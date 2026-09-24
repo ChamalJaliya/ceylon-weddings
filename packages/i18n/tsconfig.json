@@ -1,0 +1,10 @@
+{
+  "extends": "@ceylonweddings/typescript-config/base.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "noEmit": true,
+    "resolveJsonModule": true
+  },
+  "include": ["src"]
+}

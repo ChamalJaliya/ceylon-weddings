@@ -1,0 +1,13 @@
+# Railway AI service:
+#   Root Directory = apps/ai
+#   Config as code = railway.toml (this file)
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+healthcheckPath = "/health"
+healthcheckTimeout = 30
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 5

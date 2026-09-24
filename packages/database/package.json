@@ -1,0 +1,37 @@
+{
+  "name": "@ceylonweddings/database",
+  "version": "0.0.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "generate": "prisma generate",
+    "migrate": "prisma migrate dev",
+    "migrate:deploy": "prisma migrate deploy",
+    "seed": "tsx prisma/seed.ts",
+    "studio": "prisma studio",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.1.6",
+    "@prisma/adapter-pg": "7.9.1",
+    "@prisma/client": "7.9.1",
+    "dotenv": "^17.2.1",
+    "pg": "^8.16.3"
+  },
+  "devDependencies": {
+    "@ceylonweddings/typescript-config": "workspace:*",
+    "@types/bcrypt": "^5.0.2",
+    "@types/pg": "^8.15.5",
+    "bcrypt": "^6.0.0",
+    "prisma": "7.9.1",
+    "tsx": "^4.20.5",
+    "typescript": "catalog:"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "extends": "@ceylonweddings/typescript-config/nest.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "paths": {
+      "@ceylonweddings/contracts": ["../../packages/contracts/src/index.ts"],
+      "@ceylonweddings/env": ["../../packages/env/src/index.ts"],
+      "@ceylonweddings/database": ["../../packages/database/src/index.ts"]
+    }
+  },
+  "include": ["src", "../../packages/contracts/src", "../../packages/env/src", "../../packages/database/src"]
+}

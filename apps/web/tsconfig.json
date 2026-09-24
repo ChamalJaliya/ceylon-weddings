@@ -1,0 +1,11 @@
+{
+  "extends": "@ceylonweddings/typescript-config/next.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src", "next.config.ts", "next-env.d.ts"],
+  "exclude": ["node_modules"]
+}

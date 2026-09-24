@@ -1,0 +1,12 @@
+@import "@ceylonweddings/ui/globals.css";
+@source "../**/*.{ts,tsx}";
+@source "../../../../packages/ui/src/**/*.{ts,tsx}";
+
+:root,
+.pearl {
+  --radius: 1.25rem;
+}
+
+.temple {
+  --radius: 1.25rem;
+}

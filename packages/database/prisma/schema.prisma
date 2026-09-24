@@ -1,0 +1,1497 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  COUPLE
+  VENDOR
+  ADMIN
+  FAMILY
+}
+
+enum WeddingType {
+  KANDYAN_PORUWA
+  WESTERN_CHURCH
+  HINDU
+  MUSLIM_NIKAH
+  HOMECOMING
+  ENGAGEMENT
+  MEHNDI
+  DESTINATION
+}
+
+enum EventKind {
+  PORUWA
+  CHURCH
+  NIKAH
+  WALIMA
+  RECEPTION
+  HOMECOMING
+  MEHNDI
+  ENGAGEMENT
+  OTHER
+}
+
+enum Payer {
+  COUPLE
+  BRIDE_FAMILY
+  GROOM_FAMILY
+}
+
+enum GuestSide {
+  BRIDE
+  GROOM
+  BOTH
+}
+
+enum RsvpStatus {
+  CONSIDERING
+  INVITED
+  CONFIRMED
+  DECLINED
+  MAYBE
+  WALK_IN
+}
+
+enum Meal {
+  VEG
+  FISH
+  CHICKEN
+  BEEF
+  HALAL
+  OTHER
+}
+
+enum InviteChannel {
+  WHATSAPP
+  PHONE
+  PRINTED
+  OVERSEAS
+}
+
+enum VendorTypeStatus {
+  DRAFT
+  ACTIVE
+  HIDDEN
+  ARCHIVED
+}
+
+enum VendorAttributeValueType {
+  SELECT
+  MULTISELECT
+  BOOLEAN
+  NUMBER
+  RANGE
+  TEXT
+}
+
+enum VendorAttributeLayout {
+  CARDS
+  GRID
+  LIST
+  TOGGLE
+  SLIDER
+  TEXT
+}
+
+enum VendorAttributeStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum VendorGalleryLayout {
+  venue
+  portrait
+  detail
+  default
+}
+
+enum VendorLinkStatus {
+  SHORTLISTED
+  INQUIRED
+  BOOKED
+}
+
+enum InquiryStatus {
+  NEW
+  REPLIED
+  CLOSED
+}
+
+enum TaskStatus {
+  TODO
+  DOING
+  DONE
+}
+
+enum WeddingStyle {
+  MINIMALIST
+  TRADITIONAL
+  KANDYAN
+  MODERN
+  BEACH
+}
+
+enum AppointmentKind {
+  VENDOR_MEETING
+  TASTING
+  FITTING
+  CEREMONY
+  DAY_OF
+  OTHER
+}
+
+enum MusicListKind {
+  MUST
+  MAYBE
+  DO_NOT
+}
+
+enum MusicCueKind {
+  PROCESSIONAL
+  ENTRANCE
+  CEREMONY
+  RECESSIONAL
+  COCKTAIL
+  FIRST_DANCE
+  PARENT_DANCE
+  CAKE
+  BOUQUET
+  PARTY
+  LAST_DANCE
+  TRADITIONAL
+  CUSTOM
+}
+
+enum MusicLanguage {
+  SINHALA
+  TAMIL
+  ENGLISH
+  HINDI
+  MIXED
+  OTHER
+}
+
+enum MusicVibe {
+  TRADITIONAL
+  ROMANTIC
+  UPBEAT
+  BAILA
+  RELIGIOUS
+  SOFT
+  PARTY
+  CUSTOM
+}
+
+enum FamilyRelation {
+  MOTHER
+  FATHER
+  SIBLING
+  AUNT_UNCLE
+  COUSIN
+  GRANDPARENT
+  FRIEND
+  OTHER
+}
+
+enum PackageTier {
+  BASIC
+  ADVANCED
+  DREAM
+}
+
+enum PriceDisplayMode {
+  FIXED
+  FROM
+  ON_REQUEST
+}
+
+enum PackagePricingMode {
+  FIXED
+  FROM
+  RANGE
+  PER_GUEST
+  ON_REQUEST
+}
+
+enum PackageStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum PackageBadge {
+  POPULAR
+  BEST_VALUE
+  LIMITED
+}
+
+enum PackageEventType {
+  WEDDING
+  HOMECOMING
+  ENGAGEMENT
+  PRESHOOT
+  PORUWA
+  DESTINATION
+  REGISTRATION
+}
+
+enum ArticleCategory {
+  FLOWERS
+  CEREMONY
+  CAKES
+  TRANSPORT
+  FASHION
+  BEAUTY
+  FAMILY
+  EVENTS
+  TRAVEL
+  FOOD
+  REAL_WEDDING
+}
+
+enum SubscriptionStatus {
+  TRIAL
+  ACTIVE
+  GRACE
+  EXPIRED
+  CANCELLED
+  COMPED
+}
+
+enum BillingInterval {
+  MONTHLY
+  ANNUAL
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum VendorModerationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  HIDDEN
+}
+
+enum ArticleStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum ReportEntityType {
+  VENDOR
+  INQUIRY
+  REVIEW
+  ARTICLE
+  USER
+}
+
+enum ReportStatus {
+  OPEN
+  RESOLVED
+  DISMISSED
+}
+
+enum FeaturedPlacementSource {
+  EDITORIAL
+  COMPED
+  PAID_PENDING
+  PAID
+}
+
+enum PromotionStatus {
+  DRAFT
+  SCHEDULED
+  ACTIVE
+  PAUSED
+  ARCHIVED
+}
+
+enum PromotionLayout {
+  SPOTLIGHT
+  BANNER
+  CARD
+  STRIP
+  PICKS_TILE
+}
+
+enum PromotionSlot {
+  HOME_HERO
+  HOME_PICKS
+  CATALOG_TOP
+  CATALOG_INLINE
+  IDEAS_RAIL
+  VENDOR_SIDEBAR
+}
+
+enum AdminCapability {
+  MANAGE_VENDORS
+  MANAGE_USERS
+  MANAGE_CONTENT
+  MANAGE_REPORTS
+  MANAGE_FEATURED
+  VIEW_AUDIT
+  IMPERSONATE
+  MANAGE_SETTINGS
+}
+
+enum AwardNominationStatus {
+  NOMINATED
+  SHORTLISTED
+  WINNER
+  REJECTED
+}
+
+enum CmsPageStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum AnalyticsEventKind {
+  VENDOR_PROFILE_VIEW
+  WHATSAPP_TAP
+  INQUIRY_CREATED
+  ARTICLE_VIEW
+  PROMO_IMPRESSION
+  PROMO_CLICK
+}
+
+model User {
+  id              String            @id @default(cuid())
+  email           String            @unique
+  phone           String?
+  passwordHash    String
+  name            String
+  role            Role              @default(COUPLE)
+  status          UserStatus        @default(ACTIVE)
+  locale          String            @default("en")
+  currency        String            @default("LKR")
+  capabilities    AdminCapability[]
+  totpSecret      String?
+  totpEnabled     Boolean           @default(false)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  sessions        Session[]
+  memberships     WeddingMember[]
+  assignedTasks   Task[]
+  vendor          Vendor?
+  auditLogs       AuditLog[]        @relation("AuditActor")
+  reportsFiled    Report[]          @relation("ReportReporter")
+  reportsResolved Report[]          @relation("ReportResolver")
+  articlesAuthored Article[]        @relation("ArticleAuthor")
+  conversationParts ConversationParticipant[]
+  messagesSent      Message[]              @relation("MessageSender")
+  notifications     Notification[]
+  assignedAdminThreads Conversation[]      @relation("AssignedAdmin")
+  siteConfigsUpdated   SiteConfig[]        @relation("SiteConfigUpdatedBy")
+  consultations        Consultation[]      @relation("ConsultationGuest")
+  consultationsAssigned Consultation[]     @relation("ConsultationAdmin")
+}
+
+model Session {
+  id               String   @id @default(cuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refreshTokenHash String
+  expiresAt        DateTime
+  createdAt        DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Wedding {
+  id                    String        @id @default(cuid())
+  slug                  String        @unique
+  partnerOneName        String
+  partnerTwoName        String
+  date                  DateTime?
+  city                  String?
+  district              String?
+  guestCountEstimate    Int           @default(150)
+  budgetLkr             Int           @default(2500000)
+  payer                 Payer         @default(COUPLE)
+  types                 WeddingType[]
+  locale                String        @default("en")
+  currency              String        @default("LKR")
+  planningFromOverseas  Boolean       @default(false)
+  websiteEnabled        Boolean       @default(true)
+  websiteFaq            String?
+  travelNotes           String?
+  style                 WeddingStyle  @default(KANDYAN)
+  styleNotes            String?
+  settingNotes          String?
+  colors                String[]
+  onboardingCompletedAt DateTime?
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+  members               WeddingMember[]
+  events                Event[]
+  tasks                 Task[]
+  budgetLines           BudgetLine[]
+  households            GuestHousehold[]
+  inquiries             Inquiry[]
+  vendors               WeddingVendor[]
+  appointments          Appointment[]
+  reviews               Review[]
+  inviteTemplates       InviteTemplate[]
+  seatingPlans          SeatingPlan[]
+  familyPeople          FamilyPerson[]
+  conversations         Conversation[]
+  musicPlans            MusicPlan[]
+  moodboards            Moodboard[]
+  consultations         Consultation[]
+}
+
+model WeddingMember {
+  id               String  @id @default(cuid())
+  weddingId        String
+  wedding          Wedding @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  userId           String
+  user             User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role             Role    @default(COUPLE)
+  canEditGuests    Boolean @default(true)
+  canViewBudget    Boolean @default(true)
+  canManageVendors Boolean @default(false)
+
+  @@unique([weddingId, userId])
+}
+
+model FamilyPerson {
+  id          String         @id @default(cuid())
+  weddingId   String
+  wedding     Wedding        @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  name        String
+  side        GuestSide      @default(BOTH)
+  relation    FamilyRelation @default(OTHER)
+  notes       String?
+  phone       String?
+  householdId String?
+  household   GuestHousehold? @relation(fields: [householdId], references: [id], onDelete: SetNull)
+  parentId    String?
+  parent      FamilyPerson?  @relation("FamilyTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children    FamilyPerson[] @relation("FamilyTree")
+  sortOrder   Int            @default(0)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([weddingId, side])
+  @@index([householdId])
+  @@index([parentId])
+}
+
+model Event {
+  id           String        @id @default(cuid())
+  weddingId    String
+  wedding      Wedding       @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  kind         EventKind
+  name         String
+  startsAt     DateTime?
+  nekathAt     DateTime?
+  venueName    String?
+  address      String?
+  invites      EventInvite[]
+  appointments Appointment[]
+  seatingPlan  SeatingPlan?
+  musicPlan    MusicPlan?
+  moodboards   Moodboard[]
+}
+
+model Task {
+  id             String     @id @default(cuid())
+  weddingId      String
+  wedding        Wedding    @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  title          String
+  dueAt          DateTime?
+  status         TaskStatus @default(TODO)
+  category       String?
+  assigneeUserId String?
+  assignee       User?      @relation(fields: [assigneeUserId], references: [id])
+}
+
+model BudgetLine {
+  id           String   @id @default(cuid())
+  weddingId    String
+  wedding      Wedding  @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  category     String
+  label        String
+  plannedLkr   Int
+  spentLkr     Int      @default(0)
+  paidLkr      Int      @default(0)
+  payer        Payer    @default(COUPLE)
+  vendorId     String?
+  vendor       Vendor?  @relation(fields: [vendorId], references: [id])
+  depositDueAt DateTime?
+  balanceDueAt DateTime?
+}
+
+model GuestHousehold {
+  id            String         @id @default(cuid())
+  weddingId     String
+  wedding       Wedding        @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  label         String
+  headName      String
+  side          GuestSide      @default(BOTH)
+  plusCount     Int            @default(0)
+  status        RsvpStatus     @default(CONSIDERING)
+  meal          Meal?
+  channel       InviteChannel  @default(WHATSAPP)
+  phone         String?
+  email         String?
+  notes         String?
+  giftReceived  Boolean        @default(false)
+  thanked       Boolean        @default(false)
+  invites       EventInvite[]
+  seatAssignments SeatAssignment[]
+  familyPeople  FamilyPerson[]
+}
+
+model EventInvite {
+  householdId String
+  household   GuestHousehold @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  eventId     String
+  event       Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  status      RsvpStatus     @default(INVITED)
+
+  @@id([householdId, eventId])
+}
+
+model VendorType {
+  id                 String                       @id @default(cuid())
+  slug               String                       @unique
+  label              Json
+  description        Json?
+  icon               String?
+  coverUrl           String?
+  galleryLayout      VendorGalleryLayout          @default(default)
+  sortOrder          Int                          @default(0)
+  featured           Boolean                      @default(false)
+  coreTeam           Boolean                      @default(false)
+  status             VendorTypeStatus             @default(ACTIVE)
+  onboardingPresentation Json?
+  createdAt          DateTime                     @default(now())
+  updatedAt          DateTime                     @updatedAt
+  vendors            Vendor[]
+  attributes         VendorAttributeDefinition[]
+  featuredPlacements FeaturedPlacement[]
+  awardNominations   AwardNomination[]
+
+  @@index([status, sortOrder])
+  @@index([featured, sortOrder])
+}
+
+model VendorAttributeDefinition {
+  id              String                   @id @default(cuid())
+  typeId          String?
+  type            VendorType?              @relation(fields: [typeId], references: [id], onDelete: Cascade)
+  key             String
+  valueType       VendorAttributeValueType
+  question        Json
+  instruction     Json?
+  helpText        Json?
+  filterLabel     Json?
+  filterHelp      Json?
+  required        Boolean                  @default(false)
+  filterable      Boolean                  @default(true)
+  filterHighlight Boolean                  @default(false)
+  filterSortOrder Int                      @default(0)
+  showOnProfile   Boolean                  @default(true)
+  collectOnboard  Boolean                  @default(false)
+  layout          VendorAttributeLayout    @default(CARDS)
+  groupKey        String?
+  groupLabel      Json?
+  unit            String?
+  minValue        Float?
+  maxValue        Float?
+  maxSelect       Int?
+  sortOrder       Int                      @default(0)
+  status          VendorAttributeStatus    @default(ACTIVE)
+  presentation    Json?
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+  options         VendorAttributeOption[]
+  values          VendorAttributeValue[]
+
+  @@unique([typeId, key])
+  @@index([typeId, status, sortOrder])
+  @@index([filterable, filterHighlight, filterSortOrder])
+}
+
+model VendorAttributeOption {
+  id           String                     @id @default(cuid())
+  definitionId String
+  definition   VendorAttributeDefinition  @relation(fields: [definitionId], references: [id], onDelete: Cascade)
+  key          String
+  label        Json
+  helpText     Json?
+  sortOrder    Int                        @default(0)
+  active       Boolean                    @default(true)
+  createdAt    DateTime                   @default(now())
+  updatedAt    DateTime                   @updatedAt
+  selections   VendorAttributeSelection[]
+
+  @@unique([definitionId, key])
+  @@index([definitionId, active, sortOrder])
+}
+
+model VendorAttributeValue {
+  id           String                     @id @default(cuid())
+  vendorId     String
+  vendor       Vendor                     @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  definitionId String
+  definition   VendorAttributeDefinition  @relation(fields: [definitionId], references: [id], onDelete: Cascade)
+  booleanValue Boolean?
+  numberValue  Float?
+  rangeMin     Float?
+  rangeMax     Float?
+  textValue    String?
+  createdAt    DateTime                   @default(now())
+  updatedAt    DateTime                   @updatedAt
+  selections   VendorAttributeSelection[]
+
+  @@unique([vendorId, definitionId])
+  @@index([definitionId, booleanValue])
+  @@index([definitionId, numberValue])
+  @@index([definitionId, rangeMin, rangeMax])
+}
+
+model VendorAttributeSelection {
+  id        String                @id @default(cuid())
+  vendorId  String
+  vendor    Vendor                @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  valueId   String
+  value     VendorAttributeValue  @relation(fields: [valueId], references: [id], onDelete: Cascade)
+  optionId  String
+  option    VendorAttributeOption @relation(fields: [optionId], references: [id], onDelete: Restrict)
+  createdAt DateTime              @default(now())
+
+  @@unique([valueId, optionId])
+  @@unique([vendorId, optionId])
+  @@index([optionId, vendorId])
+  @@index([vendorId])
+}
+
+model Vendor {
+  id                      String           @id @default(cuid())
+  userId                  String?          @unique
+  user                    User?            @relation(fields: [userId], references: [id])
+  name                    String
+  slug                    String           @unique
+  categoryId              String?
+  categoryType            VendorType?      @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  city                    String
+  district                String
+  startingPriceLkr        Int?
+  priceDisplayMode        PriceDisplayMode @default(FROM)
+  typicalSpendLkr         Int?
+  offerHeadline           String?
+  taxesExtra              Boolean          @default(false)
+  taxNote                 String?
+  depositNote             String?
+  cancellationNote        String?
+  pricingDisclaimer       String?
+  showPricing             Boolean          @default(true)
+  listed                  Boolean          @default(true)
+  serviceAreas            String[]
+  travelNote              String?
+  overtimeNote            String?
+  whatsapp                String?
+  description             String?
+  photoUrl                String?
+  photos                  String[]
+  introVideoUrl           String?
+  yearsExperience         Int              @default(5)
+  couplesServed           Int              @default(40)
+  ratingAvg               Float            @default(4.8)
+  ratingCount             Int              @default(0)
+  includedInPrice         String[]
+  instagram               String?
+  facebook                String?
+  websiteUrl              String?
+  faqs                    Json?
+  featured                Boolean                 @default(false)
+  verified                Boolean                 @default(false)
+  moderationStatus        VendorModerationStatus  @default(PENDING)
+  moderationNote          String?
+  verifiedAt              DateTime?
+  featuredAt              DateTime?
+  hiddenAt                DateTime?
+  onboardingCompletedAt   DateTime?
+  styles                  String[]
+  destinationExperienced  Boolean                 @default(false)
+  inquiries               Inquiry[]
+  weddingLinks            WeddingVendor[]
+  budgetLines             BudgetLine[]
+  packages                VendorPackage[]
+  addOns                  VendorAddOn[]
+  mediaProjects           VendorMediaProject[]
+  videos                  VendorVideo[]
+  reviews                 Review[]
+  appointments            Appointment[]
+  featuredPlacements      FeaturedPlacement[]
+  promotions              Promotion[]
+  awardNominations        AwardNomination[]
+  subscription            VendorSubscription?
+  conversations           Conversation[]
+  entertainmentMusicPlans MusicPlan[]
+  attributeValues         VendorAttributeValue[]
+  attributeSelections     VendorAttributeSelection[]
+
+  @@index([moderationStatus])
+  @@index([listed, moderationStatus])
+  @@index([verified, featured])
+  @@index([categoryId, city])
+  @@index([categoryId, district])
+  @@index([categoryId, startingPriceLkr])
+  @@index([ratingAvg, ratingCount])
+  @@index([categoryId, verified, featured])
+}
+
+model VendorMediaProject {
+  id          String             @id @default(cuid())
+  vendorId    String
+  vendor      Vendor             @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  coverUrl    String?
+  eventDate   DateTime?
+  sortOrder   Int                @default(0)
+  items       VendorMediaItem[]
+
+  @@index([vendorId, sortOrder])
+}
+
+model VendorMediaItem {
+  id        String             @id @default(cuid())
+  projectId String
+  project   VendorMediaProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  url       String
+  sortOrder Int                @default(0)
+
+  @@index([projectId, sortOrder])
+}
+
+model VendorVideo {
+  id        String  @id @default(cuid())
+  vendorId  String
+  vendor    Vendor  @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  url       String
+  title     String?
+  sortOrder Int     @default(0)
+
+  @@index([vendorId, sortOrder])
+}
+
+model Inquiry {
+  id          String         @id @default(cuid())
+  weddingId   String
+  wedding     Wedding        @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  vendorId    String
+  vendor      Vendor         @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  message       String
+  status        InquiryStatus  @default(NEW)
+  whatsappUrl   String?
+  preferredDate DateTime?
+  createdAt     DateTime       @default(now())
+}
+
+model VendorPackage {
+  id           String             @id @default(cuid())
+  vendorId     String
+  vendor       Vendor             @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  tier         PackageTier?
+  name         String
+  pricingMode  PackagePricingMode @default(FIXED)
+  priceLkr     Int?
+  priceMaxLkr  Int?
+  description  String?
+  status       PackageStatus      @default(PUBLISHED)
+  sortOrder    Int                @default(0)
+  badge        PackageBadge?
+  inclusions   String[]
+  exclusions   String[]
+  eventTypes   PackageEventType[]
+  durationHours Float?
+  guestMin     Int?
+  guestMax     Int?
+  photoUrls    String[]
+  bestFor      String?
+  addOns       VendorAddOn[]      @relation("PackageAddOns")
+
+  @@index([vendorId, sortOrder])
+}
+
+model VendorAddOn {
+  id          String             @id @default(cuid())
+  vendorId    String
+  vendor      Vendor             @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  pricingMode PackagePricingMode @default(FIXED)
+  priceLkr    Int?
+  packages    VendorPackage[]    @relation("PackageAddOns")
+
+  @@index([vendorId])
+}
+
+model Review {
+  id              String   @id @default(cuid())
+  vendorId        String
+  vendor          Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  weddingId       String?
+  wedding         Wedding? @relation(fields: [weddingId], references: [id], onDelete: SetNull)
+  authorName      String
+  rating          Float
+  quality         Float
+  professionalism Float
+  flexibility     Float
+  responseTime    Float
+  value           Float
+  communication   Float
+  body            String
+  recommended     Boolean  @default(true)
+  hidden          Boolean  @default(false)
+  createdAt       DateTime @default(now())
+}
+
+model Appointment {
+  id               String           @id @default(cuid())
+  weddingId        String
+  wedding          Wedding          @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  eventId          String?
+  event            Event?           @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  vendorId         String?
+  vendor           Vendor?          @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+  title            String
+  kind             AppointmentKind  @default(VENDOR_MEETING)
+  startsAt         DateTime
+  endsAt           DateTime
+  venueName        String?
+  address          String?
+  reminderMinutes  Int              @default(30)
+  notes            String?
+  color            String?
+  sortOrder        Int              @default(0)
+  ownerLabel       String?
+  musicCues        MusicCue[]
+
+  @@index([weddingId, startsAt])
+  @@index([eventId, sortOrder])
+}
+
+model InviteTemplate {
+  id         String        @id @default(cuid())
+  weddingId  String
+  wedding    Wedding       @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  name       String
+  locale     String        @default("en")
+  channel    InviteChannel @default(WHATSAPP)
+  body       String
+  isDefault  Boolean       @default(false)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  @@index([weddingId])
+}
+
+model SeatingPlan {
+  id        String         @id @default(cuid())
+  weddingId String
+  wedding   Wedding        @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  eventId   String         @unique
+  event     Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  notes     String?
+  tables    SeatingTable[]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@index([weddingId])
+}
+
+model SeatingTable {
+  id          String           @id @default(cuid())
+  planId      String
+  plan        SeatingPlan      @relation(fields: [planId], references: [id], onDelete: Cascade)
+  name        String
+  capacity    Int              @default(10)
+  sortOrder   Int              @default(0)
+  notes       String?
+  assignments SeatAssignment[]
+}
+
+model SeatAssignment {
+  id          String         @id @default(cuid())
+  tableId     String
+  table       SeatingTable   @relation(fields: [tableId], references: [id], onDelete: Cascade)
+  householdId String
+  household   GuestHousehold @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  seatsUsed   Int            @default(1)
+
+  @@unique([tableId, householdId])
+  @@index([householdId])
+}
+
+model MusicPlan {
+  id                      String          @id @default(cuid())
+  weddingId               String
+  wedding                 Wedding         @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  eventId                 String          @unique
+  event                   Event           @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  notes                   String?
+  vibePrimary             MusicVibe?
+  languages               MusicLanguage[]
+  entertainmentVendorId   String?
+  entertainmentVendor     Vendor?         @relation(fields: [entertainmentVendorId], references: [id], onDelete: SetNull)
+  shareToken              String?         @unique
+  shareEnabled            Boolean         @default(false)
+  createdAt               DateTime        @default(now())
+  updatedAt               DateTime        @updatedAt
+  tracks                  MusicTrack[]
+  cues                    MusicCue[]
+
+  @@index([weddingId])
+  @@index([entertainmentVendorId])
+}
+
+model MusicTrack {
+  id        String         @id @default(cuid())
+  planId    String
+  plan      MusicPlan      @relation(fields: [planId], references: [id], onDelete: Cascade)
+  list      MusicListKind
+  title     String
+  artist    String?
+  url       String?
+  language  MusicLanguage?
+  vibe      MusicVibe?
+  notes     String?
+  sortOrder Int            @default(0)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  cues      MusicCue[]
+
+  @@index([planId, list, sortOrder])
+}
+
+model MusicCue {
+  id               String        @id @default(cuid())
+  planId           String
+  plan             MusicPlan     @relation(fields: [planId], references: [id], onDelete: Cascade)
+  kind             MusicCueKind  @default(CUSTOM)
+  label            String
+  trackTitle       String?
+  trackId          String?
+  track            MusicTrack?   @relation(fields: [trackId], references: [id], onDelete: SetNull)
+  appointmentId    String?
+  appointment      Appointment?  @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  offsetMinutes    Int?
+  startsAt         DateTime?
+  durationMinutes  Int?
+  notes            String?
+  sortOrder        Int           @default(0)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([planId, sortOrder])
+  @@index([appointmentId])
+  @@index([trackId])
+}
+
+model Moodboard {
+  id           String           @id @default(cuid())
+  weddingId    String
+  wedding      Wedding          @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  title        String
+  eventId      String?
+  event        Event?           @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  notes        String?
+  scene        Json             @default("{}")
+  version      Int              @default(1)
+  shareToken   String?          @unique
+  shareEnabled Boolean          @default(false)
+  sortOrder    Int              @default(0)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  assets       MoodboardAsset[]
+
+  @@index([weddingId, sortOrder])
+  @@index([eventId])
+}
+
+model MoodboardAsset {
+  id          String    @id @default(cuid())
+  moodboardId String
+  moodboard   Moodboard @relation(fields: [moodboardId], references: [id], onDelete: Cascade)
+  fileId      String
+  key         String
+  publicUrl   String
+  mimeType    String
+  createdAt   DateTime  @default(now())
+
+  @@unique([moodboardId, fileId])
+  @@index([moodboardId])
+}
+
+model Article {
+  id           String           @id @default(cuid())
+  slug         String           @unique
+  title        String
+  excerpt      String
+  body         String
+  category     ArticleCategory
+  coverUrl     String
+  locale       String           @default("en")
+  featured     Boolean          @default(false)
+  status       ArticleStatus    @default(PUBLISHED)
+  vendorSlugs  String[]
+  authorUserId String?
+  author       User?            @relation("ArticleAuthor", fields: [authorUserId], references: [id], onDelete: SetNull)
+  publishedAt  DateTime?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  @@index([status, featured])
+}
+
+model WeddingVendor {
+  weddingId String
+  wedding   Wedding          @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  vendorId  String
+  vendor    Vendor           @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  status    VendorLinkStatus @default(SHORTLISTED)
+
+  @@id([weddingId, vendorId])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorUserId String?
+  actor      User?    @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+  action     String
+  entityType String
+  entityId   String
+  before     Json?
+  after      Json?
+  ip         String?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([actorUserId, createdAt])
+  @@index([createdAt])
+}
+
+model Report {
+  id               String           @id @default(cuid())
+  reporterUserId   String?
+  reporter         User?            @relation("ReportReporter", fields: [reporterUserId], references: [id], onDelete: SetNull)
+  entityType       ReportEntityType
+  entityId         String
+  reason           String
+  details          String?
+  status           ReportStatus     @default(OPEN)
+  resolvedById     String?
+  resolvedBy       User?            @relation("ReportResolver", fields: [resolvedById], references: [id], onDelete: SetNull)
+  resolutionNote   String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  @@index([status, createdAt])
+  @@index([entityType, entityId])
+}
+
+model FeaturedPlacement {
+  id         String                   @id @default(cuid())
+  vendorId   String
+  vendor     Vendor                   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  city       String?
+  categoryId String?
+  category   VendorType?              @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  startsAt   DateTime
+  endsAt     DateTime
+  priority   Int                      @default(0)
+  source     FeaturedPlacementSource  @default(EDITORIAL)
+  notes      String?
+  createdAt  DateTime                 @default(now())
+  updatedAt  DateTime                 @updatedAt
+
+  @@index([startsAt, endsAt])
+  @@index([vendorId])
+  @@index([categoryId])
+}
+
+model Promotion {
+  id              String                   @id @default(cuid())
+  name            String
+  status          PromotionStatus          @default(DRAFT)
+  headline        String
+  subheadline     String?
+  body            String?
+  ctaLabel        String?
+  ctaHref         String?
+  coverUrl        String?
+  secondaryUrl    String?
+  logoUrl         String?
+  accentColor     String?
+  overlayTone     String                   @default("dark")
+  layout          PromotionLayout          @default(CARD)
+  badgeLabel      String?
+  slots           PromotionSlot[]
+  cities          String[]
+  categories      String[]
+  locales         String[]
+  startsAt        DateTime?
+  endsAt          DateTime?
+  priority        Int                      @default(0)
+  vendorId        String?
+  vendor          Vendor?                  @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+  createdById     String?
+  source          FeaturedPlacementSource  @default(EDITORIAL)
+  notes           String?
+  impressionCount Int                      @default(0)
+  clickCount      Int                      @default(0)
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+
+  @@index([status, priority])
+  @@index([startsAt, endsAt])
+  @@index([vendorId])
+}
+
+model FeatureFlag {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  enabled     Boolean  @default(false)
+  description String?
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
+}
+
+model SiteConfig {
+  id            String   @id @default("default")
+  branding      Json
+  homepage      Json
+  onboarding    Json?
+  consultations Json?
+  updatedById   String?
+  updatedBy     User?    @relation("SiteConfigUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  updatedAt     DateTime @updatedAt
+  createdAt     DateTime @default(now())
+}
+
+model CmsPage {
+  id        String        @id @default(cuid())
+  slug      String
+  title     String
+  excerpt   String?
+  body      String
+  locale    String        @default("en")
+  status    CmsPageStatus @default(DRAFT)
+  seo       Json?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@unique([slug, locale])
+  @@index([status, slug])
+}
+
+model AnalyticsEvent {
+  id         String             @id @default(cuid())
+  kind       AnalyticsEventKind
+  entityType String?
+  entityId   String?
+  userId     String?
+  meta       Json?
+  createdAt  DateTime           @default(now())
+
+  @@index([kind, createdAt])
+  @@index([entityType, entityId])
+}
+
+model AwardNomination {
+  id         String                @id @default(cuid())
+  vendorId   String
+  vendor     Vendor                @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  year       Int
+  categoryId String
+  category   VendorType            @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  status     AwardNominationStatus @default(NOMINATED)
+  notes      String?
+  createdAt  DateTime              @default(now())
+  updatedAt  DateTime              @updatedAt
+
+  @@unique([vendorId, year, categoryId])
+  @@index([year, status])
+  @@index([categoryId])
+}
+
+model PaymentIntent {
+  id          String   @id @default(cuid())
+  vendorId    String?
+  userId      String?
+  provider    String
+  externalId  String?
+  amountLkr   Int
+  currency    String   @default("LKR")
+  status      String   @default("PENDING")
+  purpose     String
+  meta        Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([status, createdAt])
+  @@index([vendorId])
+}
+
+model VendorSubscription {
+  id               String             @id @default(cuid())
+  vendorId         String             @unique
+  vendor           Vendor             @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  status           SubscriptionStatus @default(TRIAL)
+  trialEndsAt      DateTime
+  trialOverrideBy  String?
+
+  planId           String?
+  plan             SubscriptionPlan?  @relation(fields: [planId], references: [id])
+  interval         BillingInterval?
+  currentPeriodStart DateTime?
+  currentPeriodEnd   DateTime?
+
+  gracePeriodDays  Int                @default(7)
+  cancelledAt      DateTime?
+  cancelReason     String?
+
+  compedById       String?
+  compedUntil      DateTime?
+
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  invoices         SubscriptionInvoice[]
+
+  @@index([status])
+  @@index([trialEndsAt])
+  @@index([currentPeriodEnd])
+}
+
+model SubscriptionPlan {
+  id            String             @id @default(cuid())
+  name          String
+  interval      BillingInterval
+  priceLkr      Int
+  active        Boolean            @default(true)
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  subscriptions VendorSubscription[]
+}
+
+model SubscriptionInvoice {
+  id               String             @id @default(cuid())
+  subscriptionId   String
+  subscription     VendorSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  planId           String?
+  interval         BillingInterval?
+  amountLkr        Int
+  periodStart      DateTime
+  periodEnd        DateTime
+  status           String             @default("PENDING")
+  paidAt           DateTime?
+  paymentRef       String?
+  notes            String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  @@index([subscriptionId])
+  @@index([status, periodEnd])
+}
+
+enum ConversationType {
+  COUPLE_VENDOR
+  COUPLE_ADMIN
+  VENDOR_VENDOR
+  VENDOR_ADMIN
+}
+
+enum NotificationType {
+  MESSAGE
+}
+
+model Conversation {
+  id              String             @id @default(cuid())
+  type            ConversationType
+  pairKey         String             @unique
+  weddingId       String?
+  wedding         Wedding?           @relation(fields: [weddingId], references: [id], onDelete: SetNull)
+  vendorId        String?
+  vendor          Vendor?            @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+  assignedAdminId String?
+  assignedAdmin   User?              @relation("AssignedAdmin", fields: [assignedAdminId], references: [id], onDelete: SetNull)
+  lastMessageAt   DateTime?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  participants    ConversationParticipant[]
+  messages        Message[]
+  notifications   Notification[]
+
+  @@index([type, lastMessageAt])
+  @@index([assignedAdminId])
+}
+
+model ConversationParticipant {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lastReadAt     DateTime?
+  muted          Boolean      @default(false)
+  joinedAt       DateTime     @default(now())
+
+  @@unique([conversationId, userId])
+  @@index([userId, lastReadAt])
+}
+
+model Message {
+  id             String              @id @default(cuid())
+  conversationId String
+  conversation   Conversation        @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         User                @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  body           String?
+  createdAt      DateTime            @default(now())
+  editedAt       DateTime?
+  deletedAt      DateTime?
+  attachments    MessageAttachment[]
+  notifications  Notification[]
+
+  @@index([conversationId, createdAt])
+  @@index([senderId])
+}
+
+model MessageAttachment {
+  id          String  @id @default(cuid())
+  messageId   String
+  message     Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  url         String
+  key         String
+  contentType String
+  filename    String
+  byteSize    Int
+
+  @@index([messageId])
+}
+
+model Notification {
+  id             String           @id @default(cuid())
+  userId         String
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type           NotificationType @default(MESSAGE)
+  title          String
+  body           String
+  href           String?
+  conversationId String?
+  conversation   Conversation?    @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+  messageId      String?
+  message        Message?         @relation(fields: [messageId], references: [id], onDelete: SetNull)
+  readAt         DateTime?
+  createdAt      DateTime         @default(now())
+
+  @@index([userId, createdAt])
+  @@index([userId, readAt])
+}
+
+enum ConsultationStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum ConsultationMode {
+  VIDEO
+  PHONE
+  WHATSAPP
+  IN_PERSON
+}
+
+enum ConsultationTopic {
+  GETTING_STARTED
+  VENDORS
+  BUDGET
+  VENUE
+  PLATFORM_HELP
+  VENDOR_ONBOARDING
+  OTHER
+}
+
+model Consultation {
+  id              String             @id @default(cuid())
+  reference       String             @unique
+  manageToken     String             @unique
+  status          ConsultationStatus @default(CONFIRMED)
+  startsAt        DateTime
+  endsAt          DateTime
+  timezone        String             @default("Asia/Colombo")
+  // Null once cancelled so the slot frees up (Postgres unique indexes ignore nulls).
+  slotKey         String?            @unique
+  name            String
+  email           String?
+  phone           String?
+  locale          String             @default("en")
+  topic           ConsultationTopic  @default(GETTING_STARTED)
+  mode            ConsultationMode   @default(VIDEO)
+  message         String?
+  weddingDate     DateTime?
+  city            String?
+  guestCount      Int?
+  budgetLkr       Int?
+  userId          String?
+  user            User?              @relation("ConsultationGuest", fields: [userId], references: [id], onDelete: SetNull)
+  weddingId       String?
+  wedding         Wedding?           @relation(fields: [weddingId], references: [id], onDelete: SetNull)
+  assignedAdminId String?
+  assignedAdmin   User?              @relation("ConsultationAdmin", fields: [assignedAdminId], references: [id], onDelete: SetNull)
+  meetingUrl      String?
+  adminNotes      String?
+  confirmedAt     DateTime?
+  cancelledAt     DateTime?
+  cancelReason    String?
+  ip              String?
+  source          String?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  @@index([status, startsAt])
+  @@index([startsAt])
+  @@index([email])
+}
+
+enum ContactMessageStatus {
+  NEW
+  READ
+  CLOSED
+}
+
+model ContactMessage {
+  id        String               @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  message   String
+  status    ContactMessageStatus @default(NEW)
+  ip        String?
+  createdAt DateTime             @default(now())
+
+  @@index([status, createdAt])
+}
+

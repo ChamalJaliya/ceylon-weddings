@@ -1,0 +1,7 @@
+{
+  "extends": "@ceylonweddings/typescript-config/next.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": ["src"]
+}
