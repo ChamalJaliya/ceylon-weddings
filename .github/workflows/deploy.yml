@@ -1,7 +1,10 @@
-# Required GitHub secrets:
+# Optional GitHub deploy. Vercel and Railway already auto-deploy from GitHub.
+# Jobs no-op unless the matching secrets exist, so the workflow stays green.
+#
+# Secrets (only if you want this workflow to deploy):
 #   RAILWAY_TOKEN, RAILWAY_PROJECT_ID, RAILWAY_API_SERVICE
 #   VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID
-# Optional AI deploy: repo variable DEPLOY_AI=true + secret RAILWAY_AI_SERVICE
+# Optional AI: repo variable DEPLOY_AI=true + secret RAILWAY_AI_SERVICE
 name: Deploy
 
 on:
@@ -21,9 +24,12 @@ jobs:
   railway-api:
     name: Railway API
     if: >
-      github.event_name == 'workflow_dispatch' ||
-      (github.event.workflow_run.conclusion == 'success' &&
-       github.event.workflow_run.head_branch == 'main')
+      secrets.RAILWAY_TOKEN != '' &&
+      secrets.RAILWAY_PROJECT_ID != '' &&
+      secrets.RAILWAY_API_SERVICE != '' &&
+      (github.event_name == 'workflow_dispatch' ||
+       (github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.head_branch == 'main'))
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -47,6 +53,9 @@ jobs:
     name: Railway AI
     if: >
       vars.DEPLOY_AI == 'true' &&
+      secrets.RAILWAY_TOKEN != '' &&
+      secrets.RAILWAY_PROJECT_ID != '' &&
+      secrets.RAILWAY_AI_SERVICE != '' &&
       (github.event_name == 'workflow_dispatch' ||
        (github.event.workflow_run.conclusion == 'success' &&
         github.event.workflow_run.head_branch == 'main'))
@@ -73,9 +82,14 @@ jobs:
     name: Vercel web
     needs: [railway-api]
     if: >
-      github.event_name == 'workflow_dispatch' ||
-      (github.event.workflow_run.conclusion == 'success' &&
-       github.event.workflow_run.head_branch == 'main')
+      always() &&
+      secrets.VERCEL_TOKEN != '' &&
+      secrets.VERCEL_ORG_ID != '' &&
+      secrets.VERCEL_PROJECT_ID != '' &&
+      (needs.railway-api.result == 'success' || needs.railway-api.result == 'skipped') &&
+      (github.event_name == 'workflow_dispatch' ||
+       (github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.head_branch == 'main'))
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

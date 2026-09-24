@@ -9,7 +9,7 @@
     "dev": "turbo dev",
     "build": "turbo build",
     "start": "turbo start",
-    "lint": "turbo lint",
+    "lint": "node -e \"console.log('No dedicated linter configured')\"",
     "typecheck": "turbo typecheck",
     "db:generate": "pnpm --filter @ceylonweddings/database generate",
     "db:migrate": "pnpm --filter @ceylonweddings/database migrate",

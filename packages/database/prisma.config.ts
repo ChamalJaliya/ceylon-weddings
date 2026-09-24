@@ -1,8 +1,11 @@
 import { config } from "dotenv";
 import { resolve } from "node:path";
-import { defineConfig, env } from "prisma/config";
+import { defineConfig } from "prisma/config";
 
 config({ path: resolve(__dirname, "../../.env") });
+
+const databaseUrl =
+  process.env.DATABASE_URL ?? "postgresql://build:build@127.0.0.1:5432/build";
 
 export default defineConfig({
   schema: "prisma/schema.prisma",
@@ -11,6 +14,6 @@ export default defineConfig({
     seed: "tsx prisma/seed.ts",
   },
   datasource: {
-    url: env("DATABASE_URL"),
+    url: databaseUrl,
   },
 });

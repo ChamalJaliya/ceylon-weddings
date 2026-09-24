@@ -1,5 +1,6 @@
 # Build context MUST be the monorepo root (not apps/api).
-# Railway: empty root directory + dockerfilePath apps/api/Dockerfile
+# Railway: Root Directory / + Dockerfile path apps/api/Dockerfile
+# Clear Custom Build Command and Custom Start Command.
 FROM node:22-bookworm-slim AS builder
 
 WORKDIR /app

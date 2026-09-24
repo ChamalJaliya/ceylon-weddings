@@ -14,6 +14,12 @@ jobs:
   validate:
     name: Lint, Typecheck & Build
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/ci
+      NEXT_PUBLIC_APP: web
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      NEXT_PUBLIC_API_URL: http://localhost:4000
+      NEXT_PUBLIC_WS_URL: http://localhost:4000
 
     steps:
       - name: Checkout Code
@@ -34,8 +40,6 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma Client
-        env:
-          DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/ci
         run: pnpm run db:generate
 
       - name: Typecheck Monorepo
