@@ -179,6 +179,7 @@ import {
   type UpdateConsultationBody,
   type UpdateContactMessageBody,
 } from "@ceylonweddings/contracts";
+import { apiBase } from "./base-url";
 
 const guestListSchema = guestHouseholdSchema.array();
 const inquiryListSchema = inquirySchema.array();
@@ -187,10 +188,8 @@ const budgetListSchema = budgetLineSchema.array();
 const inviteTemplateListSchema = inviteTemplateSchema.array();
 const familyListSchema = familyPersonSchema.array();
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
-
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${apiUrl}${path}`, {
+  const response = await fetch(`${apiBase()}${path}`, {
     ...init,
     credentials: "include",
     headers: {
@@ -718,7 +717,7 @@ export const api = {
     jobHealth: () => request<AdminJobHealth>("/admin/jobs/health"),
     analytics: () => request<AdminAnalyticsSummary>("/admin/analytics/summary"),
     exportCsv: async (kind: "vendors" | "users") => {
-      const res = await fetch(`${apiUrl}/admin/export/${kind}`, { credentials: "include" });
+      const res = await fetch(`${apiBase()}/admin/export/${kind}`, { credentials: "include" });
       if (!res.ok) throw new Error(await res.text());
       return res.text();
     },
@@ -843,7 +842,7 @@ export const api = {
         { method: "POST", body: JSON.stringify(body) },
       ),
     icsUrl: (manageToken: string) =>
-      `${apiUrl}/public/consultations/${encodeURIComponent(manageToken)}/calendar.ics`,
+      `${apiBase()}/public/consultations/${encodeURIComponent(manageToken)}/calendar.ics`,
   },
   contact: {
     send: (body: CreateContactMessageBody) =>
