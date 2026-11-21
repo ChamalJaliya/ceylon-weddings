@@ -1,4 +1,11 @@
 import {
+  accountSecuritySchema,
+  twoFactorSetupSchema,
+  userSchema,
+  type AccountSecurity,
+  type ChangePasswordBody,
+  type TwoFactorSetup,
+  type UpdateProfileBody,
   authResponseSchema,
   mineWeddingSchema,
   guestHouseholdSchema,
@@ -225,6 +232,25 @@ export const api = {
     authResponseSchema.parse(
       await request<AuthResponse>("/auth/google", { method: "POST", body: JSON.stringify(body) }),
     ),
+  /** Account settings (/settings). */
+  account: {
+    updateProfile: async (body: UpdateProfileBody): Promise<User> =>
+      userSchema.parse(await request<User>("/auth/me", { method: "PATCH", body: JSON.stringify(body) })),
+    changePassword: (body: ChangePasswordBody) =>
+      request<{ ok: boolean; signedOut: number }>("/auth/password", { method: "POST", body: JSON.stringify(body) }),
+    security: async (): Promise<AccountSecurity> =>
+      accountSecuritySchema.parse(await request<AccountSecurity>("/auth/security")),
+    revokeSession: (id: string) =>
+      request<{ ok: boolean }>(`/auth/sessions/${encodeURIComponent(id)}`, { method: "DELETE" }),
+    revokeOtherSessions: () =>
+      request<{ ok: boolean; count: number }>("/auth/sessions/revoke-others", { method: "POST" }),
+    startTwoFactor: async (): Promise<TwoFactorSetup> =>
+      twoFactorSetupSchema.parse(await request<TwoFactorSetup>("/auth/2fa/generate", { method: "POST" })),
+    enableTwoFactor: (token: string) =>
+      request<{ ok: boolean }>("/auth/2fa/enable", { method: "POST", body: JSON.stringify({ token }) }),
+    disableTwoFactor: (token: string) =>
+      request<{ ok: boolean }>("/auth/2fa/disable", { method: "POST", body: JSON.stringify({ token }) }),
+  },
   logout: async () => {
     clearInflightRequests();
     await request<void>("/auth/logout", { method: "POST" });

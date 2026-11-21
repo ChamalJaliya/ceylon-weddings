@@ -3,7 +3,7 @@
 import { useLocale, useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import { Settings2 } from "lucide-react";
-import { COOKIES, formatMoney, usePreferenceStore } from "@ceylonweddings/web";
+import { COOKIES, formatMoney, useAuthStore, usePreferenceStore } from "@ceylonweddings/web";
 import type { Currency, Locale } from "@ceylonweddings/contracts";
 import { SimpleSelect } from "@ceylonweddings/ui/components/select";
 import { Button } from "@ceylonweddings/ui/components/button";
@@ -11,7 +11,7 @@ import { Icon } from "@ceylonweddings/ui/components/icon";
 import { Label } from "@ceylonweddings/ui/components/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@ceylonweddings/ui/components/popover";
 import { cn } from "@ceylonweddings/ui/utils";
-import { usePathname, useRouter } from "../i18n/navigation";
+import { Link, usePathname, useRouter } from "../i18n/navigation";
 
 function setCookie(name: string, value: string) {
   document.cookie = `${name}=${value}; path=/; max-age=31536000; samesite=lax`;
@@ -31,6 +31,7 @@ export function PreferenceControls({
   const { theme, setTheme } = useTheme();
   const currency = usePreferenceStore((state) => state.currency);
   const setCurrency = usePreferenceStore((state) => state.setCurrency);
+  const user = useAuthStore((state) => state.user);
 
   return (
     <Popover>
@@ -95,6 +96,14 @@ export function PreferenceControls({
             />
           </div>
           {showSample ? <p className="text-xs text-muted-foreground">{formatMoney(2500000, currency)}</p> : null}
+          {user ? (
+            <Link
+              href="/settings/language"
+              className="mt-1 border-t border-border pt-3 text-compact font-medium text-primary hover:text-primary-hover"
+            >
+              All settings →
+            </Link>
+          ) : null}
         </div>
       </PopoverContent>
     </Popover>

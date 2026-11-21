@@ -10,6 +10,7 @@ import { CenteredLoader } from "@ceylonweddings/ui/components/spinner";
 export const PLANNING_ROLES: Role[] = ["COUPLE", "FAMILY"];
 export const PRO_ROLES: Role[] = ["VENDOR", "ADMIN"];
 export const ADMIN_ROLES: Role[] = ["ADMIN"];
+export const SIGNED_IN_ROLES: Role[] = ["COUPLE", "FAMILY", "VENDOR", "ADMIN"];
 
 export function RoleGate({ allow, children }: { allow: Role[]; children: ReactNode }) {
   const router = useRouter();

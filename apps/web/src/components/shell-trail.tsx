@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Bell, MessageCircle } from "lucide-react";
+import { Bell, LogOut, MessageCircle, Settings, Shield, UserRound } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { api, useAuthStore, useMessagingStore, useRealtimeMessaging } from "@ceylonweddings/web";
 import type { Inquiry } from "@ceylonweddings/contracts";
@@ -168,19 +168,40 @@ export function ShellTrail({ overlay = false, messages = false }: { overlay?: bo
             {initials}
           </button>
         </PopoverTrigger>
-        <PopoverContent className="w-56">
-          <p className="mb-2 truncate text-sm font-medium">{user?.name}</p>
-          <button
-            type="button"
-            className="text-left text-sm text-muted-foreground"
-            onClick={async () => {
-              await api.logout();
-              setUser(null);
-              router.push("/login");
-            }}
-          >
-            {t("nav.signOut")}
-          </button>
+        <PopoverContent align="end" className="w-60 p-2">
+          <div className="px-2 pt-1 pb-2">
+            <p className="truncate text-sm font-medium">{user?.name}</p>
+            <p className="truncate text-caption text-muted-foreground">{user?.email}</p>
+          </div>
+          <div className="grid gap-0.5 border-t border-border pt-1.5">
+            {[
+              { href: "/settings/profile", label: "Profile", icon: UserRound },
+              { href: "/settings/security", label: "Security", icon: Shield },
+              { href: "/settings/appearance", label: "Settings", icon: Settings },
+            ].map((item) => (
+              <button
+                key={item.href}
+                type="button"
+                className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-left text-sm text-foreground hover:bg-accent"
+                onClick={() => router.push(item.href)}
+              >
+                <Icon icon={item.icon} size="xs" lottie={false} className="text-muted-foreground" />
+                {item.label}
+              </button>
+            ))}
+            <button
+              type="button"
+              className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-left text-sm text-muted-foreground hover:bg-accent"
+              onClick={async () => {
+                await api.logout();
+                setUser(null);
+                router.push("/login");
+              }}
+            >
+              <Icon icon={LogOut} size="xs" lottie={false} />
+              {t("nav.signOut")}
+            </button>
+          </div>
         </PopoverContent>
       </Popover>
     </>

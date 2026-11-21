@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Req, Res, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Patch, Post, Req, Res, UseGuards } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
 import { ZodResponse } from "nestjs-zod";
 import type { Request, Response } from "express";
@@ -9,6 +9,10 @@ import {
   AuthResponseDto,
   UserDto,
   Verify2FaDto,
+  UpdateProfileDto,
+  ChangePasswordDto,
+  AccountSecurityDto,
+  TwoFactorSetupDto,
 } from "./auth.dto";
 import { AuthService } from "./auth.service";
 import { JwtCookieGuard } from "./jwt-cookie.guard";
@@ -22,14 +26,22 @@ export class AuthController {
   constructor(private readonly auth: AuthService) {}
 
   @Post("register")
-  @RateLimit({ points: 10, duration: 60, errorMessage: "Too many registration attempts. Please try again in a minute." })
+  @RateLimit({
+    points: 10,
+    duration: 60,
+    errorMessage: "Too many registration attempts. Please try again in a minute.",
+  })
   @ZodResponse({ type: AuthResponseDto })
   register(@Body() body: RegisterDto, @Res({ passthrough: true }) response: Response) {
     return this.auth.register(body, response);
   }
 
   @Post("login")
-  @RateLimit({ points: 10, duration: 60, errorMessage: "Too many login attempts. Please wait a minute before trying again." })
+  @RateLimit({
+    points: 10,
+    duration: 60,
+    errorMessage: "Too many login attempts. Please wait a minute before trying again.",
+  })
   @ZodResponse({ type: AuthResponseDto })
   login(@Body() body: LoginDto, @Res({ passthrough: true }) response: Response) {
     return this.auth.login(body, response);
@@ -61,22 +73,58 @@ export class AuthController {
     return user;
   }
 
+  @Patch("me")
+  @UseGuards(JwtCookieGuard)
+  @ZodResponse({ type: UserDto })
+  updateProfile(@CurrentUser() user: User, @Body() body: UpdateProfileDto) {
+    return this.auth.updateProfile(user, body);
+  }
+
+  @Post("password")
+  @UseGuards(JwtCookieGuard)
+  @RateLimit({ points: 5, duration: 60, errorMessage: "Too many attempts. Please wait a minute." })
+  changePassword(@CurrentUser() user: User, @Body() body: ChangePasswordDto, @Req() request: Request) {
+    return this.auth.changePassword(user, body, request);
+  }
+
+  @Get("security")
+  @UseGuards(JwtCookieGuard)
+  @ZodResponse({ type: AccountSecurityDto })
+  security(@CurrentUser() user: User, @Req() request: Request) {
+    return this.auth.security(user, request);
+  }
+
+  @Delete("sessions/:id")
+  @UseGuards(JwtCookieGuard)
+  revokeSession(@CurrentUser() user: User, @Param("id") id: string, @Req() request: Request) {
+    return this.auth.revokeSession(user, id, request);
+  }
+
+  @Post("sessions/revoke-others")
+  @UseGuards(JwtCookieGuard)
+  revokeOtherSessions(@CurrentUser() user: User, @Req() request: Request) {
+    return this.auth.revokeOtherSessions(user, request);
+  }
+
   @Post("2fa/generate")
   @UseGuards(JwtCookieGuard)
+  @RateLimit({ points: 10, duration: 60 })
+  @ZodResponse({ type: TwoFactorSetupDto })
   generate2Fa(@CurrentUser() user: User) {
     return this.auth.generate2Fa(user);
   }
 
   @Post("2fa/enable")
   @UseGuards(JwtCookieGuard)
+  @RateLimit({ points: 10, duration: 60 })
   enable2Fa(@CurrentUser() user: User, @Body() body: Verify2FaDto) {
     return this.auth.enable2Fa(user, body.token);
   }
 
   @Post("2fa/disable")
   @UseGuards(JwtCookieGuard)
+  @RateLimit({ points: 10, duration: 60 })
   disable2Fa(@CurrentUser() user: User, @Body() body: Verify2FaDto) {
     return this.auth.disable2Fa(user, body.token);
   }
 }
-

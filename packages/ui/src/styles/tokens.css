@@ -100,78 +100,6 @@
   --cw-studio-clay: #b4532a;
   --cw-studio-text: #5c4a3a;
 
-  /* ── Semantic: pearl (default) ──────────────────────────────────────── */
-  --color-primary: var(--cw-gold-600);
-  --color-primary-hover: var(--cw-gold-700);
-  --color-primary-active: var(--cw-gold-800);
-  --color-primary-subtle: var(--cw-gold-100);
-  --color-primary-fg: var(--cw-white);
-  /* Text-only accent — AA (≥4.5:1) on page and card surfaces. */
-  --color-primary-text: var(--cw-gold-700);
-
-  --color-text-heading: var(--cw-ink-900);
-  --color-text-body: var(--cw-ink-700);
-  --color-text-muted: var(--cw-ink-500);
-  --color-text-inverse: var(--cw-ivory-0);
-
-  --color-bg-page: var(--cw-ivory-50);
-  --color-bg-card: var(--cw-ivory-0);
-  --color-bg-inset: color-mix(in srgb, var(--color-bg-page) 70%, var(--cw-linen));
-  --color-bg-muted: var(--cw-ivory-100);
-  --color-bg-accent: var(--cw-gold-100);
-  --color-bg-sidebar: color-mix(in srgb, var(--cw-ivory-100) 55%, var(--cw-ivory-0));
-  --color-border: var(--cw-sand);
-  --color-border-strong: var(--cw-sand-strong);
-  --color-focus-ring: var(--cw-jade-700);
-
-  --color-secondary: var(--cw-jade-100);
-  --color-secondary-fg: var(--cw-jade-700);
-
-  --color-success: var(--cw-leaf-600);
-  --color-success-subtle: var(--cw-leaf-100);
-  --color-success-fg: var(--cw-leaf-800);
-  --color-warning: var(--cw-saffron-500);
-  --color-warning-subtle: var(--cw-saffron-100);
-  --color-warning-fg: var(--cw-saffron-900);
-  --color-danger: var(--cw-vermilion-600);
-  --color-danger-hover: var(--cw-vermilion-700);
-  --color-danger-subtle: var(--cw-vermilion-100);
-  --color-danger-fg: var(--cw-vermilion-700);
-  --color-info: var(--cw-jade-700);
-  --color-info-subtle: var(--cw-jade-100);
-  --color-info-fg: var(--cw-jade-700);
-  --color-love: var(--cw-lotus-500);
-  --color-love-subtle: var(--cw-lotus-100);
-  --color-love-fg: var(--cw-lotus-700);
-  --color-premium: var(--cw-maroon-700);
-  --color-premium-subtle: var(--cw-maroon-100);
-  --color-premium-fg: var(--cw-maroon-700);
-
-  /* Fixed light/dark for copy and scrims over photography — never re-themed. */
-  --color-paper: var(--cw-ivory-0);
-  --color-ink: var(--cw-black);
-
-  /* Hero copy sits on photography — always light. */
-  --color-hero-fg: var(--cw-ivory-0);
-  --color-hero-muted: color-mix(in srgb, var(--cw-ivory-0) 72%, transparent);
-  --color-scrim: color-mix(in srgb, var(--cw-black) 55%, transparent);
-  --color-frame: var(--cw-champagne);
-
-  --color-chart-1: var(--cw-gold-600);
-  --color-chart-2: var(--cw-leaf-600);
-  --color-chart-3: var(--cw-jade-500);
-  --color-chart-4: var(--cw-lotus-500);
-  --color-chart-5: var(--cw-saffron-500);
-
-  --color-studio-ink: var(--cw-studio-ink);
-  --color-studio-ink-deep: var(--cw-studio-ink-deep);
-  --color-studio-ink-soft: var(--cw-studio-ink-soft);
-  --color-studio-paper: var(--cw-studio-paper);
-  --color-studio-line: var(--cw-studio-line);
-  --color-studio-accent: var(--cw-studio-clay);
-  --color-studio-text: var(--cw-studio-text);
-  --color-studio-danger: var(--cw-vermilion-300);
-
   /* ── Type ──────────────────────────────────────────────────────────── */
   --font-family-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-family-serif: var(--font-display), "Cormorant Garamond", ui-serif, Georgia, serif;
@@ -298,6 +226,87 @@
   --cw-notch-radius: 1.2rem;
   --cw-notch-ear: 0.9rem;
   --cw-notch-height: 3.5rem;
+}
+
+/*
+ * Pearl semantics live on `.pearl` too, so a `.pearl` subtree (theme previews)
+ * re-themes even inside .temple / .night.
+ */
+:root,
+.pearl {
+  color-scheme: light;
+
+  /* ── Semantic: pearl (default) ──────────────────────────────────────── */
+  --color-primary: var(--cw-gold-600);
+  --color-primary-hover: var(--cw-gold-700);
+  --color-primary-active: var(--cw-gold-800);
+  --color-primary-subtle: var(--cw-gold-100);
+  --color-primary-fg: var(--cw-white);
+  /* Text-only accent — AA (≥4.5:1) on page and card surfaces. */
+  --color-primary-text: var(--cw-gold-700);
+
+  --color-text-heading: var(--cw-ink-900);
+  --color-text-body: var(--cw-ink-700);
+  --color-text-muted: var(--cw-ink-500);
+  --color-text-inverse: var(--cw-ivory-0);
+
+  --color-bg-page: var(--cw-ivory-50);
+  --color-bg-card: var(--cw-ivory-0);
+  --color-bg-inset: color-mix(in srgb, var(--color-bg-page) 70%, var(--cw-linen));
+  --color-bg-muted: var(--cw-ivory-100);
+  --color-bg-accent: var(--cw-gold-100);
+  --color-bg-sidebar: color-mix(in srgb, var(--cw-ivory-100) 55%, var(--cw-ivory-0));
+  --color-border: var(--cw-sand);
+  --color-border-strong: var(--cw-sand-strong);
+  --color-focus-ring: var(--cw-jade-700);
+
+  --color-secondary: var(--cw-jade-100);
+  --color-secondary-fg: var(--cw-jade-700);
+
+  --color-success: var(--cw-leaf-600);
+  --color-success-subtle: var(--cw-leaf-100);
+  --color-success-fg: var(--cw-leaf-800);
+  --color-warning: var(--cw-saffron-500);
+  --color-warning-subtle: var(--cw-saffron-100);
+  --color-warning-fg: var(--cw-saffron-900);
+  --color-danger: var(--cw-vermilion-600);
+  --color-danger-hover: var(--cw-vermilion-700);
+  --color-danger-subtle: var(--cw-vermilion-100);
+  --color-danger-fg: var(--cw-vermilion-700);
+  --color-info: var(--cw-jade-700);
+  --color-info-subtle: var(--cw-jade-100);
+  --color-info-fg: var(--cw-jade-700);
+  --color-love: var(--cw-lotus-500);
+  --color-love-subtle: var(--cw-lotus-100);
+  --color-love-fg: var(--cw-lotus-700);
+  --color-premium: var(--cw-maroon-700);
+  --color-premium-subtle: var(--cw-maroon-100);
+  --color-premium-fg: var(--cw-maroon-700);
+
+  /* Fixed light/dark for copy and scrims over photography — never re-themed. */
+  --color-paper: var(--cw-ivory-0);
+  --color-ink: var(--cw-black);
+
+  /* Hero copy sits on photography — always light. */
+  --color-hero-fg: var(--cw-ivory-0);
+  --color-hero-muted: color-mix(in srgb, var(--cw-ivory-0) 72%, transparent);
+  --color-scrim: color-mix(in srgb, var(--cw-black) 55%, transparent);
+  --color-frame: var(--cw-champagne);
+
+  --color-chart-1: var(--cw-gold-600);
+  --color-chart-2: var(--cw-leaf-600);
+  --color-chart-3: var(--cw-jade-500);
+  --color-chart-4: var(--cw-lotus-500);
+  --color-chart-5: var(--cw-saffron-500);
+
+  --color-studio-ink: var(--cw-studio-ink);
+  --color-studio-ink-deep: var(--cw-studio-ink-deep);
+  --color-studio-ink-soft: var(--cw-studio-ink-soft);
+  --color-studio-paper: var(--cw-studio-paper);
+  --color-studio-line: var(--cw-studio-line);
+  --color-studio-accent: var(--cw-studio-clay);
+  --color-studio-text: var(--cw-studio-text);
+  --color-studio-danger: var(--cw-vermilion-300);
 }
 
 /* ── Temple: sandalwood + kumkum maroon ─────────────────────────────── */

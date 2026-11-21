@@ -3,9 +3,15 @@
  * No color literals. Everything points at semantic tokens in tokens.css.
  * `@theme inline` keeps utilities bound to the runtime variable, so
  * .temple / .night re-theme without a rebuild.
+ *
+ * Declared on every theme scope (not just :root) so a nested .pearl/.temple/.night
+ * subtree re-resolves these aliases — used by the Appearance theme previews.
  */
 
-:root {
+:root,
+.pearl,
+.temple,
+.night {
   --background: var(--color-bg-page);
   --foreground: var(--color-text-heading);
   --body-foreground: var(--color-text-body);

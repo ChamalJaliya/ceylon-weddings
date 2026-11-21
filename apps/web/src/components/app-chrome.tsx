@@ -5,12 +5,16 @@ import { api, useAuthStore } from "@ceylonweddings/web";
 import { usePathname } from "../i18n/navigation";
 import { PublicChrome, GuestChrome } from "./public-chrome";
 import { AdminShell, PlanningShell, ProShell } from "./dashboard-shell";
-import { RoleGate, ADMIN_ROLES, PLANNING_ROLES, PRO_ROLES } from "./role-gate";
+import { RoleGate, ADMIN_ROLES, PLANNING_ROLES, PRO_ROLES, SIGNED_IN_ROLES } from "./role-gate";
+import { SettingsShell } from "@/features/settings/settings-shell";
+import { useRememberReturnPath } from "@/features/settings/return-path";
 
 export function AppChrome({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const user = useAuthStore((state) => state.user);
   const setUser = useAuthStore((state) => state.setUser);
+  // Settings' "← Back" returns to the last page outside settings.
+  useRememberReturnPath(pathname);
 
   useEffect(() => {
     api
@@ -30,6 +34,14 @@ export function AppChrome({ children }: { children: ReactNode }) {
   }
   if (pathname.startsWith("/w/")) {
     return <GuestChrome>{children}</GuestChrome>;
+  }
+  // Settings is its own context: no dashboard rail, any signed-in role.
+  if (pathname === "/settings" || pathname.startsWith("/settings/")) {
+    return (
+      <RoleGate allow={SIGNED_IN_ROLES}>
+        <SettingsShell>{children}</SettingsShell>
+      </RoleGate>
+    );
   }
   if (pathname.startsWith("/planning")) {
     return (

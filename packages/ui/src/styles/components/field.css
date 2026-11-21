@@ -8,7 +8,7 @@
     appearance: none;
     border: var(--border-width) solid color-mix(in srgb, var(--color-border) 70%, transparent);
     border-radius: var(--input-radius);
-    background: color-mix(in srgb, var(--color-bg-muted) 50%, transparent);
+    background-color: color-mix(in srgb, var(--color-bg-muted) 50%, transparent);
     color: var(--color-text-heading);
     font-size: var(--text-body-size);
     box-shadow: var(--shadow-field-inset);
@@ -25,13 +25,13 @@
 
   .field:hover {
     border-color: var(--color-border);
-    background: color-mix(in srgb, var(--color-bg-muted) 80%, transparent);
+    background-color: color-mix(in srgb, var(--color-bg-muted) 80%, transparent);
   }
 
   .field:focus-visible,
   .field[data-state="open"] {
     border-color: color-mix(in srgb, var(--color-focus-ring) 70%, transparent);
-    background: var(--color-bg-page);
+    background-color: var(--color-bg-page);
     box-shadow: var(--shadow-focus);
     outline: none;
   }
@@ -47,7 +47,7 @@
   }
 
   .field:disabled:hover {
-    background: color-mix(in srgb, var(--color-bg-muted) 50%, transparent);
+    background-color: color-mix(in srgb, var(--color-bg-muted) 50%, transparent);
   }
 
   .field--default {
@@ -75,7 +75,7 @@
     height: 1.75rem;
     border: 0;
     border-radius: var(--radius-xs);
-    background: var(--color-secondary);
+    background-color: var(--color-secondary);
     padding-inline: 0.625rem;
     color: var(--color-secondary-fg);
     font-size: var(--text-caption-size);

@@ -10,7 +10,18 @@ import { compare, hash } from "bcrypt";
 import { OAuth2Client } from "google-auth-library";
 import { createHash, randomBytes } from "node:crypto";
 import type { Request, Response } from "express";
-import { COOKIES, type GoogleAuthBody, type LoginBody, type RegisterBody, type User } from "@ceylonweddings/contracts";
+import {
+  AUTH_TOTP_INVALID,
+  AUTH_TOTP_REQUIRED,
+  COOKIES,
+  type AccountSecurity,
+  type ChangePasswordBody,
+  type GoogleAuthBody,
+  type LoginBody,
+  type RegisterBody,
+  type UpdateProfileBody,
+  type User,
+} from "@ceylonweddings/contracts";
 import { PrismaService } from "@ceylonweddings/database";
 import { loadApiEnv } from "@ceylonweddings/env";
 import { authCookieOptions } from "../../common/cookies";
@@ -84,9 +95,30 @@ export class AuthService {
     if (user.status === "SUSPENDED") {
       throw new UnauthorizedException("Account suspended");
     }
+    this.assertSecondFactor(user, body.totp);
 
     await this.issueCookies(user.id, response);
     return { user: this.toUser(user) };
+  }
+
+  /**
+   * Once 2FA is on, every sign-in path (password and Google) needs the code.
+   * The form reads `reason` to show the code step instead of a generic error.
+   */
+  private assertSecondFactor(user: { totpEnabled: boolean; totpSecret: string | null }, code: string | undefined) {
+    if (!user.totpEnabled || !user.totpSecret) return;
+    if (!code) {
+      throw new UnauthorizedException({
+        message: "Enter the 6-digit code from your authenticator app.",
+        reason: AUTH_TOTP_REQUIRED,
+      });
+    }
+    if (!verifyTotpCode(user.totpSecret, code)) {
+      throw new UnauthorizedException({
+        message: "That code didn't match. Try the newest one.",
+        reason: AUTH_TOTP_INVALID,
+      });
+    }
   }
 
   async google(body: GoogleAuthBody, response: Response) {
@@ -148,6 +180,7 @@ export class AuthService {
     if (user.status === "SUSPENDED") {
       throw new UnauthorizedException("Account suspended");
     }
+    this.assertSecondFactor(user, body.totp);
 
     await this.issueCookies(user.id, response);
     return { user: this.toUser(user) };
@@ -233,15 +266,92 @@ export class AuthService {
     response.cookie(COOKIES.refresh, refresh, authCookieOptions(env, 1000 * 60 * 60 * 24 * 30));
   }
 
+  // ── Account settings ────────────────────────────────────────────────────
+
+  async updateProfile(user: User, body: UpdateProfileBody) {
+    const updated = await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        ...(body.name !== undefined ? { name: body.name } : {}),
+        ...(body.phone !== undefined ? { phone: body.phone || null } : {}),
+        ...(body.locale !== undefined ? { locale: body.locale } : {}),
+        ...(body.currency !== undefined ? { currency: body.currency } : {}),
+      },
+    });
+    return this.toUser(updated);
+  }
+
+  /** Changing the password signs out every other device. */
+  async changePassword(user: User, body: ChangePasswordBody, request: Request) {
+    const dbUser = await this.prisma.user.findUniqueOrThrow({ where: { id: user.id } });
+    const hasPassword = dbUser.passwordHash.startsWith("$2");
+    if (!hasPassword || !(await compare(body.currentPassword, dbUser.passwordHash))) {
+      throw new BadRequestException("Current password is incorrect");
+    }
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { passwordHash: await hash(body.newPassword, 12) },
+    });
+    const { count } = await this.revokeOtherSessions(user, request);
+    return { ok: true, signedOut: count };
+  }
+
+  async security(user: User, request: Request): Promise<AccountSecurity> {
+    const dbUser = await this.prisma.user.findUniqueOrThrow({ where: { id: user.id } });
+    const currentHash = this.currentRefreshHash(request);
+    const sessions = await this.prisma.session.findMany({
+      where: { userId: user.id, expiresAt: { gt: new Date() } },
+      orderBy: { createdAt: "desc" },
+    });
+    return {
+      twoFactorEnabled: dbUser.totpEnabled,
+      hasPassword: dbUser.passwordHash.startsWith("$2"),
+      sessions: sessions.map((row) => ({
+        id: row.id,
+        createdAt: row.createdAt.toISOString(),
+        expiresAt: row.expiresAt.toISOString(),
+        current: row.refreshTokenHash === currentHash,
+      })),
+    };
+  }
+
+  async revokeSession(user: User, sessionId: string, request: Request) {
+    const currentHash = this.currentRefreshHash(request);
+    const { count } = await this.prisma.session.deleteMany({
+      where: { id: sessionId, userId: user.id, ...(currentHash ? { NOT: { refreshTokenHash: currentHash } } : {}) },
+    });
+    if (count === 0) {
+      throw new BadRequestException("That session is already signed out, or it is this device.");
+    }
+    return { ok: true };
+  }
+
+  async revokeOtherSessions(user: User, request: Request) {
+    const currentHash = this.currentRefreshHash(request);
+    const { count } = await this.prisma.session.deleteMany({
+      where: { userId: user.id, ...(currentHash ? { NOT: { refreshTokenHash: currentHash } } : {}) },
+    });
+    return { ok: true, count };
+  }
+
+  private currentRefreshHash(request: Request) {
+    const refresh = request.cookies?.[COOKIES.refresh] as string | undefined;
+    return refresh ? createHash("sha256").update(refresh).digest("hex") : null;
+  }
+
   async generate2Fa(user: User) {
     const dbUser = await this.prisma.user.findUniqueOrThrow({ where: { id: user.id } });
+    // Regenerating would silently replace a working secret and lock the user out.
+    if (dbUser.totpEnabled) {
+      throw new BadRequestException("Two-factor authentication is already on. Turn it off first to reset it.");
+    }
     const secret = generateTotpSecret(20);
     await this.prisma.user.update({
       where: { id: user.id },
       data: { totpSecret: secret },
     });
     const otpauthUri = getTotpUri(dbUser.email, secret);
-    return { secret, otpauthUri, enabled: dbUser.totpEnabled };
+    return { secret, otpauthUri };
   }
 
   async enable2Fa(user: User, token: string) {
@@ -281,4 +391,3 @@ export class AuthService {
     response.clearCookie(COOKIES.refresh, { path: "/" });
   }
 }
-
