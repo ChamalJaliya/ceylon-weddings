@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import VendorComparePage from "./compare-client";
+import VendorComparePage from "@/features/vendors/compare/compare-client";
 import { CenteredLoader } from "@ceylonweddings/ui/components/spinner";
 
 export default function VendorCompareRoute() {

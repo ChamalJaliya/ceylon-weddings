@@ -5,7 +5,7 @@ import { vendorPassesPresentationGate } from "@ceylonweddings/contracts";
 import { CATEGORY_LABELS, localizedText } from "../../lib/labels";
 import { fetchPublicFlags, fetchPublicSiteConfig } from "../../lib/public-site";
 import type { PublicVendorTypeListItem } from "@ceylonweddings/contracts";
-import { HomeContent } from "./home-content";
+import { HomeContent } from "@/features/home/home-content";
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 

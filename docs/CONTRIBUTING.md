@@ -55,8 +55,9 @@ Run from the **repo root** using Turborepo:
 ```bash
 pnpm dev                # Dev server for all apps
 pnpm build              # Production build (all apps)
-pnpm lint               # ESLint across all packages
-pnpm type-check         # TypeScript check across all packages
+pnpm lint               # Design-system guard + ESLint
+pnpm typecheck          # TypeScript check across all packages
+pnpm test               # Node test runner over every *.test.ts (+ design-system checks)
 pnpm db:generate        # Regenerate Prisma client (after schema changes)
 pnpm db:migrate         # Apply new migration
 pnpm db:studio          # Open Prisma Studio (DB GUI)
@@ -221,12 +222,27 @@ async myFeatureList(): Promise<MyModel[]> {
 
 ### 6. Build the UI
 
-In `apps/web/src/app/[locale]/planning/my-feature/page.tsx`:
+Routes are thin; the page lives in a feature folder (Kloqra layout):
+
+```
+apps/web/src/
+  app/[locale]/planning/my-feature/page.tsx   # routing only
+  features/planning/my-feature/
+    my-feature-page.tsx                        # the page ("use client" if needed)
+    components/                                # pieces only this feature uses
+    use-my-feature.ts                          # feature hooks
+```
 
 ```tsx
+// app/[locale]/planning/my-feature/page.tsx
+export { default } from "@/features/planning/my-feature/my-feature-page";
+```
+
+```tsx
+// features/planning/my-feature/my-feature-page.tsx
 "use client";
 import { api } from "@ceylonweddings/web";
-import { useWedding } from "../../../components/use-wedding";
+import { useWedding } from "@/components/use-wedding";
 
 export default function MyFeaturePage() {
   const { data } = useWedding();
@@ -234,7 +250,11 @@ export default function MyFeaturePage() {
 }
 ```
 
-New shared components go in `packages/ui/src/domain/`.
+- Import with `@/…`, never `../../../`.
+- Route segment config (`export const dynamic = …`) must stay in the route file; `generateMetadata` is re-exported from the feature.
+- To move an existing fat route: `node scripts/move-route-to-feature.mjs <domain> --dry`, then without `--dry`.
+- Used by more than one page → `packages/ui/src/domain/` (UI) or `packages/web` (data/hooks).
+- Feedback: `useConfirm()`, `toast`, `CenteredLoader`, `EmptyState kind="no-results"` — see [UI_COMPONENTS.md](UI_COMPONENTS.md#feedback-patterns-ported-from-kloqra).
 
 ### 7. Add i18n strings
 

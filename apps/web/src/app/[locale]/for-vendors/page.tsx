@@ -1,4 +1,4 @@
-import { ForVendorsContent } from "./for-vendors-content";
+import { ForVendorsContent } from "@/features/for-vendors/for-vendors-content";
 
 export const metadata = {
   title: "List your business — Ceylon Weddings",

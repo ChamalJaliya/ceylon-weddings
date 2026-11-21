@@ -1,4 +1,4 @@
-import { HowItWorksContent } from "./how-it-works-content";
+import { HowItWorksContent } from "@/features/how-it-works/how-it-works-content";
 
 export const metadata = {
   title: "How It Works | Ceylon Weddings",
