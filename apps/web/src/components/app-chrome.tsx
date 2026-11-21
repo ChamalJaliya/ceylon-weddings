@@ -1,7 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
-import { useEffect } from "react";
+import { type ReactNode, useEffect } from "react";
 import { api, useAuthStore } from "@ceylonweddings/web";
 import { usePathname } from "../i18n/navigation";
 import { PublicChrome, GuestChrome } from "./public-chrome";
@@ -14,7 +13,10 @@ export function AppChrome({ children }: { children: ReactNode }) {
   const setUser = useAuthStore((state) => state.setUser);
 
   useEffect(() => {
-    api.me().then(setUser).catch(() => setUser(null));
+    api
+      .me()
+      .then(setUser)
+      .catch(() => setUser(null));
   }, [setUser]);
 
   if (pathname === "/login" || pathname === "/register") {
@@ -50,7 +52,10 @@ export function AppChrome({ children }: { children: ReactNode }) {
       </RoleGate>
     );
   }
-  if ((pathname.startsWith("/vendors") || pathname.startsWith("/ideas")) && (user?.role === "COUPLE" || user?.role === "FAMILY")) {
+  if (
+    (pathname.startsWith("/vendors") || pathname.startsWith("/ideas")) &&
+    (user?.role === "COUPLE" || user?.role === "FAMILY")
+  ) {
     return <PlanningShell>{children}</PlanningShell>;
   }
   return <PublicChrome>{children}</PublicChrome>;

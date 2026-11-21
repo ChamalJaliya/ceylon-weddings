@@ -1,26 +1,28 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { Prisma, PrismaService } from "@ceylonweddings/database";
-import type {
-  CatalogAttrValue,
-  CreateInquiryBody,
-  CreateReviewBody,
-  ShortlistVendorBody,
-  UpdateTeamVendorBody,
-  UpdateVendorBody,
-  UpsertVendorAddOnBody,
-  UpsertVendorAttributesBody,
-  UpsertVendorMediaProjectBody,
-  UpsertVendorPackageBody,
-  UpsertVendorVideoBody,
-  User,
-  Vendor,
-  VendorAttributeAnswerValue,
-  VendorCatalogQuery,
-  VendorCatalogResult,
-  VendorOnboardingResponse,
-  VendorSort,
+import {
+  type CatalogAttrValue,
+  type CreateInquiryBody,
+  type CreateReviewBody,
+  type ShortlistVendorBody,
+  type UpdateTeamVendorBody,
+  type UpdateVendorBody,
+  type UpsertVendorAddOnBody,
+  type UpsertVendorAttributesBody,
+  type UpsertVendorMediaProjectBody,
+  type UpsertVendorPackageBody,
+  type UpsertVendorVideoBody,
+  type User,
+  type Vendor,
+  type VendorAttributeAnswerValue,
+  type VendorCatalogQuery,
+  type VendorCatalogResult,
+  type VendorOnboardingResponse,
+  type VendorSort,
+  toPaginatedResult,
+  vendorCompleteness,
+  normalizeVendorWebsiteUrl,
 } from "@ceylonweddings/contracts";
-import { toPaginatedResult, vendorCompleteness, normalizeVendorWebsiteUrl } from "@ceylonweddings/contracts";
 import { uniqueVendorSlug } from "../../common/vendor-slug";
 import { WeddingAccessService } from "./wedding-access.service";
 import { isFeatureEnabled } from "../admin/feature-flag.util";
@@ -264,8 +266,7 @@ export class VendorsService {
             ...(nextCategoryId !== undefined
               ? {
                   categoryId: nextCategoryId,
-                  onboardingCompletedAt:
-                    vendor.categoryId !== nextCategoryId ? null : undefined,
+                  onboardingCompletedAt: vendor.categoryId !== nextCategoryId ? null : undefined,
                 }
               : {}),
           },
@@ -391,9 +392,7 @@ export class VendorsService {
 
     const message = packageName ? `${body.message}\n\nPackage: ${packageName}` : body.message;
     const digits = vendor.whatsapp?.replace(/\D/g, "") ?? "";
-    const whatsappUrl = digits
-      ? `https://wa.me/${digits}?text=${encodeURIComponent(message)}`
-      : null;
+    const whatsappUrl = digits ? `https://wa.me/${digits}?text=${encodeURIComponent(message)}` : null;
 
     const inquiry = await this.prisma.inquiry.create({
       data: {
@@ -507,11 +506,7 @@ export class VendorsService {
     return this.serializeVendor(vendor, options);
   }
 
-  private async replaceAddOns(
-    tx: Prisma.TransactionClient,
-    vendorId: string,
-    addOns: UpsertVendorAddOnBody[],
-  ) {
+  private async replaceAddOns(tx: Prisma.TransactionClient, vendorId: string, addOns: UpsertVendorAddOnBody[]) {
     const keepIds: string[] = [];
     const idMap = new Map<string, string>();
 
@@ -693,11 +688,7 @@ export class VendorsService {
     });
   }
 
-  private async replaceVideos(
-    tx: Prisma.TransactionClient,
-    vendorId: string,
-    videos: UpsertVendorVideoBody[],
-  ) {
+  private async replaceVideos(tx: Prisma.TransactionClient, vendorId: string, videos: UpsertVendorVideoBody[]) {
     const keepIds: string[] = [];
     for (const [index, video] of videos.entries()) {
       const base = {
@@ -874,10 +865,7 @@ export class VendorsService {
       moderationStatus: { not: "HIDDEN" },
       categoryId: { not: null },
       onboardingCompletedAt: { not: null },
-      OR: [
-        { subscription: null },
-        { subscription: { status: { in: ["TRIAL", "ACTIVE", "GRACE", "COMPED"] } } },
-      ],
+      OR: [{ subscription: null }, { subscription: { status: { in: ["TRIAL", "ACTIVE", "GRACE", "COMPED"] } } }],
       categoryType: {
         status: "ACTIVE",
         ...(query.category ? { slug: query.category } : {}),
@@ -1115,17 +1103,9 @@ export class VendorsService {
       case "rating":
         return [{ ratingAvg: "desc" }, { ratingCount: "desc" }, { name: "asc" }];
       case "price_asc":
-        return [
-          { showPricing: "desc" },
-          { startingPriceLkr: { sort: "asc", nulls: "last" } },
-          { name: "asc" },
-        ];
+        return [{ showPricing: "desc" }, { startingPriceLkr: { sort: "asc", nulls: "last" } }, { name: "asc" }];
       case "price_desc":
-        return [
-          { showPricing: "desc" },
-          { startingPriceLkr: { sort: "desc", nulls: "last" } },
-          { name: "asc" },
-        ];
+        return [{ showPricing: "desc" }, { startingPriceLkr: { sort: "desc", nulls: "last" } }, { name: "asc" }];
       case "name":
         return [{ name: "asc" }];
       default:
@@ -1160,9 +1140,7 @@ export class VendorsService {
       attributeValues = [],
       ...rest
     } = vendor;
-    const packageRows = options?.includeDrafts
-      ? packages
-      : packages.filter((pkg) => pkg.status === "PUBLISHED");
+    const packageRows = options?.includeDrafts ? packages : packages.filter((pkg) => pkg.status === "PUBLISHED");
     const showPricing = rest.showPricing !== false;
     const listed = rest.listed !== false;
     const redactPricing = !options?.includeDrafts && !showPricing;
@@ -1193,10 +1171,9 @@ export class VendorsService {
 
     const reviewRows = Array.isArray(reviews) ? reviews.filter((review) => !review.hidden) : [];
     const valuesRecord = valuesRecordFromRows(attributeValues);
-    const defsForCompleteness =
-      categoryType?.attributes?.length
-        ? categoryType.attributes
-        : attributeValues.map((v) => v.definition);
+    const defsForCompleteness = categoryType?.attributes?.length
+      ? categoryType.attributes
+      : attributeValues.map((v) => v.definition);
     const attributeCompleteness = computeAttributeCompleteness(defsForCompleteness, valuesRecord);
     const attributes = profileChipsFromValues(
       attributeValues.map((row) => row.definition),
@@ -1326,17 +1303,12 @@ export class VendorsService {
         optional: definitions.filter((def) => !def.required),
       },
       values,
-      complete:
-        Boolean(type) && attributeCompleteness.requiredDone === attributeCompleteness.requiredTotal,
+      complete: Boolean(type) && attributeCompleteness.requiredDone === attributeCompleteness.requiredTotal,
       attributeCompleteness,
     };
   }
 
-  private async pruneAttributeValuesForType(
-    tx: Prisma.TransactionClient,
-    vendorId: string,
-    typeId: string,
-  ) {
+  private async pruneAttributeValuesForType(tx: Prisma.TransactionClient, vendorId: string, typeId: string) {
     const keepDefIds = (
       await tx.vendorAttributeDefinition.findMany({
         where: { OR: [{ typeId: null }, { typeId }] },

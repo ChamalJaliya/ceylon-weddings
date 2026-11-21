@@ -1,7 +1,10 @@
 import { Body, Controller, Post, UseGuards } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
-import type { OnboardingAssetPresignResponse, User } from "@ceylonweddings/contracts";
-import { ONBOARDING_ASSET_CONTENT_TYPES } from "@ceylonweddings/contracts";
+import {
+  type OnboardingAssetPresignResponse,
+  type User,
+  ONBOARDING_ASSET_CONTENT_TYPES,
+} from "@ceylonweddings/contracts";
 import { S3PresignService } from "../../common/s3-presign.service";
 import { AdminAccessService } from "../admin/admin-access.service";
 import { JwtCookieGuard } from "../auth/jwt-cookie.guard";
@@ -18,10 +21,7 @@ export class AdminOnboardingAssetsController {
   ) {}
 
   @Post("presign")
-  presign(
-    @CurrentUser() user: User,
-    @Body() body: OnboardingAssetPresignDto,
-  ): Promise<OnboardingAssetPresignResponse> {
+  presign(@CurrentUser() user: User, @Body() body: OnboardingAssetPresignDto): Promise<OnboardingAssetPresignResponse> {
     this.access.assertAdmin(user);
     return this.presigner.presignObject({
       keyPrefix: "admin/onboarding",

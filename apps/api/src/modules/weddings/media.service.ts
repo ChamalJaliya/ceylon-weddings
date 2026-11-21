@@ -1,6 +1,10 @@
 import { Injectable } from "@nestjs/common";
-import type { MediaPresignBody, MediaPresignResponse, User } from "@ceylonweddings/contracts";
-import { MEDIA_IMAGE_CONTENT_TYPES } from "@ceylonweddings/contracts";
+import {
+  type MediaPresignBody,
+  type MediaPresignResponse,
+  type User,
+  MEDIA_IMAGE_CONTENT_TYPES,
+} from "@ceylonweddings/contracts";
 import { S3PresignService } from "../../common/s3-presign.service";
 import { VendorsService } from "./vendors.service";
 

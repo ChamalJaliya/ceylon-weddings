@@ -1,6 +1,5 @@
 import { z } from "zod";
-import type { EventKind } from "./enums";
-import { eventKindSchema } from "./enums";
+import { type EventKind, eventKindSchema } from "./enums";
 
 export const musicListKindSchema = z.enum(["MUST", "MAYBE", "DO_NOT"]);
 export type MusicListKind = z.infer<typeof musicListKindSchema>;
@@ -22,14 +21,7 @@ export const musicCueKindSchema = z.enum([
 ]);
 export type MusicCueKind = z.infer<typeof musicCueKindSchema>;
 
-export const musicLanguageSchema = z.enum([
-  "SINHALA",
-  "TAMIL",
-  "ENGLISH",
-  "HINDI",
-  "MIXED",
-  "OTHER",
-]);
+export const musicLanguageSchema = z.enum(["SINHALA", "TAMIL", "ENGLISH", "HINDI", "MIXED", "OTHER"]);
 export type MusicLanguage = z.infer<typeof musicLanguageSchema>;
 
 export const musicVibeSchema = z.enum([
@@ -428,10 +420,7 @@ export function musicCueTemplatesForEventKind(kind: EventKind): MusicCueTemplate
   }
 }
 
-export function musicPlanReady(input: {
-  mustCount: number;
-  cueCount: number;
-}): boolean {
+export function musicPlanReady(input: { mustCount: number; cueCount: number }): boolean {
   return input.mustCount >= 1 || input.cueCount >= 3;
 }
 
@@ -475,10 +464,7 @@ export function musicTracksByList(tracks: MusicTrack[]): Record<MusicListKind, M
 type CueTimeInput = Pick<MusicCue, "startsAt" | "offsetMinutes" | "sortOrder">;
 type EventTimeInput = { startsAt?: string | null; nekathAt?: string | null };
 
-export function resolveCueStartsAt(
-  cue: CueTimeInput,
-  event: EventTimeInput,
-): string | null {
+export function resolveCueStartsAt(cue: CueTimeInput, event: EventTimeInput): string | null {
   if (cue.startsAt) return cue.startsAt;
   if (cue.offsetMinutes == null) return null;
   const anchorIso = event.nekathAt ?? event.startsAt;

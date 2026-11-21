@@ -20,21 +20,17 @@ import {
   Video,
   Magnet,
 } from "lucide-react";
-import type {
-  Moodboard,
-  MoodboardAssetUpsert,
-  MoodboardTool,
+import {
+  type Moodboard,
+  type MoodboardAssetUpsert,
+  type MoodboardTool,
+  isAllowedMoodboardEmbedUrl,
+  newMoodboardItemId,
 } from "@ceylonweddings/contracts";
-import { isAllowedMoodboardEmbedUrl, newMoodboardItemId } from "@ceylonweddings/contracts";
 import { api } from "@ceylonweddings/web";
 import { cn } from "@ceylonweddings/ui/utils";
 import { MoodboardEngine } from "./engine";
-import {
-  fitMoodboardImage,
-  MoodboardImageModal,
-  pickMoodboardImage,
-  type MoodboardImagePick,
-} from "./image-modal";
+import { fitMoodboardImage, MoodboardImageModal, pickMoodboardImage, type MoodboardImagePick } from "./image-modal";
 import { MoodboardOptionsBar, MoodboardZoomControls } from "./options-bar";
 import { MoodboardTextInspector } from "./text-inspector";
 import { MoodboardToolRail } from "./tool-rail";
@@ -42,11 +38,7 @@ import { MoodboardTooltip } from "./tooltip";
 import { MoodboardVideoModal } from "./video-modal";
 import { useMoodboardAutosave, type AutosaveStatus } from "./use-autosave";
 import { useFullscreen } from "./use-fullscreen";
-import {
-  createImageItem,
-  createVideoItem,
-  useMoodboardStore,
-} from "./store";
+import { createImageItem, createVideoItem, useMoodboardStore } from "./store";
 
 const TOOL_GROUPS: Array<{
   label: string;
@@ -92,13 +84,7 @@ export type MoodboardStudioProps = {
   onStatus?: (status: AutosaveStatus, message?: string) => void;
 };
 
-export function MoodboardStudio({
-  board,
-  mode = "edit",
-  headerExtra,
-  onSaved,
-  onStatus,
-}: MoodboardStudioProps) {
+export function MoodboardStudio({ board, mode = "edit", headerExtra, onSaved, onStatus }: MoodboardStudioProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const { isFullscreen, toggle: toggleFullscreen } = useFullscreen(rootRef);
   const [pendingAssets, setPendingAssets] = useState<MoodboardAssetUpsert[]>([]);
@@ -339,11 +325,7 @@ export function MoodboardStudio({
               </MoodboardTooltip>
             </>
           ) : null}
-          <MoodboardTooltip
-            label={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
-            shortcut="F"
-            side="bottom"
-          >
+          <MoodboardTooltip label={isFullscreen ? "Exit fullscreen" : "Fullscreen"} shortcut="F" side="bottom">
             <button
               type="button"
               onClick={() => toggleFullscreen()}
@@ -357,10 +339,7 @@ export function MoodboardStudio({
       </div>
 
       {!readOnly ? (
-        <MoodboardOptionsBar
-          onUploadImage={() => setImageOpen(true)}
-          onAddVideo={() => setVideoOpen(true)}
-        />
+        <MoodboardOptionsBar onUploadImage={() => setImageOpen(true)} onAddVideo={() => setVideoOpen(true)} />
       ) : (
         <div className="flex shrink-0 items-center border-b border-paper/10 bg-studio-ink-deep px-3 py-1.5">
           <MoodboardZoomControls />
@@ -423,24 +402,13 @@ export function MoodboardStudio({
         {!readOnly && selected && (selected.type === "text" || selected.type === "sticky") ? (
           <aside className="absolute top-3 right-3 z-40 max-h-[70vh] w-64 space-y-3 overflow-y-auto rounded-2xl border border-paper/10 bg-studio-ink-deep/95 p-3 text-sm text-studio-paper shadow-xl backdrop-blur-sm">
             <p className="text-xs uppercase tracking-spaced text-paper/45">Typography</p>
-            <MoodboardTextInspector
-              item={selected}
-              onChange={(patch) => updateItem(selected.id, patch as never)}
-            />
+            <MoodboardTextInspector item={selected} onChange={(patch) => updateItem(selected.id, patch as never)} />
           </aside>
         ) : null}
       </div>
 
-      <MoodboardImageModal
-        open={imageOpen}
-        onOpenChange={setImageOpen}
-        onInsert={(pick) => void uploadImage(pick)}
-      />
-      <MoodboardVideoModal
-        open={videoOpen}
-        onOpenChange={setVideoOpen}
-        onInsert={insertVideo}
-      />
+      <MoodboardImageModal open={imageOpen} onOpenChange={setImageOpen} onInsert={(pick) => void uploadImage(pick)} />
+      <MoodboardVideoModal open={videoOpen} onOpenChange={setVideoOpen} onInsert={insertVideo} />
     </div>
   );
 }

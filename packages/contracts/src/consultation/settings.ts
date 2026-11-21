@@ -1,6 +1,5 @@
 import { z } from "zod";
-import { CONSULTATION_WEEKDAY_KEYS, consultationModeSchema } from "./enums";
-import type { ConsultationWeekdayKey } from "./enums";
+import { CONSULTATION_WEEKDAY_KEYS, consultationModeSchema, type ConsultationWeekdayKey } from "./enums";
 
 const TIME_OF_DAY = /^([01]\d|2[0-3]):([0-5]\d)$/;
 const DATE_KEY = /^\d{4}-\d{2}-\d{2}$/;
@@ -78,14 +77,7 @@ export function timezoneOffsetMinutes(timezone: string, at: Date): number {
     second: "2-digit",
   }).formatToParts(at);
   const read = (type: string) => Number(parts.find((part) => part.type === type)?.value ?? "0");
-  const asUtc = Date.UTC(
-    read("year"),
-    read("month") - 1,
-    read("day"),
-    read("hour"),
-    read("minute"),
-    read("second"),
-  );
+  const asUtc = Date.UTC(read("year"), read("month") - 1, read("day"), read("hour"), read("minute"), read("second"));
   return Math.round((asUtc - at.getTime()) / 60_000);
 }
 
@@ -117,9 +109,7 @@ export function zonedTimeToUtc(dateKey: string, minutesOfDay: number, timezone: 
 
 export function consultationWeekdayKey(dateKey: string, timezone: string): ConsultationWeekdayKey {
   const noon = zonedTimeToUtc(dateKey, 12 * 60, timezone);
-  const weekday = new Intl.DateTimeFormat("en-US", { timeZone: timezone, weekday: "short" })
-    .format(noon)
-    .toLowerCase();
+  const weekday = new Intl.DateTimeFormat("en-US", { timeZone: timezone, weekday: "short" }).format(noon).toLowerCase();
   const match = CONSULTATION_WEEKDAY_KEYS.find((key) => key === weekday);
   return match ?? "sun";
 }
