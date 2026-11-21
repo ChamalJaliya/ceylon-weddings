@@ -3,6 +3,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { api, useAuthStore } from "@ceylonweddings/web";
 import { usePathname, useRouter } from "../i18n/navigation";
+import { CenteredLoader } from "@ceylonweddings/ui/components/spinner";
 
 export function CoupleOnboardingGate({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -48,7 +49,7 @@ export function CoupleOnboardingGate({ children }: { children: ReactNode }) {
   }, [onOnboard, router, user]);
 
   if (!ready) {
-    return <p className="px-8 py-10 text-sm text-muted-foreground">Loading…</p>;
+    return <CenteredLoader label="Loading…" className="px-8 py-10" />;
   }
 
   return children;

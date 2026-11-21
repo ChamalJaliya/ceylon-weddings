@@ -57,6 +57,7 @@ import { PlaceFields } from "../../../../components/place-fields";
 import { CATEGORY_LABELS, localizedText } from "../../../../lib/labels";
 import { offerTemplatesForCategory, TEMPLATE_LABELS } from "../../../../lib/offer-templates";
 import { Smartphone, Store } from "lucide-react";
+import { CenteredLoader } from "@ceylonweddings/ui/components/spinner";
 
 const fieldClass = "h-11 rounded-xl border-border/80 bg-background/70";
 
@@ -229,7 +230,7 @@ export default function StorefrontEditPage() {
       </p>
     );
   }
-  if (!vendor) return <p className="text-sm text-muted-foreground">Loading…</p>;
+  if (!vendor) return <CenteredLoader label="Loading…" />;
 
   async function onSave(event?: FormEvent) {
     event?.preventDefault();

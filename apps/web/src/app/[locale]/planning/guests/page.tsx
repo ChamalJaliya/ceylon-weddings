@@ -29,6 +29,8 @@ import { SignInPrompt, useWedding } from "../../../../components/use-wedding";
 import { initials } from "../../../../lib/labels";
 import { Link } from "../../../../i18n/navigation";
 import { Users } from "lucide-react";
+import { useConfirm } from "@ceylonweddings/ui/components/confirm-dialog";
+import { getListEmptyMode } from "@ceylonweddings/ui/lib/list-state";
 
 const CHANNELS: InviteChannel[] = ["WHATSAPP", "PHONE", "PRINTED", "OVERSEAS"];
 const STATUSES: RsvpStatus[] = ["CONSIDERING", "INVITED", "CONFIRMED", "DECLINED", "MAYBE", "WALK_IN"];
@@ -83,6 +85,7 @@ function splitCsvLine(line: string): string[] {
 }
 
 export default function GuestsPage() {
+  const confirm = useConfirm();
   const t = useTranslations();
   const locale = useLocale();
   const { data, error, reload } = useWedding();
@@ -215,7 +218,7 @@ export default function GuestsPage() {
   }
 
   async function removeGuest(id: string) {
-    if (!window.confirm("Remove this household?")) return;
+    if (!(await confirm({ title: "Remove this household?", destructive: true, confirmLabel: "Remove" }))) return;
     await api.wedding.deleteGuest(id);
     setGuests((rows) => rows.filter((row) => row.id !== id));
     await reload();
@@ -603,7 +606,19 @@ export default function GuestsPage() {
 
       <div className="rounded-3xl border border-border/70 bg-card/30 px-4">
         {filtered.length === 0 ? (
-          <EmptyState icon={Users} title={t("nav.guests")} description={t("planning.guestsHelp")} />
+          getListEmptyMode({ sourceCount: guests.length, filteredCount: filtered.length }) === "no-results" ? (
+            <EmptyState
+              kind="no-results"
+              description="No households match this search or filter."
+              onClearFilters={() => {
+                setQuery("");
+                setFilterStatus("ALL");
+                setFilterSide("ALL");
+              }}
+            />
+          ) : (
+            <EmptyState icon={Users} title={t("nav.guests")} description={t("planning.guestsHelp")} />
+          )
         ) : (
           filtered.map((guest) => {
             const message = inviteMessage(guest.headName);

@@ -285,15 +285,11 @@ export default function AdminCategoriesPage() {
         </div>
 
         {filtered.length === 0 ? (
-          <EmptyState
-            icon={Layers}
-            title={types.length === 0 ? "No vendor types" : "No matches"}
-            description={
-              types.length === 0
-                ? "Add a type, then configure its questions."
-                : "Try a different search."
-            }
-          />
+          types.length === 0 ? (
+            <EmptyState icon={Layers} title="No vendor types" description="Add a type, then configure its questions." />
+          ) : (
+            <EmptyState kind="no-results" onClearFilters={() => setQ("")} clearFiltersLabel="Clear search" />
+          )
         ) : (
           <AdminDataTable headers={["Type", "Questions", "Required", "Status", ""]}>
             {filtered.map((type) => {

@@ -6,6 +6,7 @@ import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { cn } from "../lib/utils";
 import { Icon, AnimateIcon } from "../components/icon";
 import { IconButton } from "../components/icon-button";
+import { BrandLockup, BrandMark } from "./brand-mark";
 import {
   Sheet,
   SheetContent,
@@ -174,30 +175,26 @@ export function AppShellNavItem({
 }
 
 export function AppShellBrand({
-  monogram = "CW",
   name,
-  kicker,
   collapsed,
 }: {
-  monogram?: string;
+  /** Accessible brand name (e.g. t("app.name")). */
   name: string;
-  kicker?: string;
   collapsed?: boolean;
 }) {
-  return (
-    <div className={cn("flex items-center gap-3", collapsed && "justify-center")}>
-      <div className="flex size-10 shrink-0 items-center justify-center rounded-full border border-primary/35 font-serif text-sm tracking-wide text-primary">
-        {monogram}
+  if (collapsed) {
+    return (
+      <div className="flex justify-center">
+        <BrandMark title={name} cutColor="var(--sidebar)" className="h-11 w-auto text-primary" />
       </div>
-      {!collapsed ? (
-        <div className="min-w-0 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-200">
-          {kicker ? (
-            <p className="text-label font-medium tracking-eyebrow text-muted-foreground uppercase">{kicker}</p>
-          ) : null}
-          <p className="truncate font-serif text-base leading-tight">{name}</p>
-        </div>
-      ) : null}
-    </div>
+    );
+  }
+  return (
+    <BrandLockup
+      name={name}
+      cutColor="var(--sidebar)"
+      className="motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-200"
+    />
   );
 }
 

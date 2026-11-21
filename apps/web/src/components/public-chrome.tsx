@@ -11,6 +11,7 @@ import {
 } from "@ceylonweddings/contracts";
 import { AppFooter } from "@ceylonweddings/ui/domain/app-footer";
 import { cn } from "@ceylonweddings/ui/utils";
+import { BrandMark } from "@ceylonweddings/ui/domain/brand-mark";
 import { Link, usePathname } from "../i18n/navigation";
 import { AuthNav } from "./auth-nav";
 import { PreferenceControls } from "./preference-controls";
@@ -59,9 +60,7 @@ export function PublicHeader() {
           // eslint-disable-next-line @next/next/no-img-element
           <img src={branding.logoUrl} alt="" className="size-8 rounded-full object-cover" />
         ) : (
-          <span className="flex size-8 items-center justify-center rounded-full border border-primary/35 font-serif text-xs text-primary">
-            CW
-          </span>
+          <BrandMark className="h-8 w-auto text-primary" />
         )}
         <span className="hidden font-serif text-sm sm:inline">{t("app.name")}</span>
       </Link>

@@ -23,6 +23,8 @@ import { Textarea } from "@ceylonweddings/ui/components/textarea";
 import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
 import { SectionCard } from "@ceylonweddings/ui/domain/section-card";
 import { Link, useRouter } from "../../../../../i18n/navigation";
+import { useConfirm } from "@ceylonweddings/ui/components/confirm-dialog";
+import { CenteredLoader } from "@ceylonweddings/ui/components/spinner";
 
 const TIMEZONE = "Asia/Colombo";
 
@@ -72,6 +74,7 @@ function emptyDraft() {
 }
 
 export default function AdminConsultationDetailPage() {
+  const confirm = useConfirm();
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const isNew = params.id === "new";
@@ -160,7 +163,7 @@ export default function AdminConsultationDetailPage() {
   }
 
   async function cancel() {
-    if (!row || !confirm("Cancel this consultation and free the slot?")) return;
+    if (!row || !(await confirm({ title: "Cancel this consultation and free the slot?", destructive: true, confirmLabel: "Cancel consultation", cancelLabel: "Keep it" }))) return;
     setSaving(true);
     try {
       setRow(await api.admin.cancelConsultation(row.id, { reason: "Cancelled by the team" }));
@@ -181,7 +184,7 @@ export default function AdminConsultationDetailPage() {
     );
   }
 
-  if (!isNew && !row) return <p className="text-sm text-muted-foreground">Loading…</p>;
+  if (!isNew && !row) return <CenteredLoader label="Loading…" />;
 
   return (
     <div className="grid gap-8">

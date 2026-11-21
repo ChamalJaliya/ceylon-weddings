@@ -9,6 +9,7 @@ import { Card } from "@ceylonweddings/ui/components/card";
 import { FormStatus } from "@ceylonweddings/ui/components/form-status";
 import { useTranslations } from "next-intl";
 import { Link } from "../../../../i18n/navigation";
+import { useConfirm } from "@ceylonweddings/ui/components/confirm-dialog";
 
 const MODE_KEYS: Record<ConsultationMode, string> = {
   VIDEO: "modeVideo",
@@ -36,6 +37,7 @@ const STATUS_KEYS: Record<PublicConsultation["status"], string> = {
 };
 
 export function ManageConsultation({ token, locale }: { token: string; locale: string }) {
+  const confirm = useConfirm();
   const t = useTranslations();
   const [booking, setBooking] = useState<PublicConsultation | null>(null);
   const [loading, setLoading] = useState(true);
@@ -52,7 +54,7 @@ export function ManageConsultation({ token, locale }: { token: string; locale: s
   }, [token, t]);
 
   async function handleCancel() {
-    if (!window.confirm(t("consultation.cancelConfirm"))) return;
+    if (!(await confirm({ title: t("consultation.cancelConfirm"), destructive: true, confirmLabel: "Cancel consultation", cancelLabel: "Keep it" }))) return;
     setCancelling(true);
     setError("");
     try {

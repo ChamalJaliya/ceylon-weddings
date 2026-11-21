@@ -25,6 +25,7 @@ import { SectionCard } from "@ceylonweddings/ui/domain/section-card";
 import { Reveal } from "@ceylonweddings/ui/domain/motion";
 import { SignInPrompt, useWedding } from "../../../../components/use-wedding";
 import { Link } from "../../../../i18n/navigation";
+import { toast } from "@ceylonweddings/ui/components/toaster";
 
 export default function WeddingWebsiteManagerPage() {
   const t = useTranslations();
@@ -102,7 +103,7 @@ export default function WeddingWebsiteManagerPage() {
       setTimeout(() => setSuccessToast(false), 3000);
     } catch (err) {
       console.error("Failed to update wedding website settings", err);
-      alert("Error saving settings. Please check your slug format.");
+      toast.error("Error saving settings. Please check your slug format.");
     } finally {
       setSaving(false);
     }

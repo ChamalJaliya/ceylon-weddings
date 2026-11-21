@@ -20,6 +20,7 @@ import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
 import { SectionCard } from "@ceylonweddings/ui/domain/section-card";
 import { StatCard } from "@ceylonweddings/ui/domain/stat-card";
 import { Link } from "../../../i18n/navigation";
+import { CenteredLoader } from "@ceylonweddings/ui/components/spinner";
 
 export default function AdminHomePage() {
   const [stats, setStats] = useState<AdminStats | null>(null);
@@ -46,7 +47,7 @@ export default function AdminHomePage() {
   }
 
   if (!stats) {
-    return <p className="text-sm text-muted-foreground">Loading ops…</p>;
+    return <CenteredLoader label="Loading ops…" />;
   }
 
   return (

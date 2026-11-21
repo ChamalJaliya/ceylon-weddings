@@ -14,6 +14,7 @@ import { DashboardStats } from "@ceylonweddings/ui/domain/dashboard-layout";
 import { MediaFrame } from "@ceylonweddings/ui/domain/media-frame";
 import { SubscriptionStatusBanner } from "@ceylonweddings/ui/domain/subscription-status-banner";
 import { Link } from "../../../i18n/navigation";
+import { CenteredLoader } from "@ceylonweddings/ui/components/spinner";
 
 export default function ProHomePage() {
   const [vendor, setVendor] = useState<Vendor | null>(null);
@@ -38,7 +39,7 @@ export default function ProHomePage() {
       </FormStatus>
     );
   }
-  if (!vendor) return <p className="text-sm text-muted-foreground">Loading…</p>;
+  if (!vendor) return <CenteredLoader label="Loading…" />;
 
   const newLeads = leads.filter((lead) => lead.status === "NEW").length;
   const completeness = vendor.completeness;

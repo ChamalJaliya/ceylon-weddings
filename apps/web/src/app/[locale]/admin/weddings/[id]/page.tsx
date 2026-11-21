@@ -9,6 +9,7 @@ import { FormStatus } from "@ceylonweddings/ui/components/form-status";
 import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
 import { SectionCard } from "@ceylonweddings/ui/domain/section-card";
 import { Link } from "../../../../../i18n/navigation";
+import { CenteredLoader } from "@ceylonweddings/ui/components/spinner";
 
 export default function AdminWeddingDetailPage() {
   const params = useParams<{ id: string }>();
@@ -30,7 +31,7 @@ export default function AdminWeddingDetailPage() {
     );
   }
 
-  if (!wedding) return <p className="text-sm text-muted-foreground">Loading…</p>;
+  if (!wedding) return <CenteredLoader label="Loading…" />;
 
   return (
     <div className="grid gap-8">

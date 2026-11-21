@@ -10,6 +10,7 @@
  *   - hex / raw colour functions or bold weights in any stylesheet except tokens.css
  *   - hex inside .temple / .night (themes reassign semantics only)
  *   - density media queries that drift from lib/responsive-tiers.ts
+ *   - native window.alert / confirm / prompt (use useConfirm + toast)
  *
  * Run: node scripts/check-design-system.mjs   (also: node --test scripts/check-design-system.mjs)
  */
@@ -62,6 +63,11 @@ const SOURCE_RULES = [
     name: "density-breakpoint",
     re: /(?<![\w-])(?:max|min)-\[\d+px\]:/g,
     hint: "use compact: / dense: variants or tokens (see lib/responsive-tiers.ts)",
+  },
+  {
+    name: "native-dialog",
+    re: /\bwindow\.(?:alert|confirm|prompt)\(|(?<![.\w])(?:alert|prompt)\(|(?<![.\w])confirm\(\s*["'`]/g,
+    hint: "use useConfirm() from @ceylonweddings/ui/components/confirm-dialog, or toast from …/toaster",
   },
   {
     name: "hex-literal",
@@ -187,9 +193,9 @@ if (underNodeTest) {
     assert.equal(problems.length, 0, problems.map((p) => `${relative(root, p.file)}:${p.line} ${p.rule} ${p.match}`).join("\n"));
   });
   test("guard catches what it should", () => {
-    const sample = `<div className="bg-amber-500/15 text-white font-bold text-[11px] tracking-[0.2em] bg-[#fff] max-[1400px]:hidden" />\nconst c = "#abc";`;
+    const sample = `<div className="bg-amber-500/15 text-white font-bold text-[11px] tracking-[0.2em] bg-[#fff] max-[1400px]:hidden" />\nconst c = "#abc";\nif (!window.confirm("x")) alert("y");`;
     const rules = new Set(scanSource(sample).map((h) => h.rule));
-    for (const r of ["palette-class", "white-black-class", "heavy-weight", "arbitrary-text-size", "arbitrary-tracking", "arbitrary-color", "density-breakpoint", "hex-literal"]) {
+    for (const r of ["palette-class", "white-black-class", "heavy-weight", "arbitrary-text-size", "arbitrary-tracking", "arbitrary-color", "density-breakpoint", "hex-literal", "native-dialog"]) {
       assert.ok(rules.has(r), `missing ${r}`);
     }
     assert.equal(scanSource(`// design-system: user-data-colors\nconst c = "#abc";`).length, 0);

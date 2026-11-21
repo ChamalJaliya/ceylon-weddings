@@ -12,6 +12,7 @@ import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
 import { SectionCard } from "@ceylonweddings/ui/domain/section-card";
 import { AuditTimeline } from "@ceylonweddings/ui/domain/audit-timeline";
 import { Link } from "../../../../../i18n/navigation";
+import { CenteredLoader } from "@ceylonweddings/ui/components/spinner";
 
 export default function AdminUserDetailPage() {
   const params = useParams<{ id: string }>();
@@ -50,7 +51,7 @@ export default function AdminUserDetailPage() {
     );
   }
 
-  if (!user) return <p className="text-sm text-muted-foreground">Loading…</p>;
+  if (!user) return <CenteredLoader label="Loading…" />;
 
   return (
     <div className="grid gap-8">

@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Eye, EyeOff } from "lucide-react";
 import { Input } from "@ceylonweddings/ui/components/input";
 import { cn } from "@ceylonweddings/ui/utils";
+import { BrandMark } from "@ceylonweddings/ui/domain/brand-mark";
 import { Link } from "../i18n/navigation";
 
 const SLIDES = [
@@ -155,9 +156,7 @@ export function AuthBifold({
         {/* Sticky logo */}
         <div className="sticky top-0 z-10 flex justify-center bg-background/80 pb-3 pt-6 backdrop-blur-sm">
           <Link href="/" className="flex items-center gap-2">
-            <span className="flex size-10 items-center justify-center rounded-full border border-primary/35 font-serif text-sm text-primary">
-              CW
-            </span>
+            <BrandMark className="h-10 w-auto text-primary" />
             <span className="font-serif text-lg">{t("app.name")}</span>
           </Link>
         </div>

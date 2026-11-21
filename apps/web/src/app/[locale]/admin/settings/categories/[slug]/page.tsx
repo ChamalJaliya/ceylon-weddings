@@ -35,6 +35,8 @@ import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
 import { SectionCard } from "@ceylonweddings/ui/domain/section-card";
 import { Link, useRouter } from "../../../../../../i18n/navigation";
 import { StageEditor } from "./_components/stage-editor";
+import { useConfirm } from "@ceylonweddings/ui/components/confirm-dialog";
+import { CenteredLoader } from "@ceylonweddings/ui/components/spinner";
 
 const TYPE_STATUSES: VendorTypeStatus[] = ["DRAFT", "ACTIVE", "HIDDEN", "ARCHIVED"];
 const GALLERY_LAYOUTS: GalleryLayout[] = ["default", "venue", "portrait", "detail"];
@@ -122,6 +124,7 @@ function SwitchRow({
 }
 
 export default function AdminCategoryDetailPage() {
+  const confirm = useConfirm();
   const params = useParams<{ slug: string }>();
   const slug = params.slug;
   const router = useRouter();
@@ -207,7 +210,7 @@ export default function AdminCategoryDetailPage() {
   }
 
   if (!type) {
-    return <p className="text-sm text-muted-foreground">Loading…</p>;
+    return <CenteredLoader label="Loading…" />;
   }
 
   async function saveMeta() {
@@ -432,7 +435,7 @@ export default function AdminCategoryDetailPage() {
             className="w-fit"
             disabled={busy || type.status === "ARCHIVED"}
             onClick={async () => {
-              if (!confirm("Archive this type?")) return;
+              if (!(await confirm({ title: "Archive this type?", destructive: true, confirmLabel: "Archive" }))) return;
               setBusy(true);
               try {
                 await api.admin.deleteVendorType(type.id);
@@ -571,7 +574,7 @@ export default function AdminCategoryDetailPage() {
                       variant="outline"
                       disabled={busy || def.status === "ARCHIVED"}
                       onClick={async () => {
-                        if (!confirm("Archive this question?")) return;
+                        if (!(await confirm({ title: "Archive this question?", destructive: true, confirmLabel: "Archive" }))) return;
                         setBusy(true);
                         try {
                           await api.admin.deleteAttributeDefinition(type.id, def.id);
@@ -625,6 +628,7 @@ function AttributeEditor({
   setBusy: (v: boolean) => void;
   onSaved: (message: string) => Promise<void>;
 }) {
+  const confirm = useConfirm();
   const [draft, setDraft] = useState({
     question: localizedOrEmpty(definition.question),
     instruction: localizedOrEmpty(definition.instruction),
@@ -693,9 +697,12 @@ function AttributeEditor({
 
     if (
       next.valueType !== definition.valueType &&
-      !confirm(
-        `Change answer type from ${definition.valueType} to ${next.valueType}?\n\nExisting vendor answers for this question will be cleared.`,
-      )
+      !(await confirm({
+        title: `Change answer type from ${definition.valueType} to ${next.valueType}?`,
+        description: "Existing vendor answers for this question will be cleared.",
+        destructive: true,
+        confirmLabel: "Change type",
+      }))
     ) {
       setDraft((d) => ({ ...d, valueType: definition.valueType }));
       return;
@@ -951,7 +958,7 @@ function AttributeEditor({
                       variant="outline"
                       disabled={busy || !opt.active}
                       onClick={async () => {
-                        if (!confirm("Archive this option?")) return;
+                        if (!(await confirm({ title: "Archive this option?", destructive: true, confirmLabel: "Archive" }))) return;
                         setBusy(true);
                         try {
                           await api.admin.deleteAttributeOption(typeId, definition.id, opt.id);

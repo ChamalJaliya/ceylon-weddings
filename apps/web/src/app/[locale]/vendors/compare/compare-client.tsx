@@ -13,6 +13,7 @@ import {
 } from "@ceylonweddings/ui/domain/vendor-compare-board";
 import { Link, useRouter } from "../../../../i18n/navigation";
 import { CATEGORY_LABELS, formatAttributeDisplay, localizedText } from "../../../../lib/labels";
+import { CenteredLoader } from "@ceylonweddings/ui/components/spinner";
 
 function toColumn(
   vendor: Vendor,
@@ -182,7 +183,7 @@ export default function VendorComparePage() {
         }
       />
 
-      {loading ? <p className="text-sm text-muted-foreground">Loading comparison…</p> : null}
+      {loading ? <CenteredLoader label="Loading comparison…" /> : null}
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
       {!loading && columns.length < 2 ? (

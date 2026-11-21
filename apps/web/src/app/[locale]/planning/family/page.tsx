@@ -23,6 +23,7 @@ import { FieldBlock, FormGrid, FormPanel } from "@ceylonweddings/ui/domain/creat
 import { EmptyState } from "@ceylonweddings/ui/domain/empty-state";
 import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
 import { SignInPrompt, useWedding } from "../../../../components/use-wedding";
+import { useConfirm } from "@ceylonweddings/ui/components/confirm-dialog";
 
 const SIDE_LABELS: Record<GuestSide, string> = {
   BRIDE: "Bride’s side",
@@ -35,6 +36,7 @@ const RELATIONS = familyRelationSchema.options;
 type Tab = "tree" | "access";
 
 export default function FamilyPage() {
+  const confirm = useConfirm();
   const t = useTranslations();
   const { data, error, reload } = useWedding();
   const [tab, setTab] = useState<Tab>("tree");
@@ -202,7 +204,7 @@ export default function FamilyPage() {
                                 size="sm"
                                 variant="ghost"
                                 onClick={async () => {
-                                  if (!window.confirm(`Remove ${person.name}?`)) return;
+                                  if (!(await confirm({ title: `Remove ${person.name}?`, destructive: true, confirmLabel: "Remove" }))) return;
                                   await api.wedding.deleteFamilyPerson(person.id);
                                   await refreshPeople();
                                 }}

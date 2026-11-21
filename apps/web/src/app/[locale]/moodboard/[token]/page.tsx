@@ -7,6 +7,7 @@ import { api } from "@ceylonweddings/web";
 import type { Moodboard, MoodboardBrief } from "@ceylonweddings/contracts";
 import { EmptyState } from "@ceylonweddings/ui/domain/empty-state";
 import { MoodboardStudio } from "../../../../components/moodboard/studio";
+import { CenteredLoader } from "@ceylonweddings/ui/components/spinner";
 
 export default function PublicMoodboardPage() {
   const params = useParams<{ token: string }>();
@@ -32,7 +33,7 @@ export default function PublicMoodboardPage() {
   }, [token]);
 
   if (loading) {
-    return <div className="mx-auto max-w-5xl px-4 py-16 text-sm text-muted-foreground">Loading moodboard…</div>;
+    return <CenteredLoader label="Loading moodboard…" className="mx-auto max-w-5xl px-4 py-16" />;
   }
 
   if (error || !brief) {

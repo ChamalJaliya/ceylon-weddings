@@ -18,10 +18,13 @@ import {
 import { Link, useRouter } from "../../../../i18n/navigation";
 import { SignInPrompt, useWedding } from "../../../../components/use-wedding";
 import { CATEGORY_LABELS } from "../../../../lib/labels";
+import { useConfirm } from "@ceylonweddings/ui/components/confirm-dialog";
+import { Spinner } from "@ceylonweddings/ui/components/spinner";
 
 const STATUSES: VendorLinkStatus[] = ["SHORTLISTED", "INQUIRED", "BOOKED"];
 
 export default function TeamPage() {
+  const confirm = useConfirm();
   const t = useTranslations();
   const router = useRouter();
   const currency = usePreferenceStore((state) => state.currency);
@@ -60,7 +63,7 @@ export default function TeamPage() {
   }
 
   async function removeVendor(vendorId: string) {
-    if (!window.confirm("Remove from team?")) return;
+    if (!(await confirm({ title: "Remove from team?", destructive: true, confirmLabel: "Remove" }))) return;
     await api.wedding.unshortlist(vendorId);
     await reload();
   }
@@ -161,7 +164,7 @@ export default function TeamPage() {
               </Link>
             </Button>
           ) : null}
-          {loadingCompare ? <span className="text-xs text-muted-foreground">Loading…</span> : null}
+          {loadingCompare ? <Spinner label="Loading" /> : null}
           {compareError ? <span className="text-xs text-destructive">{compareError}</span> : null}
         </div>
       ) : (

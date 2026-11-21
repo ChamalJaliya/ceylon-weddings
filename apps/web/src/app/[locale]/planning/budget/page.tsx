@@ -16,6 +16,7 @@ import { SectionCard } from "@ceylonweddings/ui/domain/section-card";
 import { BudgetMeter } from "@ceylonweddings/ui/domain/budget-meter";
 import { PayerPots } from "@ceylonweddings/ui/domain/wedding-presentation";
 import { SignInPrompt, useWedding } from "../../../../components/use-wedding";
+import { useConfirm } from "@ceylonweddings/ui/components/confirm-dialog";
 
 const PAYERS: Payer[] = ["COUPLE", "BRIDE_FAMILY", "GROOM_FAMILY"];
 const BAR_COLORS = [
@@ -30,6 +31,7 @@ const BAR_COLORS = [
 ];
 
 export default function BudgetPage() {
+  const confirm = useConfirm();
   const t = useTranslations();
   const currency = usePreferenceStore((state) => state.currency);
   const { data, error, reload } = useWedding();
@@ -93,7 +95,7 @@ export default function BudgetPage() {
   }
 
   async function removeLine(id: string) {
-    if (!window.confirm("Delete this budget line?")) return;
+    if (!(await confirm({ title: "Delete this budget line?", destructive: true }))) return;
     await api.wedding.deleteBudgetLine(id);
     await reload();
   }

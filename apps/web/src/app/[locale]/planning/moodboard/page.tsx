@@ -13,8 +13,10 @@ import { cn } from "@ceylonweddings/ui/utils";
 import { SignInPrompt, useWedding } from "../../../../components/use-wedding";
 import { MoodboardStudio } from "../../../../components/moodboard/studio";
 import type { AutosaveStatus } from "../../../../components/moodboard/use-autosave";
+import { useConfirm } from "@ceylonweddings/ui/components/confirm-dialog";
 
 export default function MoodboardPage() {
+  const confirm = useConfirm();
   const t = useTranslations();
   const locale = useLocale();
   const { data, error } = useWedding();
@@ -146,7 +148,7 @@ export default function MoodboardPage() {
 
   async function deleteBoard() {
     if (!board || summaries.length <= 1) return;
-    if (!window.confirm(`Delete “${board.title}”?`)) return;
+    if (!(await confirm({ title: `Delete “${board.title}”?`, destructive: true }))) return;
     setBusy(true);
     try {
       await api.wedding.deleteMoodboard(board.id);

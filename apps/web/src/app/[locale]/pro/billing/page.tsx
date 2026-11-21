@@ -10,6 +10,7 @@ import { Pricing, type BillingInterval, type PricingPlan } from "@ceylonweddings
 import { SectionCard } from "@ceylonweddings/ui/domain/section-card";
 import { SubscriptionStatusBanner } from "@ceylonweddings/ui/domain/subscription-status-banner";
 import { Link } from "../../../../i18n/navigation";
+import { toast } from "@ceylonweddings/ui/components/toaster";
 
 const PRO_FEATURES = [
   "Direct WhatsApp couple inquiries with verified lead alerts",
@@ -79,7 +80,7 @@ export default function VendorBillingPage() {
       }
     } catch (err) {
       console.error("Checkout failed", err);
-      alert("Unable to initiate payment. Please contact Ceylon Weddings support.");
+      toast.error("Unable to initiate payment. Please contact Ceylon Weddings support.");
     } finally {
       setCheckingOut(null);
     }

@@ -6,6 +6,15 @@ import { X } from "lucide-react";
 import { cn } from "../lib/utils";
 import { Icon } from "./icon";
 
+export type DialogSize = "sm" | "md" | "lg" | "xl";
+
+const DIALOG_WIDTH: Record<DialogSize, string> = {
+  sm: "w-[min(24rem,calc(100vw-2rem))]",
+  md: "w-[min(32rem,calc(100vw-2rem))]",
+  lg: "w-[min(40rem,calc(100vw-2rem))]",
+  xl: "w-[min(48rem,calc(100vw-2rem))]",
+};
+
 export const Dialog = DialogPrimitive.Root;
 export const DialogTrigger = DialogPrimitive.Trigger;
 export const DialogPortal = DialogPrimitive.Portal;
@@ -31,15 +40,20 @@ DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
 
 export const DialogContent = React.forwardRef<
   React.ComponentRef<typeof DialogPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & { showClose?: boolean }
->(({ className, children, showClose = true, ...props }, ref) => (
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
+    showClose?: boolean;
+    /** sm 24rem · md 32rem (default) · lg 40rem · xl 48rem — always capped to the viewport. */
+    size?: DialogSize;
+  }
+>(({ className, children, showClose = true, size = "md", ...props }, ref) => (
   <DialogPortal>
     <DialogOverlay />
     <DialogPrimitive.Content
       ref={ref}
       data-slot="dialog-content"
       className={cn(
-        "modal fixed top-1/2 left-1/2 grid w-[min(32rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 gap-4",
+        "modal fixed top-1/2 left-1/2 grid -translate-x-1/2 -translate-y-1/2 gap-4",
+        DIALOG_WIDTH[size],
         "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
         "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
         "motion-reduce:animate-none",
@@ -67,6 +81,11 @@ export function DialogHeader({ className, ...props }: React.ComponentProps<"div"
 
 export function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
   return <div className={cn("flex flex-wrap items-center justify-end gap-2", className)} {...props} />;
+}
+
+/** Scrollable body between header and footer. */
+export function DialogBody({ className, ...props }: React.ComponentProps<"div">) {
+  return <div className={cn("grid min-h-0 gap-4", className)} {...props} />;
 }
 
 export const DialogTitle = React.forwardRef<

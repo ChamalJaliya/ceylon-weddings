@@ -43,6 +43,7 @@ import { PlaceFields } from "../../../../components/place-fields";
 import { Link } from "../../../../i18n/navigation";
 import { SignInPrompt, useWedding } from "../../../../components/use-wedding";
 import { CATEGORY_LABELS } from "../../../../lib/labels";
+import { useConfirm } from "@ceylonweddings/ui/components/confirm-dialog";
 
 const fieldClass = "h-11 rounded-xl border-border/80 bg-background/70";
 const areaClass =
@@ -78,6 +79,7 @@ const COMPLETE_LABELS: Record<string, string> = {
 };
 
 export default function WeddingStudioPage() {
+  const confirm = useConfirm();
   const t = useTranslations();
   const currency = usePreferenceStore((state) => state.currency);
   const { data, error, reload } = useWedding();
@@ -188,7 +190,7 @@ export default function WeddingStudioPage() {
     const typesChanged = [...form.types].sort().join() !== [...data!.types].sort().join();
     let seedMissingTasks = false;
     if (typesChanged) {
-      seedMissingTasks = (data!.tasks ?? []).length === 0 || window.confirm(t("planning.seedTasksConfirm"));
+      seedMissingTasks = (data!.tasks ?? []).length === 0 || (await confirm({ title: t("planning.seedTasksConfirm") }));
     }
     await api.wedding.update({
       partnerOneName: form.partnerOneName,
@@ -239,7 +241,7 @@ export default function WeddingStudioPage() {
   }
 
   async function removeEvent(id: string) {
-    if (!window.confirm("Remove this ceremony? Guest invites for it will be deleted.")) return;
+    if (!(await confirm({ title: "Remove this ceremony?", description: "Guest invites for it will be deleted.", destructive: true, confirmLabel: "Remove" }))) return;
     await api.wedding.deleteEvent(id);
     await reload();
   }

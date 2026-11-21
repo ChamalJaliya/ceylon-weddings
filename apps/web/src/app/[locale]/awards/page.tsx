@@ -8,6 +8,7 @@ import type { PublicAward } from "@ceylonweddings/contracts";
 import { Button } from "@ceylonweddings/ui/components/button";
 import { CATEGORY_LABELS } from "../../../lib/labels";
 import { Link } from "../../../i18n/navigation";
+import { CenteredLoader } from "@ceylonweddings/ui/components/spinner";
 
 export default function AwardsPage() {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
@@ -103,7 +104,7 @@ export default function AwardsPage() {
         </div>
       </div>
 
-      {loading ? <p className="text-sm text-muted-foreground">Loading awards…</p> : null}
+      {loading ? <CenteredLoader label="Loading awards…" /> : null}
 
       {!loading && winners.length === 0 && shortlist.length === 0 ? (
         <div className="rounded-2xl border border-dashed p-8 text-center text-sm text-muted-foreground">

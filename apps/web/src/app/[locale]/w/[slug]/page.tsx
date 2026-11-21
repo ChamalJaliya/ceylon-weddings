@@ -15,6 +15,7 @@ import {
 import { Reveal, PageTransition, motion } from "@ceylonweddings/ui/domain/motion";
 import { Link } from "../../../../i18n/navigation";
 import { CATEGORY_LABELS } from "../../../../lib/labels";
+import { CenteredLoader } from "@ceylonweddings/ui/components/spinner";
 
 const HERO =
   "https://images.unsplash.com/photo-1519741497674-611481863552?w=1600&q=80";
@@ -54,7 +55,7 @@ export default function GuestWebsitePage() {
           animate={{ scaleX: [0.4, 1, 0.4] }}
           transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
         />
-        <p className="text-sm text-muted-foreground">Loading invitation…</p>
+        <CenteredLoader label="Loading invitation…" />
       </motion.div>
     );
   }

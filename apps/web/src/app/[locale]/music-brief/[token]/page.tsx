@@ -7,6 +7,7 @@ import { api } from "@ceylonweddings/web";
 import type { MusicBrief } from "@ceylonweddings/contracts";
 import { EmptyState } from "@ceylonweddings/ui/domain/empty-state";
 import { Button } from "@ceylonweddings/ui/components/button";
+import { CenteredLoader } from "@ceylonweddings/ui/components/spinner";
 
 export default function MusicBriefPage() {
   const params = useParams<{ token: string; locale: string }>();
@@ -32,7 +33,7 @@ export default function MusicBriefPage() {
   }, [token]);
 
   if (loading) {
-    return <div className="mx-auto max-w-3xl px-4 py-16 text-sm text-muted-foreground">Loading music brief…</div>;
+    return <CenteredLoader label="Loading music brief…" className="mx-auto max-w-3xl px-4 py-16" />;
   }
 
   if (error || !brief) {

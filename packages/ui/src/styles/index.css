@@ -11,6 +11,7 @@
 @import "./components/card.css";
 @import "./components/badge.css";
 @import "./components/modal.css";
+@import "./components/toast.css";
 @import "./utilities/typography.css";
 @import "./utilities/motion.css";
 @import "./utilities/frame.css";

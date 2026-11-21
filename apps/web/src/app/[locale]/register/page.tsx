@@ -13,6 +13,7 @@ import { Input } from "@ceylonweddings/ui/components/input";
 import { FieldBlock } from "@ceylonweddings/ui/domain/creator-form";
 import { AnimatePresence, motion, useReducedMotion } from "@ceylonweddings/ui/domain/motion";
 import { cn } from "@ceylonweddings/ui/utils";
+import { BrandMark } from "@ceylonweddings/ui/domain/brand-mark";
 import { Link, useRouter } from "../../../i18n/navigation";
 import { PageFrame } from "../../../components/public-chrome";
 import { AuthPasswordField, GoogleMark } from "../../../components/auth-bifold";
@@ -113,9 +114,7 @@ function RegisterHeader({
         ) : null}
 
         <Link href="/" className="flex items-center gap-2 pl-1">
-          <span className="flex size-8 items-center justify-center rounded-full border border-primary/35 font-serif text-xs text-primary">
-            CW
-          </span>
+          <BrandMark className="h-8 w-auto text-primary" />
           <span className="hidden font-serif text-sm sm:inline">{t("app.name")}</span>
         </Link>
       </div>

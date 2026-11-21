@@ -208,3 +208,22 @@ All in `wedding-presentation.tsx`:
 2. Export it from `packages/ui/src/domain/index.ts` (if one exists) or import directly with the full path.
 3. Use existing token classes — no new CSS variables without a design review.
 4. Document it in this file under the relevant section.
+
+---
+
+## Feedback patterns (ported from Kloqra)
+
+| Need | Use | Not |
+|------|-----|-----|
+| Yes / no question, destructive action | `const confirm = useConfirm(); if (!(await confirm({ title, description, destructive: true }))) return;` | `window.confirm` (CI fails) |
+| Form or detail view in a modal | `AppModal` (`title`, `description`, `icon`, `tone`, `size`, `footer`) | hand-rolled `Dialog` chrome |
+| Async mutation outcome (save, delete, send, export) | `toast.success()` / `toast.error()` from `@ceylonweddings/ui/components/toaster` | `alert()` (CI fails) |
+| Field validation | `FormStatus` inline | toast |
+| Section / page fetching | `CenteredLoader` or `Skeleton` / `SkeletonText` / `SkeletonCards` | bare "Loading…" text |
+| Inline busy (button, chip) | `Spinner` | — |
+| List with nothing yet | `EmptyState` (`kind="empty"`) with the create action; hide toolbar/stats | — |
+| List filtered to nothing | `EmptyState kind="no-results" onClearFilters={…}`; keep toolbar | the "add your first…" empty state |
+
+`ConfirmProvider` and `Toaster` are mounted once by `AppProviders`. `useConfirm({ onConfirm })` runs async work with a locked "Please wait…" button (no double submit) and keeps Esc / backdrop / Cancel dismissal (Kloqra KLOQ-684).
+
+List helpers: `getListEmptyMode`, `showListChrome`, `serverSourceCount` in `@ceylonweddings/ui/lib/list-state`.

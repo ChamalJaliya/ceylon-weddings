@@ -155,7 +155,6 @@ const adminGroups: NavGroup[] = [
 
 function DashboardShellInner({
   groups,
-  kicker,
   couple,
   crumb,
   messages = false,
@@ -163,7 +162,6 @@ function DashboardShellInner({
   children,
 }: {
   groups: NavGroup[];
-  kicker: string;
   couple: { names: string; meta: string; initials: [string, string] };
   crumb?: string;
   messages?: boolean;
@@ -186,7 +184,7 @@ function DashboardShellInner({
       onMobileOpenChange={setMobileOpen}
       mobileTitle={t("app.name")}
       brand={(mode) => (
-        <AppShellBrand monogram="CW" name={t("app.name")} kicker={kicker} collapsed={mode} />
+        <AppShellBrand name={t("app.name")} collapsed={mode} />
       )}
       nav={(mode) =>
         groups.map((group) => (
@@ -272,7 +270,6 @@ function DashboardShellInner({
 
 function DashboardShell(props: {
   groups: NavGroup[];
-  kicker: string;
   couple: { names: string; meta: string; initials: [string, string] };
   crumb?: string;
   messages?: boolean;
@@ -308,7 +305,6 @@ export function PlanningShell({ children }: { children: ReactNode }) {
       audience="planning"
       searchPlaceholder={t("prefs.searchPlanning")}
       groups={groups}
-      kicker="Ceylon"
       messages
       crumb={data?.city ? `${data.city}` : t("hub.kicker")}
       couple={{
@@ -329,7 +325,6 @@ export function ProShell({ children }: { children: ReactNode }) {
       audience="pro"
       searchPlaceholder={t("prefs.searchPro")}
       groups={proGroups}
-      kicker="Vendor"
       messages
       crumb={t("nav.storefront")}
       couple={{ names: t("app.name"), meta: "Pro", initials: ["C", "W"] }}
@@ -346,7 +341,6 @@ export function AdminShell({ children }: { children: ReactNode }) {
       audience="admin"
       searchPlaceholder={t("prefs.searchAdmin")}
       groups={adminGroups}
-      kicker="Admin"
       messages
       crumb={t("nav.dashboard")}
       couple={{ names: "Ceylon Ops", meta: t("chrome.footerMeta"), initials: ["C", "W"] }}

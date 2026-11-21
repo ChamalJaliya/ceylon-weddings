@@ -13,6 +13,7 @@ import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
 import { SectionCard } from "@ceylonweddings/ui/domain/section-card";
 import { AuditTimeline } from "@ceylonweddings/ui/domain/audit-timeline";
 import { Link } from "../../../../../i18n/navigation";
+import { CenteredLoader } from "@ceylonweddings/ui/components/spinner";
 
 export default function AdminVendorDetailPage() {
   const params = useParams<{ id: string }>();
@@ -65,7 +66,7 @@ export default function AdminVendorDetailPage() {
   }
 
   if (!vendor) {
-    return <p className="text-sm text-muted-foreground">Loading…</p>;
+    return <CenteredLoader label="Loading…" />;
   }
 
   return (
@@ -240,7 +241,7 @@ export default function AdminVendorDetailPage() {
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">Loading subscription details…</p>
+              <CenteredLoader label="Loading subscription details…" />
             )}
           </SectionCard>
 
