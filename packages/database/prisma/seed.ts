@@ -1,6 +1,5 @@
 import { config } from "dotenv";
 import { resolve } from "node:path";
-// @ts-ignore
 import { hash } from "bcrypt";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient, Prisma } from "../src/generated/prisma/client";
@@ -138,11 +137,7 @@ async function upsertAttributeDefinition(def: AttrDefinitionSeed) {
   return definition;
 }
 
-async function setVendorOptionSelections(
-  vendorId: string,
-  definitionId: string,
-  optionKeys: string[],
-) {
+async function setVendorOptionSelections(vendorId: string, definitionId: string, optionKeys: string[]) {
   const value = await prisma.vendorAttributeValue.upsert({
     where: { vendorId_definitionId: { vendorId, definitionId } },
     create: { vendorId, definitionId },
@@ -801,7 +796,12 @@ async function main() {
       { weddingId: nimaliWedding.id, title: "Share guest list with Amma", category: "guests", assigneeUserId: amma.id },
       { weddingId: nimaliWedding.id, title: "Jayamangala gatha rehearsal", category: "tradition" },
       { weddingId: nimaliWedding.id, title: "Bridal dresser trial in Kandy", category: "beauty" },
-      { weddingId: nimaliWedding.id, title: "Homecoming menu with Kasun's family", category: "homecoming", assigneeUserId: kasun.id },
+      {
+        weddingId: nimaliWedding.id,
+        title: "Homecoming menu with Kasun's family",
+        category: "homecoming",
+        assigneeUserId: kasun.id,
+      },
       { weddingId: nimaliWedding.id, title: "Airport coaches for diaspora guests", category: "travel" },
       { weddingId: nimaliWedding.id, title: "Lock entertainment and music brief", category: "entertainment" },
     ],
@@ -809,38 +809,264 @@ async function main() {
 
   await prisma.budgetLine.createMany({
     data: [
-      { weddingId: nimaliWedding.id, category: "venue_catering", label: "Venue and catering", plannedLkr: 1400000, spentLkr: 400000, paidLkr: 250000, payer: "BRIDE_FAMILY", vendorId: bySlug["glen-receptions"].id },
-      { weddingId: nimaliWedding.id, category: "photo_video", label: "Photography", plannedLkr: 280000, spentLkr: 100000, paidLkr: 100000, payer: "COUPLE", vendorId: bySlug["lotus-photography"].id },
-      { weddingId: nimaliWedding.id, category: "attire", label: "Osariya, nilame, jewellery hire", plannedLkr: 420000, spentLkr: 80000, paidLkr: 40000, payer: "GROOM_FAMILY" },
-      { weddingId: nimaliWedding.id, category: "decor", label: "Poruwa florals and hall draping", plannedLkr: 180000, spentLkr: 0, paidLkr: 0, payer: "BRIDE_FAMILY" },
-      { weddingId: nimaliWedding.id, category: "entertainment", label: "Magul bera and dancers", plannedLkr: 95000, spentLkr: 0, paidLkr: 0, payer: "GROOM_FAMILY" },
-      { weddingId: nimaliWedding.id, category: "beauty", label: "Makeup and dresser", plannedLkr: 120000, spentLkr: 20000, paidLkr: 20000, payer: "BRIDE_FAMILY" },
-      { weddingId: nimaliWedding.id, category: "transport", label: "Cars and guest coaches", plannedLkr: 85000, spentLkr: 0, paidLkr: 0, payer: "COUPLE" },
-      { weddingId: nimaliWedding.id, category: "buffer", label: "Buffer for last-minute plates", plannedLkr: 200000, spentLkr: 0, paidLkr: 0, payer: "COUPLE" },
+      {
+        weddingId: nimaliWedding.id,
+        category: "venue_catering",
+        label: "Venue and catering",
+        plannedLkr: 1400000,
+        spentLkr: 400000,
+        paidLkr: 250000,
+        payer: "BRIDE_FAMILY",
+        vendorId: bySlug["glen-receptions"].id,
+      },
+      {
+        weddingId: nimaliWedding.id,
+        category: "photo_video",
+        label: "Photography",
+        plannedLkr: 280000,
+        spentLkr: 100000,
+        paidLkr: 100000,
+        payer: "COUPLE",
+        vendorId: bySlug["lotus-photography"].id,
+      },
+      {
+        weddingId: nimaliWedding.id,
+        category: "attire",
+        label: "Osariya, nilame, jewellery hire",
+        plannedLkr: 420000,
+        spentLkr: 80000,
+        paidLkr: 40000,
+        payer: "GROOM_FAMILY",
+      },
+      {
+        weddingId: nimaliWedding.id,
+        category: "decor",
+        label: "Poruwa florals and hall draping",
+        plannedLkr: 180000,
+        spentLkr: 0,
+        paidLkr: 0,
+        payer: "BRIDE_FAMILY",
+      },
+      {
+        weddingId: nimaliWedding.id,
+        category: "entertainment",
+        label: "Magul bera and dancers",
+        plannedLkr: 95000,
+        spentLkr: 0,
+        paidLkr: 0,
+        payer: "GROOM_FAMILY",
+      },
+      {
+        weddingId: nimaliWedding.id,
+        category: "beauty",
+        label: "Makeup and dresser",
+        plannedLkr: 120000,
+        spentLkr: 20000,
+        paidLkr: 20000,
+        payer: "BRIDE_FAMILY",
+      },
+      {
+        weddingId: nimaliWedding.id,
+        category: "transport",
+        label: "Cars and guest coaches",
+        plannedLkr: 85000,
+        spentLkr: 0,
+        paidLkr: 0,
+        payer: "COUPLE",
+      },
+      {
+        weddingId: nimaliWedding.id,
+        category: "buffer",
+        label: "Buffer for last-minute plates",
+        plannedLkr: 200000,
+        spentLkr: 0,
+        paidLkr: 0,
+        payer: "COUPLE",
+      },
     ],
   });
 
   const households: Prisma.GuestHouseholdCreateWithoutWeddingInput[] = [
-    { label: "Perera parents", headName: "Mr and Mrs Sunil Perera", side: "BRIDE", plusCount: 4, status: "CONFIRMED", meal: "FISH", channel: "WHATSAPP" },
-    { label: "Jayawardena parents", headName: "Mr and Mrs Jayawardena", side: "GROOM", plusCount: 4, status: "CONFIRMED", meal: "CHICKEN", channel: "PHONE" },
-    { label: "Dias cousins Australia", headName: "Tharindu Dias", side: "GROOM", plusCount: 2, status: "INVITED", meal: "VEG", channel: "OVERSEAS" },
-    { label: "Fernando uncle", headName: "Ravi Fernando", side: "BRIDE", plusCount: 3, status: "INVITED", meal: "FISH", channel: "WHATSAPP" },
-    { label: "Silva aunties", headName: "Kumari Silva", side: "BRIDE", plusCount: 5, status: "CONSIDERING", meal: "VEG", channel: "PHONE" },
-    { label: "Office team", headName: "Dialog colleagues", side: "BOTH", plusCount: 8, status: "INVITED", meal: "CHICKEN", channel: "WHATSAPP" },
-    { label: "School friends", headName: "Visakha batch", side: "BRIDE", plusCount: 6, status: "CONFIRMED", meal: "FISH", channel: "WHATSAPP" },
-    { label: "Royal batch", headName: "Kasun Royal friends", side: "GROOM", plusCount: 6, status: "MAYBE", meal: "CHICKEN", channel: "WHATSAPP" },
-    { label: "UK cousins", headName: "Shanika Perera", side: "BRIDE", plusCount: 3, status: "INVITED", meal: "VEG", channel: "OVERSEAS" },
-    { label: "Temple committee", headName: "Kelaniya dayaka", side: "BOTH", plusCount: 4, status: "CONFIRMED", meal: "VEG", channel: "PRINTED" },
-    { label: "Photographer family", headName: "Lotus plus-ones", side: "BOTH", plusCount: 2, status: "WALK_IN", meal: "FISH", channel: "WHATSAPP" },
-    { label: "Negombo neighbours", headName: "Fernando neighbours", side: "BRIDE", plusCount: 7, status: "CONSIDERING", meal: "FISH", channel: "PHONE" },
-    { label: "Kandy relatives", headName: "Jayawardena uncles", side: "GROOM", plusCount: 9, status: "INVITED", meal: "CHICKEN", channel: "PHONE" },
-    { label: "Canada family", headName: "Nadeeka Jayawardena", side: "GROOM", plusCount: 2, status: "CONFIRMED", meal: "VEG", channel: "OVERSEAS" },
-    { label: "Makeup artist plus", headName: "Nadeesha team", side: "BRIDE", plusCount: 1, status: "CONFIRMED", meal: "VEG", channel: "WHATSAPP" },
-    { label: "Hall staff buffer", headName: "Last-minute family buffer", side: "BOTH", plusCount: 12, status: "CONSIDERING", meal: "CHICKEN", channel: "PHONE" },
-    { label: "Priest and ashtaka", headName: "Ashtaka team", side: "BOTH", plusCount: 3, status: "CONFIRMED", meal: "VEG", channel: "WHATSAPP" },
-    { label: "Childhood neighbours", headName: "Dehiwala lane", side: "BRIDE", plusCount: 5, status: "DECLINED", meal: "FISH", channel: "PRINTED" },
-    { label: "Bank colleagues", headName: "Kasun office", side: "GROOM", plusCount: 4, status: "INVITED", meal: "BEEF", channel: "WHATSAPP" },
-    { label: "Homecoming only", headName: "Kandy village friends", side: "GROOM", plusCount: 10, status: "INVITED", meal: "CHICKEN", channel: "PHONE" },
+    {
+      label: "Perera parents",
+      headName: "Mr and Mrs Sunil Perera",
+      side: "BRIDE",
+      plusCount: 4,
+      status: "CONFIRMED",
+      meal: "FISH",
+      channel: "WHATSAPP",
+    },
+    {
+      label: "Jayawardena parents",
+      headName: "Mr and Mrs Jayawardena",
+      side: "GROOM",
+      plusCount: 4,
+      status: "CONFIRMED",
+      meal: "CHICKEN",
+      channel: "PHONE",
+    },
+    {
+      label: "Dias cousins Australia",
+      headName: "Tharindu Dias",
+      side: "GROOM",
+      plusCount: 2,
+      status: "INVITED",
+      meal: "VEG",
+      channel: "OVERSEAS",
+    },
+    {
+      label: "Fernando uncle",
+      headName: "Ravi Fernando",
+      side: "BRIDE",
+      plusCount: 3,
+      status: "INVITED",
+      meal: "FISH",
+      channel: "WHATSAPP",
+    },
+    {
+      label: "Silva aunties",
+      headName: "Kumari Silva",
+      side: "BRIDE",
+      plusCount: 5,
+      status: "CONSIDERING",
+      meal: "VEG",
+      channel: "PHONE",
+    },
+    {
+      label: "Office team",
+      headName: "Dialog colleagues",
+      side: "BOTH",
+      plusCount: 8,
+      status: "INVITED",
+      meal: "CHICKEN",
+      channel: "WHATSAPP",
+    },
+    {
+      label: "School friends",
+      headName: "Visakha batch",
+      side: "BRIDE",
+      plusCount: 6,
+      status: "CONFIRMED",
+      meal: "FISH",
+      channel: "WHATSAPP",
+    },
+    {
+      label: "Royal batch",
+      headName: "Kasun Royal friends",
+      side: "GROOM",
+      plusCount: 6,
+      status: "MAYBE",
+      meal: "CHICKEN",
+      channel: "WHATSAPP",
+    },
+    {
+      label: "UK cousins",
+      headName: "Shanika Perera",
+      side: "BRIDE",
+      plusCount: 3,
+      status: "INVITED",
+      meal: "VEG",
+      channel: "OVERSEAS",
+    },
+    {
+      label: "Temple committee",
+      headName: "Kelaniya dayaka",
+      side: "BOTH",
+      plusCount: 4,
+      status: "CONFIRMED",
+      meal: "VEG",
+      channel: "PRINTED",
+    },
+    {
+      label: "Photographer family",
+      headName: "Lotus plus-ones",
+      side: "BOTH",
+      plusCount: 2,
+      status: "WALK_IN",
+      meal: "FISH",
+      channel: "WHATSAPP",
+    },
+    {
+      label: "Negombo neighbours",
+      headName: "Fernando neighbours",
+      side: "BRIDE",
+      plusCount: 7,
+      status: "CONSIDERING",
+      meal: "FISH",
+      channel: "PHONE",
+    },
+    {
+      label: "Kandy relatives",
+      headName: "Jayawardena uncles",
+      side: "GROOM",
+      plusCount: 9,
+      status: "INVITED",
+      meal: "CHICKEN",
+      channel: "PHONE",
+    },
+    {
+      label: "Canada family",
+      headName: "Nadeeka Jayawardena",
+      side: "GROOM",
+      plusCount: 2,
+      status: "CONFIRMED",
+      meal: "VEG",
+      channel: "OVERSEAS",
+    },
+    {
+      label: "Makeup artist plus",
+      headName: "Nadeesha team",
+      side: "BRIDE",
+      plusCount: 1,
+      status: "CONFIRMED",
+      meal: "VEG",
+      channel: "WHATSAPP",
+    },
+    {
+      label: "Hall staff buffer",
+      headName: "Last-minute family buffer",
+      side: "BOTH",
+      plusCount: 12,
+      status: "CONSIDERING",
+      meal: "CHICKEN",
+      channel: "PHONE",
+    },
+    {
+      label: "Priest and ashtaka",
+      headName: "Ashtaka team",
+      side: "BOTH",
+      plusCount: 3,
+      status: "CONFIRMED",
+      meal: "VEG",
+      channel: "WHATSAPP",
+    },
+    {
+      label: "Childhood neighbours",
+      headName: "Dehiwala lane",
+      side: "BRIDE",
+      plusCount: 5,
+      status: "DECLINED",
+      meal: "FISH",
+      channel: "PRINTED",
+    },
+    {
+      label: "Bank colleagues",
+      headName: "Kasun office",
+      side: "GROOM",
+      plusCount: 4,
+      status: "INVITED",
+      meal: "BEEF",
+      channel: "WHATSAPP",
+    },
+    {
+      label: "Homecoming only",
+      headName: "Kandy village friends",
+      side: "GROOM",
+      plusCount: 10,
+      status: "INVITED",
+      meal: "CHICKEN",
+      channel: "PHONE",
+    },
   ];
 
   for (const household of households) {
@@ -896,10 +1122,38 @@ async function main() {
 
   const nekathAnchor = poruwa.nekathAt ?? poruwa.startsAt ?? new Date("2026-12-12T04:30:00.000Z");
   const agendaSeed = [
-    { title: "Bridal dresser arrives", kind: "DAY_OF" as const, offsetMinutes: -180, durationMinutes: 90, color: "#C4A574", ownerLabel: "Bridal dresser" },
-    { title: "Wedding cars ready", kind: "DAY_OF" as const, offsetMinutes: -90, durationMinutes: 45, color: "#1F4B73", ownerLabel: "Transport" },
-    { title: `${poruwa.name} ceremony`, kind: "CEREMONY" as const, offsetMinutes: 0, durationMinutes: 75, color: "#7A1F2B", ownerLabel: "Couple" },
-    { title: "Guest plates / seating", kind: "DAY_OF" as const, offsetMinutes: 90, durationMinutes: 120, color: "#1F4D3A", ownerLabel: "Amma / hosts" },
+    {
+      title: "Bridal dresser arrives",
+      kind: "DAY_OF" as const,
+      offsetMinutes: -180,
+      durationMinutes: 90,
+      color: "#C4A574",
+      ownerLabel: "Bridal dresser",
+    },
+    {
+      title: "Wedding cars ready",
+      kind: "DAY_OF" as const,
+      offsetMinutes: -90,
+      durationMinutes: 45,
+      color: "#1F4B73",
+      ownerLabel: "Transport",
+    },
+    {
+      title: `${poruwa.name} ceremony`,
+      kind: "CEREMONY" as const,
+      offsetMinutes: 0,
+      durationMinutes: 75,
+      color: "#7A1F2B",
+      ownerLabel: "Couple",
+    },
+    {
+      title: "Guest plates / seating",
+      kind: "DAY_OF" as const,
+      offsetMinutes: 90,
+      durationMinutes: 120,
+      color: "#1F4D3A",
+      ownerLabel: "Amma / hosts",
+    },
   ];
   for (const [index, spec] of agendaSeed.entries()) {
     const startsAt = new Date(nekathAnchor.getTime() + spec.offsetMinutes * 60_000);
@@ -1150,7 +1404,14 @@ async function main() {
       },
       budgetLines: {
         create: [
-          { category: "venue_catering", label: "Walima hall and halal plates", plannedLkr: 1600000, spentLkr: 500000, paidLkr: 300000, payer: "GROOM_FAMILY" },
+          {
+            category: "venue_catering",
+            label: "Walima hall and halal plates",
+            plannedLkr: 1600000,
+            spentLkr: 500000,
+            paidLkr: 300000,
+            payer: "GROOM_FAMILY",
+          },
           { category: "photo_video", label: "Photography", plannedLkr: 250000, paidLkr: 0, payer: "COUPLE" },
           { category: "beauty", label: "Mehndi and makeup", plannedLkr: 90000, paidLkr: 0, payer: "BRIDE_FAMILY" },
         ],
@@ -1160,9 +1421,36 @@ async function main() {
 
   await prisma.guestHousehold.createMany({
     data: [
-      { weddingId: aishaWedding.id, label: "Rahman family", headName: "Mr Rahman", side: "BRIDE", plusCount: 6, status: "CONFIRMED", meal: "HALAL", channel: "WHATSAPP" },
-      { weddingId: aishaWedding.id, label: "Farhan uncles", headName: "Uncle Imran", side: "GROOM", plusCount: 8, status: "INVITED", meal: "HALAL", channel: "PHONE" },
-      { weddingId: aishaWedding.id, label: "Dubai cousins", headName: "Sara Rahman", side: "BRIDE", plusCount: 3, status: "MAYBE", meal: "HALAL", channel: "OVERSEAS" },
+      {
+        weddingId: aishaWedding.id,
+        label: "Rahman family",
+        headName: "Mr Rahman",
+        side: "BRIDE",
+        plusCount: 6,
+        status: "CONFIRMED",
+        meal: "HALAL",
+        channel: "WHATSAPP",
+      },
+      {
+        weddingId: aishaWedding.id,
+        label: "Farhan uncles",
+        headName: "Uncle Imran",
+        side: "GROOM",
+        plusCount: 8,
+        status: "INVITED",
+        meal: "HALAL",
+        channel: "PHONE",
+      },
+      {
+        weddingId: aishaWedding.id,
+        label: "Dubai cousins",
+        headName: "Sara Rahman",
+        side: "BRIDE",
+        plusCount: 3,
+        status: "MAYBE",
+        meal: "HALAL",
+        channel: "OVERSEAS",
+      },
     ],
   });
 
@@ -1181,7 +1469,8 @@ async function main() {
       onboardingCompletedAt: new Date(),
       planningFromOverseas: true,
       websiteFaq: "Mehndi Friday. Ceremony Saturday morning. Reception at Fort Lawn. Silk or formal tropical.",
-      travelNotes: "Fly into CMB, 2.5 hours to Galle. Hotel block at Amangalla and Fort Bazaar. 4-day residency note for legal destination marriages.",
+      travelNotes:
+        "Fly into CMB, 2.5 hours to Galle. Hotel block at Amangalla and Fort Bazaar. 4-day residency note for legal destination marriages.",
       members: { create: [{ userId: priya.id, role: "COUPLE", canManageVendors: true }] },
       events: {
         create: [
@@ -1199,8 +1488,22 @@ async function main() {
       },
       budgetLines: {
         create: [
-          { category: "venue_catering", label: "Fort Lawn and catering", plannedLkr: 2200000, spentLkr: 700000, paidLkr: 400000, payer: "COUPLE" },
-          { category: "photo_video", label: "Destination film", plannedLkr: 420000, paidLkr: 0, payer: "COUPLE", vendorId: bySlug["lotus-photography"].id },
+          {
+            category: "venue_catering",
+            label: "Fort Lawn and catering",
+            plannedLkr: 2200000,
+            spentLkr: 700000,
+            paidLkr: 400000,
+            payer: "COUPLE",
+          },
+          {
+            category: "photo_video",
+            label: "Destination film",
+            plannedLkr: 420000,
+            paidLkr: 0,
+            payer: "COUPLE",
+            vendorId: bySlug["lotus-photography"].id,
+          },
           { category: "decor", label: "Mandap and florals", plannedLkr: 380000, paidLkr: 0, payer: "BRIDE_FAMILY" },
         ],
       },
@@ -1209,9 +1512,36 @@ async function main() {
 
   await prisma.guestHousehold.createMany({
     data: [
-      { weddingId: priyaWedding.id, label: "Sharma parents", headName: "Dr Sharma", side: "BRIDE", plusCount: 4, status: "CONFIRMED", meal: "VEG", channel: "OVERSEAS" },
-      { weddingId: priyaWedding.id, label: "Toronto friends", headName: "Anjali Patel", side: "BOTH", plusCount: 2, status: "INVITED", meal: "VEG", channel: "OVERSEAS" },
-      { weddingId: priyaWedding.id, label: "Galle staff buffer", headName: "Local plus-ones", side: "BOTH", plusCount: 8, status: "CONSIDERING", meal: "FISH", channel: "PHONE" },
+      {
+        weddingId: priyaWedding.id,
+        label: "Sharma parents",
+        headName: "Dr Sharma",
+        side: "BRIDE",
+        plusCount: 4,
+        status: "CONFIRMED",
+        meal: "VEG",
+        channel: "OVERSEAS",
+      },
+      {
+        weddingId: priyaWedding.id,
+        label: "Toronto friends",
+        headName: "Anjali Patel",
+        side: "BOTH",
+        plusCount: 2,
+        status: "INVITED",
+        meal: "VEG",
+        channel: "OVERSEAS",
+      },
+      {
+        weddingId: priyaWedding.id,
+        label: "Galle staff buffer",
+        headName: "Local plus-ones",
+        side: "BOTH",
+        plusCount: 8,
+        status: "CONSIDERING",
+        meal: "FISH",
+        channel: "PHONE",
+      },
     ],
   });
 
@@ -1221,7 +1551,8 @@ async function main() {
         weddingId: nimaliWedding.id,
         vendorId: bySlug["lotus-photography"].id,
         message: "Can you cover poruwa at 10:00 and the Kandy homecoming the next day?",
-        whatsappUrl: "https://wa.me/94771234567?text=Can%20you%20cover%20poruwa%20at%2010%3A00%20and%20the%20Kandy%20homecoming%20the%20next%20day%3F",
+        whatsappUrl:
+          "https://wa.me/94771234567?text=Can%20you%20cover%20poruwa%20at%2010%3A00%20and%20the%20Kandy%20homecoming%20the%20next%20day%3F",
         status: "REPLIED",
       },
       {
@@ -1292,10 +1623,22 @@ async function main() {
       description:
         "We film Sri Lankan weddings the way families remember them — nekath on time, aunties unscripted, and the quiet between rituals. Documentary coverage across Colombo, Kandy, and the south coast for diaspora and local couples.",
       faqs: [
-        { question: "Do you cover poruwa and homecoming?", answer: "Yes — two-day Kandyan coverage is our most booked package. We build the day backwards from nekath." },
-        { question: "English-speaking coordinator?", answer: "Yes. Diaspora couples usually brief us on WhatsApp from Melbourne, London, or Toronto." },
-        { question: "How fast is the gallery?", answer: "Preview within 10 days; full gallery in 4–6 weeks. Films follow within 8 weeks." },
-        { question: "Do you bring a second shooter?", answer: "Day + film and Two-day Kandyan include two shooters as standard." },
+        {
+          question: "Do you cover poruwa and homecoming?",
+          answer: "Yes — two-day Kandyan coverage is our most booked package. We build the day backwards from nekath.",
+        },
+        {
+          question: "English-speaking coordinator?",
+          answer: "Yes. Diaspora couples usually brief us on WhatsApp from Melbourne, London, or Toronto.",
+        },
+        {
+          question: "How fast is the gallery?",
+          answer: "Preview within 10 days; full gallery in 4–6 weeks. Films follow within 8 weeks.",
+        },
+        {
+          question: "Do you bring a second shooter?",
+          answer: "Day + film and Two-day Kandyan include two shooters as standard.",
+        },
       ],
     },
   });
@@ -1322,9 +1665,18 @@ async function main() {
       description:
         "A Negombo garden hall built for big Sri Lankan guest lists — poruwa under the trees, plates that scale to 400, and coordinators who understand nekath and late-night stations.",
       faqs: [
-        { question: "What is the guest capacity?", answer: "Comfortably 200–400 seated. Standing cocktail can stretch further with a floor plan review." },
-        { question: "Is outside catering allowed?", answer: "In-house kitchen preferred. Outside catering needs written approval and corkage." },
-        { question: "Is there a bridal suite?", answer: "Yes — suite, oil lamp table, and poruwa platform are included in hall hire." },
+        {
+          question: "What is the guest capacity?",
+          answer: "Comfortably 200–400 seated. Standing cocktail can stretch further with a floor plan review.",
+        },
+        {
+          question: "Is outside catering allowed?",
+          answer: "In-house kitchen preferred. Outside catering needs written approval and corkage.",
+        },
+        {
+          question: "Is there a bridal suite?",
+          answer: "Yes — suite, oil lamp table, and poruwa platform are included in hall hire.",
+        },
       ],
     },
   });
@@ -1346,7 +1698,10 @@ async function main() {
       description:
         "Mist, lawn, and a pavilion that holds a proper homecoming. Built for Kandyan weekends when Colombo does the poruwa and Kandy hosts the family feast.",
       faqs: [
-        { question: "Rain plan?", answer: "Pavilion covers 180 seated. We hold a monsoon backup layout for every booking." },
+        {
+          question: "Rain plan?",
+          answer: "Pavilion covers 180 seated. We hold a monsoon backup layout for every booking.",
+        },
       ],
     },
   });
@@ -1369,7 +1724,10 @@ async function main() {
       description:
         "Soft glam that photographs under poruwa lights and church windows. Trials in the studio; wedding morning on location with a dresser who knows neththi timing.",
       faqs: [
-        { question: "Do you travel for destination weddings?", answer: "Yes — Galle and south coast regularly. Travel and stay billed separately." },
+        {
+          question: "Do you travel for destination weddings?",
+          answer: "Yes — Galle and south coast regularly. Travel and stay billed separately.",
+        },
       ],
     },
   });
@@ -1747,8 +2105,7 @@ async function main() {
     ],
   });
 
-  const aug = (day: number, hour: number, minute = 0) =>
-    new Date(Date.UTC(2026, 7, day, hour - 5, minute - 30));
+  const aug = (day: number, hour: number, minute = 0) => new Date(Date.UTC(2026, 7, day, hour - 5, minute - 30));
 
   await prisma.appointment.createMany({
     data: [

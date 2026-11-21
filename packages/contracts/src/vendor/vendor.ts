@@ -28,10 +28,8 @@ import {
   priceDisplayModeSchema,
   subscriptionStatusSchema,
   vendorCategorySchema,
-  type BillingInterval,
   type PackagePricingMode,
   type PriceDisplayMode,
-  type SubscriptionStatus,
 } from "./enums";
 
 export const vendorFaqSchema = z.object({
@@ -267,9 +265,7 @@ export const vendorSchema = z.object({
   faqs: z.array(vendorFaqSchema).optional(),
   featured: z.boolean(),
   verified: z.boolean(),
-  moderationStatus: z
-    .enum(["PENDING", "APPROVED", "REJECTED", "HIDDEN"])
-    .optional(),
+  moderationStatus: z.enum(["PENDING", "APPROVED", "REJECTED", "HIDDEN"]).optional(),
   moderationNote: z.string().nullable().optional(),
   verifiedAt: z.string().nullable().optional(),
   featuredAt: z.string().nullable().optional(),
@@ -311,11 +307,7 @@ function parseBoundNumber(value: string): number | undefined {
   return Number.isFinite(num) ? num : undefined;
 }
 
-function pushAttrString(
-  result: Record<string, CatalogAttrFilterValue>,
-  key: string,
-  value: string,
-) {
+function pushAttrString(result: Record<string, CatalogAttrFilterValue>, key: string, value: string) {
   const existing = result[key];
   if (existing === undefined) {
     result[key] = value;
@@ -449,9 +441,7 @@ export function catalogFilterCount(query: VendorCatalogQuery) {
     query.minRating,
   ].filter((value) => value !== undefined && value !== false).length;
 
-  const attrCount = query.attrs
-    ? Object.values(query.attrs).filter((value) => isActiveAttrFilter(value)).length
-    : 0;
+  const attrCount = query.attrs ? Object.values(query.attrs).filter((value) => isActiveAttrFilter(value)).length : 0;
 
   return base + attrCount;
 }
@@ -793,4 +783,3 @@ export type CreateReviewBody = z.infer<typeof createReviewBodySchema>;
 export type VendorPackage = z.infer<typeof vendorPackageSchema>;
 export type VendorAddOn = z.infer<typeof vendorAddOnSchema>;
 export type VendorFaq = z.infer<typeof vendorFaqSchema>;
-

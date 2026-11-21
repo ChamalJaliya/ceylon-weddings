@@ -1,7 +1,6 @@
 import { Injectable, BadRequestException, Logger, NotFoundException } from "@nestjs/common";
 import { createHash } from "node:crypto";
 import { PrismaService } from "@ceylonweddings/database";
-import { loadApiEnv } from "@ceylonweddings/env";
 import type { BillingInterval, User } from "@ceylonweddings/contracts";
 
 export interface CreateCheckoutParams {
@@ -83,9 +82,7 @@ export class PaymentService {
     });
 
     const isSandbox = process.env.NODE_ENV !== "production" || !process.env.PAYHERE_LIVE;
-    const actionUrl = isSandbox
-      ? "https://sandbox.payhere.lk/pay/checkout"
-      : "https://www.payhere.lk/pay/checkout";
+    const actionUrl = isSandbox ? "https://sandbox.payhere.lk/pay/checkout" : "https://www.payhere.lk/pay/checkout";
 
     return {
       paymentIntentId: intent.id,
@@ -93,8 +90,12 @@ export class PaymentService {
       actionUrl,
       fields: {
         merchant_id: merchantId,
-        return_url: params.returnUrl || `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/pro/billing?status=success`,
-        cancel_url: params.cancelUrl || `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/pro/billing?status=cancelled`,
+        return_url:
+          params.returnUrl ||
+          `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/pro/billing?status=success`,
+        cancel_url:
+          params.cancelUrl ||
+          `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/pro/billing?status=cancelled`,
         notify_url: `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/subscription/payhere/webhook`,
         order_id: orderId,
         items: `Ceylon Weddings Pro: ${plan.name}`,

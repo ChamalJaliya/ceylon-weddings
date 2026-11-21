@@ -15,7 +15,7 @@
  * Run: node scripts/check-design-system.mjs   (also: node --test scripts/check-design-system.mjs)
  */
 import { readFileSync, readdirSync, statSync } from "node:fs";
-import { dirname, join, relative } from "node:path";
+import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -25,7 +25,8 @@ const TOKENS = "packages/ui/src/styles/tokens.css";
 
 const HUES =
   "slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose";
-const COLOR_UTIL = "bg|text|border|from|via|to|ring|fill|stroke|shadow|divide|outline|decoration|accent|caret|placeholder";
+const COLOR_UTIL =
+  "bg|text|border|from|via|to|ring|fill|stroke|shadow|divide|outline|decoration|accent|caret|placeholder";
 
 /** Each rule: name, regex (global), human hint. */
 const SOURCE_RULES = [
@@ -73,15 +74,18 @@ const SOURCE_RULES = [
     name: "hex-literal",
     re: /["'`]#[0-9a-fA-F]{3,8}["'`]/g,
     hint: "chrome colours live in tokens.css; mark user-data palettes with `design-system: user-data-colors`",
-    allow: (line, prev) =>
-      /design-system:/.test(prev) || /design-system:/.test(line) || /placeholder=["']#/.test(line),
+    allow: (line, prev) => /design-system:/.test(prev) || /design-system:/.test(line) || /placeholder=["']#/.test(line),
   },
 ];
 
 const CSS_RULES = [
   { name: "css-hex", re: /#[0-9a-fA-F]{3,8}\b/g, hint: "hex belongs in tokens.css primitives" },
   { name: "css-raw-color", re: /\b(?:rgba?|hsla?|oklch|oklab)\(/g, hint: "use var(--color-*) / color-mix with tokens" },
-  { name: "css-heavy-weight", re: /font-weight:\s*(?:600|700|800|900|bold|bolder)\b/g, hint: "use var(--font-weight-medium)" },
+  {
+    name: "css-heavy-weight",
+    re: /font-weight:\s*(?:600|700|800|900|bold|bolder)\b/g,
+    hint: "use var(--font-weight-medium)",
+  },
   { name: "css-important", re: /!important/g, hint: "raise specificity or use a layer instead" },
 ];
 
@@ -125,35 +129,55 @@ export function scanCss(text) {
 function densityQueries() {
   const ts = readFileSync(join(root, "packages/ui/src/lib/responsive-tiers.ts"), "utf8");
   const block = ts.match(/DENSITY_MEDIA_QUERIES = \{([\s\S]*?)\} as const/)?.[1] ?? "";
-  return Object.fromEntries(
-    [...block.matchAll(/(\w+):\s*"([^"]+)"/g)].map(([, tier, query]) => [tier, query]),
-  );
+  return Object.fromEntries([...block.matchAll(/(\w+):\s*"([^"]+)"/g)].map(([, tier, query]) => [tier, query]));
 }
 
-export function run() {
+/**
+ * @param {string[] | null} only  Absolute paths to scan (lint-staged passes staged files).
+ *   null = whole repo. Theme and density checks always run (they are cheap).
+ */
+export function run(only = null) {
   const problems = [];
+  const inScope = (file) => !only || only.includes(file);
+  const isSource = (n) => /\.(ts|tsx)$/.test(n) && !/\.(spec|test)\.tsx?$/.test(n);
 
   for (const base of SOURCE_ROOTS) {
     const abs = join(root, base);
-    for (const file of walk(abs, (n) => /\.(ts|tsx)$/.test(n) && !/\.(spec|test)\.tsx?$/.test(n))) {
+    for (const file of walk(abs, isSource)) {
+      if (!inScope(file)) continue;
       for (const hit of scanSource(readFileSync(file, "utf8"))) problems.push({ file, ...hit });
     }
   }
 
-  for (const file of walk(join(root, STYLE_ROOT), (n) => n.endsWith(".css"))) {
-    if (relative(root, file) === TOKENS) continue;
+  const cssFiles = [
+    ...walk(join(root, STYLE_ROOT), (n) => n.endsWith(".css")),
+    join(root, "apps/web/src/app/globals.css"),
+  ];
+  for (const file of cssFiles) {
+    if (relative(root, file) === TOKENS || !inScope(file)) continue;
     for (const hit of scanCss(readFileSync(file, "utf8"))) problems.push({ file, ...hit });
   }
-  const appCss = join(root, "apps/web/src/app/globals.css");
-  for (const hit of scanCss(readFileSync(appCss, "utf8"))) problems.push({ file: appCss, ...hit });
 
   // Themes reassign semantic tokens only — no new hex inside .temple / .night.
   const tokens = stripCssComments(readFileSync(join(root, TOKENS), "utf8"));
   for (const theme of ["temple", "night"]) {
     const body = tokens.match(new RegExp(`\\.${theme}\\s*\\{([\\s\\S]*?)\\n\\}`))?.[1] ?? "";
-    if (!body) problems.push({ file: join(root, TOKENS), line: 0, rule: "theme-missing", match: `.${theme}`, hint: "theme block not found" });
+    if (!body)
+      problems.push({
+        file: join(root, TOKENS),
+        line: 0,
+        rule: "theme-missing",
+        match: `.${theme}`,
+        hint: "theme block not found",
+      });
     for (const m of body.matchAll(/#[0-9a-fA-F]{3,8}\b/g)) {
-      problems.push({ file: join(root, TOKENS), line: 0, rule: "theme-hex", match: `.${theme} ${m[0]}`, hint: "point at a primitive with var()" });
+      problems.push({
+        file: join(root, TOKENS),
+        line: 0,
+        rule: "theme-hex",
+        match: `.${theme} ${m[0]}`,
+        hint: "point at a primitive with var()",
+      });
     }
   }
 
@@ -164,10 +188,22 @@ export function run() {
   for (const [tier, query] of Object.entries(queries)) {
     const q = normalize(query);
     if (!density.includes(`@media ${q}`)) {
-      problems.push({ file: join(root, STYLE_ROOT, "density.css"), line: 0, rule: "density-drift", match: tier, hint: `expected @media ${q}` });
+      problems.push({
+        file: join(root, STYLE_ROOT, "density.css"),
+        line: 0,
+        rule: "density-drift",
+        match: tier,
+        hint: `expected @media ${q}`,
+      });
     }
     if (tier !== "phone" && !globals.includes(`@custom-variant ${tier} { @media ${q}`)) {
-      problems.push({ file: join(root, STYLE_ROOT, "globals.css"), line: 0, rule: "density-drift", match: tier, hint: `expected @custom-variant ${tier} with ${q}` });
+      problems.push({
+        file: join(root, STYLE_ROOT, "globals.css"),
+        line: 0,
+        rule: "density-drift",
+        match: tier,
+        hint: `expected @custom-variant ${tier} with ${q}`,
+      });
     }
   }
   // Only density.css may own viewport height / resolution queries.
@@ -175,7 +211,13 @@ export function run() {
     if (/density\.css$|globals\.css$/.test(file)) continue;
     const css = stripCssComments(readFileSync(file, "utf8"));
     for (const m of css.matchAll(/@media[^{]*(?:height|resolution)[^{]*/g)) {
-      problems.push({ file, line: 0, rule: "density-owner", match: m[0].trim(), hint: "viewport density lives in density.css" });
+      problems.push({
+        file,
+        line: 0,
+        rule: "density-owner",
+        match: m[0].trim(),
+        hint: "viewport density lives in density.css",
+      });
     }
   }
 
@@ -190,19 +232,34 @@ if (underNodeTest) {
   const assert = await import("node:assert/strict");
   test("design system: no token bypasses", () => {
     const problems = run();
-    assert.equal(problems.length, 0, problems.map((p) => `${relative(root, p.file)}:${p.line} ${p.rule} ${p.match}`).join("\n"));
+    assert.equal(
+      problems.length,
+      0,
+      problems.map((p) => `${relative(root, p.file)}:${p.line} ${p.rule} ${p.match}`).join("\n"),
+    );
   });
   test("guard catches what it should", () => {
     const sample = `<div className="bg-amber-500/15 text-white font-bold text-[11px] tracking-[0.2em] bg-[#fff] max-[1400px]:hidden" />\nconst c = "#abc";\nif (!window.confirm("x")) alert("y");`;
     const rules = new Set(scanSource(sample).map((h) => h.rule));
-    for (const r of ["palette-class", "white-black-class", "heavy-weight", "arbitrary-text-size", "arbitrary-tracking", "arbitrary-color", "density-breakpoint", "hex-literal", "native-dialog"]) {
+    for (const r of [
+      "palette-class",
+      "white-black-class",
+      "heavy-weight",
+      "arbitrary-text-size",
+      "arbitrary-tracking",
+      "arbitrary-color",
+      "density-breakpoint",
+      "hex-literal",
+      "native-dialog",
+    ]) {
       assert.ok(rules.has(r), `missing ${r}`);
     }
     assert.equal(scanSource(`// design-system: user-data-colors\nconst c = "#abc";`).length, 0);
     assert.equal(scanSource(`<div className="bg-primary text-muted-foreground font-medium text-label" />`).length, 0);
   });
 } else if (isMain) {
-  const problems = run();
+  const args = process.argv.slice(2).filter((a) => !a.startsWith("-"));
+  const problems = run(args.length ? args.map((a) => resolve(a)) : null);
   if (problems.length) {
     for (const p of problems) {
       console.error(`${relative(root, p.file)}:${p.line}  [${p.rule}] ${p.match}\n    → ${p.hint}`);

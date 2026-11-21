@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { api } from "@ceylonweddings/web";
@@ -116,7 +116,10 @@ export default function GuestsPage() {
   }, [searchParams]);
 
   useEffect(() => {
-    api.wedding.guests().then(setGuests).catch(() => setGuests([]));
+    api.wedding
+      .guests()
+      .then(setGuests)
+      .catch(() => setGuests([]));
     api.wedding
       .inviteTemplates()
       .then((rows) => {
@@ -139,10 +142,7 @@ export default function GuestsPage() {
   );
 
   const summary = useMemo(() => guestListSummary(guests), [guests]);
-  const plates = useMemo(
-    () => plateSummary(guests, data?.guestCountEstimate ?? 0),
-    [guests, data?.guestCountEstimate],
-  );
+  const plates = useMemo(() => plateSummary(guests, data?.guestCountEstimate ?? 0), [guests, data?.guestCountEstimate]);
 
   const filtered = useMemo(() => {
     return guests.filter((guest) => {
@@ -307,10 +307,7 @@ export default function GuestsPage() {
           className="w-[11rem]"
           value={filterStatus}
           onValueChange={setFilterStatus}
-          options={[
-            { value: "ALL", label: "All statuses" },
-            ...STATUSES.map((item) => ({ value: item, label: item })),
-          ]}
+          options={[{ value: "ALL", label: "All statuses" }, ...STATUSES.map((item) => ({ value: item, label: item }))]}
         />
         <SimpleSelect
           className="w-[10rem]"
@@ -350,7 +347,7 @@ export default function GuestsPage() {
                 const rows = guests
                   .map(
                     (g) =>
-                      `"${g.label.replace(/"/g, '""')}","${g.headName.replace(/"/g, '""')}",${g.side},${g.plusCount},${g.status},${g.meal || ""},"${g.phone || ""}",${g.giftReceived},${g.thanked}`
+                      `"${g.label.replace(/"/g, '""')}","${g.headName.replace(/"/g, '""')}",${g.side},${g.plusCount},${g.status},${g.meal || ""},"${g.phone || ""}",${g.giftReceived},${g.thanked}`,
                   )
                   .join("\n");
                 const blob = new Blob([header + rows], { type: "text/csv;charset=utf-8;" });
@@ -588,9 +585,7 @@ export default function GuestsPage() {
                   key={event.id}
                   type="button"
                   className={`rounded-full px-3 py-1 text-xs ${on ? "bg-primary text-primary-foreground" : "bg-secondary"}`}
-                  onClick={() =>
-                    setEventIds((ids) => (on ? ids.filter((id) => id !== event.id) : [...ids, event.id]))
-                  }
+                  onClick={() => setEventIds((ids) => (on ? ids.filter((id) => id !== event.id) : [...ids, event.id]))}
                 >
                   {event.name}
                 </button>

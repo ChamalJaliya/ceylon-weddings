@@ -4,7 +4,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import { Settings2 } from "lucide-react";
 import { COOKIES, formatMoney, usePreferenceStore } from "@ceylonweddings/web";
-import type { Currency, Locale, ThemeName } from "@ceylonweddings/contracts";
+import type { Currency, Locale } from "@ceylonweddings/contracts";
 import { SimpleSelect } from "@ceylonweddings/ui/components/select";
 import { Button } from "@ceylonweddings/ui/components/button";
 import { Icon } from "@ceylonweddings/ui/components/icon";

@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Music2 } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
@@ -47,16 +47,7 @@ const CUE_KINDS: MusicCueKind[] = [
   "CUSTOM",
 ];
 
-const VIBES: MusicVibe[] = [
-  "TRADITIONAL",
-  "ROMANTIC",
-  "UPBEAT",
-  "BAILA",
-  "RELIGIOUS",
-  "SOFT",
-  "PARTY",
-  "CUSTOM",
-];
+const VIBES: MusicVibe[] = ["TRADITIONAL", "ROMANTIC", "UPBEAT", "BAILA", "RELIGIOUS", "SOFT", "PARTY", "CUSTOM"];
 
 export default function MusicPage() {
   const t = useTranslations();
@@ -82,7 +73,10 @@ export default function MusicPage() {
   const [cueAppointmentId, setCueAppointmentId] = useState<string>("");
 
   useEffect(() => {
-    api.wedding.appointments().then(setAppointments).catch(() => setAppointments([]));
+    api.wedding
+      .appointments()
+      .then(setAppointments)
+      .catch(() => setAppointments([]));
   }, []);
 
   useEffect(() => {
@@ -107,28 +101,16 @@ export default function MusicPage() {
     setPlan(existing);
   }, [eventId, plans]);
 
-  const event = useMemo(
-    () => data?.events?.find((item) => item.id === eventId) ?? null,
-    [data, eventId],
-  );
+  const event = useMemo(() => data?.events?.find((item) => item.id === eventId) ?? null, [data, eventId]);
 
-  const agenda = useMemo(
-    () => appointments.filter((a) => a.eventId === eventId),
-    [appointments, eventId],
-  );
+  const agenda = useMemo(() => appointments.filter((a) => a.eventId === eventId), [appointments, eventId]);
 
   const entertainment = useMemo(
-    () =>
-      (data?.team ?? []).filter(
-        (v) => v.category === "ENTERTAINMENT" && v.status === "BOOKED",
-      ),
+    () => (data?.team ?? []).filter((v) => v.category === "ENTERTAINMENT" && v.status === "BOOKED"),
     [data?.team],
   );
 
-  const tracksByList = useMemo(
-    () => musicTracksByList((plan?.tracks ?? []) as MusicTrack[]),
-    [plan?.tracks],
-  );
+  const tracksByList = useMemo(() => musicTracksByList((plan?.tracks ?? []) as MusicTrack[]), [plan?.tracks]);
 
   const cues = useMemo(() => {
     if (!event) return (plan?.cues ?? []) as MusicCue[];
@@ -360,11 +342,7 @@ export default function MusicPage() {
     return (
       <div className="space-y-6">
         <PageHeader title={t("nav.music")} description={t("planning.musicHelp")} />
-        <EmptyState
-          icon={Music2}
-          title={t("planning.noEvents")}
-          description={t("planning.musicNeedEvent")}
-        />
+        <EmptyState icon={Music2} title={t("planning.noEvents")} description={t("planning.musicNeedEvent")} />
       </div>
     );
   }
@@ -401,11 +379,7 @@ export default function MusicPage() {
       {status ? <p className="text-sm text-muted-foreground">{status}</p> : null}
 
       {!plan ? (
-        <EmptyState
-          icon={Music2}
-          title={t("planning.musicEmptyTitle")}
-          description={t("planning.musicEmptyBody")}
-        />
+        <EmptyState icon={Music2} title={t("planning.musicEmptyTitle")} description={t("planning.musicEmptyBody")} />
       ) : (
         <>
           <section className="grid gap-4 md:grid-cols-2">
@@ -414,10 +388,7 @@ export default function MusicPage() {
               <SimpleSelect
                 value={plan.vibePrimary ?? "__none__"}
                 onValueChange={(value) => void onSaveVibe(value === "__none__" ? null : (value as MusicVibe))}
-                options={[
-                  { value: "__none__", label: "—" },
-                  ...VIBES.map((vibe) => ({ value: vibe, label: vibe })),
-                ]}
+                options={[{ value: "__none__", label: "—" }, ...VIBES.map((vibe) => ({ value: vibe, label: vibe }))]}
               />
             </div>
             <div className="space-y-2 rounded-xl border border-border/60 p-4">
@@ -451,7 +422,11 @@ export default function MusicPage() {
                     <Button type="button" variant="ghost" disabled={busy} onClick={() => void onShare(false)}>
                       {t("planning.musicDisableShare")}
                     </Button>
-                    <Button type="button" disabled={busy || !plan.entertainmentVendorId} onClick={() => void messageEntertainment()}>
+                    <Button
+                      type="button"
+                      disabled={busy || !plan.entertainmentVendorId}
+                      onClick={() => void messageEntertainment()}
+                    >
                       {t("planning.musicMessageVendor")}
                     </Button>
                   </>
@@ -462,9 +437,7 @@ export default function MusicPage() {
                 )}
               </div>
             </div>
-            {briefUrl ? (
-              <p className="break-all font-mono text-xs text-muted-foreground">{briefUrl}</p>
-            ) : null}
+            {briefUrl ? <p className="break-all font-mono text-xs text-muted-foreground">{briefUrl}</p> : null}
           </section>
 
           <section className="space-y-4">
@@ -519,7 +492,13 @@ export default function MusicPage() {
                               </a>
                             ) : null}
                           </div>
-                          <Button type="button" variant="ghost" size="sm" disabled={busy} onClick={() => void onDeleteTrack(track.id)}>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            disabled={busy}
+                            onClick={() => void onDeleteTrack(track.id)}
+                          >
                             {t("planning.remove")}
                           </Button>
                         </li>
@@ -595,7 +574,13 @@ export default function MusicPage() {
                               : "Time TBD"}
                         </p>
                       </div>
-                      <Button type="button" variant="ghost" size="sm" disabled={busy} onClick={() => void onDeleteCue(cue.id)}>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        disabled={busy}
+                        onClick={() => void onDeleteCue(cue.id)}
+                      >
                         {t("planning.remove")}
                       </Button>
                     </li>

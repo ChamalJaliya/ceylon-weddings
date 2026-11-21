@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { type FormEvent, useState } from "react";
 import { useTranslations } from "next-intl";
 import { ListChecks } from "lucide-react";
 import { api } from "@ceylonweddings/web";
@@ -164,11 +164,15 @@ export default function ChecklistPage() {
                   <div>
                     <p className="text-sm font-medium">{task.title}</p>
                     <p className="text-xs text-muted-foreground">
-                      {task.assigneeUserId ? members[task.assigneeUserId] ?? t("planning.assignee") : t("planning.category")}
+                      {task.assigneeUserId
+                        ? (members[task.assigneeUserId] ?? t("planning.assignee"))
+                        : t("planning.category")}
                     </p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <Badge intent={task.status === "DONE" ? "success" : task.status === "DOING" ? "warning" : "default"}>
+                    <Badge
+                      intent={task.status === "DONE" ? "success" : task.status === "DOING" ? "warning" : "default"}
+                    >
                       {t(`planning.${task.status.toLowerCase()}`)}
                     </Badge>
                     <Button size="sm" variant="outline" disabled={busy === task.id} onClick={() => cycle(task)}>

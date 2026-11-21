@@ -1,21 +1,15 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Bell, MessageCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
-import {
-  api,
-  useAuthStore,
-  useMessagingStore,
-  useRealtimeMessaging,
-} from "@ceylonweddings/web";
+import { api, useAuthStore, useMessagingStore, useRealtimeMessaging } from "@ceylonweddings/web";
 import type { Inquiry } from "@ceylonweddings/contracts";
 import { Popover, PopoverContent, PopoverTrigger } from "@ceylonweddings/ui/components/popover";
 import { Button } from "@ceylonweddings/ui/components/button";
 import { Icon } from "@ceylonweddings/ui/components/icon";
 import { useRouter } from "../i18n/navigation";
 import { PreferenceControls } from "./preference-controls";
-import { useState } from "react";
 
 function messagesHref(role: string | undefined) {
   if (role === "VENDOR") return "/pro/messages";
@@ -23,13 +17,7 @@ function messagesHref(role: string | undefined) {
   return "/planning/messages";
 }
 
-export function ShellTrail({
-  overlay = false,
-  messages = false,
-}: {
-  overlay?: boolean;
-  messages?: boolean;
-}) {
+export function ShellTrail({ overlay = false, messages = false }: { overlay?: boolean; messages?: boolean }) {
   const t = useTranslations();
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
@@ -47,7 +35,10 @@ export function ShellTrail({
   useEffect(() => {
     if (!messages || !user) return;
     if (user.role === "COUPLE" || user.role === "FAMILY") {
-      api.wedding.inquiries().then(setInquiries).catch(() => setInquiries([]));
+      api.wedding
+        .inquiries()
+        .then(setInquiries)
+        .catch(() => setInquiries([]));
     }
   }, [messages, user]);
 
@@ -77,11 +68,7 @@ export function ShellTrail({
           <PopoverContent className="w-80">
             <div className="mb-3 flex items-center justify-between gap-2">
               <p className="font-medium">{t("nav.messages")}</p>
-              <button
-                type="button"
-                className="text-xs font-medium text-primary"
-                onClick={() => router.push(href)}
-              >
+              <button type="button" className="text-xs font-medium text-primary" onClick={() => router.push(href)}>
                 {t("messaging.openInbox")}
               </button>
             </div>
@@ -94,9 +81,7 @@ export function ShellTrail({
                   onClick={() => router.push(`${href}?c=${item.id}`)}
                 >
                   <p className="font-medium">{item.peer?.name ?? item.vendorName ?? t("messaging.support")}</p>
-                  <p className="line-clamp-2 text-xs text-muted-foreground">
-                    {item.lastMessagePreview ?? "—"}
-                  </p>
+                  <p className="line-clamp-2 text-xs text-muted-foreground">{item.lastMessagePreview ?? "—"}</p>
                 </button>
               ))}
               {dmPreview.length === 0 ? (

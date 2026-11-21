@@ -231,21 +231,9 @@ function ItemNode({
           strokeWidth={selected ? 2 : 1}
         />
         {image ? (
-          <KonvaImage
-            image={image}
-            width={item.width}
-            height={item.height}
-            cornerRadius={6}
-            listening={false}
-          />
+          <KonvaImage image={image} width={item.width} height={item.height} cornerRadius={6} listening={false} />
         ) : null}
-        <Rect
-          width={item.width}
-          height={item.height}
-          fill="rgba(31,26,22,0.28)"
-          cornerRadius={6}
-          listening={false}
-        />
+        <Rect width={item.width} height={item.height} fill="rgba(31,26,22,0.28)" cornerRadius={6} listening={false} />
         <Ellipse
           x={item.width / 2}
           y={item.height / 2}
@@ -276,22 +264,14 @@ function ItemNode({
           dash={[8, 6]}
           fill="rgba(196,165,116,0.04)"
         />
-        {item.label ? (
-          <Text text={item.label} y={-22} fontSize={12} fill={item.stroke} listening={false} />
-        ) : null}
+        {item.label ? <Text text={item.label} y={-22} fontSize={12} fill={item.stroke} listening={false} /> : null}
       </Group>
     );
   }
   return null;
 }
 
-export function MoodboardEngine({
-  assets,
-  className,
-}: {
-  assets: MoodboardAsset[];
-  className?: string;
-}) {
+export function MoodboardEngine({ assets, className }: { assets: MoodboardAsset[]; className?: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<Konva.Stage>(null);
   const trRef = useRef<Konva.Transformer>(null);
@@ -333,10 +313,7 @@ export function MoodboardEngine({
     return map;
   }, [assets]);
 
-  const sortedItems = useMemo(
-    () => [...scene.items].sort((a, b) => (a.zIndex ?? 0) - (b.zIndex ?? 0)),
-    [scene.items],
-  );
+  const sortedItems = useMemo(() => [...scene.items].sort((a, b) => (a.zIndex ?? 0) - (b.zIndex ?? 0)), [scene.items]);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -522,11 +499,7 @@ export function MoodboardEngine({
           drawingId.current = item.id;
           addItem(item);
         } else if (tool === "line" || tool === "arrow") {
-          const item = createLineItem(
-            [world.x, world.y, world.x, world.y],
-            tool === "arrow",
-            style,
-          );
+          const item = createLineItem([world.x, world.y, world.x, world.y], tool === "arrow", style);
           drawingId.current = item.id;
           addItem(item);
         } else if (tool === "path") {
@@ -545,7 +518,7 @@ export function MoodboardEngine({
   );
 
   const onPointerMove = useCallback(
-    (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
+    (_e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
       const stage = stageRef.current;
       if (!stage) return;
       const pointer = stage.getPointerPosition();
@@ -632,7 +605,15 @@ export function MoodboardEngine({
       node.scaleY(1);
       const item = useMoodboardStore.getState().scene.items.find((i) => i.id === id);
       if (!item) continue;
-      if (item.type === "rect" || item.type === "ellipse" || item.type === "image" || item.type === "sticky" || item.type === "text" || item.type === "video" || item.type === "frame") {
+      if (
+        item.type === "rect" ||
+        item.type === "ellipse" ||
+        item.type === "image" ||
+        item.type === "sticky" ||
+        item.type === "text" ||
+        item.type === "video" ||
+        item.type === "frame"
+      ) {
         updateItem(id, {
           x: snap(node.x()),
           y: snap(node.y()),
@@ -682,18 +663,12 @@ export function MoodboardEngine({
         }}
       >
         <Layer listening={false}>
-          <Rect
-            x={-50000}
-            y={-50000}
-            width={100000}
-            height={100000}
-            fill={scene.background}
-          />
+          <Rect x={-50000} y={-50000} width={100000} height={100000} fill={scene.background} />
           {scene.grid.enabled
             ? Array.from({ length: 80 }).flatMap((_, i) => {
                 const g = scene.grid.size;
-                const originX = Math.floor((-scene.camera.x / scene.camera.zoom) / g) * g;
-                const originY = Math.floor((-scene.camera.y / scene.camera.zoom) / g) * g;
+                const originX = Math.floor(-scene.camera.x / scene.camera.zoom / g) * g;
+                const originY = Math.floor(-scene.camera.y / scene.camera.zoom / g) * g;
                 const x = originX + i * g;
                 const y = originY + i * g;
                 return [

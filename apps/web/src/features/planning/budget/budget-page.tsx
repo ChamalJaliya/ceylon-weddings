@@ -1,11 +1,10 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Wallet } from "lucide-react";
 import { api, formatMoney, usePreferenceStore } from "@ceylonweddings/web";
-import type { BudgetLine, Payer } from "@ceylonweddings/contracts";
-import { payerRollup } from "@ceylonweddings/contracts";
+import { type BudgetLine, type Payer , payerRollup } from "@ceylonweddings/contracts";
 import { Button } from "@ceylonweddings/ui/components/button";
 import { Input } from "@ceylonweddings/ui/components/input";
 import { DatePicker } from "@ceylonweddings/ui/components/date-picker";
@@ -38,8 +37,8 @@ export default function BudgetPage() {
   const [label, setLabel] = useState("");
   const [category, setCategory] = useState("other");
   const [plannedLkr, setPlannedLkr] = useState(0);
-  const [spentLkr, setSpentLkr] = useState(0);
-  const [paidLkr, setPaidLkr] = useState(0);
+  const [spentLkr] = useState(0);
+  const [paidLkr] = useState(0);
   const [payer, setPayer] = useState<Payer>("COUPLE");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const lines = data?.budgetLines ?? [];
@@ -105,7 +104,12 @@ export default function BudgetPage() {
       <FormPanel className="h-fit gap-3 p-4">
         <form className="grid gap-3" onSubmit={onCreate}>
           <FieldBlock label={t("planning.label")} compact>
-            <Input placeholder={t("planning.label")} value={label} onChange={(e) => setLabel(e.target.value)} required />
+            <Input
+              placeholder={t("planning.label")}
+              value={label}
+              onChange={(e) => setLabel(e.target.value)}
+              required
+            />
           </FieldBlock>
           <FieldBlock label={t("planning.category")} compact>
             <Input
@@ -151,13 +155,48 @@ export default function BudgetPage() {
             onClick={async () => {
               const cap = data.budgetLkr || 2500000;
               const benchmarks = [
-                { label: "Venue, Catering & Welcome Drinks (45%)", category: "venue", plannedLkr: Math.round(cap * 0.45), payer: "COUPLE" as Payer },
-                { label: "Photography & Cinematic Video (15%)", category: "photo", plannedLkr: Math.round(cap * 0.15), payer: "COUPLE" as Payer },
-                { label: "Bridal Osariya, Groom Mul Anduma & Jewellery (15%)", category: "attire", plannedLkr: Math.round(cap * 0.15), payer: "BRIDE_FAMILY" as Payer },
-                { label: "Poruwa Structure & Floral Decor (10%)", category: "decor", plannedLkr: Math.round(cap * 0.10), payer: "COUPLE" as Payer },
-                { label: "Kandyan Dancers, Magul Bera & Live Band (5%)", category: "music", plannedLkr: Math.round(cap * 0.05), payer: "GROOM_FAMILY" as Payer },
-                { label: "Wedding Luxury Cars & Guest Transport (5%)", category: "transport", plannedLkr: Math.round(cap * 0.05), payer: "GROOM_FAMILY" as Payer },
-                { label: "Astrologer, Registrar & Emergency Buffer (5%)", category: "buffer", plannedLkr: Math.round(cap * 0.05), payer: "COUPLE" as Payer },
+                {
+                  label: "Venue, Catering & Welcome Drinks (45%)",
+                  category: "venue",
+                  plannedLkr: Math.round(cap * 0.45),
+                  payer: "COUPLE" as Payer,
+                },
+                {
+                  label: "Photography & Cinematic Video (15%)",
+                  category: "photo",
+                  plannedLkr: Math.round(cap * 0.15),
+                  payer: "COUPLE" as Payer,
+                },
+                {
+                  label: "Bridal Osariya, Groom Mul Anduma & Jewellery (15%)",
+                  category: "attire",
+                  plannedLkr: Math.round(cap * 0.15),
+                  payer: "BRIDE_FAMILY" as Payer,
+                },
+                {
+                  label: "Poruwa Structure & Floral Decor (10%)",
+                  category: "decor",
+                  plannedLkr: Math.round(cap * 0.1),
+                  payer: "COUPLE" as Payer,
+                },
+                {
+                  label: "Kandyan Dancers, Magul Bera & Live Band (5%)",
+                  category: "music",
+                  plannedLkr: Math.round(cap * 0.05),
+                  payer: "GROOM_FAMILY" as Payer,
+                },
+                {
+                  label: "Wedding Luxury Cars & Guest Transport (5%)",
+                  category: "transport",
+                  plannedLkr: Math.round(cap * 0.05),
+                  payer: "GROOM_FAMILY" as Payer,
+                },
+                {
+                  label: "Astrologer, Registrar & Emergency Buffer (5%)",
+                  category: "buffer",
+                  plannedLkr: Math.round(cap * 0.05),
+                  payer: "COUPLE" as Payer,
+                },
               ];
               for (const b of benchmarks) {
                 await api.wedding.createBudgetLine({
@@ -186,17 +225,23 @@ export default function BudgetPage() {
             <div className="p-3 rounded-xl border bg-secondary/30">
               <span className="font-medium text-primary">5-Star Luxury (Colombo/Bentota)</span>
               <p className="text-label text-muted-foreground mt-0.5">LKR 14,500 / plate</p>
-              <p className="font-medium mt-2 text-sm">{formatMoney((data.guestCountEstimate || 150) * 14500, currency)}</p>
+              <p className="font-medium mt-2 text-sm">
+                {formatMoney((data.guestCountEstimate || 150) * 14500, currency)}
+              </p>
             </div>
             <div className="p-3 rounded-xl border bg-secondary/30">
               <span className="font-medium text-primary">4-Star & Heritage Resort</span>
               <p className="text-label text-muted-foreground mt-0.5">LKR 9,500 / plate</p>
-              <p className="font-medium mt-2 text-sm">{formatMoney((data.guestCountEstimate || 150) * 9500, currency)}</p>
+              <p className="font-medium mt-2 text-sm">
+                {formatMoney((data.guestCountEstimate || 150) * 9500, currency)}
+              </p>
             </div>
             <div className="p-3 rounded-xl border bg-secondary/30">
               <span className="font-medium text-primary">Banquet Hall & Reception</span>
               <p className="text-label text-muted-foreground mt-0.5">LKR 6,200 / plate</p>
-              <p className="font-medium mt-2 text-sm">{formatMoney((data.guestCountEstimate || 150) * 6200, currency)}</p>
+              <p className="font-medium mt-2 text-sm">
+                {formatMoney((data.guestCountEstimate || 150) * 6200, currency)}
+              </p>
             </div>
           </div>
         </div>
@@ -226,7 +271,8 @@ export default function BudgetPage() {
           <SectionCard title={t("knotly.finalCost")} delay={2} variant="muted">
             <p className="font-serif text-3xl font-medium tracking-tight">{formatMoney(spent, currency)}</p>
             <p className="text-sm text-muted-foreground">
-              {t("planning.spent")}: {formatMoney(paid, currency)} · {t("knotly.pending")}: {formatMoney(pending, currency)}
+              {t("planning.spent")}: {formatMoney(paid, currency)} · {t("knotly.pending")}:{" "}
+              {formatMoney(pending, currency)}
             </p>
           </SectionCard>
         </div>
@@ -256,7 +302,10 @@ export default function BudgetPage() {
               <span />
             </div>
             {filtered.map((line) => (
-              <div key={line.id} className="cw-row-lift grid gap-2 rounded-xl border border-border/60 bg-background/40 p-3 md:grid-cols-6 md:items-center md:border-0 md:bg-transparent md:p-0">
+              <div
+                key={line.id}
+                className="cw-row-lift grid gap-2 rounded-xl border border-border/60 bg-background/40 p-3 md:grid-cols-6 md:items-center md:border-0 md:bg-transparent md:p-0"
+              >
                 <span className="font-medium">{line.label}</span>
                 <Input
                   type="number"

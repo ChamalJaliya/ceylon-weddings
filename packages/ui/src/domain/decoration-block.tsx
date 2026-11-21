@@ -3,10 +3,7 @@
 import { Lottie } from "lottie-react";
 import { cn } from "../lib/utils";
 import { ICON_STROKE } from "../contracts/icon";
-import {
-  ANIMATED_ICON_NAMES,
-  resolveAnimatedIconByName,
-} from "../components/animate-ui/icons/registry";
+import { ANIMATED_ICON_NAMES, resolveAnimatedIconByName } from "../components/animate-ui/icons/registry";
 import { motion, useReducedMotion } from "./motion";
 
 export { ANIMATED_ICON_NAMES };
@@ -97,15 +94,7 @@ const SLIDE_OFFSET: Record<StageSlot, { x: number; y: number }> = {
 };
 
 /** Static icon render for admin pickers and previews. */
-export function StageIconPreview({
-  name,
-  size = 24,
-  className,
-}: {
-  name: string;
-  size?: number;
-  className?: string;
-}) {
+export function StageIconPreview({ name, size = 24, className }: { name: string; size?: number; className?: string }) {
   const Animated = resolveAnimatedIconByName(name);
   if (!Animated) return null;
   return <Animated size={size} strokeWidth={ICON_STROKE} className={className} aria-hidden />;
@@ -121,9 +110,7 @@ export function DecorationBlockView({ block, className }: { block: StageBlock; c
   })();
 
   const animate =
-    !reduce && block.entrance === "FLOAT"
-      ? { opacity: 1, x: 0, y: [0, -8, 0] }
-      : { opacity: 1, x: 0, y: 0 };
+    !reduce && block.entrance === "FLOAT" ? { opacity: 1, x: 0, y: [0, -8, 0] } : { opacity: 1, x: 0, y: 0 };
 
   const transition =
     !reduce && block.entrance === "FLOAT"
@@ -163,10 +150,7 @@ function BlockBody({ block }: { block: StageBlock }) {
           ) : null}
           {block.body ? (
             <p
-              className={cn(
-                "text-sm leading-relaxed",
-                block.tone === "DEFAULT" ? "text-muted-foreground" : undefined,
-              )}
+              className={cn("text-sm leading-relaxed", block.tone === "DEFAULT" ? "text-muted-foreground" : undefined)}
             >
               {block.body}
             </p>
@@ -191,9 +175,7 @@ function BlockBody({ block }: { block: StageBlock }) {
             loopDelay={600}
           />
           {block.label ? (
-            <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-              {block.label}
-            </span>
+            <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">{block.label}</span>
           ) : null}
         </div>
       );
@@ -232,7 +214,6 @@ function BlockBody({ block }: { block: StageBlock }) {
 
     case "VIDEO":
       return (
-        // eslint-disable-next-line jsx-a11y/media-has-caption
         <video
           src={block.src}
           poster={block.poster ?? undefined}

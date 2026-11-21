@@ -47,7 +47,8 @@ const STEP_META: Record<Step, { label: string; title: string; subtitle: string; 
   date: {
     label: "Step 2 of 6",
     title: "When is the big day?",
-    subtitle: "A wedding date lets us generate your milestone countdown and nekath timeline. You can also skip for now.",
+    subtitle:
+      "A wedding date lets us generate your milestone countdown and nekath timeline. You can also skip for now.",
     icon: Calendar,
   },
   place: {
@@ -77,14 +78,54 @@ const STEP_META: Record<Step, { label: string; title: string; subtitle: string; 
 };
 
 const TYPE_OPTIONS: Array<{ value: WeddingType; title: string; description: string; emoji: string }> = [
-  { value: "KANDYAN_PORUWA", title: "Kandyan Poruwa", description: "Traditional Sinhala ceremony with osariya and nilame.", emoji: "🪷" },
-  { value: "WESTERN_CHURCH", title: "Western / Church", description: "Church vows and elegant seated reception.", emoji: "⛪" },
-  { value: "HINDU", title: "Hindu Mandapam", description: "Vibrant Mandapam rituals, sacred fire, and garlands.", emoji: "🪔" },
-  { value: "MUSLIM_NIKAH", title: "Nikah & Walima", description: "Solemn Nikah blessing and festive Walima dinner.", emoji: "🌙" },
-  { value: "HOMECOMING", title: "Homecoming", description: "Bride welcoming celebration after the main ceremony.", emoji: "🏡" },
-  { value: "ENGAGEMENT", title: "Engagement Party", description: "Intimate family ring exchange and dinner.", emoji: "💎" },
-  { value: "MEHNDI", title: "Mehndi Night", description: "Henna night filled with folk music and dancing.", emoji: "✨" },
-  { value: "DESTINATION", title: "Beach / Destination", description: "Coastal resort or colonial fortress celebration.", emoji: "🌴" },
+  {
+    value: "KANDYAN_PORUWA",
+    title: "Kandyan Poruwa",
+    description: "Traditional Sinhala ceremony with osariya and nilame.",
+    emoji: "🪷",
+  },
+  {
+    value: "WESTERN_CHURCH",
+    title: "Western / Church",
+    description: "Church vows and elegant seated reception.",
+    emoji: "⛪",
+  },
+  {
+    value: "HINDU",
+    title: "Hindu Mandapam",
+    description: "Vibrant Mandapam rituals, sacred fire, and garlands.",
+    emoji: "🪔",
+  },
+  {
+    value: "MUSLIM_NIKAH",
+    title: "Nikah & Walima",
+    description: "Solemn Nikah blessing and festive Walima dinner.",
+    emoji: "🌙",
+  },
+  {
+    value: "HOMECOMING",
+    title: "Homecoming",
+    description: "Bride welcoming celebration after the main ceremony.",
+    emoji: "🏡",
+  },
+  {
+    value: "ENGAGEMENT",
+    title: "Engagement Party",
+    description: "Intimate family ring exchange and dinner.",
+    emoji: "💎",
+  },
+  {
+    value: "MEHNDI",
+    title: "Mehndi Night",
+    description: "Henna night filled with folk music and dancing.",
+    emoji: "✨",
+  },
+  {
+    value: "DESTINATION",
+    title: "Beach / Destination",
+    description: "Coastal resort or colonial fortress celebration.",
+    emoji: "🌴",
+  },
 ];
 
 const GUEST_PRESETS = [
@@ -220,7 +261,9 @@ export function CoupleWizardInline({
     body = (
       <div className="grid gap-6">
         <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 text-xs leading-relaxed text-muted-foreground">
-          💡 <span className="font-medium text-foreground">Tip:</span> If you haven&apos;t finalized your auspicious wedding nekath date, you can click <span className="font-medium text-foreground">Skip for now</span> below and update it anytime in your dashboard.
+          💡 <span className="font-medium text-foreground">Tip:</span> If you haven&apos;t finalized your auspicious
+          wedding nekath date, you can click <span className="font-medium text-foreground">Skip for now</span> below and
+          update it anytime in your dashboard.
         </div>
         <FieldBlock label="Wedding Date" hint="Choose your scheduled wedding date">
           <div className="max-w-md">
@@ -236,7 +279,9 @@ export function CoupleWizardInline({
         <label className="flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-border/80 bg-card/60 p-4 transition hover:bg-card">
           <div className="grid gap-0.5">
             <span className="text-sm font-medium">Planning from overseas (Diaspora)</span>
-            <span className="text-xs text-muted-foreground">We&apos;ll highlight vendors offering remote consultations & currency options.</span>
+            <span className="text-xs text-muted-foreground">
+              We&apos;ll highlight vendors offering remote consultations & currency options.
+            </span>
           </div>
           <Switch checked={planningFromOverseas} onCheckedChange={setPlanningFromOverseas} />
         </label>
@@ -303,7 +348,11 @@ export function CoupleWizardInline({
             />
           ))}
         </div>
-        <FieldBlock label="Or enter exact headcount" htmlFor="guests" hint="You can refine this with your exact guest list later">
+        <FieldBlock
+          label="Or enter exact headcount"
+          htmlFor="guests"
+          hint="You can refine this with your exact guest list later"
+        >
           <div className="max-w-xs">
             <Input
               id="guests"
@@ -334,14 +383,16 @@ export function CoupleWizardInline({
   return (
     <div className="mx-auto w-full max-w-3xl">
       {/* Progress header */}
-      <div className="mb-6 flex items-center justify-between gap-4">
+      <div className="mb-4 flex items-center justify-between gap-4">
         <div className="flex items-center gap-2.5">
           <span className="grid size-9 place-items-center rounded-xl bg-primary/10 text-primary">
             <StepIcon className="size-4" />
           </span>
           <div>
             <p className="text-label font-medium tracking-wider text-primary uppercase">{currentMeta.label}</p>
-            <p className="text-xs text-muted-foreground">{stepIndex + 1} of {STEPS.length} questions</p>
+            <p className="text-xs text-muted-foreground">
+              {stepIndex + 1} of {STEPS.length} questions
+            </p>
           </div>
         </div>
 
@@ -352,11 +403,7 @@ export function CoupleWizardInline({
               key={s}
               className={cn(
                 "h-1.5 rounded-full transition-all duration-300",
-                idx === stepIndex
-                  ? "w-6 bg-primary"
-                  : idx < stepIndex
-                    ? "w-2 bg-primary/50"
-                    : "w-2 bg-muted",
+                idx === stepIndex ? "w-6 bg-primary" : idx < stepIndex ? "w-2 bg-primary/50" : "w-2 bg-muted",
               )}
             />
           ))}
@@ -364,14 +411,10 @@ export function CoupleWizardInline({
       </div>
 
       {/* Main Glassmorphic Panel */}
-      <div className="relative overflow-hidden rounded-3xl border border-border/80 bg-card/80 p-6 shadow-xl backdrop-blur-md sm:p-8">
-        <header className="mb-6 grid gap-1.5">
-          <h2 className="font-serif text-2xl font-medium tracking-tight sm:text-3xl">
-            {currentMeta.title}
-          </h2>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            {currentMeta.subtitle}
-          </p>
+      <div className="relative">
+        <header className="mb-5 grid gap-1">
+          <h2 className="font-serif text-2xl font-medium tracking-tight sm:text-3xl">{currentMeta.title}</h2>
+          <p className="text-sm text-muted-foreground leading-relaxed">{currentMeta.subtitle}</p>
         </header>
 
         {error ? (
@@ -393,7 +436,7 @@ export function CoupleWizardInline({
         </AnimatePresence>
 
         {/* Action footer */}
-        <div className="mt-8 flex items-center justify-between border-t border-border/60 pt-6">
+        <div className="sticky bottom-0 z-10 -mx-1 mt-6 flex items-center justify-between border-t border-border/50 bg-background/90 px-1 py-3 backdrop-blur-sm">
           <Button
             type="button"
             variant="ghost"
@@ -406,12 +449,7 @@ export function CoupleWizardInline({
 
           <div className="flex items-center gap-2.5">
             {step === "date" || step === "place" ? (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => continueFrom(step)}
-                className="text-xs"
-              >
+              <Button type="button" variant="outline" onClick={() => continueFrom(step)} className="text-xs">
                 Skip for now
               </Button>
             ) : null}

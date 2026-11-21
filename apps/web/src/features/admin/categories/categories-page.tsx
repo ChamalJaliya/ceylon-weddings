@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { LayoutGrid, Search, Store } from "lucide-react";
+import { LayoutGrid, Search } from "lucide-react";
 import { api } from "@ceylonweddings/web";
 import type { Vendor } from "@ceylonweddings/contracts";
 import { Input } from "@ceylonweddings/ui/components/input";
@@ -22,33 +22,54 @@ import { Link } from "@/i18n/navigation";
 
 // ─── Category metadata ──────────────────────────────────────────────────────
 
-const CATEGORY_META: Record<
-  string,
-  { emoji: string; gradient: string; accent: string }
-> = {
-  VENUE:         { emoji: "🏛️",  gradient: "from-chart-1/20 via-chart-1/10 to-transparent", accent: "border-chart-1/40" },
-  PHOTO_VIDEO:   { emoji: "📷",  gradient: "from-chart-3/20 via-chart-3/10 to-transparent", accent: "border-chart-3/40" },
-  BRIDAL_WEAR:   { emoji: "👗",  gradient: "from-love/20 via-love/10 to-transparent", accent: "border-love/40" },
-  GROOM_WEAR:    { emoji: "🤵",  gradient: "from-muted-foreground/20 via-muted-foreground/10 to-transparent", accent: "border-muted-foreground/40" },
-  JEWELLERY:     { emoji: "💎",  gradient: "from-premium/20 via-premium/10 to-transparent", accent: "border-premium/40" },
-  HAIR_MAKEUP:   { emoji: "💄",  gradient: "from-love/20 via-love/10 to-transparent", accent: "border-love/40" },
-  BRIDAL_DRESSER:{ emoji: "✨",  gradient: "from-chart-4/20 via-chart-4/10 to-transparent", accent: "border-chart-4/40" },
-  FLORIST_DECOR: { emoji: "🌸",  gradient: "from-chart-2/20 via-chart-2/10 to-transparent", accent: "border-chart-2/40" },
-  CATERER:       { emoji: "🍽️",  gradient: "from-chart-5/20 via-chart-5/10 to-transparent", accent: "border-chart-5/40" },
-  CAKE:          { emoji: "🎂",  gradient: "from-chart-5/20 via-chart-5/10 to-transparent", accent: "border-chart-5/40" },
-  ENTERTAINMENT: { emoji: "🎶",  gradient: "from-info/20 via-info/10 to-transparent", accent: "border-info/40" },
-  PORUWA:        { emoji: "🛕",  gradient: "from-premium/20 via-premium/10 to-transparent", accent: "border-premium/40" },
-  ASTROLOGY:     { emoji: "🔮",  gradient: "from-premium/20 via-premium/10 to-transparent", accent: "border-premium/40" },
-  WEDDING_CARS:  { emoji: "🚗",  gradient: "from-chart-3/20 via-chart-3/10 to-transparent", accent: "border-chart-3/40" },
-  INVITATIONS:   { emoji: "📜",  gradient: "from-chart-1/20 via-chart-1/10 to-transparent", accent: "border-chart-1/40" },
-  PLANNER:       { emoji: "📋",  gradient: "from-chart-2/20 via-chart-2/10 to-transparent", accent: "border-chart-2/40" },
-  REGISTRAR:     { emoji: "⚖️",  gradient: "from-muted-foreground/20 via-muted-foreground/10 to-transparent", accent: "border-muted-foreground/40" },
-  MEHNDI:        { emoji: "🌿",  gradient: "from-chart-2/20 via-chart-2/10 to-transparent", accent: "border-chart-2/40" },
-  TRANSPORT:     { emoji: "🚌",  gradient: "from-info/20 via-info/10 to-transparent", accent: "border-info/40" },
-  ACCOMMODATION: { emoji: "🏨",  gradient: "from-muted-foreground/20 via-muted-foreground/10 to-transparent", accent: "border-muted-foreground/40" },
+const CATEGORY_META: Record<string, { emoji: string; gradient: string; accent: string }> = {
+  VENUE: { emoji: "🏛️", gradient: "from-chart-1/20 via-chart-1/10 to-transparent", accent: "border-chart-1/40" },
+  PHOTO_VIDEO: { emoji: "📷", gradient: "from-chart-3/20 via-chart-3/10 to-transparent", accent: "border-chart-3/40" },
+  BRIDAL_WEAR: { emoji: "👗", gradient: "from-love/20 via-love/10 to-transparent", accent: "border-love/40" },
+  GROOM_WEAR: {
+    emoji: "🤵",
+    gradient: "from-muted-foreground/20 via-muted-foreground/10 to-transparent",
+    accent: "border-muted-foreground/40",
+  },
+  JEWELLERY: { emoji: "💎", gradient: "from-premium/20 via-premium/10 to-transparent", accent: "border-premium/40" },
+  HAIR_MAKEUP: { emoji: "💄", gradient: "from-love/20 via-love/10 to-transparent", accent: "border-love/40" },
+  BRIDAL_DRESSER: {
+    emoji: "✨",
+    gradient: "from-chart-4/20 via-chart-4/10 to-transparent",
+    accent: "border-chart-4/40",
+  },
+  FLORIST_DECOR: {
+    emoji: "🌸",
+    gradient: "from-chart-2/20 via-chart-2/10 to-transparent",
+    accent: "border-chart-2/40",
+  },
+  CATERER: { emoji: "🍽️", gradient: "from-chart-5/20 via-chart-5/10 to-transparent", accent: "border-chart-5/40" },
+  CAKE: { emoji: "🎂", gradient: "from-chart-5/20 via-chart-5/10 to-transparent", accent: "border-chart-5/40" },
+  ENTERTAINMENT: { emoji: "🎶", gradient: "from-info/20 via-info/10 to-transparent", accent: "border-info/40" },
+  PORUWA: { emoji: "🛕", gradient: "from-premium/20 via-premium/10 to-transparent", accent: "border-premium/40" },
+  ASTROLOGY: { emoji: "🔮", gradient: "from-premium/20 via-premium/10 to-transparent", accent: "border-premium/40" },
+  WEDDING_CARS: { emoji: "🚗", gradient: "from-chart-3/20 via-chart-3/10 to-transparent", accent: "border-chart-3/40" },
+  INVITATIONS: { emoji: "📜", gradient: "from-chart-1/20 via-chart-1/10 to-transparent", accent: "border-chart-1/40" },
+  PLANNER: { emoji: "📋", gradient: "from-chart-2/20 via-chart-2/10 to-transparent", accent: "border-chart-2/40" },
+  REGISTRAR: {
+    emoji: "⚖️",
+    gradient: "from-muted-foreground/20 via-muted-foreground/10 to-transparent",
+    accent: "border-muted-foreground/40",
+  },
+  MEHNDI: { emoji: "🌿", gradient: "from-chart-2/20 via-chart-2/10 to-transparent", accent: "border-chart-2/40" },
+  TRANSPORT: { emoji: "🚌", gradient: "from-info/20 via-info/10 to-transparent", accent: "border-info/40" },
+  ACCOMMODATION: {
+    emoji: "🏨",
+    gradient: "from-muted-foreground/20 via-muted-foreground/10 to-transparent",
+    accent: "border-muted-foreground/40",
+  },
 };
 
-const FALLBACK_META = { emoji: "🏷️", gradient: "from-muted/30 via-transparent to-transparent", accent: "border-border/40" };
+const FALLBACK_META = {
+  emoji: "🏷️",
+  gradient: "from-muted/30 via-transparent to-transparent",
+  accent: "border-border/40",
+};
 
 // ─── Page ───────────────────────────────────────────────────────────────────
 
@@ -89,9 +110,7 @@ export default function AdminCategoriesPage() {
   const filteredCategories = useMemo(() => {
     const lower = q.toLowerCase();
     if (!lower) return allCategories;
-    return allCategories.filter((cat) =>
-      (CATEGORY_LABELS[cat] ?? cat).toLowerCase().includes(lower),
-    );
+    return allCategories.filter((cat) => (CATEGORY_LABELS[cat] ?? cat).toLowerCase().includes(lower));
   }, [q, allCategories]);
 
   const totalVendors = vendors.length;
@@ -126,12 +145,7 @@ export default function AdminCategoriesPage() {
       {/* ── Search ────────────────────────────────────────────────── */}
       <div className="relative">
         <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Search categories…"
-          className="pl-9"
-        />
+        <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search categories…" className="pl-9" />
       </div>
 
       {/* ── Mosaic grid ───────────────────────────────────────────── */}
@@ -166,9 +180,7 @@ export default function AdminCategoriesPage() {
                     accent={meta.accent}
                     total={stats.total}
                     verified={stats.verified}
-                    onClick={() =>
-                      router.push(`/admin/vendors?category=${cat}`)
-                    }
+                    onClick={() => router.push(`/admin/vendors?category=${cat}`)}
                   />
                 </StaggerItem>
               );
@@ -182,26 +194,11 @@ export default function AdminCategoriesPage() {
 
 // ─── Stat strip item ────────────────────────────────────────────────────────
 
-function Stat({
-  label,
-  value,
-  loaded,
-  accent,
-}: {
-  label: string;
-  value: number;
-  loaded: boolean;
-  accent?: boolean;
-}) {
+function Stat({ label, value, loaded, accent }: { label: string; value: number; loaded: boolean; accent?: boolean }) {
   return (
     <div className="grid gap-0.5">
       <p className="text-xs text-muted-foreground">{label}</p>
-      <p
-        className={cn(
-          "font-serif text-2xl font-medium tracking-tight tabular-nums",
-          accent && "text-primary",
-        )}
-      >
+      <p className={cn("font-serif text-2xl font-medium tracking-tight tabular-nums", accent && "text-primary")}>
         {loaded ? <AnimatedCounter value={value} /> : "—"}
       </p>
     </div>
@@ -257,15 +254,12 @@ function CategoryTile({
         </span>
 
         {/* Label */}
-        <p className="font-serif text-sm font-medium leading-snug tracking-tight">
-          {label}
-        </p>
+        <p className="font-serif text-sm font-medium leading-snug tracking-tight">{label}</p>
 
         {/* Stats row */}
         <div className="mt-auto flex items-end justify-between gap-2">
           <p className="text-xs tabular-nums text-muted-foreground">
-            <span className="font-medium text-foreground">{total}</span>{" "}
-            {total === 1 ? "listing" : "listings"}
+            <span className="font-medium text-foreground">{total}</span> {total === 1 ? "listing" : "listings"}
           </p>
           {verified > 0 && (
             <span className="rounded-full bg-success/15 px-2 py-0.5 text-label font-medium text-success">

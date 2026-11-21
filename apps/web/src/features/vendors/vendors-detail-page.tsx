@@ -1,10 +1,7 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
-import { useParams } from "next/navigation";
-import { useTranslations, useLocale } from "next-intl";
-import { api, formatMoney, readCatalogHref, useAuthStore, useCompareStore, usePreferenceStore } from "@ceylonweddings/web";
 import {
+  type Article,
   formatPackagePriceLabel,
   formatVendorStartingPriceLabel,
   normalizeVendorWebsiteUrl,
@@ -15,6 +12,17 @@ import {
   type Vendor,
   type VendorProfileAttributeChip,
 } from "@ceylonweddings/contracts";
+import { type FormEvent, useEffect, useMemo, useState } from "react";
+import { useParams } from "next/navigation";
+import { useTranslations, useLocale } from "next-intl";
+import {
+  api,
+  formatMoney,
+  readCatalogHref,
+  useAuthStore,
+  useCompareStore,
+  usePreferenceStore,
+} from "@ceylonweddings/web";
 import { Badge } from "@ceylonweddings/ui/components/badge";
 import { Button } from "@ceylonweddings/ui/components/button";
 import { DatePicker } from "@ceylonweddings/ui/components/date-picker";
@@ -74,7 +82,7 @@ export default function VendorStorefrontPage() {
   const [rating, setRating] = useState(5);
   const [shortlisted, setShortlisted] = useState(false);
   const [compareHint, setCompareHint] = useState<string | null>(null);
-  const [features, setFeatures] = useState<import("@ceylonweddings/contracts").Article[]>([]);
+  const [features, setFeatures] = useState<Article[]>([]);
   const [reviewsEnabled, setReviewsEnabled] = useState(true);
   const toggleCompare = useCompareStore((state) => state.toggle);
   const hasCompare = useCompareStore((state) => state.has);
@@ -88,10 +96,14 @@ export default function VendorStorefrontPage() {
     setVendor(next);
     const first = next.packages?.[0]?.id ?? null;
     setSelectedPackageId(first);
-    api.vendorTypes()
+    api
+      .vendorTypes()
       .then((list) => setTypeMeta(list.find((item) => item.slug === next.category) ?? null))
       .catch(() => setTypeMeta(null));
-    api.public.articles(undefined, undefined, next.slug).then(setFeatures).catch(() => setFeatures([]));
+    api.public
+      .articles(undefined, undefined, next.slug)
+      .then(setFeatures)
+      .catch(() => setFeatures([]));
     if (user && (user.role === "COUPLE" || user.role === "FAMILY")) {
       api.wedding
         .mine()
@@ -123,8 +135,7 @@ export default function VendorStorefrontPage() {
   const averages = useMemo(() => {
     const reviews = vendor?.reviews ?? [];
     if (!reviews.length) return null;
-    const avg = (key: (typeof DIMS)[number]) =>
-      reviews.reduce((sum, review) => sum + review[key], 0) / reviews.length;
+    const avg = (key: (typeof DIMS)[number]) => reviews.reduce((sum, review) => sum + review[key], 0) / reviews.length;
     return Object.fromEntries(DIMS.map((key) => [key, avg(key)])) as Record<(typeof DIMS)[number], number>;
   }, [vendor]);
 
@@ -259,9 +270,7 @@ export default function VendorStorefrontPage() {
   const websiteLabel = vendorWebsiteLabel(vendor.websiteUrl) || t("knotly.website");
 
   const categoryLabel =
-    (typeMeta ? localizedText(typeMeta.label, locale) : null) ||
-    CATEGORY_LABELS[vendor.category] ||
-    vendor.category;
+    (typeMeta ? localizedText(typeMeta.label, locale) : null) || CATEGORY_LABELS[vendor.category] || vendor.category;
 
   const cinematic = vendor.galleryLayout ?? typeMeta?.galleryLayout ?? "default";
   const profileAttributes = vendor.attributes ?? [];
@@ -278,10 +287,7 @@ export default function VendorStorefrontPage() {
           {t("catalog.backToResults")}
         </Link>
         <span aria-hidden>/</span>
-        <Link
-          href={`/vendors?category=${vendor.category}`}
-          className="transition hover:text-foreground"
-        >
+        <Link href={`/vendors?category=${vendor.category}`} className="transition hover:text-foreground">
           {categoryLabel}
         </Link>
         <span aria-hidden>/</span>
@@ -376,7 +382,13 @@ export default function VendorStorefrontPage() {
           <div className="flex flex-wrap gap-2">
             {canCouple ? <ShortlistControl saved={shortlisted} onToggle={saveToTeam} /> : null}
             {canCouple || user?.role === "VENDOR" ? (
-              <Button type="button" size="sm" variant="outline" className="gap-2" onClick={() => void openInAppMessage()}>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="gap-2"
+                onClick={() => void openInAppMessage()}
+              >
                 <MessageCircle className="size-4" />
                 {t("messaging.messageInApp")}
               </Button>
@@ -483,7 +495,11 @@ export default function VendorStorefrontPage() {
                     </a>
                   </Button>
                 ) : null}
-                {status ? <FormStatus tone={status.includes("sent") || status.includes("Sent") ? "success" : "muted"}>{status}</FormStatus> : null}
+                {status ? (
+                  <FormStatus tone={status.includes("sent") || status.includes("Sent") ? "success" : "muted"}>
+                    {status}
+                  </FormStatus>
+                ) : null}
                 {whatsappUrl ? (
                   <Button asChild className="w-full">
                     <a href={whatsappUrl} target="_blank" rel="noreferrer">
@@ -555,10 +571,7 @@ export default function VendorStorefrontPage() {
         <TabsContent value="faqs" className="mt-4">
           <div className="grid gap-1 rounded-3xl border border-border/70 bg-card/60 p-4 text-sm shadow-sm md:p-6">
             {(vendor.faqs ?? []).map((faq, index) => (
-              <details
-                key={`${faq.question}-${index}`}
-                className="group border-b border-border/50 py-3 last:border-0"
-              >
+              <details key={`${faq.question}-${index}`} className="group border-b border-border/50 py-3 last:border-0">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-3 font-medium marker:content-none [&::-webkit-details-marker]:hidden">
                   <span>{faq.question}</span>
                   <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform duration-200 group-open:rotate-180" />
@@ -611,12 +624,7 @@ export default function VendorStorefrontPage() {
                   />
                 </FieldBlock>
                 <FieldBlock label="Review" compact>
-                  <Textarea
-                    value={reviewBody}
-                    onChange={(e) => setReviewBody(e.target.value)}
-                    required
-                    minLength={8}
-                  />
+                  <Textarea value={reviewBody} onChange={(e) => setReviewBody(e.target.value)} required minLength={8} />
                 </FieldBlock>
                 <Button type="submit">{t("planning.save")}</Button>
               </form>
@@ -671,7 +679,9 @@ export default function VendorStorefrontPage() {
             <Button
               type="button"
               className="flex-1"
-              onClick={() => document.getElementById("preferred")?.scrollIntoView({ behavior: "smooth", block: "center" })}
+              onClick={() =>
+                document.getElementById("preferred")?.scrollIntoView({ behavior: "smooth", block: "center" })
+              }
             >
               {t("hub.inquire")}
             </Button>

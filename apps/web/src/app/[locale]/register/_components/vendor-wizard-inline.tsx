@@ -16,7 +16,11 @@ import { Button } from "@ceylonweddings/ui/components/button";
 import { Heading } from "@ceylonweddings/ui/components/heading";
 import { FormStatus } from "@ceylonweddings/ui/components/form-status";
 import { Input } from "@ceylonweddings/ui/components/input";
-import { AttributeField, isAttributeAnswered, type AttributeFieldValue } from "@ceylonweddings/ui/domain/attribute-field";
+import {
+  AttributeField,
+  isAttributeAnswered,
+  type AttributeFieldValue,
+} from "@ceylonweddings/ui/domain/attribute-field";
 import { AnimatePresence, motion, useReducedMotion } from "@ceylonweddings/ui/domain/motion";
 import { OnboardingStage } from "@ceylonweddings/ui/domain/onboarding-stage";
 import { cn } from "@ceylonweddings/ui/utils";
@@ -42,11 +46,13 @@ function toFieldDef(def: VendorAttributeDefinition, locale: string) {
     maxValue: def.maxValue,
     maxSelect: def.maxSelect,
     layout: def.layout,
-    options: (def.options ?? []).filter((o) => o.active).map((o) => ({
-      key: o.key,
-      label: localizedText(o.label, locale),
-      helpText: o.helpText ? localizedText(o.helpText, locale) : null,
-    })),
+    options: (def.options ?? [])
+      .filter((o) => o.active)
+      .map((o) => ({
+        key: o.key,
+        label: localizedText(o.label, locale),
+        helpText: o.helpText ? localizedText(o.helpText, locale) : null,
+      })),
   };
 }
 
@@ -157,7 +163,9 @@ export function VendorWizardInline({
     const answered = isAttributeAnswered(values[currentDef.key] as AttributeFieldValue);
     if (!answered) return;
 
-    const catLabel = selectedSlug ? (CATEGORY_LABELS[selectedSlug] ?? (typeSchema ? localizedText(typeSchema.label, locale) : selectedSlug)) : "Vendor";
+    const catLabel = selectedSlug
+      ? (CATEGORY_LABELS[selectedSlug] ?? (typeSchema ? localizedText(typeSchema.label, locale) : selectedSlug))
+      : "Vendor";
 
     if (stepIndex < required.length - 1) {
       setCurrentStep(required[stepIndex + 1]!.key);
@@ -201,11 +209,7 @@ export function VendorWizardInline({
 
   const stage = useMemo(() => {
     if (pickingCategory) return toStageView(categoryStepStage, locale);
-    return resolveStageView(
-      currentDef?.presentation,
-      typeSchema?.onboardingPresentation?.questionDefault,
-      locale,
-    );
+    return resolveStageView(currentDef?.presentation, typeSchema?.onboardingPresentation?.questionDefault, locale);
   }, [categoryStepStage, currentDef, locale, pickingCategory, typeSchema]);
 
   let stepLabel = "Vendor Category";
@@ -291,16 +295,18 @@ export function VendorWizardInline({
           onChange={(next) => handleSaveAttribute(currentDef.key, next)}
         />
         {!isCurrentAnswered && (
-          <p className="text-xs text-muted-foreground italic">* This question is required before creating your storefront.</p>
+          <p className="text-xs text-muted-foreground italic">
+            * This question is required before creating your storefront.
+          </p>
         )}
       </div>
     );
   }
 
   return (
-    <OnboardingStage presentation={stage} cardMinHeight={420} className="mx-auto w-full max-w-7xl">
+    <OnboardingStage presentation={stage} className="mx-auto w-full max-w-7xl">
       {/* Progress header */}
-      <div className="mb-6 flex items-center justify-between gap-4">
+      <div className="mb-4 flex items-center justify-between gap-4">
         <div className="flex items-center gap-2.5">
           <span className="grid size-9 place-items-center rounded-xl bg-foreground/5 text-foreground">
             <Icon icon={Store} size="sm" />
@@ -320,11 +326,7 @@ export function VendorWizardInline({
                 key={def.key}
                 className={cn(
                   "h-1.5 rounded-full transition-all duration-300",
-                  idx === stepIndex
-                    ? "w-6 bg-primary"
-                    : idx < stepIndex
-                      ? "w-2 bg-primary/50"
-                      : "w-2 bg-muted",
+                  idx === stepIndex ? "w-6 bg-primary" : idx < stepIndex ? "w-2 bg-primary/50" : "w-2 bg-muted",
                 )}
               />
             ))}
@@ -333,9 +335,9 @@ export function VendorWizardInline({
       </div>
 
       {/* Main Glassmorphic Panel */}
-      <div className="relative overflow-hidden rounded-3xl border border-border/80 bg-card/80 p-6 shadow-xl backdrop-blur-md sm:p-8">
-        <header className="mb-6 grid gap-1.5">
-          <Heading as="h2" icon={pickingCategory ? Sparkles : Store} className="text-2xl font-medium sm:text-3xl">
+      <div className="relative">
+        <header className="mb-5 grid gap-1">
+          <Heading as="h2" icon={pickingCategory ? Sparkles : Store} className="text-xl font-medium sm:text-2xl">
             {title}
           </Heading>
           <p className="text-sm leading-relaxed text-muted-foreground">{subtitle}</p>
@@ -360,7 +362,7 @@ export function VendorWizardInline({
         </AnimatePresence>
 
         {/* Action footer */}
-        <div className="mt-8 flex items-center justify-between border-t border-border/60 pt-6">
+        <div className="sticky bottom-0 z-10 -mx-1 mt-6 flex items-center justify-between border-t border-border/50 bg-background/90 px-1 py-3 backdrop-blur-sm">
           <Button
             type="button"
             variant="ghost"

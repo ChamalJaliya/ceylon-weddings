@@ -11,7 +11,7 @@ import type {
 
 let socket: Socket | undefined;
 
-export function getRealtimeSocket() {
+export function getRealtimeSocket(): Socket {
   if (!socket) {
     socket = io(process.env.NEXT_PUBLIC_WS_URL ?? "http://localhost:4000", {
       withCredentials: true,
@@ -25,7 +25,7 @@ export function getRealtimeSocket() {
   return socket;
 }
 
-export function connectRealtime() {
+export function connectRealtime(): Socket {
   const client = getRealtimeSocket();
   if (!client.connected) client.connect();
   return client;
@@ -54,14 +54,12 @@ export function emitTyping(conversationId: string, typing: boolean) {
 
 export function emitSocketSend(conversationId: string, body: SendMessageBody) {
   return new Promise<Message>((resolve, reject) => {
-    getRealtimeSocket().timeout(12_000).emit(
-      "message.send",
-      { conversationId, ...body },
-      (err: Error | null, message: Message) => {
+    getRealtimeSocket()
+      .timeout(12_000)
+      .emit("message.send", { conversationId, ...body }, (err: Error | null, message: Message) => {
         if (err) reject(err);
         else resolve(message);
-      },
-    );
+      });
   });
 }
 

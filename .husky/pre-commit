@@ -1,0 +1,2 @@
+# Format + lint + design-system guard on staged files only.
+npx --no -- lint-staged

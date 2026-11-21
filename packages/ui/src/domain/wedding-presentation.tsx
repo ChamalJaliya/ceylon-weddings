@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { GuestVendorCredit } from "./team-vendor";
 import { cn } from "../lib/utils";
 import { Button } from "../components/button";
-import { motion, useReducedMotion, Stagger, StaggerItem, Reveal, AnimatedCollapsible, InteractiveCard } from "./motion";
+import { motion, useReducedMotion, Stagger, StaggerItem, Reveal } from "./motion";
 
 export function CoupleIdentity({
   names,
@@ -22,9 +22,7 @@ export function CoupleIdentity({
   return (
     <div className={cn("grid gap-2", className)}>
       <h2 className="font-serif text-3xl leading-tight font-medium sm:text-4xl">{names}</h2>
-      <p className="text-sm text-muted-foreground">
-        {[date, place, styleLabel].filter(Boolean).join(" · ")}
-      </p>
+      <p className="text-sm text-muted-foreground">{[date, place, styleLabel].filter(Boolean).join(" · ")}</p>
     </div>
   );
 }
@@ -48,7 +46,7 @@ export function GuestSiteHero({
 
   return (
     <section className="relative isolate min-h-[28rem] overflow-hidden rounded-[2rem] sm:min-h-[34rem]">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
+      {}
       <motion.img
         src={imageSrc}
         alt=""
@@ -110,9 +108,7 @@ export function CeremonySchedule({
           <div className="grid gap-2 rounded-3xl border border-border/50 bg-secondary/20 px-5 py-4 transition duration-300 hover:border-border hover:bg-secondary/35">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <p className="font-serif text-xl">{event.name}</p>
-              <span className="text-label tracking-eyebrow text-muted-foreground uppercase">
-                {event.kind}
-              </span>
+              <span className="text-label tracking-eyebrow text-muted-foreground uppercase">{event.kind}</span>
             </div>
             {event.nekathAt ? (
               <p className="text-sm text-muted-foreground">Nekath · {formatWhen(event.nekathAt)}</p>
@@ -148,12 +144,21 @@ export function FaqAccordion({ faq }: { faq: string | null | undefined }) {
             >
               <summary className="flex cursor-pointer items-center justify-between font-medium">
                 {title}
-                <motion.span
-                  className="ml-2 shrink-0 text-muted-foreground"
-                  style={{ display: "inline-block" }}
-                >
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="transition-transform duration-300 group-open:rotate-180">
-                    <path d="M2 5l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                <motion.span className="ml-2 shrink-0 text-muted-foreground" style={{ display: "inline-block" }}>
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 14 14"
+                    fill="none"
+                    className="transition-transform duration-300 group-open:rotate-180"
+                  >
+                    <path
+                      d="M2 5l5 5 5-5"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
                   </svg>
                 </motion.span>
               </summary>
@@ -169,7 +174,6 @@ export function FaqAccordion({ faq }: { faq: string | null | undefined }) {
     </Stagger>
   );
 }
-
 
 export function TravelGuideBlock({ notes }: { notes: string | null | undefined }) {
   if (!notes?.trim()) return null;
@@ -364,9 +368,7 @@ export function TeamGapBanner({
   if (!missing.length) return null;
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/30 bg-primary/5 px-4 py-3">
-      <p className="text-sm">
-        Still need: {missing.map((key) => labels[key] ?? key).join(", ")}
-      </p>
+      <p className="text-sm">Still need: {missing.map((key) => labels[key] ?? key).join(", ")}</p>
       {action}
     </div>
   );

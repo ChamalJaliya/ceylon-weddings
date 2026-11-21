@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Palette } from "lucide-react";
 import { api } from "@ceylonweddings/web";
@@ -73,9 +73,7 @@ export default function PublicMoodboardPage() {
   return (
     <div className="mx-auto flex h-[100dvh] max-w-6xl flex-col gap-3 px-3 py-4 sm:px-6">
       <header className="shrink-0 space-y-1">
-        <p className="text-xs uppercase tracking-eyebrow text-muted-foreground">
-          Ceylon Weddings · Moodboard
-        </p>
+        <p className="text-xs uppercase tracking-eyebrow text-muted-foreground">Ceylon Weddings · Moodboard</p>
         <h1 className="font-display text-3xl sm:text-4xl">{brief.title}</h1>
         <p className="text-sm text-muted-foreground">
           {[brief.coupleLabel, brief.eventName].filter(Boolean).join(" · ")}

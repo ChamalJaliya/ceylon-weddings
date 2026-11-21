@@ -20,8 +20,6 @@ export type SubscriptionStatusBannerProps = {
 export function SubscriptionStatusBanner({
   status,
   daysRemaining,
-  trialEndsAt,
-  currentPeriodEnd,
   planName,
   onUpgradeClick,
   className,
@@ -78,12 +76,14 @@ export function SubscriptionStatusBanner({
           variant: "expired" as const,
           icon: AlertTriangle,
           title: "Subscription Expired — Listing Hidden",
-          description: "Your vendor profile is currently hidden from public search and catalog. Subscribe now to instantly restore visibility.",
+          description:
+            "Your vendor profile is currently hidden from public search and catalog. Subscribe now to instantly restore visibility.",
           cta: "Re-activate Storefront",
           badge: "Expired",
           badgeBg: "bg-status-danger-bg text-status-danger-fg border-status-danger-border",
           bannerBg: "bg-destructive/5 border-destructive/25 text-danger-fg",
-          buttonStyle: "bg-destructive hover:bg-destructive/90 text-destructive-foreground shadow-destructive/20 animate-pulse",
+          buttonStyle:
+            "bg-destructive hover:bg-destructive/90 text-destructive-foreground shadow-destructive/20 animate-pulse",
         };
 
       case "COMPED":

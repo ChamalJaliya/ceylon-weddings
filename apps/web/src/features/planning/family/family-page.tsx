@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Network, UserPlus } from "lucide-react";
 import { api } from "@ceylonweddings/web";
@@ -58,8 +58,14 @@ export default function FamilyPage() {
   const [status, setStatus] = useState<string | null>(null);
 
   useEffect(() => {
-    api.wedding.family().then(setPeople).catch(() => setPeople([]));
-    api.wedding.guests().then(setGuests).catch(() => setGuests([]));
+    api.wedding
+      .family()
+      .then(setPeople)
+      .catch(() => setPeople([]));
+    api.wedding
+      .guests()
+      .then(setGuests)
+      .catch(() => setGuests([]));
   }, []);
 
   const groups = useMemo(() => familyBySide(people), [people]);
@@ -204,7 +210,14 @@ export default function FamilyPage() {
                                 size="sm"
                                 variant="ghost"
                                 onClick={async () => {
-                                  if (!(await confirm({ title: `Remove ${person.name}?`, destructive: true, confirmLabel: "Remove" }))) return;
+                                  if (
+                                    !(await confirm({
+                                      title: `Remove ${person.name}?`,
+                                      destructive: true,
+                                      confirmLabel: "Remove",
+                                    }))
+                                  )
+                                    return;
                                   await api.wedding.deleteFamilyPerson(person.id);
                                   await refreshPeople();
                                 }}
@@ -331,9 +344,7 @@ export default function FamilyPage() {
                       <CheckboxField
                         label={t("planning.canManageVendors")}
                         checked={member.canManageVendors}
-                        onCheckedChange={(checked) =>
-                          toggleFlag(member.id, "canManageVendors", checked === true)
-                        }
+                        onCheckedChange={(checked) => toggleFlag(member.id, "canManageVendors", checked === true)}
                       />
                     </div>
                   ) : (

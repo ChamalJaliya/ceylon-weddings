@@ -4,7 +4,6 @@ import { useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { usePreferenceStore } from "@ceylonweddings/web";
 import {
-  Award,
   Briefcase,
   CalendarClock,
   CalendarDays,
@@ -183,9 +182,7 @@ function DashboardShellInner({
       mobileOpen={mobileOpen}
       onMobileOpenChange={setMobileOpen}
       mobileTitle={t("app.name")}
-      brand={(mode) => (
-        <AppShellBrand name={t("app.name")} collapsed={mode} />
-      )}
+      brand={(mode) => <AppShellBrand name={t("app.name")} collapsed={mode} />}
       nav={(mode) =>
         groups.map((group) => (
           <AppShellNavGroup key={group.labelKey} label={t(group.labelKey)} collapsed={mode}>
@@ -193,13 +190,7 @@ function DashboardShellInner({
               const label = t(`nav.${item.key}`);
               const isActive = isNavActive(pathname, item.href);
               return (
-                <AppShellNavItem
-                  key={item.href}
-                  asChild
-                  active={isActive}
-                  collapsed={mode}
-                  label={label}
-                >
+                <AppShellNavItem key={item.href} asChild active={isActive} collapsed={mode} label={label}>
                   <Link href={item.href} onClick={() => setMobileOpen(false)}>
                     <Icon icon={item.icon} size="sm" />
                     <span className={mode ? "sr-only" : undefined}>{label}</span>
@@ -211,24 +202,14 @@ function DashboardShellInner({
         ))
       }
       railFooter={(mode) => (
-        <AppShellCouple
-          names={couple.names}
-          meta={couple.meta}
-          initials={couple.initials}
-          collapsed={mode}
-        />
+        <AppShellCouple names={couple.names} meta={couple.meta} initials={couple.initials} collapsed={mode} />
       )}
       header={
         <AppHeader
           tone="glass"
           crumb={crumb}
           leading={
-            <IconButton
-              type="button"
-              className="lg:hidden"
-              aria-label="Open menu"
-              onClick={() => setMobileOpen(true)}
-            >
+            <IconButton type="button" className="lg:hidden" aria-label="Open menu" onClick={() => setMobileOpen(true)}>
               <Icon icon={Menu} size="sm" />
             </IconButton>
           }
@@ -349,4 +330,3 @@ export function AdminShell({ children }: { children: ReactNode }) {
     </DashboardShell>
   );
 }
-

@@ -1,5 +1,4 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { loadApiEnv } from "@ceylonweddings/env";
 
 export type EmailTemplate =
   | "welcome"
@@ -26,7 +25,9 @@ export class EmailService {
     const html = payload.html || this.renderTemplate(payload.template, payload.data || {});
 
     // In local / sandbox development without configured SMTP credentials, we log formatted delivery
-    this.logger.log(`[Email Dispatch] Template: ${payload.template} | To: ${payload.to} | Subject: "${payload.subject}"`);
+    this.logger.log(
+      `[Email Dispatch] Template: ${payload.template} | To: ${payload.to} | Subject: "${payload.subject}" | ${html.length} chars`,
+    );
 
     // If SMTP_HOST / RESEND_API_KEY is configured in env, we can dispatch to real upstream
     // Here we ensure reliable delivery logging and error resilience
@@ -39,7 +40,6 @@ export class EmailService {
   private renderTemplate(template: SendEmailPayload["template"], data: Record<string, any>): string {
     const brandColor = "#7A1F2B";
     const goldColor = "#C4A574";
-    const bgBase = "#FDFBF7";
 
     const header = `
       <div style="background-color: ${brandColor}; padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">

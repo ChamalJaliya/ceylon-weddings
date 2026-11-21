@@ -1,34 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
-import {
-  Globe,
-  ExternalLink,
-  Copy,
-  Check,
-  Lock,
-  Plane,
-  HelpCircle,
-  Sparkles,
-  Save,
-  Plus,
-  Trash2,
-  Eye,
-} from "lucide-react";
+import { Globe, Copy, Check, Plane, HelpCircle, Sparkles, Save, Plus, Trash2, Eye } from "lucide-react";
 import { api } from "@ceylonweddings/web";
 import { Button } from "@ceylonweddings/ui/components/button";
-import { Input } from "@ceylonweddings/ui/components/input";
 import { Switch } from "@ceylonweddings/ui/components/switch";
 import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
 import { SectionCard } from "@ceylonweddings/ui/domain/section-card";
 import { Reveal } from "@ceylonweddings/ui/domain/motion";
 import { SignInPrompt, useWedding } from "@/components/use-wedding";
-import { Link } from "@/i18n/navigation";
 import { toast } from "@ceylonweddings/ui/components/toaster";
 
 export default function WeddingWebsiteManagerPage() {
-  const t = useTranslations();
   const { data, error, reload } = useWedding();
 
   const [saving, setSaving] = useState(false);
@@ -42,7 +25,10 @@ export default function WeddingWebsiteManagerPage() {
   const [styleNotes, setStyleNotes] = useState("");
   const [faqs, setFaqs] = useState<Array<{ question: string; answer: string }>>([
     { question: "What is the dress code?", answer: "Traditional Sri Lankan attire or formal evening wear." },
-    { question: "Is parking available at the venue?", answer: "Yes, valet and self-parking are available at the main gate." },
+    {
+      question: "Is parking available at the venue?",
+      answer: "Yes, valet and self-parking are available at the main gate.",
+    },
   ]);
 
   useEffect(() => {
@@ -66,7 +52,8 @@ export default function WeddingWebsiteManagerPage() {
 
   if (!data) return <SignInPrompt error={error} />;
 
-  const siteUrl = typeof window !== "undefined" ? `${window.location.origin}/w/${slug || data.slug}` : `/w/${slug || data.slug}`;
+  const siteUrl =
+    typeof window !== "undefined" ? `${window.location.origin}/w/${slug || data.slug}` : `/w/${slug || data.slug}`;
 
   function copyLink() {
     navigator.clipboard.writeText(siteUrl);
@@ -178,7 +165,8 @@ export default function WeddingWebsiteManagerPage() {
       <SectionCard title="Travel & Stay Guide (For Diaspora & Outstation Guests)" icon={Plane}>
         <div className="space-y-4">
           <p className="text-xs text-muted-foreground">
-            Provide flight, hotel, airport pickup, or monsoon travel guidelines for friends and family traveling from overseas or across Sri Lanka.
+            Provide flight, hotel, airport pickup, or monsoon travel guidelines for friends and family traveling from
+            overseas or across Sri Lanka.
           </p>
           <textarea
             value={travelNotes}
@@ -194,7 +182,8 @@ export default function WeddingWebsiteManagerPage() {
       <SectionCard title="Guest Questions & Answers (FAQs)" icon={HelpCircle}>
         <div className="space-y-4">
           <p className="text-xs text-muted-foreground">
-            Address common questions regarding dress codes, gift envelope preferences, photo policies, and ceremony timings.
+            Address common questions regarding dress codes, gift envelope preferences, photo policies, and ceremony
+            timings.
           </p>
 
           <div className="space-y-3">

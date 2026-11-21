@@ -7,9 +7,10 @@
   },
   "scripts": {
     "dev": "turbo dev",
+    "watch": "turbo dev",
     "build": "turbo build",
     "start": "turbo start",
-    "lint": "node scripts/check-design-system.mjs",
+    "lint": "node scripts/check-design-system.mjs && eslint . --max-warnings=50",
     "typecheck": "turbo typecheck",
     "db:generate": "pnpm --filter @ceylonweddings/database generate",
     "db:migrate": "pnpm --filter @ceylonweddings/database migrate",
@@ -19,11 +20,29 @@
     "ai:test": "cd apps/ai && pytest tests/ -v",
     "check:design-system": "node scripts/check-design-system.mjs",
     "test:design-system": "node scripts/test.mjs packages/ui",
-    "test": "node scripts/test.mjs"
+    "test": "node scripts/test.mjs",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write",
+    "format:check": "prettier --check",
+    "prepare": "node -e \"const {existsSync}=require('fs');const {execSync}=require('child_process');if(existsSync('node_modules/husky')&&existsSync('.git'))execSync('husky',{stdio:'inherit'})\""
   },
   "devDependencies": {
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
+    "@eslint/js": "^9.39.5",
+    "@next/eslint-plugin-next": "16.3.1",
+    "eslint": "^9.39.5",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "globals": "^15.15.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.2",
+    "prettier": "^3.10.1",
     "turbo": "^2.5.6",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "typescript-eslint": "^8.73.0"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
@@ -32,6 +51,20 @@
       "bcrypt",
       "esbuild",
       "prisma"
+    ]
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "prettier --write",
+      "eslint --fix --max-warnings=50",
+      "node scripts/check-design-system.mjs"
+    ],
+    "*.css": [
+      "prettier --write",
+      "node scripts/check-design-system.mjs"
+    ],
+    "*.{js,mjs,cjs,json,md,yml,yaml}": [
+      "prettier --write"
     ]
   }
 }

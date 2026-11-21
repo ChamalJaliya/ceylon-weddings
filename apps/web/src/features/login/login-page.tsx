@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { type FormEvent, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { api, useAuthStore, usePreferenceStore } from "@ceylonweddings/web";
 import type { Currency, Locale } from "@ceylonweddings/contracts";
@@ -64,7 +64,10 @@ export default function LoginPage() {
       </h1>
       <p className="mt-2 text-center text-sm text-muted-foreground">{t("auth.loginSub")}</p>
 
-      <form className="mt-8 grid gap-4 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-500" onSubmit={onSubmit}>
+      <form
+        className="mt-8 grid gap-4 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-500"
+        onSubmit={onSubmit}
+      >
         <FieldBlock label={t("auth.email")} htmlFor="email">
           <Input
             id="email"
@@ -91,13 +94,7 @@ export default function LoginPage() {
         <Button type="submit" className="h-11 w-full" disabled={pending}>
           {t("nav.signIn")}
         </Button>
-        <Button
-          type="button"
-          variant="outline"
-          className="h-11 w-full bg-card"
-          disabled={pending}
-          onClick={onGoogle}
-        >
+        <Button type="button" variant="outline" className="h-11 w-full bg-card" disabled={pending} onClick={onGoogle}>
           <GoogleMark />
           {t("auth.googleSignIn")}
         </Button>

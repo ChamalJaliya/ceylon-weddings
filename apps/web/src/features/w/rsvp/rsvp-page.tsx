@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { api } from "@ceylonweddings/web";
@@ -76,10 +76,7 @@ export default function PublicRsvpPage() {
           <FieldBlock label={t("planning.rsvpPerEvent")}>
             <div className="grid gap-3">
               {(site?.events ?? []).map((item) => (
-                <div
-                  key={item.id}
-                  className="grid gap-2.5 rounded-2xl border border-border/70 bg-muted/25 px-3.5 py-3"
-                >
+                <div key={item.id} className="grid gap-2.5 rounded-2xl border border-border/70 bg-muted/25 px-3.5 py-3">
                   <span className="text-sm font-medium">
                     {item.name}
                     {item.venueName ? (

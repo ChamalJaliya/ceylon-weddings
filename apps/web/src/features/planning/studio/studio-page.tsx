@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { api, formatMoney, usePreferenceStore } from "@ceylonweddings/web";
 import {
@@ -8,7 +8,6 @@ import {
   formatWeddingDateLabel,
   payerSchema,
   renderInviteTemplate,
-  weddingStyleSchema,
   weddingTypeSchema,
   type Event,
   type EventKind,
@@ -51,8 +50,7 @@ const areaClass =
 
 type Section = "basics" | "style" | "events" | "website" | "family" | "publish";
 
-const HERO =
-  "https://images.unsplash.com/photo-1519741497674-611481863552?w=1600&q=80";
+const HERO = "https://images.unsplash.com/photo-1519741497674-611481863552?w=1600&q=80";
 
 function toDatetimeLocal(value: string | null) {
   if (!value) return "";
@@ -114,7 +112,13 @@ export default function WeddingStudioPage() {
     startsAt: "",
     nekathAt: "",
   });
-  const [invite, setInvite] = useState({ email: "", name: "", canEditGuests: true, canViewBudget: true, canManageVendors: false });
+  const [invite, setInvite] = useState({
+    email: "",
+    name: "",
+    canEditGuests: true,
+    canViewBudget: true,
+    canManageVendors: false,
+  });
 
   useEffect(() => {
     if (!data) return;
@@ -241,7 +245,15 @@ export default function WeddingStudioPage() {
   }
 
   async function removeEvent(id: string) {
-    if (!(await confirm({ title: "Remove this ceremony?", description: "Guest invites for it will be deleted.", destructive: true, confirmLabel: "Remove" }))) return;
+    if (
+      !(await confirm({
+        title: "Remove this ceremony?",
+        description: "Guest invites for it will be deleted.",
+        destructive: true,
+        confirmLabel: "Remove",
+      }))
+    )
+      return;
     await api.wedding.deleteEvent(id);
     await reload();
   }
@@ -267,13 +279,7 @@ export default function WeddingStudioPage() {
         description="Shape the wedding object — ceremonies, style, guest site — with a live preview."
       />
       <StudioShell
-        nav={
-          <CreatorSectionNav
-            sections={sections}
-            active={section}
-            onSelect={(id) => setSection(id as Section)}
-          />
-        }
+        nav={<CreatorSectionNav sections={sections} active={section} onSelect={(id) => setSection(id as Section)} />}
         previewLabel="Guest preview"
         previewTitle={[form.partnerOneName, form.partnerTwoName].filter(Boolean).join(" & ") || "Your wedding site"}
         previewThumb={HERO}
@@ -300,359 +306,395 @@ export default function WeddingStudioPage() {
           </div>
         }
       >
-          <form className="grid gap-6 pb-24" onSubmit={saveBasics}>
-            {section === "basics" ? (
-              <FormSection title="Basics" description="Partners, place, traditions, and money story.">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <FieldBlock label={t("planning.partnerOne")}>
-                    <Input className={fieldClass} value={form.partnerOneName} onChange={(e) => setForm({ ...form, partnerOneName: e.target.value })} />
-                  </FieldBlock>
-                  <FieldBlock label={t("planning.partnerTwo")}>
-                    <Input className={fieldClass} value={form.partnerTwoName} onChange={(e) => setForm({ ...form, partnerTwoName: e.target.value })} />
-                  </FieldBlock>
-                  <FieldBlock label={t("planning.date")}>
-                    <DatePicker
-                      className={fieldClass}
-                      value={form.date}
-                      onChange={(value) => setForm({ ...form, date: value })}
-                    />
-                  </FieldBlock>
-                  <FieldBlock label={t("planning.guestEstimate")}>
-                    <Input
-                      className={fieldClass}
-                      type="number"
-                      value={form.guestCountEstimate}
-                      onChange={(e) => setForm({ ...form, guestCountEstimate: Number(e.target.value) })}
-                    />
-                  </FieldBlock>
-                  <PlaceFields
-                    city={form.city}
-                    district={form.district}
-                    onCityChange={(city) => setForm((current) => ({ ...current, city }))}
-                    onDistrictChange={(district) => setForm((current) => ({ ...current, district }))}
-                    cityLabel={t("planning.city")}
-                    districtLabel={t("planning.district")}
-                    fieldClass={fieldClass}
-                    className="grid gap-4 sm:grid-cols-2 md:col-span-2"
+        <form className="grid gap-6 pb-24" onSubmit={saveBasics}>
+          {section === "basics" ? (
+            <FormSection title="Basics" description="Partners, place, traditions, and money story.">
+              <div className="grid gap-4 md:grid-cols-2">
+                <FieldBlock label={t("planning.partnerOne")}>
+                  <Input
+                    className={fieldClass}
+                    value={form.partnerOneName}
+                    onChange={(e) => setForm({ ...form, partnerOneName: e.target.value })}
                   />
-                  {data.myAccess.canViewBudget ? (
-                    <>
-                      <FieldBlock label={t("planning.budgetBand")}>
-                        <Input
-                          className={fieldClass}
-                          type="number"
-                          value={form.budgetLkr}
-                          onChange={(e) => setForm({ ...form, budgetLkr: Number(e.target.value) })}
-                        />
-                      </FieldBlock>
-                      <FieldBlock label={t("planning.payer")}>
-                        <SimpleSelect
-                          className={fieldClass}
-                          value={form.payer}
-                          onValueChange={(value) => setForm({ ...form, payer: value as Payer })}
-                          options={payerSchema.options.map((payer) => ({ value: payer, label: payer }))}
-                        />
-                      </FieldBlock>
-                    </>
-                  ) : null}
-                </div>
-                <FieldBlock label={t("planning.weddingTypes")}>
-                  <div className="flex flex-wrap gap-2">
-                    {weddingTypeSchema.options.map((type) => {
-                      const on = form.types.includes(type);
-                      return (
-                        <button
-                          key={type}
-                          type="button"
-                          className={`rounded-full px-3 py-1.5 text-xs tracking-wide uppercase ${on ? "bg-primary text-primary-foreground" : "bg-secondary"}`}
-                          onClick={() =>
-                            setForm({
-                              ...form,
-                              types: on ? form.types.filter((item) => item !== type) : [...form.types, type],
-                            })
-                          }
-                        >
-                          {type.replaceAll("_", " ")}
-                        </button>
-                      );
-                    })}
-                  </div>
                 </FieldBlock>
-                <label className="flex items-center justify-between gap-3 rounded-xl border border-border/70 bg-background/40 px-4 py-3 text-sm">
-                  <span>{t("planning.planningFromOverseas")}</span>
-                  <Switch
-                    checked={form.planningFromOverseas}
-                    onCheckedChange={(checked) => setForm({ ...form, planningFromOverseas: checked })}
+                <FieldBlock label={t("planning.partnerTwo")}>
+                  <Input
+                    className={fieldClass}
+                    value={form.partnerTwoName}
+                    onChange={(e) => setForm({ ...form, partnerTwoName: e.target.value })}
                   />
-                </label>
-              </FormSection>
-            ) : null}
-
-            {section === "style" ? (
-              <FormSection title="Style" description="The visual story guests and vendors should feel.">
-                <StyleStoryPicker
-                  value={form.style}
-                  options={WEDDING_STYLE_OPTIONS}
-                  colors={form.colors}
-                  onChange={(value) => {
-                    const option = WEDDING_STYLE_OPTIONS.find((item) => item.value === value);
-                    setForm({
-                      ...form,
-                      style: value as WeddingStyle,
-                      colors: option?.swatches ?? form.colors,
-                    });
-                  }}
+                </FieldBlock>
+                <FieldBlock label={t("planning.date")}>
+                  <DatePicker
+                    className={fieldClass}
+                    value={form.date}
+                    onChange={(value) => setForm({ ...form, date: value })}
+                  />
+                </FieldBlock>
+                <FieldBlock label={t("planning.guestEstimate")}>
+                  <Input
+                    className={fieldClass}
+                    type="number"
+                    value={form.guestCountEstimate}
+                    onChange={(e) => setForm({ ...form, guestCountEstimate: Number(e.target.value) })}
+                  />
+                </FieldBlock>
+                <PlaceFields
+                  city={form.city}
+                  district={form.district}
+                  onCityChange={(city) => setForm((current) => ({ ...current, city }))}
+                  onDistrictChange={(district) => setForm((current) => ({ ...current, district }))}
+                  cityLabel={t("planning.city")}
+                  districtLabel={t("planning.district")}
+                  fieldClass={fieldClass}
+                  className="grid gap-4 sm:grid-cols-2 md:col-span-2"
                 />
-                <FieldBlock label="Palette">
-                  <TagInput values={form.colors} onChange={(colors) => setForm({ ...form, colors })} placeholder="#C4A574" />
-                </FieldBlock>
-                <FieldBlock label="Style notes">
-                  <textarea className={areaClass} value={form.styleNotes} onChange={(e) => setForm({ ...form, styleNotes: e.target.value })} />
-                </FieldBlock>
-                <FieldBlock label="Setting notes">
-                  <textarea className={areaClass} value={form.settingNotes} onChange={(e) => setForm({ ...form, settingNotes: e.target.value })} />
-                </FieldBlock>
-              </FormSection>
-            ) : null}
-
-            {section === "events" ? (
-              <FormSection title="Events" description="Poruwa, church, nikah, walima — each with nekath when it matters.">
-                <div className="grid gap-4">
-                  {eventDrafts.map((item) => (
-                    <EventCeremonyCard
-                      key={item.id}
-                      title={item.name}
-                      kind={item.kind}
-                      onRemove={() => removeEvent(item.id)}
-                    >
-                      <div className="grid gap-3 md:grid-cols-2">
-                        <FieldBlock label="Name">
-                          <Input
-                            className={fieldClass}
-                            value={item.name}
-                            onChange={(e) =>
-                              setEventDrafts((rows) =>
-                                rows.map((row) => (row.id === item.id ? { ...row, name: e.target.value } : row)),
-                              )
-                            }
-                          />
-                        </FieldBlock>
-                        <FieldBlock label="Kind">
-                          <SimpleSelect
-                            className={fieldClass}
-                            value={item.kind}
-                            onValueChange={(value) =>
-                              setEventDrafts((rows) =>
-                                rows.map((row) =>
-                                  row.id === item.id ? { ...row, kind: value as EventKind } : row,
-                                ),
-                              )
-                            }
-                            options={eventKindSchema.options.map((kind) => ({ value: kind, label: kind }))}
-                          />
-                        </FieldBlock>
-                        <FieldBlock label="Starts">
-                          <DateTimePicker
-                            value={toDatetimeLocal(item.startsAt)}
-                            onChange={(value) =>
-                              setEventDrafts((rows) =>
-                                rows.map((row) =>
-                                  row.id === item.id ? { ...row, startsAt: fromDatetimeLocal(value) } : row,
-                                ),
-                              )
-                            }
-                          />
-                        </FieldBlock>
-                        <FieldBlock label="Nekath">
-                          <DateTimePicker
-                            value={toDatetimeLocal(item.nekathAt)}
-                            onChange={(value) =>
-                              setEventDrafts((rows) =>
-                                rows.map((row) =>
-                                  row.id === item.id ? { ...row, nekathAt: fromDatetimeLocal(value) } : row,
-                                ),
-                              )
-                            }
-                          />
-                        </FieldBlock>
-                        <FieldBlock label="Venue">
-                          <Input
-                            className={fieldClass}
-                            value={item.venueName ?? ""}
-                            onChange={(e) =>
-                              setEventDrafts((rows) =>
-                                rows.map((row) => (row.id === item.id ? { ...row, venueName: e.target.value } : row)),
-                              )
-                            }
-                          />
-                        </FieldBlock>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        <Button type="button" size="sm" onClick={() => saveEvent(item)}>
-                          Save ceremony
-                        </Button>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          onClick={() => api.wedding.generateNekathSchedule(item.id).then(() => reload())}
-                        >
-                          Generate day-of
-                        </Button>
-                      </div>
-                    </EventCeremonyCard>
-                  ))}
-                </div>
-                <div className="grid gap-3 rounded-3xl border border-dashed border-border/80 p-5">
-                  <p className="font-medium">Add ceremony</p>
-                  <div className="grid gap-3 md:grid-cols-2">
-                    <FieldBlock label="Name">
-                      <Input className={fieldClass} value={eventForm.name} onChange={(e) => setEventForm({ ...eventForm, name: e.target.value })} required />
+                {data.myAccess.canViewBudget ? (
+                  <>
+                    <FieldBlock label={t("planning.budgetBand")}>
+                      <Input
+                        className={fieldClass}
+                        type="number"
+                        value={form.budgetLkr}
+                        onChange={(e) => setForm({ ...form, budgetLkr: Number(e.target.value) })}
+                      />
                     </FieldBlock>
-                    <FieldBlock label="Kind">
+                    <FieldBlock label={t("planning.payer")}>
                       <SimpleSelect
                         className={fieldClass}
-                        value={eventForm.kind}
-                        onValueChange={(value) => setEventForm({ ...eventForm, kind: value as EventKind })}
-                        options={eventKindSchema.options.map((kind) => ({ value: kind, label: kind }))}
+                        value={form.payer}
+                        onValueChange={(value) => setForm({ ...form, payer: value as Payer })}
+                        options={payerSchema.options.map((payer) => ({ value: payer, label: payer }))}
                       />
                     </FieldBlock>
-                    <FieldBlock label="Starts">
-                      <DateTimePicker
-                        value={eventForm.startsAt}
-                        onChange={(value) => setEventForm({ ...eventForm, startsAt: value })}
-                      />
-                    </FieldBlock>
-                    <FieldBlock label="Nekath">
-                      <DateTimePicker
-                        value={eventForm.nekathAt}
-                        onChange={(value) => setEventForm({ ...eventForm, nekathAt: value })}
-                      />
-                    </FieldBlock>
-                    <FieldBlock label="Venue">
-                      <Input className={fieldClass} value={eventForm.venueName} onChange={(e) => setEventForm({ ...eventForm, venueName: e.target.value })} />
-                    </FieldBlock>
-                  </div>
-                  <Button type="button" onClick={() => void addEvent()}>
-                    Add event
-                  </Button>
-                </div>
-              </FormSection>
-            ) : null}
-
-            {section === "website" ? (
-              <FormSection title="Website" description="What guests see on your invitation site.">
-                <label className="flex items-center justify-between gap-3 rounded-xl border border-border/70 bg-background/40 px-4 py-3 text-sm">
-                  <span>Publish guest site</span>
-                  <Switch
-                    checked={form.websiteEnabled}
-                    onCheckedChange={(checked) => setForm({ ...form, websiteEnabled: checked })}
-                  />
-                </label>
-                <FieldBlock label="FAQ">
-                  <textarea
-                    className={areaClass}
-                    value={form.websiteFaq}
-                    onChange={(e) => setForm({ ...form, websiteFaq: e.target.value })}
-                    placeholder={"Dress code\nNational / Kandyan welcome\n\nGifts\nBlessings mean more than parcels"}
-                  />
-                </FieldBlock>
-                <FieldBlock label="Travel notes">
-                  <textarea
-                    className={areaClass}
-                    value={form.travelNotes}
-                    onChange={(e) => setForm({ ...form, travelNotes: e.target.value })}
-                  />
-                </FieldBlock>
-                <ShareInvitePanel
-                  url={siteUrl}
-                  whatsappUrl={shareWhatsappUrl}
-                  copied={copied}
-                  onCopy={async () => {
-                    await navigator.clipboard.writeText(siteUrl);
-                    setCopied(true);
-                    window.setTimeout(() => setCopied(false), 2000);
-                  }}
-                />
-              </FormSection>
-            ) : null}
-
-            {section === "family" ? (
-              <FormSection title="Family" description="Invite Amma or diaspora helpers with clear permissions.">
-                <div className="grid gap-3">
-                  {(data.members ?? []).map((member) => (
-                    <div key={member.id} className="rounded-2xl border border-border/70 px-4 py-3 text-sm">
-                      <p className="font-medium">
-                        {member.name} · {member.email}
-                      </p>
-                      <p className="text-muted-foreground">{member.role}</p>
-                    </div>
-                  ))}
-                </div>
-                {data.myAccess.role === "COUPLE" ? (
-                  <div className="grid gap-3 rounded-3xl border border-dashed border-border/80 p-5">
-                    <FieldBlock label="Name">
-                      <Input className={fieldClass} value={invite.name} onChange={(e) => setInvite({ ...invite, name: e.target.value })} />
-                    </FieldBlock>
-                    <FieldBlock label="Email">
-                      <Input className={fieldClass} type="email" value={invite.email} onChange={(e) => setInvite({ ...invite, email: e.target.value })} />
-                    </FieldBlock>
-                    <div className="flex flex-wrap gap-4 text-sm">
-                      <CheckboxField
-                        label="Guests"
-                        checked={invite.canEditGuests}
-                        onCheckedChange={(checked) => setInvite({ ...invite, canEditGuests: checked === true })}
-                      />
-                      <CheckboxField
-                        label="Budget"
-                        checked={invite.canViewBudget}
-                        onCheckedChange={(checked) => setInvite({ ...invite, canViewBudget: checked === true })}
-                      />
-                      <CheckboxField
-                        label="Vendors"
-                        checked={invite.canManageVendors}
-                        onCheckedChange={(checked) => setInvite({ ...invite, canManageVendors: checked === true })}
-                      />
-                    </div>
-                    <Button type="button" onClick={inviteMember}>
-                      Invite family
-                    </Button>
-                  </div>
+                  </>
                 ) : null}
-              </FormSection>
-            ) : null}
-
-            {section === "publish" ? (
-              <FormSection title="Publish" description="Completeness before you share the guest site.">
-                <CompletenessChecklist
-                  score={completeness.score}
-                  total={completeness.total}
-                  missing={completeness.missing.map((key) => COMPLETE_LABELS[key] ?? key)}
-                  ready={completeness.ready}
-                />
+              </div>
+              <FieldBlock label={t("planning.weddingTypes")}>
                 <div className="flex flex-wrap gap-2">
-                  <Button asChild>
-                    <Link href={`/w/${data.slug}`} target="_blank">
-                      View guest site
-                    </Link>
-                  </Button>
-                  <Button type="button" variant="outline" onClick={() => setSection("website")}>
-                    Edit website
+                  {weddingTypeSchema.options.map((type) => {
+                    const on = form.types.includes(type);
+                    return (
+                      <button
+                        key={type}
+                        type="button"
+                        className={`rounded-full px-3 py-1.5 text-xs tracking-wide uppercase ${on ? "bg-primary text-primary-foreground" : "bg-secondary"}`}
+                        onClick={() =>
+                          setForm({
+                            ...form,
+                            types: on ? form.types.filter((item) => item !== type) : [...form.types, type],
+                          })
+                        }
+                      >
+                        {type.replaceAll("_", " ")}
+                      </button>
+                    );
+                  })}
+                </div>
+              </FieldBlock>
+              <label className="flex items-center justify-between gap-3 rounded-xl border border-border/70 bg-background/40 px-4 py-3 text-sm">
+                <span>{t("planning.planningFromOverseas")}</span>
+                <Switch
+                  checked={form.planningFromOverseas}
+                  onCheckedChange={(checked) => setForm({ ...form, planningFromOverseas: checked })}
+                />
+              </label>
+            </FormSection>
+          ) : null}
+
+          {section === "style" ? (
+            <FormSection title="Style" description="The visual story guests and vendors should feel.">
+              <StyleStoryPicker
+                value={form.style}
+                options={WEDDING_STYLE_OPTIONS}
+                colors={form.colors}
+                onChange={(value) => {
+                  const option = WEDDING_STYLE_OPTIONS.find((item) => item.value === value);
+                  setForm({
+                    ...form,
+                    style: value as WeddingStyle,
+                    colors: option?.swatches ?? form.colors,
+                  });
+                }}
+              />
+              <FieldBlock label="Palette">
+                <TagInput
+                  values={form.colors}
+                  onChange={(colors) => setForm({ ...form, colors })}
+                  placeholder="#C4A574"
+                />
+              </FieldBlock>
+              <FieldBlock label="Style notes">
+                <textarea
+                  className={areaClass}
+                  value={form.styleNotes}
+                  onChange={(e) => setForm({ ...form, styleNotes: e.target.value })}
+                />
+              </FieldBlock>
+              <FieldBlock label="Setting notes">
+                <textarea
+                  className={areaClass}
+                  value={form.settingNotes}
+                  onChange={(e) => setForm({ ...form, settingNotes: e.target.value })}
+                />
+              </FieldBlock>
+            </FormSection>
+          ) : null}
+
+          {section === "events" ? (
+            <FormSection title="Events" description="Poruwa, church, nikah, walima — each with nekath when it matters.">
+              <div className="grid gap-4">
+                {eventDrafts.map((item) => (
+                  <EventCeremonyCard
+                    key={item.id}
+                    title={item.name}
+                    kind={item.kind}
+                    onRemove={() => removeEvent(item.id)}
+                  >
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <FieldBlock label="Name">
+                        <Input
+                          className={fieldClass}
+                          value={item.name}
+                          onChange={(e) =>
+                            setEventDrafts((rows) =>
+                              rows.map((row) => (row.id === item.id ? { ...row, name: e.target.value } : row)),
+                            )
+                          }
+                        />
+                      </FieldBlock>
+                      <FieldBlock label="Kind">
+                        <SimpleSelect
+                          className={fieldClass}
+                          value={item.kind}
+                          onValueChange={(value) =>
+                            setEventDrafts((rows) =>
+                              rows.map((row) => (row.id === item.id ? { ...row, kind: value as EventKind } : row)),
+                            )
+                          }
+                          options={eventKindSchema.options.map((kind) => ({ value: kind, label: kind }))}
+                        />
+                      </FieldBlock>
+                      <FieldBlock label="Starts">
+                        <DateTimePicker
+                          value={toDatetimeLocal(item.startsAt)}
+                          onChange={(value) =>
+                            setEventDrafts((rows) =>
+                              rows.map((row) =>
+                                row.id === item.id ? { ...row, startsAt: fromDatetimeLocal(value) } : row,
+                              ),
+                            )
+                          }
+                        />
+                      </FieldBlock>
+                      <FieldBlock label="Nekath">
+                        <DateTimePicker
+                          value={toDatetimeLocal(item.nekathAt)}
+                          onChange={(value) =>
+                            setEventDrafts((rows) =>
+                              rows.map((row) =>
+                                row.id === item.id ? { ...row, nekathAt: fromDatetimeLocal(value) } : row,
+                              ),
+                            )
+                          }
+                        />
+                      </FieldBlock>
+                      <FieldBlock label="Venue">
+                        <Input
+                          className={fieldClass}
+                          value={item.venueName ?? ""}
+                          onChange={(e) =>
+                            setEventDrafts((rows) =>
+                              rows.map((row) => (row.id === item.id ? { ...row, venueName: e.target.value } : row)),
+                            )
+                          }
+                        />
+                      </FieldBlock>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Button type="button" size="sm" onClick={() => saveEvent(item)}>
+                        Save ceremony
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => api.wedding.generateNekathSchedule(item.id).then(() => reload())}
+                      >
+                        Generate day-of
+                      </Button>
+                    </div>
+                  </EventCeremonyCard>
+                ))}
+              </div>
+              <div className="grid gap-3 rounded-3xl border border-dashed border-border/80 p-5">
+                <p className="font-medium">Add ceremony</p>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <FieldBlock label="Name">
+                    <Input
+                      className={fieldClass}
+                      value={eventForm.name}
+                      onChange={(e) => setEventForm({ ...eventForm, name: e.target.value })}
+                      required
+                    />
+                  </FieldBlock>
+                  <FieldBlock label="Kind">
+                    <SimpleSelect
+                      className={fieldClass}
+                      value={eventForm.kind}
+                      onValueChange={(value) => setEventForm({ ...eventForm, kind: value as EventKind })}
+                      options={eventKindSchema.options.map((kind) => ({ value: kind, label: kind }))}
+                    />
+                  </FieldBlock>
+                  <FieldBlock label="Starts">
+                    <DateTimePicker
+                      value={eventForm.startsAt}
+                      onChange={(value) => setEventForm({ ...eventForm, startsAt: value })}
+                    />
+                  </FieldBlock>
+                  <FieldBlock label="Nekath">
+                    <DateTimePicker
+                      value={eventForm.nekathAt}
+                      onChange={(value) => setEventForm({ ...eventForm, nekathAt: value })}
+                    />
+                  </FieldBlock>
+                  <FieldBlock label="Venue">
+                    <Input
+                      className={fieldClass}
+                      value={eventForm.venueName}
+                      onChange={(e) => setEventForm({ ...eventForm, venueName: e.target.value })}
+                    />
+                  </FieldBlock>
+                </div>
+                <Button type="button" onClick={() => void addEvent()}>
+                  Add event
+                </Button>
+              </div>
+            </FormSection>
+          ) : null}
+
+          {section === "website" ? (
+            <FormSection title="Website" description="What guests see on your invitation site.">
+              <label className="flex items-center justify-between gap-3 rounded-xl border border-border/70 bg-background/40 px-4 py-3 text-sm">
+                <span>Publish guest site</span>
+                <Switch
+                  checked={form.websiteEnabled}
+                  onCheckedChange={(checked) => setForm({ ...form, websiteEnabled: checked })}
+                />
+              </label>
+              <FieldBlock label="FAQ">
+                <textarea
+                  className={areaClass}
+                  value={form.websiteFaq}
+                  onChange={(e) => setForm({ ...form, websiteFaq: e.target.value })}
+                  placeholder={"Dress code\nNational / Kandyan welcome\n\nGifts\nBlessings mean more than parcels"}
+                />
+              </FieldBlock>
+              <FieldBlock label="Travel notes">
+                <textarea
+                  className={areaClass}
+                  value={form.travelNotes}
+                  onChange={(e) => setForm({ ...form, travelNotes: e.target.value })}
+                />
+              </FieldBlock>
+              <ShareInvitePanel
+                url={siteUrl}
+                whatsappUrl={shareWhatsappUrl}
+                copied={copied}
+                onCopy={async () => {
+                  await navigator.clipboard.writeText(siteUrl);
+                  setCopied(true);
+                  window.setTimeout(() => setCopied(false), 2000);
+                }}
+              />
+            </FormSection>
+          ) : null}
+
+          {section === "family" ? (
+            <FormSection title="Family" description="Invite Amma or diaspora helpers with clear permissions.">
+              <div className="grid gap-3">
+                {(data.members ?? []).map((member) => (
+                  <div key={member.id} className="rounded-2xl border border-border/70 px-4 py-3 text-sm">
+                    <p className="font-medium">
+                      {member.name} · {member.email}
+                    </p>
+                    <p className="text-muted-foreground">{member.role}</p>
+                  </div>
+                ))}
+              </div>
+              {data.myAccess.role === "COUPLE" ? (
+                <div className="grid gap-3 rounded-3xl border border-dashed border-border/80 p-5">
+                  <FieldBlock label="Name">
+                    <Input
+                      className={fieldClass}
+                      value={invite.name}
+                      onChange={(e) => setInvite({ ...invite, name: e.target.value })}
+                    />
+                  </FieldBlock>
+                  <FieldBlock label="Email">
+                    <Input
+                      className={fieldClass}
+                      type="email"
+                      value={invite.email}
+                      onChange={(e) => setInvite({ ...invite, email: e.target.value })}
+                    />
+                  </FieldBlock>
+                  <div className="flex flex-wrap gap-4 text-sm">
+                    <CheckboxField
+                      label="Guests"
+                      checked={invite.canEditGuests}
+                      onCheckedChange={(checked) => setInvite({ ...invite, canEditGuests: checked === true })}
+                    />
+                    <CheckboxField
+                      label="Budget"
+                      checked={invite.canViewBudget}
+                      onCheckedChange={(checked) => setInvite({ ...invite, canViewBudget: checked === true })}
+                    />
+                    <CheckboxField
+                      label="Vendors"
+                      checked={invite.canManageVendors}
+                      onCheckedChange={(checked) => setInvite({ ...invite, canManageVendors: checked === true })}
+                    />
+                  </div>
+                  <Button type="button" onClick={inviteMember}>
+                    Invite family
                   </Button>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  Cap {formatMoney(form.budgetLkr, currency)} · {form.guestCountEstimate} estimated guests
-                </p>
-              </FormSection>
-            ) : null}
+              ) : null}
+            </FormSection>
+          ) : null}
 
-            <StickyActionBar>
-              <div className="flex flex-wrap items-center gap-3">
-                <Button type="submit">{t("planning.save")}</Button>
-                {status ? <span className="text-sm text-muted-foreground">{status}</span> : null}
+          {section === "publish" ? (
+            <FormSection title="Publish" description="Completeness before you share the guest site.">
+              <CompletenessChecklist
+                score={completeness.score}
+                total={completeness.total}
+                missing={completeness.missing.map((key) => COMPLETE_LABELS[key] ?? key)}
+                ready={completeness.ready}
+              />
+              <div className="flex flex-wrap gap-2">
+                <Button asChild>
+                  <Link href={`/w/${data.slug}`} target="_blank">
+                    View guest site
+                  </Link>
+                </Button>
+                <Button type="button" variant="outline" onClick={() => setSection("website")}>
+                  Edit website
+                </Button>
               </div>
-            </StickyActionBar>
-          </form>
+              <p className="text-sm text-muted-foreground">
+                Cap {formatMoney(form.budgetLkr, currency)} · {form.guestCountEstimate} estimated guests
+              </p>
+            </FormSection>
+          ) : null}
+
+          <StickyActionBar>
+            <div className="flex flex-wrap items-center gap-3">
+              <Button type="submit">{t("planning.save")}</Button>
+              {status ? <span className="text-sm text-muted-foreground">{status}</span> : null}
+            </div>
+          </StickyActionBar>
+        </form>
       </StudioShell>
     </div>
   );

@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Play, X } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { cn } from "../lib/utils";
-import { MediaFrame } from "./media-frame";
 import { Icon } from "../components/icon";
 
 export type VendorGalleryProject = {
@@ -43,7 +42,10 @@ function parseEmbed(raw: string): string | null {
       return id ? `https://www.youtube.com/embed/${id}` : null;
     }
     if (host === "vimeo.com" || host === "player.vimeo.com") {
-      const id = url.pathname.split("/").filter(Boolean).find((part) => /^\d+$/.test(part));
+      const id = url.pathname
+        .split("/")
+        .filter(Boolean)
+        .find((part) => /^\d+$/.test(part));
       return id ? `https://player.vimeo.com/video/${id}` : null;
     }
   } catch {
@@ -98,12 +100,7 @@ export function VendorGallery({
   const [albumKey, setAlbumKey] = useState("gallery");
   const activeAlbum = albums.find((album) => album.key === albumKey) ?? albums[0];
   const list = activeAlbum?.photos ?? [];
-  const hero =
-    coverUrl ||
-    photos[0] ||
-    projects.find((project) => project.coverUrl)?.coverUrl ||
-    list[0] ||
-    null;
+  const hero = coverUrl || photos[0] || projects.find((project) => project.coverUrl)?.coverUrl || list[0] || null;
 
   const [active, setActive] = useState(0);
   const [open, setOpen] = useState(false);
@@ -147,9 +144,13 @@ export function VendorGallery({
   return (
     <div className={cn("grid content-start gap-3", className)}>
       {displayHero ? (
-        <button type="button" className="relative block w-full self-start text-left" onClick={() => list.length && setOpen(true)}>
+        <button
+          type="button"
+          className="relative block w-full self-start text-left"
+          onClick={() => list.length && setOpen(true)}
+        >
           {/* motion.img with layoutId so it expands seamlessly into the lightbox */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
+          {}
           <motion.img
             src={displayHero}
             alt={name}
@@ -295,7 +296,7 @@ export function VendorGallery({
               </>
             ) : null}
             {/* Same layoutId as hero — Framer morphs the image from grid → fullscreen */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
+            {}
             <motion.img
               src={list[Math.min(active, list.length - 1)]!}
               alt={name}

@@ -1,12 +1,10 @@
 "use client";
 
-import { weddingStyleColors } from "@ceylonweddings/contracts";
+import { weddingStyleColors, weddingStyleSchema ,type  Appointment,type  Inquiry,type  WeddingStyle } from "@ceylonweddings/contracts";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { CalendarDays, Heart, Music2, Store, Wallet } from "lucide-react";
 import { api, formatMoney, usePreferenceStore } from "@ceylonweddings/web";
-import type { Appointment, Inquiry, WeddingStyle } from "@ceylonweddings/contracts";
-import { weddingStyleSchema } from "@ceylonweddings/contracts";
 import { Button } from "@ceylonweddings/ui/components/button";
 import { CoupleHero } from "@ceylonweddings/ui/domain/couple-hero";
 import {
@@ -55,8 +53,14 @@ export default function PlanningHubPage() {
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
-    api.wedding.appointments().then(setAppointments).catch(() => setAppointments([]));
-    api.wedding.inquiries().then(setInquiries).catch(() => setInquiries([]));
+    api.wedding
+      .appointments()
+      .then(setAppointments)
+      .catch(() => setAppointments([]));
+    api.wedding
+      .inquiries()
+      .then(setInquiries)
+      .catch(() => setInquiries([]));
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(timer);
   }, []);
@@ -78,11 +82,6 @@ export default function PlanningHubPage() {
   }, [data?.date, data?.hubStats?.daysToNextEvent, now]);
 
   if (!data) return <SignInPrompt error={error} />;
-
-  async function complete(id: string) {
-    await api.wedding.updateTask(id, { status: "DONE" });
-    await reload();
-  }
 
   async function setStyle(style: WeddingStyle) {
     await api.wedding.update({ style, colors: weddingStyleColors(style) });
@@ -194,11 +193,17 @@ export default function PlanningHubPage() {
 
       <DashboardMain>
         <DashboardPrimary>
-          <SectionCard title="Ceremonies" icon={CalendarDays} delay={1} variant="muted" action={
-            <Button asChild variant="ghost" size="sm">
-              <Link href="/planning/studio">Studio</Link>
-            </Button>
-          }>
+          <SectionCard
+            title="Ceremonies"
+            icon={CalendarDays}
+            delay={1}
+            variant="muted"
+            action={
+              <Button asChild variant="ghost" size="sm">
+                <Link href="/planning/studio">Studio</Link>
+              </Button>
+            }
+          >
             <CeremonySchedule
               events={data.events ?? []}
               formatWhen={(iso) =>

@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "../components/card";
-import { motion, useReducedMotion, SPRING_SMOOTH, AnimatedCounter } from "./motion";
+import { motion, useReducedMotion, SPRING_SMOOTH } from "./motion";
 
 export type BudgetCategory = {
   label: string;
@@ -63,4 +63,3 @@ export function BudgetMeter({
     </Card>
   );
 }
-

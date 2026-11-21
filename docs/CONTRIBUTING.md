@@ -6,11 +6,11 @@ How to work on Ceylon Weddings: setup, conventions, the contract flow, and a ste
 
 ## Prerequisites
 
-| Tool | Version | Notes |
-|------|---------|-------|
-| Node.js | 22+ | Use [nvm](https://github.com/nvm-sh/nvm): `nvm use` |
-| pnpm | 10+ | `npm i -g pnpm` |
-| Docker | any recent | For Postgres + Redis |
+| Tool    | Version    | Notes                                               |
+| ------- | ---------- | --------------------------------------------------- |
+| Node.js | 22+        | Use [nvm](https://github.com/nvm-sh/nvm): `nvm use` |
+| pnpm    | 10+        | `npm i -g pnpm`                                     |
+| Docker  | any recent | For Postgres + Redis                                |
 
 ---
 
@@ -40,10 +40,10 @@ pnpm db:seed                  # Seed test accounts + sample data
 pnpm dev                      # Turborepo watch mode
 ```
 
-| App | URL |
-|-----|-----|
-| Web | http://localhost:3000 |
-| API | http://localhost:4000 |
+| App     | URL                        |
+| ------- | -------------------------- |
+| Web     | http://localhost:3000      |
+| API     | http://localhost:4000      |
 | Swagger | http://localhost:4000/docs |
 
 ---
@@ -77,28 +77,28 @@ cd apps/web && pnpm dev       # Web only
 
 See `.env.example` for the full list. Key variables:
 
-| Variable | Example | Notes |
-|----------|---------|-------|
-| `DATABASE_URL` | `postgresql://…` | Prisma connection string |
-| `REDIS_URL` | `redis://localhost:6379` | BullMQ + Socket.IO adapter |
-| `JWT_SECRET` | random 64-char string | Access token signing |
-| `JWT_REFRESH_SECRET` | random 64-char string | Refresh token signing |
-| `API_URL` | `http://localhost:4000` | Used by `apps/web` to call the API |
-| `NEXT_PUBLIC_API_URL` | `http://localhost:4000` | Browser-side API calls |
-| `S3_BUCKET` / `S3_REGION` / `S3_KEY` / `S3_SECRET` | | Media uploads (presigned URLs) |
-| `RESEND_API_KEY` | | Email (BullMQ jobs; can be empty in dev) |
+| Variable                                           | Example                  | Notes                                    |
+| -------------------------------------------------- | ------------------------ | ---------------------------------------- |
+| `DATABASE_URL`                                     | `postgresql://…`         | Prisma connection string                 |
+| `REDIS_URL`                                        | `redis://localhost:6379` | BullMQ + Socket.IO adapter               |
+| `JWT_SECRET`                                       | random 64-char string    | Access token signing                     |
+| `JWT_REFRESH_SECRET`                               | random 64-char string    | Refresh token signing                    |
+| `API_URL`                                          | `http://localhost:4000`  | Used by `apps/web` to call the API       |
+| `NEXT_PUBLIC_API_URL`                              | `http://localhost:4000`  | Browser-side API calls                   |
+| `S3_BUCKET` / `S3_REGION` / `S3_KEY` / `S3_SECRET` |                          | Media uploads (presigned URLs)           |
+| `RESEND_API_KEY`                                   |                          | Email (BullMQ jobs; can be empty in dev) |
 
 ---
 
 ## Seed accounts
 
-| Role | Email | Password |
-|------|-------|----------|
-| Couple | couple@ceylonweddings.com | Password123! |
+| Role          | Email                     | Password     |
+| ------------- | ------------------------- | ------------ |
+| Couple        | couple@ceylonweddings.com | Password123! |
 | Family member | family@ceylonweddings.com | Password123! |
-| Couple (alt) | kasun@ceylonweddings.com | Password123! |
-| Vendor | vendor@ceylonweddings.com | Password123! |
-| Admin | admin@ceylonweddings.com | Password123! |
+| Couple (alt)  | kasun@ceylonweddings.com  | Password123! |
+| Vendor        | vendor@ceylonweddings.com | Password123! |
+| Admin         | admin@ceylonweddings.com  | Password123! |
 
 ---
 
@@ -152,6 +152,7 @@ export class CreateTaskDto extends createZodDto(createTaskSchema) {}
 ### 1. Write a spec (optional but encouraged)
 
 Create `specs/003-my-feature.md` with:
+
 - Status: `proposed`
 - Goal
 - API contract (endpoints + request/response shapes)
@@ -185,6 +186,7 @@ model MyModel {
 ```
 
 Then:
+
 ```bash
 pnpm db:generate
 pnpm db:migrate
@@ -259,6 +261,7 @@ export default function MyFeaturePage() {
 ### 7. Add i18n strings
 
 In `packages/i18n/src/messages/en.json` (and `si.json`):
+
 ```json
 {
   "myFeature": {
@@ -269,9 +272,10 @@ In `packages/i18n/src/messages/en.json` (and `si.json`):
 ```
 
 Use with `useTranslations()`:
+
 ```tsx
 const t = useTranslations();
-<h1>{t("myFeature.title")}</h1>
+<h1>{t("myFeature.title")}</h1>;
 ```
 
 ### 8. Update docs
@@ -286,14 +290,18 @@ const t = useTranslations();
 
 ## Code style
 
-- **TypeScript strict** everywhere. No `any`.
-- **Zod validation** at every API boundary. Never trust raw request body.
-- **No magic strings** for enums — import from `@ceylonweddings/contracts` or `@ceylonweddings/database`.
-- **Money as integer LKR** at all times server-side.
-- **Comments**: explain the *why*, not the *what*.
-- **Imports**: use workspace aliases (`@ceylonweddings/ui`, `@ceylonweddings/web`, etc.) — not relative paths across package boundaries.
+Gates ported from Kloqra — they run automatically:
 
----
+| When                                          | What                                                                                                |
+| --------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `git commit` (husky pre-commit → lint-staged) | Prettier, `eslint --fix`, and the design-system guard on **staged files only**                      |
+| `git commit` (commit-msg)                     | Conventional commits: `feat(scope): …`, `fix(…)`, `refactor`, `docs`, `chore`, `test`, `ci`, `perf` |
+| CI                                            | typecheck → `pnpm lint` (guard + ESLint) → `pnpm test` → commitlint on PRs → build                  |
+
+- Prettier (`prettier.config.mjs`): double quotes, semicolons, trailing commas, 120 columns. Files are formatted as you touch them; there is no repo-wide reformat.
+- ESLint (`eslint.config.mjs`): TS recommended, React + hooks, Next core-web-vitals, type-only imports, no duplicate imports, no `../../` out of `features/`, no deep cross-module imports in the API.
+- Design system: [packages/ui/STYLEGUIDE.md](../packages/ui/STYLEGUIDE.md).
+- Tests: `*.test.ts` next to the code, Node's built-in runner (`pnpm test`).
 
 ## Package dependency rules
 

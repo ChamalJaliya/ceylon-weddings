@@ -29,7 +29,6 @@ import {
   drawerVariants,
   staggerContainerVariants,
   accordionVariants,
-  hoverLiftVariants,
 } from "../motion/variants";
 
 export { MOTION_TIMINGS, SPRING_SNAPPY, SPRING_BOUNCY, SPRING_SMOOTH, SPRING_GENTLE, EASE_OUT_EXPO, DURATION };
@@ -206,13 +205,7 @@ type PressableProps = {
   hoverScale?: number;
 } & Omit<HTMLMotionProps<"div">, "children">;
 
-export function Pressable({
-  children,
-  className,
-  scale = 0.97,
-  hoverScale = 1.02,
-  ...props
-}: PressableProps) {
+export function Pressable({ children, className, scale = 0.97, hoverScale = 1.02, ...props }: PressableProps) {
   const reduce = useReducedMotion();
 
   return (
@@ -345,7 +338,10 @@ export function AnimatedTabs<T extends string>({
             {isActive && (
               <motion.div
                 layoutId={reduce ? undefined : layoutId}
-                className={cn("absolute inset-0 -z-10 rounded-lg bg-card shadow-sm border border-border/50", activePillClassName)}
+                className={cn(
+                  "absolute inset-0 -z-10 rounded-lg bg-card shadow-sm border border-border/50",
+                  activePillClassName,
+                )}
                 transition={SPRING_SNAPPY}
               />
             )}
@@ -369,7 +365,7 @@ type AnimatedCounterProps = {
   duration?: number;
 };
 
-export function AnimatedCounter({ value, formatter, className, duration = 1 }: AnimatedCounterProps) {
+export function AnimatedCounter({ value, formatter, className }: AnimatedCounterProps) {
   const reduce = useReducedMotion();
   const spring = useSpring(value, { mass: 0.8, stiffness: 120, damping: 20 });
   const display = useTransform(spring, (current) =>
@@ -452,12 +448,7 @@ export function PulseDot({ className, colorClass = "bg-primary" }: { className?:
   return (
     <span className={cn("relative flex h-2.5 w-2.5 items-center justify-center", className)}>
       {!reduce && (
-        <span
-          className={cn(
-            "absolute inline-flex h-full w-full animate-ping rounded-full opacity-75",
-            colorClass,
-          )}
-        />
+        <span className={cn("absolute inline-flex h-full w-full animate-ping rounded-full opacity-75", colorClass)} />
       )}
       <span className={cn("relative inline-flex h-2 w-2 rounded-full", colorClass)} />
     </span>

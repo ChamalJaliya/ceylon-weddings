@@ -1,25 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import {
-  Cake,
-  Car,
-  Flower2,
-  Heart,
-  Lightbulb,
-  PartyPopper,
-  Search,
-  Shirt,
-  Sparkles,
-  Users,
-} from "lucide-react";
+import { Cake, Car, Flower2, Heart, Lightbulb, PartyPopper, Search, Shirt, Sparkles, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { api } from "@ceylonweddings/web";
 import type { Article, ArticleCategory } from "@ceylonweddings/contracts";
 import { Input } from "@ceylonweddings/ui/components/input";
 import { Icon } from "@ceylonweddings/ui/components/icon";
 import { EmptyState } from "@ceylonweddings/ui/domain/empty-state";
-import { Reveal, Stagger, StaggerItem, Pressable, motion, useReducedMotion } from "@ceylonweddings/ui/domain/motion";
+import { Reveal, Stagger, StaggerItem, motion, useReducedMotion } from "@ceylonweddings/ui/domain/motion";
 import { Link } from "@/i18n/navigation";
 
 const ICONS: Partial<Record<ArticleCategory, typeof Flower2>> = {
@@ -63,7 +52,10 @@ export default function IdeasPage() {
 
   useEffect(() => {
     if (!enabled) return;
-    api.public.articles(category || undefined, q || undefined).then(setArticles).catch(() => setArticles([]));
+    api.public
+      .articles(category || undefined, q || undefined)
+      .then(setArticles)
+      .catch(() => setArticles([]));
   }, [category, q, enabled]);
 
   const featured = useMemo(() => articles.find((item) => item.featured) ?? articles[0], [articles]);
@@ -158,9 +150,7 @@ export default function IdeasPage() {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-ink/85 via-ink/35 to-ink/15" />
             <div className="relative flex min-h-[22rem] flex-col justify-end gap-3 px-6 py-8 sm:min-h-[28rem] sm:px-10 sm:py-12">
-              <p className="text-label font-medium tracking-eyebrow text-primary uppercase">
-                {t("nav.featured")}
-              </p>
+              <p className="text-label font-medium tracking-eyebrow text-primary uppercase">{t("nav.featured")}</p>
               <h2 className="max-w-2xl font-serif text-3xl leading-[1.05] font-medium tracking-tight text-paper sm:text-4xl lg:text-5xl">
                 {featured.title}
               </h2>
@@ -177,9 +167,7 @@ export default function IdeasPage() {
       {rest.length ? (
         <section className="grid gap-6">
           <Reveal y={8}>
-            <p className="text-label font-medium tracking-eyebrow text-muted-foreground uppercase">
-              {t("nav.ideas")}
-            </p>
+            <p className="text-label font-medium tracking-eyebrow text-muted-foreground uppercase">{t("nav.ideas")}</p>
           </Reveal>
           <Stagger className="grid gap-5 sm:grid-cols-2 sm:gap-6" stagger={0.07}>
             {rest.map((article) => (
@@ -214,11 +202,7 @@ export default function IdeasPage() {
       ) : null}
 
       {articles.length === 0 ? (
-        <EmptyState
-          icon={Lightbulb}
-          title={t("marketing.emptyVendors")}
-          description={t("knotly.ideasSub")}
-        />
+        <EmptyState icon={Lightbulb} title={t("marketing.emptyVendors")} description={t("knotly.ideasSub")} />
       ) : null}
     </div>
   );
