@@ -1,17 +1,4 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Header,
-  Param,
-  Patch,
-  Post,
-  Put,
-  Query,
-  Req,
-  UseGuards,
-} from "@nestjs/common";
+import { Body, Controller, Delete, Get, Header, Param, Patch, Post, Put, Query, Req, UseGuards } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
 import type { Request } from "express";
 import type { User } from "@ceylonweddings/contracts";
@@ -29,6 +16,8 @@ import {
   AdminOverrideTrialDto,
   AdminGrantCompedDto,
   AdminActivatePaidDto,
+  AdminUpsertSubscriptionPlanDto,
+  AdminSetSubscriptionPlanActiveDto,
   CreateReportDto,
   ImpersonateDto,
   ResolveReportDto,
@@ -47,6 +36,25 @@ export class AdminController {
   @Get("stats")
   stats(@CurrentUser() user: User) {
     return this.admin.stats(user);
+  }
+
+  @Get("subscription-plans")
+  listSubscriptionPlans(@CurrentUser() user: User) {
+    return this.admin.listSubscriptionPlans(user);
+  }
+
+  @Put("subscription-plans")
+  upsertSubscriptionPlan(@CurrentUser() user: User, @Body() body: AdminUpsertSubscriptionPlanDto) {
+    return this.admin.upsertSubscriptionPlan(user, body);
+  }
+
+  @Patch("subscription-plans/:id/active")
+  setSubscriptionPlanActive(
+    @CurrentUser() user: User,
+    @Param("id") id: string,
+    @Body() body: AdminSetSubscriptionPlanActiveDto,
+  ) {
+    return this.admin.setSubscriptionPlanActive(user, id, body.active);
   }
 
   @Get("vendors")
@@ -80,37 +88,18 @@ export class AdminController {
   }
 
   @Patch("vendors/:id/subscription/trial")
-  overrideVendorTrial(
-    @CurrentUser() user: User,
-    @Param("id") id: string,
-    @Body() body: AdminOverrideTrialDto,
-  ) {
+  overrideVendorTrial(@CurrentUser() user: User, @Param("id") id: string, @Body() body: AdminOverrideTrialDto) {
     return this.admin.overrideVendorTrial(user, id, body.trialEndsAt);
   }
 
   @Patch("vendors/:id/subscription/comp")
-  grantVendorComped(
-    @CurrentUser() user: User,
-    @Param("id") id: string,
-    @Body() body: AdminGrantCompedDto,
-  ) {
+  grantVendorComped(@CurrentUser() user: User, @Param("id") id: string, @Body() body: AdminGrantCompedDto) {
     return this.admin.grantVendorComped(user, id, body.compedUntil);
   }
 
   @Patch("vendors/:id/subscription/activate")
-  activateVendorSubscription(
-    @CurrentUser() user: User,
-    @Param("id") id: string,
-    @Body() body: AdminActivatePaidDto,
-  ) {
-    return this.admin.activateVendorSubscription(
-      user,
-      id,
-      body.planId,
-      body.interval,
-      body.paymentRef,
-      body.notes,
-    );
+  activateVendorSubscription(@CurrentUser() user: User, @Param("id") id: string, @Body() body: AdminActivatePaidDto) {
+    return this.admin.activateVendorSubscription(user, id, body.planId, body.interval, body.paymentRef, body.notes);
   }
 
   @Patch("vendors/:id/subscription/suspend")
@@ -129,12 +118,7 @@ export class AdminController {
   }
 
   @Patch("users/:id")
-  patchUser(
-    @CurrentUser() user: User,
-    @Param("id") id: string,
-    @Body() body: AdminPatchUserDto,
-    @Req() req: Request,
-  ) {
+  patchUser(@CurrentUser() user: User, @Param("id") id: string, @Body() body: AdminPatchUserDto, @Req() req: Request) {
     return this.admin.patchUser(user, id, body, clientIp(req));
   }
 
@@ -244,11 +228,7 @@ export class AdminController {
   }
 
   @Post("featured")
-  createPlacement(
-    @CurrentUser() user: User,
-    @Body() body: UpsertFeaturedPlacementDto,
-    @Req() req: Request,
-  ) {
+  createPlacement(@CurrentUser() user: User, @Body() body: UpsertFeaturedPlacementDto, @Req() req: Request) {
     return this.admin.createPlacement(user, body, clientIp(req));
   }
 

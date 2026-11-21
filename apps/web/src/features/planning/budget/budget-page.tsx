@@ -4,7 +4,7 @@ import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Wallet } from "lucide-react";
 import { api, formatMoney, usePreferenceStore } from "@ceylonweddings/web";
-import { type BudgetLine, type Payer , payerRollup } from "@ceylonweddings/contracts";
+import { type BudgetLine, type Payer, payerRollup } from "@ceylonweddings/contracts";
 import { Button } from "@ceylonweddings/ui/components/button";
 import { Input } from "@ceylonweddings/ui/components/input";
 import { DatePicker } from "@ceylonweddings/ui/components/date-picker";
@@ -14,6 +14,8 @@ import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
 import { SectionCard } from "@ceylonweddings/ui/domain/section-card";
 import { BudgetMeter } from "@ceylonweddings/ui/domain/budget-meter";
 import { PayerPots } from "@ceylonweddings/ui/domain/wedding-presentation";
+import { EmptyState } from "@ceylonweddings/ui/domain/empty-state";
+import { PlanningList, PlanningListRow } from "@ceylonweddings/ui/domain/planning-list-row";
 import { SignInPrompt, useWedding } from "@/components/use-wedding";
 import { useConfirm } from "@ceylonweddings/ui/components/confirm-dialog";
 
@@ -293,70 +295,79 @@ export default function BudgetPage() {
           </div>
         </SectionCard>
         <SectionCard title={t("planning.label")} variant="muted">
-          <div className="grid gap-3 text-sm">
-            <div className="hidden grid-cols-5 font-medium text-muted-foreground md:grid">
-              <span>{t("planning.label")}</span>
-              <span>{t("planning.planned")}</span>
-              <span>{t("planning.spent")}</span>
-              <span>{t("knotly.paid")}</span>
-              <span />
-            </div>
-            {filtered.map((line) => (
-              <div
-                key={line.id}
-                className="cw-row-lift grid gap-2 rounded-xl border border-border/60 bg-background/40 p-3 md:grid-cols-6 md:items-center md:border-0 md:bg-transparent md:p-0"
-              >
-                <span className="font-medium">{line.label}</span>
-                <Input
-                  type="number"
-                  defaultValue={line.plannedLkr}
-                  onBlur={(e) => save({ ...line, plannedLkr: Number(e.target.value) })}
-                />
-                <Input
-                  type="number"
-                  defaultValue={line.spentLkr}
-                  onBlur={(e) => save({ ...line, spentLkr: Number(e.target.value) })}
-                />
-                <Input
-                  type="number"
-                  defaultValue={line.paidLkr}
-                  onBlur={(e) => save({ ...line, paidLkr: Number(e.target.value) })}
-                />
-                <SimpleSelect
-                  value={line.payer}
-                  onValueChange={(value) => save({ ...line, payer: value as Payer })}
-                  options={PAYERS.map((value) => ({ value, label: value.replaceAll("_", " ") }))}
-                />
-                <Button type="button" size="sm" variant="ghost" onClick={() => removeLine(line.id)}>
-                  Remove
-                </Button>
-                <div className="md:col-span-6 grid gap-2 sm:grid-cols-2">
-                  <FieldBlock label="Deposit due" compact>
-                    <DatePicker
-                      value={line.depositDueAt?.slice(0, 10) ?? ""}
-                      onChange={(value) =>
-                        save({
-                          ...line,
-                          depositDueAt: value ? new Date(value).toISOString() : null,
-                        })
-                      }
-                    />
-                  </FieldBlock>
-                  <FieldBlock label="Balance due" compact>
-                    <DatePicker
-                      value={line.balanceDueAt?.slice(0, 10) ?? ""}
-                      onChange={(value) =>
-                        save({
-                          ...line,
-                          balanceDueAt: value ? new Date(value).toISOString() : null,
-                        })
-                      }
-                    />
-                  </FieldBlock>
-                </div>
+          {filtered.length === 0 ? (
+            <EmptyState
+              icon={Wallet}
+              title={t("nav.costGuide")}
+              description={activeCategory ? `No lines in category "${activeCategory}".` : t("planning.budgetHelp")}
+            />
+          ) : (
+            <PlanningList>
+              <div className="hidden grid-cols-5 text-sm font-medium text-muted-foreground md:grid">
+                <span>{t("planning.label")}</span>
+                <span>{t("planning.planned")}</span>
+                <span>{t("planning.spent")}</span>
+                <span>{t("knotly.paid")}</span>
+                <span />
               </div>
-            ))}
-          </div>
+              {filtered.map((line) => (
+                <PlanningListRow
+                  key={line.id}
+                  variant="card"
+                  className="md:grid-cols-6 md:items-center md:border-0 md:bg-transparent md:p-0"
+                  title={line.label}
+                >
+                  <Input
+                    type="number"
+                    defaultValue={line.plannedLkr}
+                    onBlur={(e) => save({ ...line, plannedLkr: Number(e.target.value) })}
+                  />
+                  <Input
+                    type="number"
+                    defaultValue={line.spentLkr}
+                    onBlur={(e) => save({ ...line, spentLkr: Number(e.target.value) })}
+                  />
+                  <Input
+                    type="number"
+                    defaultValue={line.paidLkr}
+                    onBlur={(e) => save({ ...line, paidLkr: Number(e.target.value) })}
+                  />
+                  <SimpleSelect
+                    value={line.payer}
+                    onValueChange={(value) => save({ ...line, payer: value as Payer })}
+                    options={PAYERS.map((value) => ({ value, label: value.replaceAll("_", " ") }))}
+                  />
+                  <Button type="button" size="sm" variant="ghost" onClick={() => removeLine(line.id)}>
+                    Remove
+                  </Button>
+                  <div className="md:col-span-6 grid gap-2 sm:grid-cols-2">
+                    <FieldBlock label="Deposit due" compact>
+                      <DatePicker
+                        value={line.depositDueAt?.slice(0, 10) ?? ""}
+                        onChange={(value) =>
+                          save({
+                            ...line,
+                            depositDueAt: value ? new Date(value).toISOString() : null,
+                          })
+                        }
+                      />
+                    </FieldBlock>
+                    <FieldBlock label="Balance due" compact>
+                      <DatePicker
+                        value={line.balanceDueAt?.slice(0, 10) ?? ""}
+                        onChange={(value) =>
+                          save({
+                            ...line,
+                            balanceDueAt: value ? new Date(value).toISOString() : null,
+                          })
+                        }
+                      />
+                    </FieldBlock>
+                  </div>
+                </PlanningListRow>
+              ))}
+            </PlanningList>
+          )}
         </SectionCard>
       </div>
     </div>

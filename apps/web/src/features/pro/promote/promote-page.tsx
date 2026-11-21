@@ -27,10 +27,13 @@ import {
   PromotionTargetingFields,
   type AdsPromotionDraft,
 } from "@ceylonweddings/ui/domain/ads-studio";
-import { EmptyState } from "@ceylonweddings/ui/domain/empty-state";
+import { DataTableCell, DataTableHead } from "@ceylonweddings/ui/domain/data-table";
+import { DataTableList } from "@ceylonweddings/ui/domain/data-table-list";
 import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
 import { SectionCard } from "@ceylonweddings/ui/domain/section-card";
-import { AdminDataCell, AdminDataRow, AdminDataTable } from "@ceylonweddings/ui/domain/admin-data-table";
+import { useClientTablePagination } from "@ceylonweddings/ui/lib/use-client-table-pagination";
+
+const LIST_COLUMNS = ["campaign", "status", "perf", "actions"] as const;
 import { CATEGORY_LABELS, localizedText } from "@/lib/labels";
 
 type Section = "creative" | "targeting" | "schedule" | "publish";
@@ -47,15 +50,19 @@ export default function VendorPromotePage() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [listLoading, setListLoading] = useState(true);
   const [categoryOptions, setCategoryOptions] = useState(
     Object.entries(CATEGORY_LABELS).map(([value, label]) => ({ value, label })),
   );
 
   const load = useCallback(async () => {
     try {
+      setListLoading(true);
       setRows(await api.promotions.mine());
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load");
+    } finally {
+      setListLoading(false);
     }
   }, []);
 
@@ -172,6 +179,9 @@ export default function VendorPromotePage() {
     }
   }
 
+  const filtered = rows;
+  const { page, setPage, setLimit, pageItems, total, totalPages, limit } = useClientTablePagination(filtered, 25, "");
+
   if (mode === "list") {
     return (
       <div className="grid gap-8">
@@ -188,31 +198,75 @@ export default function VendorPromotePage() {
         />
         {error ? <FormStatus tone="destructive">{error}</FormStatus> : null}
         <SectionCard title="Your campaigns" icon={Megaphone}>
-          {rows.length === 0 ? (
-            <EmptyState icon={Megaphone} title="No promotions yet" description="Launch a campaign with your own creative." />
-          ) : (
-            <AdminDataTable headers={["Campaign", "Status", "Perf", ""]}>
-              {rows.map((row) => (
-                <AdminDataRow key={row.id}>
-                  <AdminDataCell>
-                    <p className="font-medium">{row.name}</p>
-                    <p className="text-xs text-muted-foreground">{row.headline}</p>
-                  </AdminDataCell>
-                  <AdminDataCell>
-                    <Badge>{row.status}</Badge>
-                  </AdminDataCell>
-                  <AdminDataCell className="text-xs text-muted-foreground">
-                    {row.impressionCount} / {row.clickCount}
-                  </AdminDataCell>
-                  <AdminDataCell>
-                    <Button size="sm" variant="ghost" onClick={() => void openEdit(row.id)}>
-                      Edit
-                    </Button>
-                  </AdminDataCell>
-                </AdminDataRow>
-              ))}
-            </AdminDataTable>
-          )}
+          <DataTableList
+            framed={false}
+            loading={listLoading}
+            loadingColumns={LIST_COLUMNS.length}
+            sourceCount={rows.length}
+            filteredCount={filtered.length}
+            empty={{
+              icon: Megaphone,
+              title: "No promotions yet",
+              description: "Launch a campaign with your own creative.",
+            }}
+            pagination={
+              totalPages > 0
+                ? {
+                    page,
+                    totalPages,
+                    total,
+                    limit,
+                    onPageChange: setPage,
+                    onLimitChange: setLimit,
+                  }
+                : null
+            }
+            items={pageItems}
+            getRowId={(row) => row.id}
+            orderedVisibleIds={LIST_COLUMNS}
+            renderHead={(id) => {
+              const labels: Record<(typeof LIST_COLUMNS)[number], string> = {
+                campaign: "Campaign",
+                status: "Status",
+                perf: "Perf",
+                actions: "",
+              };
+              return <DataTableHead key={id}>{labels[id as (typeof LIST_COLUMNS)[number]]}</DataTableHead>;
+            }}
+            renderCell={(id, row) => {
+              switch (id) {
+                case "campaign":
+                  return (
+                    <DataTableCell key={id}>
+                      <p className="font-medium">{row.name}</p>
+                      <p className="text-xs text-muted-foreground">{row.headline}</p>
+                    </DataTableCell>
+                  );
+                case "status":
+                  return (
+                    <DataTableCell key={id}>
+                      <Badge>{row.status}</Badge>
+                    </DataTableCell>
+                  );
+                case "perf":
+                  return (
+                    <DataTableCell key={id} className="text-xs text-muted-foreground">
+                      {row.impressionCount} / {row.clickCount}
+                    </DataTableCell>
+                  );
+                case "actions":
+                  return (
+                    <DataTableCell key={id}>
+                      <Button size="sm" variant="ghost" onClick={() => void openEdit(row.id)}>
+                        Edit
+                      </Button>
+                    </DataTableCell>
+                  );
+                default:
+                  return null;
+              }
+            }}
+          />
         </SectionCard>
       </div>
     );

@@ -32,6 +32,7 @@ import {
   type AuditLog,
   type User,
   type Vendor,
+  type UpsertSubscriptionPlanBody,
   FEATURE_FLAG_CATALOG,
 } from "@ceylonweddings/contracts";
 import { AdminAccessService } from "./admin-access.service";
@@ -1263,6 +1264,21 @@ export class AdminService {
   async suspendVendorSubscription(user: User, vendorId: string) {
     this.access.assertAdmin(user);
     return this.subscription.adminSuspend(user.id, vendorId);
+  }
+
+  async listSubscriptionPlans(user: User) {
+    this.access.assertAdmin(user);
+    return this.subscription.listAllPlans();
+  }
+
+  async upsertSubscriptionPlan(user: User, body: UpsertSubscriptionPlanBody) {
+    this.access.assertAdmin(user);
+    return this.subscription.upsertPlan(body);
+  }
+
+  async setSubscriptionPlanActive(user: User, id: string, active: boolean) {
+    this.access.assertAdmin(user);
+    return this.subscription.setPlanActive(id, active);
   }
 
   private serializeFlag(row: {

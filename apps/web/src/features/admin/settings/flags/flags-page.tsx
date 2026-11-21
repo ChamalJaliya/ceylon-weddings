@@ -7,20 +7,28 @@ import { FEATURE_FLAG_CATALOG, type FeatureFlag } from "@ceylonweddings/contract
 import { Button } from "@ceylonweddings/ui/components/button";
 import { FormStatus } from "@ceylonweddings/ui/components/form-status";
 import { Input } from "@ceylonweddings/ui/components/input";
+import { CenteredLoader } from "@ceylonweddings/ui/components/spinner";
+import { EmptyState } from "@ceylonweddings/ui/domain/empty-state";
 import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
 import { SectionCard } from "@ceylonweddings/ui/domain/section-card";
+import { SettingsList, SettingsListRow } from "@ceylonweddings/ui/domain/settings-list-row";
 import { Link } from "@/i18n/navigation";
 
 export default function AdminFlagsPage() {
   const [flags, setFlags] = useState<FeatureFlag[]>([]);
   const [customKey, setCustomKey] = useState("");
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
+      setLoading(true);
       setFlags(await api.admin.flags());
+      setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load");
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -38,7 +46,9 @@ export default function AdminFlagsPage() {
 
   const byKey = new Map(flags.map((flag) => [flag.key, flag]));
   const catalogKeys = new Set(FEATURE_FLAG_CATALOG.map((f) => f.key));
-  const customFlags = flags.filter((flag) => !catalogKeys.has(flag.key as (typeof FEATURE_FLAG_CATALOG)[number]["key"]));
+  const customFlags = flags.filter(
+    (flag) => !catalogKeys.has(flag.key as (typeof FEATURE_FLAG_CATALOG)[number]["key"]),
+  );
 
   return (
     <div className="grid gap-8">
@@ -50,37 +60,39 @@ export default function AdminFlagsPage() {
       />
 
       <SectionCard title="Catalog" icon={Flag}>
-        <ul className="grid gap-2 text-sm">
-          {FEATURE_FLAG_CATALOG.map((item) => {
-            const flag = byKey.get(item.key);
-            const enabled = flag?.enabled ?? item.defaultEnabled;
-            return (
-              <li
-                key={item.key}
-                className="flex items-center justify-between gap-3 rounded-lg border border-border/60 px-3 py-2"
-              >
-                <div>
-                  <p className="font-medium">{item.key}</p>
-                  <p className="text-xs text-muted-foreground">{item.description}</p>
-                </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={async () => {
-                    await api.admin.upsertFlag({
-                      key: item.key,
-                      enabled: !enabled,
-                      description: item.description,
-                    });
-                    await load();
-                  }}
-                >
-                  {enabled ? "Disable" : "Enable"}
-                </Button>
-              </li>
-            );
-          })}
-        </ul>
+        {loading ? (
+          <CenteredLoader label="Loading flags" />
+        ) : (
+          <SettingsList>
+            {FEATURE_FLAG_CATALOG.map((item) => {
+              const flag = byKey.get(item.key);
+              const enabled = flag?.enabled ?? item.defaultEnabled;
+              return (
+                <SettingsListRow
+                  key={item.key}
+                  title={item.key}
+                  description={item.description}
+                  actions={
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={async () => {
+                        await api.admin.upsertFlag({
+                          key: item.key,
+                          enabled: !enabled,
+                          description: item.description,
+                        });
+                        await load();
+                      }}
+                    >
+                      {enabled ? "Disable" : "Enable"}
+                    </Button>
+                  }
+                />
+              );
+            })}
+          </SettingsList>
+        )}
       </SectionCard>
 
       <SectionCard title="Custom flags" icon={Flag}>
@@ -107,36 +119,35 @@ export default function AdminFlagsPage() {
             Enable custom flag
           </Button>
         </div>
-        <ul className="grid gap-2 text-sm">
-          {customFlags.map((flag) => (
-            <li
-              key={flag.id}
-              className="flex items-center justify-between gap-3 rounded-lg border border-border/60 px-3 py-2"
-            >
-              <div>
-                <p className="font-medium">{flag.key}</p>
-                <p className="text-xs text-muted-foreground">{flag.description}</p>
-              </div>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={async () => {
-                  await api.admin.upsertFlag({
-                    key: flag.key,
-                    enabled: !flag.enabled,
-                    description: flag.description,
-                  });
-                  await load();
-                }}
-              >
-                {flag.enabled ? "Disable" : "Enable"}
-              </Button>
-            </li>
-          ))}
-          {customFlags.length === 0 ? (
-            <li className="text-xs text-muted-foreground">No custom flags yet.</li>
-          ) : null}
-        </ul>
+        {!loading && customFlags.length === 0 ? (
+          <EmptyState icon={Flag} title="No custom flags yet" description="Add an ops experiment key above." />
+        ) : (
+          <SettingsList>
+            {customFlags.map((flag) => (
+              <SettingsListRow
+                key={flag.id}
+                title={flag.key}
+                description={flag.description}
+                actions={
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={async () => {
+                      await api.admin.upsertFlag({
+                        key: flag.key,
+                        enabled: !flag.enabled,
+                        description: flag.description,
+                      });
+                      await load();
+                    }}
+                  >
+                    {flag.enabled ? "Disable" : "Enable"}
+                  </Button>
+                }
+              />
+            ))}
+          </SettingsList>
+        )}
       </SectionCard>
     </div>
   );

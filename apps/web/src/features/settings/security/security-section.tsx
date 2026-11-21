@@ -15,6 +15,7 @@ import { Input } from "@ceylonweddings/ui/components/input";
 import { Label } from "@ceylonweddings/ui/components/label";
 import { SkeletonText } from "@ceylonweddings/ui/components/skeleton";
 import { toast } from "@ceylonweddings/ui/components/toaster";
+import { SettingsList, SettingsListRow } from "@ceylonweddings/ui/domain/settings-list-row";
 import { SettingsCard } from "../components/settings-card";
 
 const errorText = (error: unknown, fallback: string) => (isApiError(error) ? error.message : fallback);
@@ -424,47 +425,59 @@ export default function SecuritySection() {
           ) : null
         }
       >
-        <ul className="grid divide-y divide-border rounded-2xl border border-border">
+        <SettingsList>
           {security.sessions.map((session) => (
-            <li key={session.id} className="flex items-center gap-3 px-4 py-3">
-              <span className="grid size-9 shrink-0 place-items-center rounded-full bg-secondary text-secondary-foreground">
-                <Icon icon={LaptopMinimal} size="xs" lottie={false} />
-              </span>
-              <div className="grid min-w-0 flex-1 gap-0.5">
-                <span className="flex items-center gap-2 text-compact font-medium text-foreground">
+            <SettingsListRow
+              key={session.id}
+              title={
+                <>
                   Signed in {formatWhen(session.createdAt)}
-                  {session.current ? <Badge intent="success">This device</Badge> : null}
+                  {session.current ? (
+                    <>
+                      {" "}
+                      <Badge intent="success">This device</Badge>
+                    </>
+                  ) : null}
+                </>
+              }
+              meta={
+                <span className="inline-flex items-center gap-2 text-muted-foreground">
+                  <span className="grid size-7 place-items-center rounded-full bg-secondary text-secondary-foreground">
+                    <Icon icon={LaptopMinimal} size="xs" lottie={false} />
+                  </span>
+                  Expires {formatWhen(session.expiresAt)}
                 </span>
-                <span className="text-caption text-muted-foreground">Expires {formatWhen(session.expiresAt)}</span>
-              </div>
-              {!session.current ? (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={async () => {
-                    const ok = await confirm({
-                      title: "Sign out this device?",
-                      description: `Signed in ${formatWhen(session.createdAt)}.`,
-                      confirmLabel: "Sign out",
-                      destructive: true,
-                      onConfirm: () => api.account.revokeSession(session.id),
-                    }).catch((err) => {
-                      toast.error(errorText(err, "Couldn't sign that device out."));
-                      return false;
-                    });
-                    if (ok) {
-                      toast.success("Device signed out");
-                      load();
-                    }
-                  }}
-                >
-                  Sign out
-                </Button>
-              ) : null}
-            </li>
+              }
+              actions={
+                !session.current ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={async () => {
+                      const ok = await confirm({
+                        title: "Sign out this device?",
+                        description: `Signed in ${formatWhen(session.createdAt)}.`,
+                        confirmLabel: "Sign out",
+                        destructive: true,
+                        onConfirm: () => api.account.revokeSession(session.id),
+                      }).catch((err) => {
+                        toast.error(errorText(err, "Couldn't sign that device out."));
+                        return false;
+                      });
+                      if (ok) {
+                        toast.success("Device signed out");
+                        load();
+                      }
+                    }}
+                  >
+                    Sign out
+                  </Button>
+                ) : null
+              }
+            />
           ))}
-        </ul>
+        </SettingsList>
       </SettingsCard>
 
       <PasswordModal open={modal === "password"} onOpenChange={(open) => setModal(open ? "password" : null)} />

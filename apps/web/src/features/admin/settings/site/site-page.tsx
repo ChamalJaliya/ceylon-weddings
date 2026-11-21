@@ -11,6 +11,7 @@ import {
   type VendorType,
 } from "@ceylonweddings/contracts";
 import { Button } from "@ceylonweddings/ui/components/button";
+import { CheckboxField } from "@ceylonweddings/ui/components/checkbox";
 import { FormStatus } from "@ceylonweddings/ui/components/form-status";
 import { Input } from "@ceylonweddings/ui/components/input";
 import { Textarea } from "@ceylonweddings/ui/components/textarea";
@@ -87,10 +88,7 @@ export default function AdminSiteSettingsPage() {
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="grid gap-1 text-sm">
             <span className="text-muted-foreground">Tagline</span>
-            <Input
-              value={branding.tagline}
-              onChange={(e) => setBranding({ ...branding, tagline: e.target.value })}
-            />
+            <Input value={branding.tagline} onChange={(e) => setBranding({ ...branding, tagline: e.target.value })} />
           </label>
           <label className="grid gap-1 text-sm">
             <span className="text-muted-foreground">Logo URL</span>
@@ -123,10 +121,7 @@ export default function AdminSiteSettingsPage() {
           </label>
           <label className="grid gap-1 text-sm">
             <span className="text-muted-foreground">WhatsApp</span>
-            <Input
-              value={branding.whatsapp}
-              onChange={(e) => setBranding({ ...branding, whatsapp: e.target.value })}
-            />
+            <Input value={branding.whatsapp} onChange={(e) => setBranding({ ...branding, whatsapp: e.target.value })} />
           </label>
           <label className="grid gap-1 text-sm">
             <span className="text-muted-foreground">Instagram URL</span>
@@ -135,19 +130,20 @@ export default function AdminSiteSettingsPage() {
               onChange={(e) => setBranding({ ...branding, socialInstagram: e.target.value || null })}
             />
           </label>
-          <label className="flex items-center gap-2 text-sm sm:col-span-2">
-            <input
-              type="checkbox"
-              checked={branding.maintenanceBanner.enabled}
-              onChange={(e) =>
-                setBranding({
-                  ...branding,
-                  maintenanceBanner: { ...branding.maintenanceBanner, enabled: e.target.checked },
-                })
-              }
-            />
-            Show maintenance banner
-          </label>
+          <CheckboxField
+            className="sm:col-span-2"
+            label="Show maintenance banner"
+            checked={branding.maintenanceBanner.enabled}
+            onCheckedChange={(checked) =>
+              setBranding({
+                ...branding,
+                maintenanceBanner: {
+                  ...branding.maintenanceBanner,
+                  enabled: checked === true,
+                },
+              })
+            }
+          />
           <label className="grid gap-1 text-sm sm:col-span-2">
             <span className="text-muted-foreground">Maintenance message</span>
             <Input
@@ -176,9 +172,7 @@ export default function AdminSiteSettingsPage() {
             <span className="text-muted-foreground">Subtitle</span>
             <Input
               value={homepage.hero.subtitle}
-              onChange={(e) =>
-                setHomepage({ ...homepage, hero: { ...homepage.hero, subtitle: e.target.value } })
-              }
+              onChange={(e) => setHomepage({ ...homepage, hero: { ...homepage.hero, subtitle: e.target.value } })}
             />
           </label>
           <label className="grid gap-1 text-sm">
@@ -194,9 +188,7 @@ export default function AdminSiteSettingsPage() {
             <span className="text-muted-foreground">Primary CTA href</span>
             <Input
               value={homepage.hero.ctaPrimaryHref}
-              onChange={(e) =>
-                setHomepage({ ...homepage, hero: { ...homepage.hero, ctaPrimaryHref: e.target.value } })
-              }
+              onChange={(e) => setHomepage({ ...homepage, hero: { ...homepage.hero, ctaPrimaryHref: e.target.value } })}
             />
           </label>
           <label className="grid gap-1 text-sm">
@@ -221,9 +213,7 @@ export default function AdminSiteSettingsPage() {
             <span className="text-muted-foreground">Hero image URL</span>
             <Input
               value={homepage.hero.imageUrl}
-              onChange={(e) =>
-                setHomepage({ ...homepage, hero: { ...homepage.hero, imageUrl: e.target.value } })
-              }
+              onChange={(e) => setHomepage({ ...homepage, hero: { ...homepage.hero, imageUrl: e.target.value } })}
             />
           </label>
           <label className="grid gap-1 text-sm sm:col-span-2">
@@ -276,12 +266,7 @@ export default function AdminSiteSettingsPage() {
 
       <SectionCard title="Category tiles" icon={Globe}>
         <div className="flex flex-wrap gap-2">
-          {Array.from(
-            new Set([
-              ...vendorTypes.map((t) => t.slug),
-              ...homepage.categoryKeys,
-            ]),
-          ).map((key) => {
+          {Array.from(new Set([...vendorTypes.map((t) => t.slug), ...homepage.categoryKeys])).map((key) => {
             const selected = homepage.categoryKeys.includes(key);
             const label = vendorTypes.find((t) => t.slug === key)?.label.en ?? key;
             return (
@@ -347,9 +332,7 @@ export default function AdminSiteSettingsPage() {
           />
           <Textarea
             value={homepage.seo.description}
-            onChange={(e) =>
-              setHomepage({ ...homepage, seo: { ...homepage.seo, description: e.target.value } })
-            }
+            onChange={(e) => setHomepage({ ...homepage, seo: { ...homepage.seo, description: e.target.value } })}
             rows={3}
           />
           <Input

@@ -21,6 +21,8 @@ import { Label } from "@ceylonweddings/ui/components/label";
 import { SimpleSelect } from "@ceylonweddings/ui/components/select";
 import { FieldBlock, FormGrid, FormPanel } from "@ceylonweddings/ui/domain/creator-form";
 import { EmptyState } from "@ceylonweddings/ui/domain/empty-state";
+import { PlanningFormPanel } from "@ceylonweddings/ui/domain/planning-form-panel";
+import { PlanningList, PlanningListRow } from "@ceylonweddings/ui/domain/planning-list-row";
 import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
 import { SignInPrompt, useWedding } from "@/components/use-wedding";
 import { useConfirm } from "@ceylonweddings/ui/components/confirm-dialog";
@@ -184,51 +186,54 @@ export default function FamilyPage() {
                     <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
                       {SIDE_LABELS[group.side]}
                     </h2>
-                    <ul className="grid gap-2">
+                    <PlanningList>
                       {group.people.map((person) => (
-                        <li
+                        <PlanningListRow
                           key={person.id}
-                          className="flex flex-wrap items-start justify-between gap-3 rounded-2xl border border-border/70 bg-background/40 px-4 py-3"
-                        >
-                          <div>
-                            <p className="font-medium">{person.name}</p>
-                            <p className="text-sm text-muted-foreground">
+                          variant="card"
+                          title={person.name}
+                          description={
+                            <>
                               {FAMILY_RELATION_LABELS[person.relation]}
                               {person.parentName ? ` · under ${person.parentName}` : ""}
                               {person.householdLabel ? ` · guest: ${person.householdLabel}` : ""}
                               {person.phone ? ` · ${person.phone}` : ""}
-                            </p>
-                            {person.notes ? <p className="mt-1 text-xs text-muted-foreground">{person.notes}</p> : null}
-                          </div>
-                          {canEdit ? (
-                            <div className="flex gap-1">
-                              <Button type="button" size="sm" variant="ghost" onClick={() => startEdit(person)}>
-                                Edit
-                              </Button>
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="ghost"
-                                onClick={async () => {
-                                  if (
-                                    !(await confirm({
-                                      title: `Remove ${person.name}?`,
-                                      destructive: true,
-                                      confirmLabel: "Remove",
-                                    }))
-                                  )
-                                    return;
-                                  await api.wedding.deleteFamilyPerson(person.id);
-                                  await refreshPeople();
-                                }}
-                              >
-                                Remove
-                              </Button>
-                            </div>
-                          ) : null}
-                        </li>
+                            </>
+                          }
+                          meta={
+                            person.notes ? <p className="mt-1 text-xs text-muted-foreground">{person.notes}</p> : null
+                          }
+                          actions={
+                            canEdit ? (
+                              <>
+                                <Button type="button" size="sm" variant="ghost" onClick={() => startEdit(person)}>
+                                  Edit
+                                </Button>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={async () => {
+                                    if (
+                                      !(await confirm({
+                                        title: `Remove ${person.name}?`,
+                                        destructive: true,
+                                        confirmLabel: "Remove",
+                                      }))
+                                    )
+                                      return;
+                                    await api.wedding.deleteFamilyPerson(person.id);
+                                    await refreshPeople();
+                                  }}
+                                >
+                                  Remove
+                                </Button>
+                              </>
+                            ) : null
+                          }
+                        />
                       ))}
-                    </ul>
+                    </PlanningList>
                   </section>
                 ),
               )
@@ -236,78 +241,79 @@ export default function FamilyPage() {
           </div>
 
           {canEdit ? (
-            <form className="grid h-fit gap-3 rounded-3xl border border-border/70 p-4" onSubmit={onSavePerson}>
-              <h2 className="font-medium">{editingId ? "Edit person" : "Add to tree"}</h2>
-              <div className="grid gap-1">
-                <Label>Name</Label>
-                <Input value={name} onChange={(e) => setName(e.target.value)} required />
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2">
+            <form className="h-fit" onSubmit={onSavePerson}>
+              <PlanningFormPanel title={editingId ? "Edit person" : "Add to tree"}>
                 <div className="grid gap-1">
-                  <Label>Side</Label>
+                  <Label>Name</Label>
+                  <Input value={name} onChange={(e) => setName(e.target.value)} required />
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="grid gap-1">
+                    <Label>Side</Label>
+                    <SimpleSelect
+                      value={side}
+                      onValueChange={(v) => setSide(v as GuestSide)}
+                      options={[
+                        { value: "BRIDE", label: SIDE_LABELS.BRIDE },
+                        { value: "GROOM", label: SIDE_LABELS.GROOM },
+                        { value: "BOTH", label: SIDE_LABELS.BOTH },
+                      ]}
+                    />
+                  </div>
+                  <div className="grid gap-1">
+                    <Label>Relation</Label>
+                    <SimpleSelect
+                      value={relation}
+                      onValueChange={(v) => setRelation(v as FamilyRelation)}
+                      options={RELATIONS.map((item) => ({
+                        value: item,
+                        label: FAMILY_RELATION_LABELS[item],
+                      }))}
+                    />
+                  </div>
+                </div>
+                <div className="grid gap-1">
+                  <Label>Under (parent)</Label>
                   <SimpleSelect
-                    value={side}
-                    onValueChange={(v) => setSide(v as GuestSide)}
+                    value={parentId}
+                    onValueChange={setParentId}
                     options={[
-                      { value: "BRIDE", label: SIDE_LABELS.BRIDE },
-                      { value: "GROOM", label: SIDE_LABELS.GROOM },
-                      { value: "BOTH", label: SIDE_LABELS.BOTH },
+                      { value: "", label: "None" },
+                      ...people
+                        .filter((p) => p.id !== editingId)
+                        .map((p) => ({ value: p.id, label: `${p.name} (${SIDE_LABELS[p.side]})` })),
                     ]}
                   />
                 </div>
                 <div className="grid gap-1">
-                  <Label>Relation</Label>
+                  <Label>Link guest household</Label>
                   <SimpleSelect
-                    value={relation}
-                    onValueChange={(v) => setRelation(v as FamilyRelation)}
-                    options={RELATIONS.map((item) => ({
-                      value: item,
-                      label: FAMILY_RELATION_LABELS[item],
-                    }))}
+                    value={householdId}
+                    onValueChange={setHouseholdId}
+                    options={[
+                      { value: "", label: "None" },
+                      ...guests.map((g) => ({ value: g.id, label: `${g.label} · ${g.headName}` })),
+                    ]}
                   />
                 </div>
-              </div>
-              <div className="grid gap-1">
-                <Label>Under (parent)</Label>
-                <SimpleSelect
-                  value={parentId}
-                  onValueChange={setParentId}
-                  options={[
-                    { value: "", label: "None" },
-                    ...people
-                      .filter((p) => p.id !== editingId)
-                      .map((p) => ({ value: p.id, label: `${p.name} (${SIDE_LABELS[p.side]})` })),
-                  ]}
-                />
-              </div>
-              <div className="grid gap-1">
-                <Label>Link guest household</Label>
-                <SimpleSelect
-                  value={householdId}
-                  onValueChange={setHouseholdId}
-                  options={[
-                    { value: "", label: "None" },
-                    ...guests.map((g) => ({ value: g.id, label: `${g.label} · ${g.headName}` })),
-                  ]}
-                />
-              </div>
-              <div className="grid gap-1">
-                <Label>Phone</Label>
-                <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+94…" />
-              </div>
-              <div className="grid gap-1">
-                <Label>Notes</Label>
-                <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Lives in Melbourne…" />
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Button type="submit">{editingId ? "Save" : "Add person"}</Button>
-                {editingId ? (
-                  <Button type="button" variant="ghost" onClick={resetForm}>
-                    Cancel
-                  </Button>
-                ) : null}
-              </div>
-              {status && tab === "tree" ? <p className="text-sm text-muted-foreground">{status}</p> : null}
+                <div className="grid gap-1">
+                  <Label>Phone</Label>
+                  <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+94…" />
+                </div>
+                <div className="grid gap-1">
+                  <Label>Notes</Label>
+                  <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Lives in Melbourne…" />
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button type="submit">{editingId ? "Save" : "Add person"}</Button>
+                  {editingId ? (
+                    <Button type="button" variant="ghost" onClick={resetForm}>
+                      Cancel
+                    </Button>
+                  ) : null}
+                </div>
+                {status && tab === "tree" ? <FormStatus>{status}</FormStatus> : null}
+              </PlanningFormPanel>
             </form>
           ) : null}
         </div>
@@ -318,48 +324,53 @@ export default function FamilyPage() {
             {members.length === 0 ? (
               <EmptyState icon={UserPlus} title={t("nav.family")} description={t("planning.familyHelp")} />
             ) : (
-              members.map((member) => (
-                <div
-                  key={member.id}
-                  className="cw-row-lift grid gap-2 rounded-xl border border-border/70 bg-background/50 p-4 text-sm"
-                >
-                  <div className="flex justify-between gap-3">
-                    <span className="font-medium">
-                      {member.name} · {member.email}
-                    </span>
-                    <span className="text-muted-foreground">{member.role}</span>
-                  </div>
-                  {member.role === "FAMILY" && isCouple ? (
-                    <div className="flex flex-wrap gap-4">
-                      <CheckboxField
-                        label={t("planning.canEditGuests")}
-                        checked={member.canEditGuests}
-                        onCheckedChange={(checked) => toggleFlag(member.id, "canEditGuests", checked === true)}
-                      />
-                      <CheckboxField
-                        label={t("planning.canViewBudget")}
-                        checked={member.canViewBudget}
-                        onCheckedChange={(checked) => toggleFlag(member.id, "canViewBudget", checked === true)}
-                      />
-                      <CheckboxField
-                        label={t("planning.canManageVendors")}
-                        checked={member.canManageVendors}
-                        onCheckedChange={(checked) => toggleFlag(member.id, "canManageVendors", checked === true)}
-                      />
-                    </div>
-                  ) : (
-                    <p className="text-xs text-muted-foreground">
-                      {[
-                        member.canEditGuests ? t("planning.canEditGuests") : null,
-                        member.canViewBudget ? t("planning.canViewBudget") : null,
-                        member.canManageVendors ? t("planning.canManageVendors") : null,
-                      ]
-                        .filter(Boolean)
-                        .join(" · ")}
-                    </p>
-                  )}
-                </div>
-              ))
+              <PlanningList>
+                {members.map((member) => (
+                  <PlanningListRow
+                    key={member.id}
+                    variant="card"
+                    className="text-sm"
+                    title={
+                      <span className="flex justify-between gap-3">
+                        <span>
+                          {member.name} · {member.email}
+                        </span>
+                        <span className="font-normal text-muted-foreground">{member.role}</span>
+                      </span>
+                    }
+                  >
+                    {member.role === "FAMILY" && isCouple ? (
+                      <div className="flex flex-wrap gap-4">
+                        <CheckboxField
+                          label={t("planning.canEditGuests")}
+                          checked={member.canEditGuests}
+                          onCheckedChange={(checked) => toggleFlag(member.id, "canEditGuests", checked === true)}
+                        />
+                        <CheckboxField
+                          label={t("planning.canViewBudget")}
+                          checked={member.canViewBudget}
+                          onCheckedChange={(checked) => toggleFlag(member.id, "canViewBudget", checked === true)}
+                        />
+                        <CheckboxField
+                          label={t("planning.canManageVendors")}
+                          checked={member.canManageVendors}
+                          onCheckedChange={(checked) => toggleFlag(member.id, "canManageVendors", checked === true)}
+                        />
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">
+                        {[
+                          member.canEditGuests ? t("planning.canEditGuests") : null,
+                          member.canViewBudget ? t("planning.canViewBudget") : null,
+                          member.canManageVendors ? t("planning.canManageVendors") : null,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </p>
+                    )}
+                  </PlanningListRow>
+                ))}
+              </PlanningList>
             )}
           </div>
 

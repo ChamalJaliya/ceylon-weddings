@@ -21,8 +21,11 @@ import { Button } from "@ceylonweddings/ui/components/button";
 import { Input } from "@ceylonweddings/ui/components/input";
 import { Label } from "@ceylonweddings/ui/components/label";
 import { SimpleSelect } from "@ceylonweddings/ui/components/select";
+import { FormStatus } from "@ceylonweddings/ui/components/form-status";
 import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
 import { EmptyState } from "@ceylonweddings/ui/domain/empty-state";
+import { PlanningEventToolbar, PlanningFormPanel } from "@ceylonweddings/ui/domain/planning-form-panel";
+import { PlanningList, PlanningListRow } from "@ceylonweddings/ui/domain/planning-list-row";
 import { SignInPrompt, useWedding } from "@/components/use-wedding";
 
 const LIST_LABELS: Record<MusicListKind, string> = {
@@ -351,7 +354,7 @@ export default function MusicPage() {
     <div className="space-y-8">
       <PageHeader title={t("nav.music")} description={t("planning.musicHelp")} />
 
-      <div className="flex flex-wrap items-end gap-3">
+      <PlanningEventToolbar>
         <div className="min-w-[12rem] space-y-1">
           <Label>{t("planning.event")}</Label>
           <SimpleSelect
@@ -374,9 +377,9 @@ export default function MusicPage() {
             {t("planning.musicReplaceCues")}
           </Button>
         ) : null}
-      </div>
+      </PlanningEventToolbar>
 
-      {status ? <p className="text-sm text-muted-foreground">{status}</p> : null}
+      {status ? <FormStatus>{status}</FormStatus> : null}
 
       {!plan ? (
         <EmptyState icon={Music2} title={t("planning.musicEmptyTitle")} description={t("planning.musicEmptyBody")} />
@@ -442,35 +445,39 @@ export default function MusicPage() {
 
           <section className="space-y-4">
             <h2 className="text-lg font-medium">{t("planning.musicLists")}</h2>
-            <form className="grid gap-3 rounded-xl border border-border/60 p-4 md:grid-cols-4" onSubmit={onAddTrack}>
-              <div className="space-y-1 md:col-span-1">
-                <Label>{t("planning.musicList")}</Label>
-                <SimpleSelect
-                  value={trackList}
-                  onValueChange={(value) => setTrackList(value as MusicListKind)}
-                  options={(Object.keys(LIST_LABELS) as MusicListKind[]).map((list) => ({
-                    value: list,
-                    label: LIST_LABELS[list],
-                  }))}
-                />
-              </div>
-              <div className="space-y-1 md:col-span-1">
-                <Label>{t("planning.musicTitle")}</Label>
-                <Input value={trackTitle} onChange={(e) => setTrackTitle(e.target.value)} required />
-              </div>
-              <div className="space-y-1">
-                <Label>{t("planning.musicArtist")}</Label>
-                <Input value={trackArtist} onChange={(e) => setTrackArtist(e.target.value)} />
-              </div>
-              <div className="space-y-1">
-                <Label>{t("planning.musicUrl")}</Label>
-                <Input value={trackUrl} onChange={(e) => setTrackUrl(e.target.value)} placeholder="https://" />
-              </div>
-              <div className="md:col-span-4">
-                <Button type="submit" disabled={busy}>
-                  {t("planning.musicAddTrack")}
-                </Button>
-              </div>
+            <form onSubmit={onAddTrack}>
+              <PlanningFormPanel className="rounded-xl md:grid-cols-4">
+                <div className="grid gap-3 md:grid-cols-4">
+                  <div className="space-y-1 md:col-span-1">
+                    <Label>{t("planning.musicList")}</Label>
+                    <SimpleSelect
+                      value={trackList}
+                      onValueChange={(value) => setTrackList(value as MusicListKind)}
+                      options={(Object.keys(LIST_LABELS) as MusicListKind[]).map((list) => ({
+                        value: list,
+                        label: LIST_LABELS[list],
+                      }))}
+                    />
+                  </div>
+                  <div className="space-y-1 md:col-span-1">
+                    <Label>{t("planning.musicTitle")}</Label>
+                    <Input value={trackTitle} onChange={(e) => setTrackTitle(e.target.value)} required />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>{t("planning.musicArtist")}</Label>
+                    <Input value={trackArtist} onChange={(e) => setTrackArtist(e.target.value)} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>{t("planning.musicUrl")}</Label>
+                    <Input value={trackUrl} onChange={(e) => setTrackUrl(e.target.value)} placeholder="https://" />
+                  </div>
+                  <div className="md:col-span-4">
+                    <Button type="submit" disabled={busy}>
+                      {t("planning.musicAddTrack")}
+                    </Button>
+                  </div>
+                </div>
+              </PlanningFormPanel>
             </form>
 
             <div className="grid gap-4 lg:grid-cols-3">
@@ -480,30 +487,35 @@ export default function MusicPage() {
                   {tracksByList[list].length === 0 ? (
                     <p className="text-sm text-muted-foreground">{t("planning.musicNoTracks")}</p>
                   ) : (
-                    <ul className="space-y-2">
+                    <PlanningList className="gap-2">
                       {tracksByList[list].map((track) => (
-                        <li key={track.id} className="flex items-start justify-between gap-2 text-sm">
-                          <div>
-                            <p className="font-medium">{track.title}</p>
-                            {track.artist ? <p className="text-muted-foreground">{track.artist}</p> : null}
-                            {track.url ? (
+                        <PlanningListRow
+                          key={track.id}
+                          variant="plain"
+                          className="text-sm"
+                          title={track.title}
+                          description={track.artist ?? undefined}
+                          meta={
+                            track.url ? (
                               <a className="text-xs underline" href={track.url} target="_blank" rel="noreferrer">
                                 Link
                               </a>
-                            ) : null}
-                          </div>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            disabled={busy}
-                            onClick={() => void onDeleteTrack(track.id)}
-                          >
-                            {t("planning.remove")}
-                          </Button>
-                        </li>
+                            ) : undefined
+                          }
+                          actions={
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              disabled={busy}
+                              onClick={() => void onDeleteTrack(track.id)}
+                            >
+                              {t("planning.remove")}
+                            </Button>
+                          }
+                        />
                       ))}
-                    </ul>
+                    </PlanningList>
                   )}
                 </div>
               ))}
@@ -512,81 +524,88 @@ export default function MusicPage() {
 
           <section className="space-y-4">
             <h2 className="text-lg font-medium">{t("planning.musicCues")}</h2>
-            <form className="grid gap-3 rounded-xl border border-border/60 p-4 md:grid-cols-2" onSubmit={onAddCue}>
-              <div className="space-y-1">
-                <Label>{t("planning.musicCueKind")}</Label>
-                <SimpleSelect
-                  value={cueKind}
-                  onValueChange={(value) => setCueKind(value as MusicCueKind)}
-                  options={CUE_KINDS.map((kind) => ({ value: kind, label: kind }))}
-                />
-              </div>
-              <div className="space-y-1">
-                <Label>{t("planning.musicCueLabel")}</Label>
-                <Input value={cueLabel} onChange={(e) => setCueLabel(e.target.value)} required />
-              </div>
-              <div className="space-y-1">
-                <Label>{t("planning.musicCueSong")}</Label>
-                <Input value={cueTrackTitle} onChange={(e) => setCueTrackTitle(e.target.value)} />
-              </div>
-              <div className="space-y-1">
-                <Label>{t("planning.musicCueOffset")}</Label>
-                <Input value={cueOffset} onChange={(e) => setCueOffset(e.target.value)} type="number" />
-              </div>
-              <div className="space-y-1 md:col-span-2">
-                <Label>{t("planning.musicCueAgenda")}</Label>
-                <SimpleSelect
-                  value={cueAppointmentId || "__none__"}
-                  onValueChange={(value) => setCueAppointmentId(value === "__none__" ? "" : value)}
-                  options={[
-                    { value: "__none__", label: "—" },
-                    ...agenda.map((item) => ({ value: item.id, label: item.title })),
-                  ]}
-                />
-              </div>
-              <div className="md:col-span-2">
-                <Button type="submit" disabled={busy}>
-                  {t("planning.musicAddCue")}
-                </Button>
-              </div>
+            <form onSubmit={onAddCue}>
+              <PlanningFormPanel className="rounded-xl">
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div className="space-y-1">
+                    <Label>{t("planning.musicCueKind")}</Label>
+                    <SimpleSelect
+                      value={cueKind}
+                      onValueChange={(value) => setCueKind(value as MusicCueKind)}
+                      options={CUE_KINDS.map((kind) => ({ value: kind, label: kind }))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>{t("planning.musicCueLabel")}</Label>
+                    <Input value={cueLabel} onChange={(e) => setCueLabel(e.target.value)} required />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>{t("planning.musicCueSong")}</Label>
+                    <Input value={cueTrackTitle} onChange={(e) => setCueTrackTitle(e.target.value)} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>{t("planning.musicCueOffset")}</Label>
+                    <Input value={cueOffset} onChange={(e) => setCueOffset(e.target.value)} type="number" />
+                  </div>
+                  <div className="space-y-1 md:col-span-2">
+                    <Label>{t("planning.musicCueAgenda")}</Label>
+                    <SimpleSelect
+                      value={cueAppointmentId || "__none__"}
+                      onValueChange={(value) => setCueAppointmentId(value === "__none__" ? "" : value)}
+                      options={[
+                        { value: "__none__", label: "—" },
+                        ...agenda.map((item) => ({ value: item.id, label: item.title })),
+                      ]}
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <Button type="submit" disabled={busy}>
+                      {t("planning.musicAddCue")}
+                    </Button>
+                  </div>
+                </div>
+              </PlanningFormPanel>
             </form>
 
             {cues.length === 0 ? (
               <p className="text-sm text-muted-foreground">{t("planning.musicNoCues")}</p>
             ) : (
-              <ol className="space-y-3">
+              <PlanningList>
                 {cues.map((cue) => {
                   const startsAt = event ? resolveCueStartsAt(cue, event) : cue.startsAt;
                   return (
-                    <li
+                    <PlanningListRow
                       key={cue.id}
-                      className="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-border/60 p-4"
-                    >
-                      <div>
-                        <p className="text-xs uppercase tracking-wide text-muted-foreground">{cue.kind}</p>
-                        <p className="font-medium">{cue.label}</p>
-                        {cue.trackTitle ? <p className="text-sm">{cue.trackTitle}</p> : null}
-                        <p className="text-sm text-muted-foreground">
-                          {startsAt
-                            ? new Date(startsAt).toLocaleString()
-                            : cue.offsetMinutes != null
-                              ? `${cue.offsetMinutes} min from start`
-                              : "Time TBD"}
-                        </p>
-                      </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        disabled={busy}
-                        onClick={() => void onDeleteCue(cue.id)}
-                      >
-                        {t("planning.remove")}
-                      </Button>
-                    </li>
+                      variant="card"
+                      title={cue.label}
+                      description={cue.kind}
+                      meta={
+                        <>
+                          {cue.trackTitle ? <p className="text-sm">{cue.trackTitle}</p> : null}
+                          <p className="text-sm text-muted-foreground">
+                            {startsAt
+                              ? new Date(startsAt).toLocaleString()
+                              : cue.offsetMinutes != null
+                                ? `${cue.offsetMinutes} min from start`
+                                : "Time TBD"}
+                          </p>
+                        </>
+                      }
+                      actions={
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          disabled={busy}
+                          onClick={() => void onDeleteCue(cue.id)}
+                        >
+                          {t("planning.remove")}
+                        </Button>
+                      }
+                    />
                   );
                 })}
-              </ol>
+              </PlanningList>
             )}
           </section>
         </>

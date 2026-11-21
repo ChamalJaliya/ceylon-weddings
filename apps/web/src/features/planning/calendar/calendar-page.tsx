@@ -13,16 +13,14 @@ import {
 } from "@ceylonweddings/contracts";
 import { Button } from "@ceylonweddings/ui/components/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@ceylonweddings/ui/components/card";
+import { FormStatus } from "@ceylonweddings/ui/components/form-status";
 import { Input } from "@ceylonweddings/ui/components/input";
 import { SimpleSelect } from "@ceylonweddings/ui/components/select";
 import { FormPanel } from "@ceylonweddings/ui/domain/creator-form";
 import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
 import { Link } from "@/i18n/navigation";
 import { SignInPrompt, useWedding } from "@/components/use-wedding";
-import {
-  AppointmentEditor,
-  KIND_COLOR,
-} from "@/features/planning/components/appointment-editor";
+import { AppointmentEditor, KIND_COLOR } from "@/features/planning/components/appointment-editor";
 
 const HOURS = Array.from({ length: 12 }, (_, i) => i + 8);
 const HOUR_PX = 64;
@@ -248,18 +246,10 @@ export default function CalendarPage() {
               <Button variant="outline" size="sm" onClick={() => setCursor(startOfWeek(new Date()))}>
                 {t("knotly.today")}
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setCursor(new Date(cursor.getTime() - 7 * 86400000))}
-              >
+              <Button variant="ghost" size="sm" onClick={() => setCursor(new Date(cursor.getTime() - 7 * 86400000))}>
                 ‹
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setCursor(new Date(cursor.getTime() + 7 * 86400000))}
-              >
+              <Button variant="ghost" size="sm" onClick={() => setCursor(new Date(cursor.getTime() + 7 * 86400000))}>
                 ›
               </Button>
               <span className="text-sm">
@@ -307,7 +297,7 @@ export default function CalendarPage() {
             busy={busy}
             onSubmit={onCreate}
           />
-          {status ? <p className="text-sm text-muted-foreground">{status}</p> : null}
+          {status ? <FormStatus>{status}</FormStatus> : null}
         </FormPanel>
 
         <p className="text-xs text-muted-foreground">GMT+5:30</p>

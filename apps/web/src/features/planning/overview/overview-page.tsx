@@ -1,6 +1,12 @@
 "use client";
 
-import { weddingStyleColors, weddingStyleSchema ,type  Appointment,type  Inquiry,type  WeddingStyle } from "@ceylonweddings/contracts";
+import {
+  weddingStyleColors,
+  weddingStyleSchema,
+  type Appointment,
+  type Inquiry,
+  type WeddingStyle,
+} from "@ceylonweddings/contracts";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { CalendarDays, Heart, Music2, Store, Wallet } from "lucide-react";
@@ -26,6 +32,8 @@ import {
   TeamGapBanner,
 } from "@ceylonweddings/ui/domain/wedding-presentation";
 import { Stagger, StaggerItem } from "@ceylonweddings/ui/domain/motion";
+import { EmptyState } from "@ceylonweddings/ui/domain/empty-state";
+import { PreviewRow } from "@ceylonweddings/ui/domain/preview-row";
 import { Link } from "@/i18n/navigation";
 import { SignInPrompt, useWedding } from "@/components/use-wedding";
 import { AiStub } from "@/components/ai-stub";
@@ -372,20 +380,25 @@ export default function PlanningHubPage() {
           </Button>
           <SectionCard title={t("nav.messages")} delay={3}>
             {inquiries.length === 0 ? (
-              <p className="text-sm text-muted-foreground">{t("knotly.noMessages")}</p>
+              <EmptyState
+                className="border-none bg-transparent py-6"
+                title={t("nav.messages")}
+                description={t("knotly.noMessages")}
+              />
             ) : (
-              inquiries.slice(0, 4).map((item) => (
-                <a
-                  key={item.id}
-                  href={item.whatsappUrl ?? "#"}
-                  target={item.whatsappUrl ? "_blank" : undefined}
-                  rel="noreferrer"
-                  className="rounded-xl border border-border/60 px-3 py-2 text-sm hover:bg-secondary"
-                >
-                  <p className="font-medium">{item.vendorName ?? "Vendor"}</p>
-                  <p className="line-clamp-2 text-xs text-muted-foreground">{item.message}</p>
-                </a>
-              ))
+              inquiries.slice(0, 4).map((item) =>
+                item.whatsappUrl ? (
+                  <a key={item.id} href={item.whatsappUrl} target="_blank" rel="noreferrer" className="block">
+                    <PreviewRow
+                      title={item.vendorName ?? "Vendor"}
+                      description={item.message}
+                      className="hover:bg-secondary"
+                    />
+                  </a>
+                ) : (
+                  <PreviewRow key={item.id} title={item.vendorName ?? "Vendor"} description={item.message} />
+                ),
+              )
             )}
           </SectionCard>
         </DashboardSecondary>

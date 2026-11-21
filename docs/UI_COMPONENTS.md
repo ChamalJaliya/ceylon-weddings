@@ -193,14 +193,15 @@ Hooks: `useClientTablePagination` in `@ceylonweddings/ui/lib/use-client-table-pa
 
 ### Admin
 
-| Component                  | File                             | Use                                                         |
-| -------------------------- | -------------------------------- | ----------------------------------------------------------- |
-| `AdminDetailSheet`         | `admin-detail-sheet.tsx`         | Slide-over detail panel for admin actions.                  |
-| `AdminQueue`               | `admin-queue.tsx`                | Moderation queue row component.                             |
-| `AdsStudio`                | `ads-studio.tsx`                 | Full promotion / ad campaign editor.                        |
-| `AuditTimeline`            | `audit-timeline.tsx`             | Audit log entry timeline.                                   |
-| `SubscriptionStatusBanner` | `subscription-status-banner.tsx` | Vendor subscription status alert (trial / grace / expired). |
-| `WeddingPresentation`      | `wedding-presentation.tsx`       | Read-only wedding snapshot for admin support view.          |
+| Component                                          | File                             | Use                                                                                       |
+| -------------------------------------------------- | -------------------------------- | ----------------------------------------------------------------------------------------- |
+| `AdminDetailSheet`                                 | `admin-detail-sheet.tsx`         | Slide-over detail panel for admin actions.                                                |
+| `AdminQueue`                                       | `admin-queue.tsx`                | Moderation queue row component.                                                           |
+| `AdsStudio`                                        | `ads-studio.tsx`                 | Full promotion / ad campaign editor.                                                      |
+| `AuditTimeline`                                    | `audit-timeline.tsx`             | Audit log entry timeline.                                                                 |
+| `SubscriptionStatusBanner`                         | `subscription-status-banner.tsx` | Vendor subscription status alert (trial / grace / expired).                               |
+| `BillingAlertBanner` / `resolveBillingAlertBanner` | `billing-alert-banner.tsx`       | Kloqra-style membership alert (trial ending, grace, canceling, comped) with optional CTA. |
+| `WeddingPresentation`                              | `wedding-presentation.tsx`       | Read-only wedding snapshot for admin support view.                                        |
 
 ### Motion
 

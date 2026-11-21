@@ -16,10 +16,11 @@ import {
 import { Badge } from "@ceylonweddings/ui/components/badge";
 import { Button } from "@ceylonweddings/ui/components/button";
 import { Input } from "@ceylonweddings/ui/components/input";
-import { Switch } from "@ceylonweddings/ui/components/switch";
+import { SimpleSelect } from "@ceylonweddings/ui/components/select";
 import { Textarea } from "@ceylonweddings/ui/components/textarea";
 import { ANIMATED_ICON_NAMES, StageIconPreview } from "@ceylonweddings/ui/domain/decoration-block";
 import { OnboardingStage } from "@ceylonweddings/ui/domain/onboarding-stage";
+import { SettingsSwitchRow } from "@ceylonweddings/ui/domain/settings-switch-row";
 import { cn } from "@ceylonweddings/ui/utils";
 import { toStageView } from "@/lib/onboarding-stage";
 
@@ -91,23 +92,20 @@ function Select<T extends string>({
   value,
   options,
   onChange,
+  "aria-label": ariaLabel,
 }: {
   value: T;
   options: readonly T[];
   onChange: (next: T) => void;
+  "aria-label"?: string;
 }) {
   return (
-    <select
-      className="rounded-lg border border-border/70 bg-background px-3 py-2 text-sm"
+    <SimpleSelect
       value={value}
-      onChange={(e) => onChange(e.target.value as T)}
-    >
-      {options.map((option) => (
-        <option key={option} value={option}>
-          {option}
-        </option>
-      ))}
-    </select>
+      onValueChange={(next) => onChange(next as T)}
+      aria-label={ariaLabel}
+      options={options.map((option) => ({ value: option, label: option }))}
+    />
   );
 }
 
@@ -191,19 +189,14 @@ export function StageEditor({
       </div>
 
       {onInheritChange ? (
-        <div className="flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-background px-3 py-2">
-          <div className="min-w-0">
-            <p className="text-sm font-medium">Inherit category defaults</p>
-            <p className="text-xs text-muted-foreground">
-              Merge with the decorations set on this vendor type instead of replacing them.
-            </p>
-          </div>
-          <Switch
-            checked={inherit ?? true}
-            onCheckedChange={onInheritChange}
-            disabled={disabled}
-          />
-        </div>
+        <SettingsSwitchRow
+          className="bg-background"
+          label="Inherit category defaults"
+          description="Merge with the decorations set on this vendor type instead of replacing them."
+          checked={inherit ?? true}
+          onCheckedChange={onInheritChange}
+          disabled={disabled}
+        />
       ) : null}
 
       <div className="flex flex-wrap items-center gap-1.5">
@@ -241,9 +234,7 @@ export function StageEditor({
             <div key={block.id} className="rounded-lg border border-border/60 bg-background">
               <div className="flex flex-wrap items-center gap-2 px-3 py-2">
                 <Badge>{KIND_LABEL[block.kind]}</Badge>
-                <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
-                  {summarize(block)}
-                </span>
+                <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">{summarize(block)}</span>
                 <Button
                   size="sm"
                   variant="outline"
@@ -261,22 +252,13 @@ export function StageEditor({
                 <Button size="sm" variant="outline" disabled={disabled} onClick={() => duplicate(block)}>
                   <Copy className="size-3.5" />
                 </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={disabled}
-                  onClick={() => remove(block.id)}
-                >
+                <Button size="sm" variant="outline" disabled={disabled} onClick={() => remove(block.id)}>
                   <Trash2 className="size-3.5" />
                 </Button>
               </div>
 
               {open ? (
-                <BlockForm
-                  block={block}
-                  disabled={disabled}
-                  onChange={(next) => replace(block.id, next)}
-                />
+                <BlockForm block={block} disabled={disabled} onChange={(next) => replace(block.id, next)} />
               ) : null}
             </div>
           );
@@ -305,15 +287,11 @@ export function StageEditor({
           </Button>
         </div>
         <div className="overflow-hidden rounded-xl border border-border/60 bg-background p-4">
-          <div
-            className={cn("mx-auto origin-top", previewMobile ? "w-[380px] scale-[0.85]" : "w-full")}
-          >
+          <div className={cn("mx-auto origin-top", previewMobile ? "w-[380px] scale-[0.85]" : "w-full")}>
             <OnboardingStage presentation={stagePreview}>
               <div className="rounded-2xl border border-border/80 bg-card/80 p-5 shadow-sm">
                 <p className="font-serif text-xl font-medium">{previewTitle || "Question"}</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Fill in this key vendor specification.
-                </p>
+                <p className="mt-1 text-xs text-muted-foreground">Fill in this key vendor specification.</p>
                 <div className="mt-4 grid gap-2 sm:grid-cols-2">
                   <div className="h-12 rounded-xl border border-border/70" />
                   <div className="h-12 rounded-xl border border-border/70" />
@@ -378,17 +356,11 @@ function BlockForm({
             type="number"
             value={block.maxWidthPx ?? ""}
             placeholder="auto"
-            onChange={(e) =>
-              onChange({ ...block, maxWidthPx: e.target.value === "" ? null : Number(e.target.value) })
-            }
+            onChange={(e) => onChange({ ...block, maxWidthPx: e.target.value === "" ? null : Number(e.target.value) })}
           />
         </Row>
         <Row label="Slot">
-          <Select
-            value={block.slot}
-            options={DECORATION_SLOTS}
-            onChange={(slot) => onChange({ ...block, slot })}
-          />
+          <Select value={block.slot} options={DECORATION_SLOTS} onChange={(slot) => onChange({ ...block, slot })} />
         </Row>
       </div>
 
@@ -405,9 +377,7 @@ function BlockForm({
                 onClick={() =>
                   onChange({
                     ...block,
-                    hideOn: active
-                      ? block.hideOn.filter((item) => item !== breakpoint)
-                      : [...block.hideOn, breakpoint],
+                    hideOn: active ? block.hideOn.filter((item) => item !== breakpoint) : [...block.hideOn, breakpoint],
                   })
                 }
                 className={cn(
@@ -466,10 +436,7 @@ function KindFields({
     case "ICON":
       return (
         <div className="grid gap-2">
-          <IconPicker
-            value={block.iconName}
-            onChange={(iconName) => onChange({ ...block, iconName })}
-          />
+          <IconPicker value={block.iconName} onChange={(iconName) => onChange({ ...block, iconName })} />
           <Row label="Label">
             <Input
               value={block.label?.en ?? ""}
@@ -529,13 +496,11 @@ function KindFields({
               />
             </Row>
             <div className="flex items-end">
-              <label className="flex w-full items-center justify-between gap-2 rounded-lg border border-border/60 px-3 py-2">
-                <span className="text-xs font-medium">Rounded</span>
-                <Switch
-                  checked={block.rounded}
-                  onCheckedChange={(rounded) => onChange({ ...block, rounded })}
-                />
-              </label>
+              <SettingsSwitchRow
+                label="Rounded"
+                checked={block.rounded}
+                onCheckedChange={(rounded) => onChange({ ...block, rounded })}
+              />
             </div>
           </div>
         </div>
@@ -561,19 +526,18 @@ function KindFields({
               />
             </Row>
             <div className="flex items-end">
-              <label className="flex w-full items-center justify-between gap-2 rounded-lg border border-border/60 px-3 py-2">
-                <span className="text-xs font-medium">Loop</span>
-                <Switch checked={block.loop} onCheckedChange={(loop) => onChange({ ...block, loop })} />
-              </label>
+              <SettingsSwitchRow
+                label="Loop"
+                checked={block.loop}
+                onCheckedChange={(loop) => onChange({ ...block, loop })}
+              />
             </div>
             <div className="flex items-end">
-              <label className="flex w-full items-center justify-between gap-2 rounded-lg border border-border/60 px-3 py-2">
-                <span className="text-xs font-medium">Autoplay</span>
-                <Switch
-                  checked={block.autoplay}
-                  onCheckedChange={(autoplay) => onChange({ ...block, autoplay })}
-                />
-              </label>
+              <SettingsSwitchRow
+                label="Autoplay"
+                checked={block.autoplay}
+                onCheckedChange={(autoplay) => onChange({ ...block, autoplay })}
+              />
             </div>
           </div>
         </div>
@@ -597,21 +561,20 @@ function KindFields({
             onChange={(poster) => onChange({ ...block, poster: poster || null })}
           />
           <div className="grid gap-2 sm:grid-cols-2">
-            <label className="flex items-center justify-between gap-2 rounded-lg border border-border/60 px-3 py-2">
-              <span className="text-xs font-medium">Loop</span>
-              <Switch checked={block.loop} onCheckedChange={(loop) => onChange({ ...block, loop })} />
-            </label>
-            <label className="flex items-center justify-between gap-2 rounded-lg border border-border/60 px-3 py-2">
-              <span className="text-xs font-medium">Autoplay</span>
-              <Switch
-                checked={block.autoplay}
-                onCheckedChange={(autoplay) => onChange({ ...block, autoplay })}
-              />
-            </label>
+            <SettingsSwitchRow
+              label="Loop"
+              checked={block.loop}
+              onCheckedChange={(loop) => onChange({ ...block, loop })}
+            />
+            <SettingsSwitchRow
+              label="Autoplay"
+              checked={block.autoplay}
+              onCheckedChange={(autoplay) => onChange({ ...block, autoplay })}
+            />
           </div>
           <p className="text-label text-muted-foreground">
-            Videos always play muted and inline, and fall back to a poster with controls when a
-            visitor prefers reduced motion.
+            Videos always play muted and inline, and fall back to a poster with controls when a visitor prefers reduced
+            motion.
           </p>
         </div>
       );
@@ -710,12 +673,7 @@ function AssetField({
     <div className="grid gap-1.5">
       <Row label={label}>
         <div className="flex gap-2">
-          <Input
-            value={value}
-            placeholder="https://…"
-            onChange={(e) => onChange(e.target.value)}
-            className="flex-1"
-          />
+          <Input value={value} placeholder="https://…" onChange={(e) => onChange(e.target.value)} className="flex-1" />
           <Button
             size="sm"
             variant="outline"

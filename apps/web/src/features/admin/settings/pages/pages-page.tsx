@@ -6,19 +6,28 @@ import { api } from "@ceylonweddings/web";
 import type { CmsPage } from "@ceylonweddings/contracts";
 import { Badge } from "@ceylonweddings/ui/components/badge";
 import { FormStatus } from "@ceylonweddings/ui/components/form-status";
+import { Icon } from "@ceylonweddings/ui/components/icon";
+import { CenteredLoader } from "@ceylonweddings/ui/components/spinner";
+import { EmptyState } from "@ceylonweddings/ui/domain/empty-state";
 import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
 import { SectionCard } from "@ceylonweddings/ui/domain/section-card";
+import { SettingsList, SettingsListRow } from "@ceylonweddings/ui/domain/settings-list-row";
 import { Link } from "@/i18n/navigation";
 
 export default function AdminCmsPagesListPage() {
   const [pages, setPages] = useState<CmsPage[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
+      setLoading(true);
       setPages(await api.admin.cmsPages());
+      setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load");
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -43,29 +52,39 @@ export default function AdminCmsPagesListPage() {
         description="Edit About, FAQ, Terms, Privacy, and Contact bodies shown on the public site."
       />
       <SectionCard title="Pages" icon={FileText}>
-        <ul className="grid gap-2">
-          {pages.map((page) => (
-            <li
-              key={page.id}
-              className="flex items-center gap-2 rounded-lg border border-border/60 px-3 py-3 text-sm transition hover:border-primary/40"
-            >
-              <Link href={`/admin/settings/pages/${page.slug}`} className="min-w-0 flex-1">
-                <p className="font-medium">{page.title}</p>
-                <p className="text-xs text-muted-foreground">/{page.slug}</p>
-              </Link>
-              <Badge intent={page.status === "PUBLISHED" ? "success" : "outline"}>{page.status}</Badge>
-              {page.status === "PUBLISHED" ? (
-                <Link
-                  href={`/${page.slug}`}
-                  className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-                >
-                  View
-                  <ExternalLink className="size-3" />
-                </Link>
-              ) : null}
-            </li>
-          ))}
-        </ul>
+        {loading ? (
+          <CenteredLoader label="Loading pages" />
+        ) : pages.length === 0 ? (
+          <EmptyState icon={FileText} title="No pages" description="CMS pages will appear here." />
+        ) : (
+          <SettingsList>
+            {pages.map((page) => (
+              <SettingsListRow
+                key={page.id}
+                title={
+                  <Link href={`/admin/settings/pages/${page.slug}`} className="hover:underline">
+                    {page.title}
+                  </Link>
+                }
+                description={`/${page.slug}`}
+                actions={
+                  <>
+                    <Badge intent={page.status === "PUBLISHED" ? "success" : "outline"}>{page.status}</Badge>
+                    {page.status === "PUBLISHED" ? (
+                      <Link
+                        href={`/${page.slug}`}
+                        className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                      >
+                        View
+                        <Icon icon={ExternalLink} size="xs" />
+                      </Link>
+                    ) : null}
+                  </>
+                }
+              />
+            ))}
+          </SettingsList>
+        )}
       </SectionCard>
     </div>
   );

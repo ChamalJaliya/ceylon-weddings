@@ -7,14 +7,12 @@ import { api, formatMoney, usePreferenceStore } from "@ceylonweddings/web";
 import { formatVendorStartingPriceLabel, type Vendor, type VendorLinkStatus } from "@ceylonweddings/contracts";
 import { Button } from "@ceylonweddings/ui/components/button";
 import { SimpleSelect } from "@ceylonweddings/ui/components/select";
+import { FilterChip } from "@ceylonweddings/ui/domain/async-list";
 import { EmptyState } from "@ceylonweddings/ui/domain/empty-state";
 import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
 import { TeamMemberCard } from "@ceylonweddings/ui/domain/team-vendor";
 import { TeamGapBanner } from "@ceylonweddings/ui/domain/wedding-presentation";
-import {
-  VendorCompareTray,
-  type VendorCompareColumn,
-} from "@ceylonweddings/ui/domain/vendor-compare-tray";
+import { VendorCompareTray, type VendorCompareColumn } from "@ceylonweddings/ui/domain/vendor-compare-tray";
 import { Link, useRouter } from "@/i18n/navigation";
 import { SignInPrompt, useWedding } from "@/components/use-wedding";
 import { CATEGORY_LABELS } from "@/lib/labels";
@@ -144,22 +142,19 @@ export default function TeamPage() {
         <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-card p-3">
           <p className="text-sm text-muted-foreground">Compare same category:</p>
           {categoriesWithPeers.map((category) => (
-            <Button
+            <FilterChip
               key={category}
-              type="button"
-              size="sm"
-              variant={compareCategory === category ? "default" : "outline"}
-              disabled={loadingCompare}
-              onClick={() => openCompare(category)}
+              active={compareCategory === category}
+              onClick={() => {
+                if (!loadingCompare) openCompare(category);
+              }}
             >
               {CATEGORY_LABELS[category] ?? category}
-            </Button>
+            </FilterChip>
           ))}
           {compareCategory && compareColumns.length >= 2 ? (
             <Button asChild size="sm" variant="secondary">
-              <Link
-                href={`/vendors/compare?slugs=${compareColumns.map((column) => column.slug).join(",")}`}
-              >
+              <Link href={`/vendors/compare?slugs=${compareColumns.map((column) => column.slug).join(",")}`}>
                 Full compare page
               </Link>
             </Button>
@@ -168,13 +163,16 @@ export default function TeamPage() {
           {compareError ? <span className="text-xs text-destructive">{compareError}</span> : null}
         </div>
       ) : (
-        <p className="rounded-2xl border border-dashed border-border/80 bg-card/40 px-4 py-3 text-sm text-muted-foreground">
-          Shortlist 2+ vendors in the same category to open the compare tray — or use{" "}
-          <Link href="/vendors" className="text-primary underline-offset-2 hover:underline">
-            catalog scale icons
-          </Link>
-          .
-        </p>
+        <EmptyState
+          className="rounded-2xl border-dashed py-6"
+          title="Nothing to compare yet"
+          description="Shortlist 2+ vendors in the same category to open the compare tray — or use catalog scale icons."
+          action={
+            <Button asChild size="sm" variant="outline">
+              <Link href="/vendors">Browse vendors</Link>
+            </Button>
+          }
+        />
       )}
 
       {data.team.length ? (
@@ -238,7 +236,7 @@ export default function TeamPage() {
 
       <VendorCompareTray
         open={compareColumns.length >= 2}
-        title={`Compare ${compareCategory ? CATEGORY_LABELS[compareCategory] ?? compareCategory : "vendors"}`}
+        title={`Compare ${compareCategory ? (CATEGORY_LABELS[compareCategory] ?? compareCategory) : "vendors"}`}
         columns={compareColumns}
         onView={(slug) => router.push(`/vendors/${slug}`)}
         onClose={() => {

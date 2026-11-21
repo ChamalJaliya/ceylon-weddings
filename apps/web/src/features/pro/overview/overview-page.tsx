@@ -12,11 +12,14 @@ import { SectionCard } from "@ceylonweddings/ui/domain/section-card";
 import { StatCard } from "@ceylonweddings/ui/domain/stat-card";
 import { DashboardStats } from "@ceylonweddings/ui/domain/dashboard-layout";
 import { MediaFrame } from "@ceylonweddings/ui/domain/media-frame";
+import { BillingAlertBanner, resolveBillingAlertBanner } from "@ceylonweddings/ui/domain/billing-alert-banner";
 import { SubscriptionStatusBanner } from "@ceylonweddings/ui/domain/subscription-status-banner";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { CenteredLoader } from "@ceylonweddings/ui/components/spinner";
+import { BulletPreviewRow, PreviewRow, PreviewRowList } from "@ceylonweddings/ui/domain/preview-row";
 
 export default function ProHomePage() {
+  const router = useRouter();
   const [vendor, setVendor] = useState<Vendor | null>(null);
   const [leads, setLeads] = useState<(Inquiry & { wedding: { partnerOneName: string; partnerTwoName: string } })[]>([]);
   const [subscription, setSubscription] = useState<VendorSubscription | null>(null);
@@ -27,7 +30,10 @@ export default function ProHomePage() {
       .then(([mine, inbox]) => {
         setVendor(mine);
         setLeads(inbox);
-        return api.subscription.vendor(mine.id).then((sub) => setSubscription(sub)).catch(() => null);
+        return api.subscription
+          .vendor(mine.id)
+          .then((sub) => setSubscription(sub))
+          .catch(() => null);
       })
       .catch((err: Error) => setError(err.message));
   }, []);
@@ -45,6 +51,15 @@ export default function ProHomePage() {
   const completeness = vendor.completeness;
   const publishedOffers = (vendor.packages ?? []).filter((pkg) => pkg.status === "PUBLISHED").length;
   const cover = vendor.photoUrl ?? vendor.photos?.[0];
+  const billingAlert = subscription
+    ? resolveBillingAlertBanner({
+        billingAlert: subscription.billingAlert,
+        daysRemaining: subscription.daysRemaining,
+        planName: subscription.plan?.name,
+        cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
+        currentPeriodEnd: subscription.currentPeriodEnd,
+      })
+    : null;
 
   return (
     <div className="cw-stack">
@@ -84,6 +99,8 @@ export default function ProHomePage() {
         </div>
       </div>
 
+      {billingAlert ? <BillingAlertBanner model={billingAlert} onCta={() => router.push("/pro/billing")} /> : null}
+
       {subscription && (
         <SubscriptionStatusBanner
           status={subscription.status}
@@ -92,7 +109,7 @@ export default function ProHomePage() {
           currentPeriodEnd={subscription.currentPeriodEnd}
           planName={subscription.plan?.name}
           onUpgradeClick={() => {
-            window.location.href = "mailto:support@ceylonweddings.lk?subject=Vendor%20Subscription%20Plan%20Upgrade";
+            window.location.href = "/pro/billing";
           }}
         />
       )}
@@ -133,15 +150,19 @@ export default function ProHomePage() {
             </Button>
           }
         >
-          {leads.slice(0, 4).map((lead) => (
-            <div key={lead.id} className="cw-row-lift rounded-xl border border-border/60 bg-background/40 px-4 py-3 text-sm">
-              <p className="font-medium">
-                {lead.wedding.partnerOneName} & {lead.wedding.partnerTwoName}
-              </p>
-              <p className="line-clamp-2 text-xs text-muted-foreground">{lead.message}</p>
-            </div>
-          ))}
-          {leads.length === 0 ? <p className="text-sm text-muted-foreground">No inquiries yet — refine offers and publish.</p> : null}
+          <PreviewRowList
+            empty={leads.length === 0}
+            emptyTitle="Recent leads"
+            emptyDescription="No inquiries yet — refine offers and publish."
+          >
+            {leads.slice(0, 4).map((lead) => (
+              <PreviewRow
+                key={lead.id}
+                title={`${lead.wedding.partnerOneName} & ${lead.wedding.partnerTwoName}`}
+                description={lead.message}
+              />
+            ))}
+          </PreviewRowList>
         </SectionCard>
 
         <SectionCard
@@ -154,14 +175,14 @@ export default function ProHomePage() {
             </Button>
           }
         >
-          <ul className="grid gap-2 text-sm text-muted-foreground">
-            {(completeness?.missing.length ? completeness.missing : ["Preview your live storefront", "Check WhatsApp number", "Publish at least one package"])
+          <ul className="grid gap-2">
+            {(completeness?.missing.length
+              ? completeness.missing
+              : ["Preview your live storefront", "Check WhatsApp number", "Publish at least one package"]
+            )
               .slice(0, 4)
               .map((item) => (
-                <li key={item} className="flex items-start gap-2 rounded-xl border border-border/50 bg-background/30 px-3 py-2">
-                  <span className="mt-1 size-1.5 shrink-0 rounded-full bg-primary" />
-                  <span className="capitalize">{item.replaceAll("_", " ")}</span>
-                </li>
+                <BulletPreviewRow key={item}>{item.replaceAll("_", " ")}</BulletPreviewRow>
               ))}
           </ul>
         </SectionCard>

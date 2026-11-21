@@ -14,16 +14,15 @@ import {
   type CreateAppointmentBody,
 } from "@ceylonweddings/contracts";
 import { Button } from "@ceylonweddings/ui/components/button";
+import { FormStatus } from "@ceylonweddings/ui/components/form-status";
 import { SimpleSelect } from "@ceylonweddings/ui/components/select";
+import { PlanningEventToolbar, PlanningFormPanel, StatPill } from "@ceylonweddings/ui/domain/planning-form-panel";
 import { Label } from "@ceylonweddings/ui/components/label";
 import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
 import { EmptyState } from "@ceylonweddings/ui/domain/empty-state";
 import { Link } from "@/i18n/navigation";
 import { SignInPrompt, useWedding } from "@/components/use-wedding";
-import {
-  AppointmentEditor,
-  KIND_COLOR,
-} from "@/features/planning/components/appointment-editor";
+import { AppointmentEditor, KIND_COLOR } from "@/features/planning/components/appointment-editor";
 
 function dayKey(iso: string) {
   return new Date(iso).toLocaleDateString("en-CA", { timeZone: "Asia/Colombo" });
@@ -41,7 +40,10 @@ export default function AgendaPage() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    api.wedding.appointments().then(setAppointments).catch(() => setAppointments([]));
+    api.wedding
+      .appointments()
+      .then(setAppointments)
+      .catch(() => setAppointments([]));
   }, []);
 
   useEffect(() => {
@@ -60,10 +62,7 @@ export default function AgendaPage() {
     }
   }, [data, eventId]);
 
-  const agenda = useMemo(
-    () => (eventId ? agendaForEvent(appointments, eventId) : []),
-    [appointments, eventId],
-  );
+  const agenda = useMemo(() => (eventId ? agendaForEvent(appointments, eventId) : []), [appointments, eventId]);
   const contacts = useMemo(() => teamContactSheet(data?.team ?? []), [data?.team]);
   const canEdit = Boolean(data?.myAccess.canEditGuests || data?.myAccess.role === "COUPLE");
 
@@ -169,7 +168,7 @@ export default function AgendaPage() {
         description={t("knotly.agendaHelp")}
       />
 
-      <div className="flex flex-wrap items-end gap-3 print:hidden">
+      <PlanningEventToolbar className="print:hidden">
         <div className="grid gap-1">
           <Label>{t("planning.events")}</Label>
           <SimpleSelect
@@ -187,7 +186,7 @@ export default function AgendaPage() {
         <Button type="button" variant="ghost" onClick={() => window.print()}>
           {t("knotly.print")}
         </Button>
-      </div>
+      </PlanningEventToolbar>
 
       {contacts.length ? (
         <div className="rounded-3xl border border-border/70 p-4 print:rounded-none print:border print:p-2">
@@ -196,21 +195,23 @@ export default function AgendaPage() {
           </h2>
           <ul className="flex flex-wrap gap-3 text-sm">
             {contacts.map((contact) => (
-              <li key={contact.vendorId} className="rounded-full bg-secondary px-3 py-1">
-                {contact.name}
-                {contact.whatsapp ? (
-                  <>
-                    {" · "}
-                    <a
-                      className="underline"
-                      href={`https://wa.me/${contact.whatsapp.replace(/\D/g, "")}`}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      {t("knotly.message")}
-                    </a>
-                  </>
-                ) : null}
+              <li key={contact.vendorId}>
+                <StatPill>
+                  {contact.name}
+                  {contact.whatsapp ? (
+                    <>
+                      {" · "}
+                      <a
+                        className="underline"
+                        href={`https://wa.me/${contact.whatsapp.replace(/\D/g, "")}`}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {t("knotly.message")}
+                      </a>
+                    </>
+                  ) : null}
+                </StatPill>
               </li>
             ))}
           </ul>
@@ -218,11 +219,7 @@ export default function AgendaPage() {
       ) : null}
 
       {agenda.length === 0 ? (
-        <EmptyState
-          icon={ClipboardList}
-          title={t("nav.agenda")}
-          description={t("knotly.agendaEmpty")}
-        />
+        <EmptyState icon={ClipboardList} title={t("nav.agenda")} description={t("knotly.agendaEmpty")} />
       ) : (
         <ol className="grid gap-3">
           {agenda.map((block, index) => {
@@ -268,7 +265,13 @@ export default function AgendaPage() {
                     ) : null}
                   </div>
                   <div className="flex flex-wrap gap-1 print:hidden">
-                    <Button type="button" size="sm" variant="ghost" disabled={index === 0} onClick={() => void move(block.id, -1)}>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      disabled={index === 0}
+                      onClick={() => void move(block.id, -1)}
+                    >
                       {t("knotly.moveUp")}
                     </Button>
                     <Button
@@ -290,7 +293,13 @@ export default function AgendaPage() {
                         >
                           {editing ? t("knotly.cancel") : t("knotly.edit")}
                         </Button>
-                        <Button type="button" size="sm" variant="ghost" disabled={busy} onClick={() => void onDuplicate(block)}>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          disabled={busy}
+                          onClick={() => void onDuplicate(block)}
+                        >
                           {t("knotly.duplicate")}
                         </Button>
                       </>
@@ -341,8 +350,7 @@ export default function AgendaPage() {
       )}
 
       {canEdit ? (
-        <div className="grid gap-3 rounded-3xl border border-border/70 p-4 print:hidden">
-          <h2 className="font-medium">{t("knotly.addAgendaBlock")}</h2>
+        <PlanningFormPanel title={t("knotly.addAgendaBlock")} className="print:hidden">
           <AppointmentEditor
             mode="create"
             initial={{ kind: "DAY_OF", eventId, color: KIND_COLOR.DAY_OF }}
@@ -354,8 +362,8 @@ export default function AgendaPage() {
             submitLabel={t("knotly.add")}
             onSubmit={onAdd}
           />
-          {status ? <p className="text-sm text-muted-foreground">{status}</p> : null}
-        </div>
+          {status ? <FormStatus>{status}</FormStatus> : null}
+        </PlanningFormPanel>
       ) : null}
     </div>
   );

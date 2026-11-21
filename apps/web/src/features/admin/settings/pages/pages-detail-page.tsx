@@ -8,6 +8,7 @@ import type { CmsPageStatus } from "@ceylonweddings/contracts";
 import { Button } from "@ceylonweddings/ui/components/button";
 import { FormStatus } from "@ceylonweddings/ui/components/form-status";
 import { Input } from "@ceylonweddings/ui/components/input";
+import { SimpleSelect } from "@ceylonweddings/ui/components/select";
 import { Textarea } from "@ceylonweddings/ui/components/textarea";
 import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
 import { SectionCard } from "@ceylonweddings/ui/domain/section-card";
@@ -109,21 +110,17 @@ export default function AdminCmsPageEditorPage() {
           <Input value={excerpt} onChange={(e) => setExcerpt(e.target.value)} placeholder="Excerpt" />
           <label className="grid gap-1 text-sm">
             <span className="text-muted-foreground">Status</span>
-            <select
-              className="rounded-lg border border-border/70 bg-background px-3 py-2 text-sm"
+            <SimpleSelect
               value={status}
-              onChange={(e) => setStatus(e.target.value as CmsPageStatus)}
-            >
-              <option value="DRAFT">DRAFT</option>
-              <option value="PUBLISHED">PUBLISHED</option>
-            </select>
+              onValueChange={(value) => setStatus(value as CmsPageStatus)}
+              aria-label="Page status"
+              options={[
+                { value: "DRAFT", label: "DRAFT" },
+                { value: "PUBLISHED", label: "PUBLISHED" },
+              ]}
+            />
           </label>
-          <Textarea
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-            rows={18}
-            placeholder="Markdown-ish body"
-          />
+          <Textarea value={body} onChange={(e) => setBody(e.target.value)} rows={18} placeholder="Markdown-ish body" />
         </div>
       </SectionCard>
 

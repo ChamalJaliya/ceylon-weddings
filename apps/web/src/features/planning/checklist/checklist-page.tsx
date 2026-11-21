@@ -10,6 +10,7 @@ import { Button } from "@ceylonweddings/ui/components/button";
 import { Input } from "@ceylonweddings/ui/components/input";
 import { FieldBlock, FormGrid, FormPanel } from "@ceylonweddings/ui/domain/creator-form";
 import { EmptyState } from "@ceylonweddings/ui/domain/empty-state";
+import { PlanningList, PlanningListRow } from "@ceylonweddings/ui/domain/planning-list-row";
 import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
 import { SectionCard } from "@ceylonweddings/ui/domain/section-card";
 import { SignInPrompt, useWedding } from "@/components/use-wedding";
@@ -155,41 +156,40 @@ export default function ChecklistPage() {
       ) : (
         Object.entries(byCategory).map(([group, groupTasks]) => (
           <SectionCard key={group} title={group} icon={ListChecks} variant="muted">
-            <div className="divide-y divide-border/70">
+            <PlanningList divided>
               {groupTasks.map((task) => (
-                <div
+                <PlanningListRow
                   key={task.id}
-                  className="cw-row-lift flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <div>
-                    <p className="text-sm font-medium">{task.title}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {task.assigneeUserId
-                        ? (members[task.assigneeUserId] ?? t("planning.assignee"))
-                        : t("planning.category")}
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Badge
-                      intent={task.status === "DONE" ? "success" : task.status === "DOING" ? "warning" : "default"}
-                    >
-                      {t(`planning.${task.status.toLowerCase()}`)}
-                    </Badge>
-                    <Button size="sm" variant="outline" disabled={busy === task.id} onClick={() => cycle(task)}>
-                      {t("planning.cycleStatus")}
-                    </Button>
-                    {task.status !== "DONE" ? (
-                      <Button size="sm" disabled={busy === task.id} onClick={() => markDone(task)}>
-                        {t("planning.markDone")}
+                  variant="divided"
+                  title={task.title}
+                  description={
+                    task.assigneeUserId
+                      ? (members[task.assigneeUserId] ?? t("planning.assignee"))
+                      : t("planning.category")
+                  }
+                  actions={
+                    <>
+                      <Badge
+                        intent={task.status === "DONE" ? "success" : task.status === "DOING" ? "warning" : "default"}
+                      >
+                        {t(`planning.${task.status.toLowerCase()}`)}
+                      </Badge>
+                      <Button size="sm" variant="outline" disabled={busy === task.id} onClick={() => cycle(task)}>
+                        {t("planning.cycleStatus")}
                       </Button>
-                    ) : null}
-                    <Button size="sm" variant="ghost" disabled={busy === task.id} onClick={() => removeTask(task.id)}>
-                      Remove
-                    </Button>
-                  </div>
-                </div>
+                      {task.status !== "DONE" ? (
+                        <Button size="sm" disabled={busy === task.id} onClick={() => markDone(task)}>
+                          {t("planning.markDone")}
+                        </Button>
+                      ) : null}
+                      <Button size="sm" variant="ghost" disabled={busy === task.id} onClick={() => removeTask(task.id)}>
+                        Remove
+                      </Button>
+                    </>
+                  }
+                />
               ))}
-            </div>
+            </PlanningList>
           </SectionCard>
         ))
       )}

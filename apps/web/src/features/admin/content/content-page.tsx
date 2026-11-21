@@ -7,27 +7,38 @@ import type { AdminArticle } from "@ceylonweddings/contracts";
 import { Badge } from "@ceylonweddings/ui/components/badge";
 import { Button } from "@ceylonweddings/ui/components/button";
 import { FormStatus } from "@ceylonweddings/ui/components/form-status";
-import { EmptyState } from "@ceylonweddings/ui/domain/empty-state";
+import { DataTableCell, DataTableHead } from "@ceylonweddings/ui/domain/data-table";
+import { DataTableList } from "@ceylonweddings/ui/domain/data-table-list";
 import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
 import { SectionCard } from "@ceylonweddings/ui/domain/section-card";
-import { AdminDataCell, AdminDataRow, AdminDataTable } from "@ceylonweddings/ui/domain/admin-data-table";
+import { useClientTablePagination } from "@ceylonweddings/ui/lib/use-client-table-pagination";
 import { Link } from "@/i18n/navigation";
+
+const COLUMNS = ["title", "status", "category", "actions"] as const;
 
 export default function AdminContentPage() {
   const [rows, setRows] = useState<AdminArticle[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
+      setLoading(true);
       setRows(await api.admin.articles());
+      setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load");
+    } finally {
+      setLoading(false);
     }
   }, []);
 
   useEffect(() => {
     void load();
   }, [load]);
+
+  const filtered = rows;
+  const { page, setPage, setLimit, pageItems, total, totalPages, limit } = useClientTablePagination(filtered, 25, "");
 
   if (error) {
     return (
@@ -51,30 +62,76 @@ export default function AdminContentPage() {
         }
       />
       <SectionCard title="Articles" icon={Lightbulb}>
-        {rows.length === 0 ? (
-          <EmptyState icon={Lightbulb} title="No articles" description="Create the first Ideas piece." />
-        ) : (
-          <AdminDataTable headers={["Title", "Status", "Category", ""]}>
-            {rows.map((row) => (
-              <AdminDataRow key={row.id}>
-                <AdminDataCell>
-                  <p className="font-medium">{row.title}</p>
-                  <p className="text-xs text-muted-foreground">{row.slug}</p>
-                </AdminDataCell>
-                <AdminDataCell>
-                  <Badge intent={row.status === "PUBLISHED" ? "success" : undefined}>{row.status}</Badge>
-                  {row.featured ? <Badge intent="love" className="ml-1">Featured</Badge> : null}
-                </AdminDataCell>
-                <AdminDataCell>{row.category}</AdminDataCell>
-                <AdminDataCell>
-                  <Button asChild size="sm" variant="ghost">
-                    <Link href={`/admin/content/${row.id}`}>Edit</Link>
-                  </Button>
-                </AdminDataCell>
-              </AdminDataRow>
-            ))}
-          </AdminDataTable>
-        )}
+        <DataTableList
+          framed={false}
+          loading={loading}
+          loadingColumns={COLUMNS.length}
+          sourceCount={rows.length}
+          filteredCount={filtered.length}
+          empty={{
+            icon: Lightbulb,
+            title: "No articles",
+            description: "Create the first Ideas piece.",
+          }}
+          pagination={
+            totalPages > 0
+              ? {
+                  page,
+                  totalPages,
+                  total,
+                  limit,
+                  onPageChange: setPage,
+                  onLimitChange: setLimit,
+                }
+              : null
+          }
+          items={pageItems}
+          getRowId={(row) => row.id}
+          orderedVisibleIds={COLUMNS}
+          renderHead={(id) => {
+            const labels: Record<(typeof COLUMNS)[number], string> = {
+              title: "Title",
+              status: "Status",
+              category: "Category",
+              actions: "",
+            };
+            return <DataTableHead key={id}>{labels[id as (typeof COLUMNS)[number]]}</DataTableHead>;
+          }}
+          renderCell={(id, row) => {
+            switch (id) {
+              case "title":
+                return (
+                  <DataTableCell key={id}>
+                    <p className="font-medium">{row.title}</p>
+                    <p className="text-xs text-muted-foreground">{row.slug}</p>
+                  </DataTableCell>
+                );
+              case "status":
+                return (
+                  <DataTableCell key={id}>
+                    <Badge intent={row.status === "PUBLISHED" ? "success" : undefined}>{row.status}</Badge>
+                    {row.featured ? (
+                      <Badge intent="love" className="ml-1">
+                        Featured
+                      </Badge>
+                    ) : null}
+                  </DataTableCell>
+                );
+              case "category":
+                return <DataTableCell key={id}>{row.category}</DataTableCell>;
+              case "actions":
+                return (
+                  <DataTableCell key={id}>
+                    <Button asChild size="sm" variant="ghost">
+                      <Link href={`/admin/content/${row.id}`}>Edit</Link>
+                    </Button>
+                  </DataTableCell>
+                );
+              default:
+                return null;
+            }
+          }}
+        />
       </SectionCard>
     </div>
   );

@@ -18,8 +18,11 @@ import {
   type RsvpStatus,
 } from "@ceylonweddings/contracts";
 import { Button } from "@ceylonweddings/ui/components/button";
+import { FormStatus } from "@ceylonweddings/ui/components/form-status";
 import { Input } from "@ceylonweddings/ui/components/input";
 import { Label } from "@ceylonweddings/ui/components/label";
+import { Textarea } from "@ceylonweddings/ui/components/textarea";
+import { CheckboxField } from "@ceylonweddings/ui/components/checkbox";
 import { SimpleSelect } from "@ceylonweddings/ui/components/select";
 import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
 import { GuestInviteChip, GuestRow } from "@ceylonweddings/ui/domain/guest-row";
@@ -30,7 +33,9 @@ import { initials } from "@/lib/labels";
 import { Link } from "@/i18n/navigation";
 import { Users } from "lucide-react";
 import { useConfirm } from "@ceylonweddings/ui/components/confirm-dialog";
-import { getListEmptyMode } from "@ceylonweddings/ui/lib/list-state";
+import { AdminListToolbar } from "@ceylonweddings/ui/domain/admin-list-toolbar";
+import { PlanningFormPanel } from "@ceylonweddings/ui/domain/planning-form-panel";
+import { getListEmptyMode, showListChrome } from "@ceylonweddings/ui/lib/list-state";
 
 const CHANNELS: InviteChannel[] = ["WHATSAPP", "PHONE", "PRINTED", "OVERSEAS"];
 const STATUSES: RsvpStatus[] = ["CONSIDERING", "INVITED", "CONFIRMED", "DECLINED", "MAYBE", "WALK_IN"];
@@ -296,115 +301,121 @@ export default function GuestsPage() {
         />
       </div>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <Input
-          className="max-w-xs"
-          placeholder="Search households"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
+      {showListChrome(getListEmptyMode({ sourceCount: guests.length, filteredCount: filtered.length })) ||
+      guests.length > 0 ? (
+        <AdminListToolbar
+          searchValue={query}
+          onSearchChange={setQuery}
+          searchPlaceholder="Search households"
+          filters={
+            <>
+              <SimpleSelect
+                className="w-[11rem]"
+                value={filterStatus}
+                onValueChange={setFilterStatus}
+                options={[
+                  { value: "ALL", label: "All statuses" },
+                  ...STATUSES.map((item) => ({ value: item, label: item })),
+                ]}
+              />
+              <SimpleSelect
+                className="w-[10rem]"
+                value={filterSide}
+                onValueChange={setFilterSide}
+                options={[
+                  { value: "ALL", label: "All sides" },
+                  { value: "BRIDE", label: "Bride" },
+                  { value: "GROOM", label: "Groom" },
+                  { value: "BOTH", label: "Both" },
+                ]}
+              />
+              {templates.length ? (
+                <SimpleSelect
+                  className="w-[14rem]"
+                  value={templateId || selectedTemplate?.id || ""}
+                  onValueChange={setTemplateId}
+                  options={templates.map((row) => ({
+                    value: row.id,
+                    label: `${row.name}${row.isDefault ? " ★" : ""}`,
+                  }))}
+                />
+              ) : null}
+            </>
+          }
+          actions={
+            data.myAccess.canEditGuests ? (
+              <>
+                <Button type="button" variant="outline" onClick={() => setShowTemplates((v) => !v)}>
+                  Templates
+                </Button>
+                <Button type="button" variant="outline" onClick={() => setShowImport((v) => !v)}>
+                  Import CSV
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    const header = "Household,HeadName,Side,PlusCount,Status,Meal,Phone,GiftReceived,Thanked\n";
+                    const rows = guests
+                      .map(
+                        (g) =>
+                          `"${g.label.replace(/"/g, '""')}","${g.headName.replace(/"/g, '""')}",${g.side},${g.plusCount},${g.status},${g.meal || ""},"${g.phone || ""}",${g.giftReceived},${g.thanked}`,
+                      )
+                      .join("\n");
+                    const blob = new Blob([header + rows], { type: "text/csv;charset=utf-8;" });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = `ceylon-weddings-guests-${Date.now()}.csv`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                  }}
+                >
+                  Export CSV
+                </Button>
+                <Button asChild variant="ghost" size="sm">
+                  <Link href="/planning/seating">Seating board</Link>
+                </Button>
+              </>
+            ) : null
+          }
         />
-        <SimpleSelect
-          className="w-[11rem]"
-          value={filterStatus}
-          onValueChange={setFilterStatus}
-          options={[{ value: "ALL", label: "All statuses" }, ...STATUSES.map((item) => ({ value: item, label: item }))]}
-        />
-        <SimpleSelect
-          className="w-[10rem]"
-          value={filterSide}
-          onValueChange={setFilterSide}
-          options={[
-            { value: "ALL", label: "All sides" },
-            { value: "BRIDE", label: "Bride" },
-            { value: "GROOM", label: "Groom" },
-            { value: "BOTH", label: "Both" },
-          ]}
-        />
-        {templates.length ? (
-          <SimpleSelect
-            className="w-[14rem]"
-            value={templateId || selectedTemplate?.id || ""}
-            onValueChange={setTemplateId}
-            options={templates.map((row) => ({
-              value: row.id,
-              label: `${row.name}${row.isDefault ? " ★" : ""}`,
-            }))}
-          />
-        ) : null}
-        {data.myAccess.canEditGuests ? (
-          <>
-            <Button type="button" variant="outline" onClick={() => setShowTemplates((v) => !v)}>
-              Templates
-            </Button>
-            <Button type="button" variant="outline" onClick={() => setShowImport((v) => !v)}>
-              Import CSV
+      ) : null}
+
+      {showTemplates && data.myAccess.canEditGuests ? (
+        <PlanningFormPanel title="Invite templates">
+          <div className="flex flex-wrap justify-end gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() =>
+                setEditingTemplate({
+                  id: `new-${Date.now()}`,
+                  weddingId: data.id,
+                  name: "New template",
+                  locale: locale.slice(0, 2),
+                  channel: "WHATSAPP",
+                  body: "Ayubowan {{guestName}}! {{partnerOne}} & {{partnerTwo}} — {{eventName}} on {{date}} at {{venue}}. RSVP: {{rsvpUrl}}",
+                  isDefault: false,
+                })
+              }
+            >
+              New
             </Button>
             <Button
               type="button"
-              variant="outline"
-              onClick={() => {
-                const header = "Household,HeadName,Side,PlusCount,Status,Meal,Phone,GiftReceived,Thanked\n";
-                const rows = guests
-                  .map(
-                    (g) =>
-                      `"${g.label.replace(/"/g, '""')}","${g.headName.replace(/"/g, '""')}",${g.side},${g.plusCount},${g.status},${g.meal || ""},"${g.phone || ""}",${g.giftReceived},${g.thanked}`,
-                  )
-                  .join("\n");
-                const blob = new Blob([header + rows], { type: "text/csv;charset=utf-8;" });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = `ceylon-weddings-guests-${Date.now()}.csv`;
-                a.click();
-                URL.revokeObjectURL(url);
+              size="sm"
+              variant="ghost"
+              onClick={async () => {
+                const rows = await api.wedding.resetInviteTemplates();
+                setTemplates(rows);
+                const def = rows.find((r) => r.isDefault) ?? rows[0];
+                if (def) setTemplateId(def.id);
               }}
             >
-              Export CSV
+              Reset to starters
             </Button>
-            <Button asChild variant="ghost" size="sm">
-              <Link href="/planning/seating">Seating board</Link>
-            </Button>
-          </>
-        ) : null}
-      </div>
-
-      {showTemplates && data.myAccess.canEditGuests ? (
-        <div className="grid gap-3 rounded-3xl border border-border/70 p-4">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="font-medium">Invite templates</h2>
-            <div className="flex flex-wrap gap-2">
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={() =>
-                  setEditingTemplate({
-                    id: `new-${Date.now()}`,
-                    weddingId: data.id,
-                    name: "New template",
-                    locale: locale.slice(0, 2),
-                    channel: "WHATSAPP",
-                    body: "Ayubowan {{guestName}}! {{partnerOne}} & {{partnerTwo}} — {{eventName}} on {{date}} at {{venue}}. RSVP: {{rsvpUrl}}",
-                    isDefault: false,
-                  })
-                }
-              >
-                New
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                onClick={async () => {
-                  const rows = await api.wedding.resetInviteTemplates();
-                  setTemplates(rows);
-                  const def = rows.find((r) => r.isDefault) ?? rows[0];
-                  if (def) setTemplateId(def.id);
-                }}
-              >
-                Reset to starters
-              </Button>
-            </div>
           </div>
           <ul className="grid gap-2">
             {templates.map((row) => (
@@ -451,19 +462,16 @@ export default function GuestsPage() {
                     onChange={(e) => setEditingTemplate({ ...editingTemplate, locale: e.target.value })}
                   />
                 </div>
-                <label className="flex items-end gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={editingTemplate.isDefault}
-                    onChange={(e) => setEditingTemplate({ ...editingTemplate, isDefault: e.target.checked })}
-                  />
-                  Default
-                </label>
+                <CheckboxField
+                  label="Default"
+                  checked={editingTemplate.isDefault}
+                  onCheckedChange={(checked) => setEditingTemplate({ ...editingTemplate, isDefault: checked === true })}
+                />
               </div>
               <div className="grid gap-1">
                 <Label>Body</Label>
-                <textarea
-                  className="min-h-28 rounded-xl border border-border bg-background px-3 py-2 text-sm"
+                <Textarea
+                  className="min-h-28"
                   value={editingTemplate.body}
                   onChange={(e) => setEditingTemplate({ ...editingTemplate, body: e.target.value })}
                   required
@@ -484,13 +492,12 @@ export default function GuestsPage() {
               </div>
             </form>
           ) : null}
-        </div>
+        </PlanningFormPanel>
       ) : null}
 
       {showImport && data.myAccess.canEditGuests ? (
-        <div className="grid gap-3 rounded-3xl border border-border/70 p-4">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="font-medium">Import guests (CSV)</h2>
+        <PlanningFormPanel title="Import guests (CSV)">
+          <div className="flex flex-wrap items-center justify-end gap-2">
             <Button
               type="button"
               size="sm"
@@ -534,66 +541,70 @@ export default function GuestsPage() {
               </Button>
             </>
           ) : null}
-        </div>
+        </PlanningFormPanel>
       ) : null}
 
       {data.myAccess.canEditGuests ? (
-        <form className="grid gap-3 rounded-3xl border border-border/70 p-4" onSubmit={onSubmit}>
-          <div className="grid gap-3 md:grid-cols-3 lg:grid-cols-6">
-            <div className="grid gap-1">
-              <Label>{t("planning.household")}</Label>
-              <Input value={label} onChange={(e) => setLabel(e.target.value)} required />
+        <form onSubmit={onSubmit}>
+          <PlanningFormPanel>
+            <div className="grid gap-3 md:grid-cols-3 lg:grid-cols-6">
+              <div className="grid gap-1">
+                <Label>{t("planning.household")}</Label>
+                <Input value={label} onChange={(e) => setLabel(e.target.value)} required />
+              </div>
+              <div className="grid gap-1">
+                <Label>{t("planning.headName")}</Label>
+                <Input value={headName} onChange={(e) => setHeadName(e.target.value)} required />
+              </div>
+              <div className="grid gap-1">
+                <Label>{t("planning.side")}</Label>
+                <SimpleSelect
+                  value={side}
+                  onValueChange={(value) => setSide(value as typeof side)}
+                  options={[
+                    { value: "BRIDE", label: t("planning.bride") },
+                    { value: "GROOM", label: t("planning.groom") },
+                    { value: "BOTH", label: t("planning.both") },
+                  ]}
+                />
+              </div>
+              <div className="grid gap-1">
+                <Label>{t("planning.plusCount")}</Label>
+                <Input type="number" value={plusCount} onChange={(e) => setPlusCount(Number(e.target.value))} />
+              </div>
+              <div className="grid gap-1">
+                <Label>{t("planning.channel")}</Label>
+                <SimpleSelect
+                  value={channel}
+                  onValueChange={(value) => setChannel(value as InviteChannel)}
+                  options={CHANNELS.map((item) => ({ value: item, label: item }))}
+                />
+              </div>
+              <div className="grid gap-1">
+                <Label>Phone</Label>
+                <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+94…" />
+              </div>
             </div>
-            <div className="grid gap-1">
-              <Label>{t("planning.headName")}</Label>
-              <Input value={headName} onChange={(e) => setHeadName(e.target.value)} required />
+            <div className="flex flex-wrap gap-2">
+              {(data.events ?? []).map((event) => {
+                const on = eventIds.includes(event.id);
+                return (
+                  <button
+                    key={event.id}
+                    type="button"
+                    className={`rounded-full px-3 py-1 text-xs ${on ? "bg-primary text-primary-foreground" : "bg-secondary"}`}
+                    onClick={() =>
+                      setEventIds((ids) => (on ? ids.filter((id) => id !== event.id) : [...ids, event.id]))
+                    }
+                  >
+                    {event.name}
+                  </button>
+                );
+              })}
             </div>
-            <div className="grid gap-1">
-              <Label>{t("planning.side")}</Label>
-              <SimpleSelect
-                value={side}
-                onValueChange={(value) => setSide(value as typeof side)}
-                options={[
-                  { value: "BRIDE", label: t("planning.bride") },
-                  { value: "GROOM", label: t("planning.groom") },
-                  { value: "BOTH", label: t("planning.both") },
-                ]}
-              />
-            </div>
-            <div className="grid gap-1">
-              <Label>{t("planning.plusCount")}</Label>
-              <Input type="number" value={plusCount} onChange={(e) => setPlusCount(Number(e.target.value))} />
-            </div>
-            <div className="grid gap-1">
-              <Label>{t("planning.channel")}</Label>
-              <SimpleSelect
-                value={channel}
-                onValueChange={(value) => setChannel(value as InviteChannel)}
-                options={CHANNELS.map((item) => ({ value: item, label: item }))}
-              />
-            </div>
-            <div className="grid gap-1">
-              <Label>Phone</Label>
-              <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+94…" />
-            </div>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {(data.events ?? []).map((event) => {
-              const on = eventIds.includes(event.id);
-              return (
-                <button
-                  key={event.id}
-                  type="button"
-                  className={`rounded-full px-3 py-1 text-xs ${on ? "bg-primary text-primary-foreground" : "bg-secondary"}`}
-                  onClick={() => setEventIds((ids) => (on ? ids.filter((id) => id !== event.id) : [...ids, event.id]))}
-                >
-                  {event.name}
-                </button>
-              );
-            })}
-          </div>
-          <Button type="submit">{t("planning.addGuest")}</Button>
-          {status ? <p className="text-sm text-muted-foreground">{status}</p> : null}
+            <Button type="submit">{t("planning.addGuest")}</Button>
+            {status ? <FormStatus>{status}</FormStatus> : null}
+          </PlanningFormPanel>
         </form>
       ) : (
         <p className="text-sm text-muted-foreground">{t("planning.noGuestEdit")}</p>

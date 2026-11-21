@@ -4,18 +4,16 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { LayoutGrid } from "lucide-react";
 import { api } from "@ceylonweddings/web";
-import {
-  seatingSummary,
-  type GuestHousehold,
-  type SeatingPlan,
-  type SeatingSummary,
-} from "@ceylonweddings/contracts";
+import { seatingSummary, type GuestHousehold, type SeatingPlan, type SeatingSummary } from "@ceylonweddings/contracts";
 import { Button } from "@ceylonweddings/ui/components/button";
 import { Input } from "@ceylonweddings/ui/components/input";
 import { Label } from "@ceylonweddings/ui/components/label";
 import { SimpleSelect } from "@ceylonweddings/ui/components/select";
+import { FormStatus } from "@ceylonweddings/ui/components/form-status";
 import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
 import { EmptyState } from "@ceylonweddings/ui/domain/empty-state";
+import { PlanningEventToolbar, PlanningFormPanel, StatPill } from "@ceylonweddings/ui/domain/planning-form-panel";
+import { PlanningListRow } from "@ceylonweddings/ui/domain/planning-list-row";
 import { SignInPrompt, useWedding } from "@/components/use-wedding";
 
 type DraftTable = {
@@ -41,7 +39,10 @@ export default function SeatingPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    api.wedding.guests().then(setGuests).catch(() => setGuests([]));
+    api.wedding
+      .guests()
+      .then(setGuests)
+      .catch(() => setGuests([]));
   }, []);
 
   useEffect(() => {
@@ -77,10 +78,7 @@ export default function SeatingPage() {
     return ids;
   }, [tables]);
 
-  const unassigned = useMemo(
-    () => guests.filter((g) => !assignedIds.has(g.id)),
-    [guests, assignedIds],
-  );
+  const unassigned = useMemo(() => guests.filter((g) => !assignedIds.has(g.id)), [guests, assignedIds]);
 
   const liveSummary = useMemo(() => {
     const plan: SeatingPlan = {
@@ -188,7 +186,7 @@ export default function SeatingPage() {
         description="Visual table board — assign households per event, not CAD floor plans."
       />
 
-      <div className="flex flex-wrap items-end gap-3">
+      <PlanningEventToolbar>
         <div className="grid gap-1">
           <Label>Event</Label>
           <SimpleSelect
@@ -208,59 +206,57 @@ export default function SeatingPage() {
             </Button>
           </>
         ) : null}
-      </div>
+      </PlanningEventToolbar>
 
       <div className="flex flex-wrap gap-3 text-sm">
-        <span className="rounded-full bg-secondary px-3 py-1">
+        <StatPill>
           Seated {display.seatedHeads}/{display.capacity}
-        </span>
-        <span className="rounded-full bg-secondary px-3 py-1">
+        </StatPill>
+        <StatPill>
           Unassigned {display.unassignedHouseholds} ({display.unassignedHeads} heads)
-        </span>
-        {display.overbookedTables ? (
-          <span className="rounded-full bg-destructive/15 px-3 py-1 text-destructive">
-            {display.overbookedTables} overbooked
-          </span>
-        ) : null}
+        </StatPill>
+        {display.overbookedTables ? <StatPill tone="danger">{display.overbookedTables} overbooked</StatPill> : null}
       </div>
 
       {data.myAccess.canEditGuests ? (
-        <div className="flex flex-wrap items-end gap-3 rounded-3xl border border-border/70 p-4">
-          <div className="grid gap-1">
-            <Label>Household</Label>
-            <SimpleSelect
-              className="w-[16rem]"
-              value={assignHouseholdId}
-              onValueChange={setAssignHouseholdId}
-              options={[
-                { value: "", label: "Pick household" },
-                ...unassigned.map((g) => ({
-                  value: g.id,
-                  label: `${g.label} (+${g.plusCount})`,
-                })),
-              ]}
-            />
+        <PlanningFormPanel>
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="grid gap-1">
+              <Label>Household</Label>
+              <SimpleSelect
+                className="w-[16rem]"
+                value={assignHouseholdId}
+                onValueChange={setAssignHouseholdId}
+                options={[
+                  { value: "", label: "Pick household" },
+                  ...unassigned.map((g) => ({
+                    value: g.id,
+                    label: `${g.label} (+${g.plusCount})`,
+                  })),
+                ]}
+              />
+            </div>
+            <div className="grid gap-1">
+              <Label>Table</Label>
+              <SimpleSelect
+                className="w-[12rem]"
+                value={assignTableKey}
+                onValueChange={setAssignTableKey}
+                options={[
+                  { value: "", label: "Pick table" },
+                  ...tables.map((table) => ({ value: table.key, label: table.name })),
+                ]}
+              />
+            </div>
+            <Button type="button" onClick={assignSelected} disabled={!assignHouseholdId || !assignTableKey}>
+              Assign
+            </Button>
+            <div className="grid min-w-[12rem] flex-1 gap-1">
+              <Label>Notes</Label>
+              <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Poruwa side notes…" />
+            </div>
           </div>
-          <div className="grid gap-1">
-            <Label>Table</Label>
-            <SimpleSelect
-              className="w-[12rem]"
-              value={assignTableKey}
-              onValueChange={setAssignTableKey}
-              options={[
-                { value: "", label: "Pick table" },
-                ...tables.map((table) => ({ value: table.key, label: table.name })),
-              ]}
-            />
-          </div>
-          <Button type="button" onClick={assignSelected} disabled={!assignHouseholdId || !assignTableKey}>
-            Assign
-          </Button>
-          <div className="grid min-w-[12rem] flex-1 gap-1">
-            <Label>Notes</Label>
-            <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Poruwa side notes…" />
-          </div>
-        </div>
+        </PlanningFormPanel>
       ) : null}
 
       {tables.length === 0 ? (
@@ -322,44 +318,46 @@ export default function SeatingPage() {
                   ) : null}
                 </div>
                 <div className="h-2 overflow-hidden rounded-full bg-secondary">
-                  <div
-                    className={`h-full ${over ? "bg-destructive" : "bg-primary"}`}
-                    style={{ width: `${pct}%` }}
-                  />
+                  <div className={`h-full ${over ? "bg-destructive" : "bg-primary"}`} style={{ width: `${pct}%` }} />
                 </div>
                 <ul className="grid gap-2">
                   {table.assignments.map((a) => {
                     const household = guests.find((g) => g.id === a.householdId);
                     return (
-                      <li
-                        key={a.householdId}
-                        className="flex items-center justify-between gap-2 rounded-xl bg-secondary/60 px-3 py-2 text-sm"
-                      >
-                        <span>
-                          {household?.label ?? a.householdId}
-                          <span className="text-muted-foreground"> · {a.seatsUsed} seats</span>
-                        </span>
-                        {data.myAccess.canEditGuests ? (
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="ghost"
-                            onClick={() =>
-                              setTables((rows) =>
-                                rows.map((row) =>
-                                  row.key === table.key
-                                    ? {
-                                        ...row,
-                                        assignments: row.assignments.filter((x) => x.householdId !== a.householdId),
-                                      }
-                                    : row,
-                                ),
-                              )
-                            }
-                          >
-                            Unseat
-                          </Button>
-                        ) : null}
+                      <li key={a.householdId}>
+                        <PlanningListRow
+                          variant="plain"
+                          className="rounded-xl bg-secondary/60 px-3 py-2 text-sm"
+                          title={
+                            <>
+                              {household?.label ?? a.householdId}
+                              <span className="font-normal text-muted-foreground"> · {a.seatsUsed} seats</span>
+                            </>
+                          }
+                          actions={
+                            data.myAccess.canEditGuests ? (
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="ghost"
+                                onClick={() =>
+                                  setTables((rows) =>
+                                    rows.map((row) =>
+                                      row.key === table.key
+                                        ? {
+                                            ...row,
+                                            assignments: row.assignments.filter((x) => x.householdId !== a.householdId),
+                                          }
+                                        : row,
+                                    ),
+                                  )
+                                }
+                              >
+                                Unseat
+                              </Button>
+                            ) : null
+                          }
+                        />
                       </li>
                     );
                   })}
@@ -385,7 +383,7 @@ export default function SeatingPage() {
         )}
       </div>
 
-      {status ? <p className="text-sm text-muted-foreground">{status}</p> : null}
+      {status ? <FormStatus>{status}</FormStatus> : null}
     </div>
   );
 }

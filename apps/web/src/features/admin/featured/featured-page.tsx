@@ -7,11 +7,15 @@ import type { FeaturedPlacement, Vendor } from "@ceylonweddings/contracts";
 import { Button } from "@ceylonweddings/ui/components/button";
 import { FormStatus } from "@ceylonweddings/ui/components/form-status";
 import { Input } from "@ceylonweddings/ui/components/input";
-import { EmptyState } from "@ceylonweddings/ui/domain/empty-state";
+import { SimpleSelect } from "@ceylonweddings/ui/components/select";
+import { DataTableCell, DataTableHead } from "@ceylonweddings/ui/domain/data-table";
+import { DataTableList } from "@ceylonweddings/ui/domain/data-table-list";
 import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
 import { SectionCard } from "@ceylonweddings/ui/domain/section-card";
-import { AdminDataCell, AdminDataRow, AdminDataTable } from "@ceylonweddings/ui/domain/admin-data-table";
+import { useClientTablePagination } from "@ceylonweddings/ui/lib/use-client-table-pagination";
 import { Link } from "@/i18n/navigation";
+
+const COLUMNS = ["vendor", "window", "source", "actions"] as const;
 
 export default function AdminFeaturedPage() {
   const [rows, setRows] = useState<FeaturedPlacement[]>([]);
@@ -19,21 +23,29 @@ export default function AdminFeaturedPage() {
   const [vendorId, setVendorId] = useState("");
   const [startsAt, setStartsAt] = useState("");
   const [endsAt, setEndsAt] = useState("");
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
+      setLoading(true);
       const [placements, vendorRows] = await Promise.all([api.admin.featured(), api.admin.vendors()]);
       setRows(placements);
       setVendors(vendorRows);
+      setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load");
+    } finally {
+      setLoading(false);
     }
   }, []);
 
   useEffect(() => {
     void load();
   }, [load]);
+
+  const filtered = rows;
+  const { page, setPage, setLimit, pageItems, total, totalPages, limit } = useClientTablePagination(filtered, 25, "");
 
   if (error) {
     return (
@@ -53,18 +65,13 @@ export default function AdminFeaturedPage() {
       />
       <SectionCard title="Create placement" icon={Store}>
         <div className="grid gap-2 md:grid-cols-4">
-          <select
-            className="rounded-lg border border-border/70 bg-background px-3 py-2 text-sm"
+          <SimpleSelect
             value={vendorId}
-            onChange={(e) => setVendorId(e.target.value)}
-          >
-            <option value="">Select vendor</option>
-            {vendors.map((vendor) => (
-              <option key={vendor.id} value={vendor.id}>
-                {vendor.name}
-              </option>
-            ))}
-          </select>
+            onValueChange={setVendorId}
+            placeholder="Select vendor"
+            aria-label="Select vendor"
+            options={vendors.map((vendor) => ({ value: vendor.id, label: vendor.name }))}
+          />
           <Input type="datetime-local" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} />
           <Input type="datetime-local" value={endsAt} onChange={(e) => setEndsAt(e.target.value)} />
           <Button
@@ -88,33 +95,73 @@ export default function AdminFeaturedPage() {
         </div>
       </SectionCard>
       <SectionCard title="Schedule" icon={Store}>
-        {rows.length === 0 ? (
-          <EmptyState icon={Store} title="No placements" description="Create an editorial window above." />
-        ) : (
-          <AdminDataTable headers={["Vendor", "Window", "Source", ""]}>
-            {rows.map((row) => (
-              <AdminDataRow key={row.id}>
-                <AdminDataCell>{row.vendorName ?? row.vendorId}</AdminDataCell>
-                <AdminDataCell>
-                  {new Date(row.startsAt).toLocaleString()} → {new Date(row.endsAt).toLocaleString()}
-                </AdminDataCell>
-                <AdminDataCell>{row.source}</AdminDataCell>
-                <AdminDataCell>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={async () => {
-                      await api.admin.deleteFeatured(row.id);
-                      await load();
-                    }}
-                  >
-                    Delete
-                  </Button>
-                </AdminDataCell>
-              </AdminDataRow>
-            ))}
-          </AdminDataTable>
-        )}
+        <DataTableList
+          framed={false}
+          loading={loading}
+          loadingColumns={COLUMNS.length}
+          sourceCount={rows.length}
+          filteredCount={filtered.length}
+          empty={{
+            icon: Store,
+            title: "No placements",
+            description: "Create an editorial window above.",
+          }}
+          pagination={
+            totalPages > 0
+              ? {
+                  page,
+                  totalPages,
+                  total,
+                  limit,
+                  onPageChange: setPage,
+                  onLimitChange: setLimit,
+                }
+              : null
+          }
+          items={pageItems}
+          getRowId={(row) => row.id}
+          orderedVisibleIds={COLUMNS}
+          renderHead={(id) => {
+            const labels: Record<(typeof COLUMNS)[number], string> = {
+              vendor: "Vendor",
+              window: "Window",
+              source: "Source",
+              actions: "",
+            };
+            return <DataTableHead key={id}>{labels[id as (typeof COLUMNS)[number]]}</DataTableHead>;
+          }}
+          renderCell={(id, row) => {
+            switch (id) {
+              case "vendor":
+                return <DataTableCell key={id}>{row.vendorName ?? row.vendorId}</DataTableCell>;
+              case "window":
+                return (
+                  <DataTableCell key={id}>
+                    {new Date(row.startsAt).toLocaleString()} → {new Date(row.endsAt).toLocaleString()}
+                  </DataTableCell>
+                );
+              case "source":
+                return <DataTableCell key={id}>{row.source}</DataTableCell>;
+              case "actions":
+                return (
+                  <DataTableCell key={id}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={async () => {
+                        await api.admin.deleteFeatured(row.id);
+                        await load();
+                      }}
+                    >
+                      Delete
+                    </Button>
+                  </DataTableCell>
+                );
+              default:
+                return null;
+            }
+          }}
+        />
       </SectionCard>
     </div>
   );

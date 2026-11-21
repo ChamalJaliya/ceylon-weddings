@@ -2,14 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
-import {
-  ArrowDown,
-  ArrowUp,
-  Copy,
-  Download,
-  Layers,
-  Plus,
-} from "lucide-react";
+import { ArrowDown, ArrowUp, Copy, Download, Layers, Plus } from "lucide-react";
 import { api, type VendorTypeAnalytics } from "@ceylonweddings/web";
 import {
   type AttributeLayout,
@@ -29,10 +22,12 @@ import { Badge } from "@ceylonweddings/ui/components/badge";
 import { Button } from "@ceylonweddings/ui/components/button";
 import { FormStatus } from "@ceylonweddings/ui/components/form-status";
 import { Input } from "@ceylonweddings/ui/components/input";
-import { Switch } from "@ceylonweddings/ui/components/switch";
+import { SimpleSelect } from "@ceylonweddings/ui/components/select";
 import { Textarea } from "@ceylonweddings/ui/components/textarea";
 import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
 import { SectionCard } from "@ceylonweddings/ui/domain/section-card";
+import { SettingsList, SettingsListRow } from "@ceylonweddings/ui/domain/settings-list-row";
+import { SettingsSwitchRow } from "@ceylonweddings/ui/domain/settings-switch-row";
 import { Link, useRouter } from "@/i18n/navigation";
 import { StageEditor } from "@/features/admin/settings/categories/components/stage-editor";
 import { useConfirm } from "@ceylonweddings/ui/components/confirm-dialog";
@@ -40,14 +35,7 @@ import { CenteredLoader } from "@ceylonweddings/ui/components/spinner";
 
 const TYPE_STATUSES: VendorTypeStatus[] = ["DRAFT", "ACTIVE", "HIDDEN", "ARCHIVED"];
 const GALLERY_LAYOUTS: GalleryLayout[] = ["default", "venue", "portrait", "detail"];
-const VALUE_TYPES: AttributeValueType[] = [
-  "SELECT",
-  "MULTISELECT",
-  "BOOLEAN",
-  "NUMBER",
-  "RANGE",
-  "TEXT",
-];
+const VALUE_TYPES: AttributeValueType[] = ["SELECT", "MULTISELECT", "BOOLEAN", "NUMBER", "RANGE", "TEXT"];
 const LAYOUTS: AttributeLayout[] = ["CARDS", "GRID", "LIST", "TOGGLE", "SLIDER", "TEXT"];
 const ATTR_STATUSES: AttributeStatus[] = ["DRAFT", "ACTIVE", "ARCHIVED"];
 
@@ -82,18 +70,10 @@ function downloadJson(filename: string, data: unknown) {
   URL.revokeObjectURL(url);
 }
 
-function Field({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="grid gap-1.5">
-      <span className="text-compact font-medium leading-none tracking-normal text-foreground/80">
-        {label}
-      </span>
+      <span className="text-compact font-medium leading-none tracking-normal text-foreground/80">{label}</span>
       {children}
     </label>
   );
@@ -113,13 +93,13 @@ function SwitchRow({
   disabled?: boolean;
 }) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-lg border border-border/60 px-3 py-2">
-      <div className="min-w-0">
-        <p className="text-sm font-medium">{label}</p>
-        {description ? <p className="text-xs text-muted-foreground">{description}</p> : null}
-      </div>
-      <Switch checked={checked} onCheckedChange={onChange} disabled={disabled} />
-    </div>
+    <SettingsSwitchRow
+      label={label}
+      description={description}
+      checked={checked}
+      onCheckedChange={onChange}
+      disabled={disabled}
+    />
   );
 }
 
@@ -353,9 +333,7 @@ export default function AdminCategoryDetailPage() {
           <Field label="Display name">
             <Input
               value={meta.label.en}
-              onChange={(e) =>
-                setMeta((m) => ({ ...m, label: { ...m.label, en: e.target.value } }))
-              }
+              onChange={(e) => setMeta((m) => ({ ...m, label: { ...m.label, en: e.target.value } }))}
             />
           </Field>
           <Field label="Description">
@@ -372,34 +350,20 @@ export default function AdminCategoryDetailPage() {
           </Field>
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label="Status">
-              <select
-                className="rounded-lg border border-border/70 bg-background px-3 py-2 text-sm"
+              <SimpleSelect
                 value={meta.status}
-                onChange={(e) =>
-                  setMeta((m) => ({ ...m, status: e.target.value as VendorTypeStatus }))
-                }
-              >
-                {TYPE_STATUSES.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
+                onValueChange={(value) => setMeta((m) => ({ ...m, status: value as VendorTypeStatus }))}
+                aria-label="Type status"
+                options={TYPE_STATUSES.map((s) => ({ value: s, label: s }))}
+              />
             </Field>
             <Field label="Gallery layout">
-              <select
-                className="rounded-lg border border-border/70 bg-background px-3 py-2 text-sm"
+              <SimpleSelect
                 value={meta.galleryLayout}
-                onChange={(e) =>
-                  setMeta((m) => ({ ...m, galleryLayout: e.target.value as GalleryLayout }))
-                }
-              >
-                {GALLERY_LAYOUTS.map((layout) => (
-                  <option key={layout} value={layout}>
-                    {layout}
-                  </option>
-                ))}
-              </select>
+                onValueChange={(value) => setMeta((m) => ({ ...m, galleryLayout: value as GalleryLayout }))}
+                aria-label="Gallery layout"
+                options={GALLERY_LAYOUTS.map((layout) => ({ value: layout, label: layout }))}
+              />
             </Field>
             <Field label="Cover URL">
               <Input
@@ -471,23 +435,16 @@ export default function AdminCategoryDetailPage() {
               <Input
                 value={newQuestionKey}
                 onChange={(e) =>
-                  setNewQuestionKey(
-                    e.target.value.replace(/[^a-zA-Z0-9_]/g, "").replace(/^([^a-z])/, ""),
-                  )
+                  setNewQuestionKey(e.target.value.replace(/[^a-zA-Z0-9_]/g, "").replace(/^([^a-z])/, ""))
                 }
                 placeholder="key"
               />
-              <select
-                className="rounded-lg border border-border/70 bg-background px-3 py-2 text-sm"
+              <SimpleSelect
                 value={newQuestionType}
-                onChange={(e) => setNewQuestionType(e.target.value as AttributeValueType)}
-              >
-                {VALUE_TYPES.map((vt) => (
-                  <option key={vt} value={vt}>
-                    {vt}
-                  </option>
-                ))}
-              </select>
+                onValueChange={(value) => setNewQuestionType(value as AttributeValueType)}
+                aria-label="Answer type"
+                options={VALUE_TYPES.map((vt) => ({ value: vt, label: vt }))}
+              />
             </div>
             <div className="flex gap-2">
               <Button
@@ -545,28 +502,14 @@ export default function AdminCategoryDetailPage() {
                     {def.question.en}
                   </button>
                   <Badge intent="outline">{def.valueType}</Badge>
-                  <Badge intent={def.required ? "warning" : "outline"}>
-                    {def.required ? "Required" : "Optional"}
-                  </Badge>
+                  <Badge intent={def.required ? "warning" : "outline"}>{def.required ? "Required" : "Optional"}</Badge>
                   {def.filterable ? <Badge intent="outline">Filterable</Badge> : null}
-                  <Badge intent={def.status === "ACTIVE" ? "success" : "outline"}>
-                    {def.status}
-                  </Badge>
+                  <Badge intent={def.status === "ACTIVE" ? "success" : "outline"}>{def.status}</Badge>
                   <div className="ml-auto flex gap-1">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={busy}
-                      onClick={() => void moveAttribute(def, -1)}
-                    >
+                    <Button size="sm" variant="outline" disabled={busy} onClick={() => void moveAttribute(def, -1)}>
                       <ArrowUp className="size-3.5" />
                     </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={busy}
-                      onClick={() => void moveAttribute(def, 1)}
-                    >
+                    <Button size="sm" variant="outline" disabled={busy} onClick={() => void moveAttribute(def, 1)}>
                       <ArrowDown className="size-3.5" />
                     </Button>
                     <Button
@@ -574,7 +517,14 @@ export default function AdminCategoryDetailPage() {
                       variant="outline"
                       disabled={busy || def.status === "ARCHIVED"}
                       onClick={async () => {
-                        if (!(await confirm({ title: "Archive this question?", destructive: true, confirmLabel: "Archive" }))) return;
+                        if (
+                          !(await confirm({
+                            title: "Archive this question?",
+                            destructive: true,
+                            confirmLabel: "Archive",
+                          }))
+                        )
+                          return;
                         setBusy(true);
                         try {
                           await api.admin.deleteAttributeDefinition(type.id, def.id);
@@ -649,9 +599,7 @@ function AttributeEditor({
     status: definition.status,
     valueType: definition.valueType,
   });
-  const [stageBlocks, setStageBlocks] = useState<DecorationBlock[]>(
-    definition.presentation?.blocks ?? [],
-  );
+  const [stageBlocks, setStageBlocks] = useState<DecorationBlock[]>(definition.presentation?.blocks ?? []);
   const [stageInherit, setStageInherit] = useState(definition.presentation?.inherit ?? true);
   const [newOptKey, setNewOptKey] = useState("");
   const [newOptLabel, setNewOptLabel] = useState("");
@@ -732,9 +680,7 @@ function AttributeEditor({
         maxValue: next.maxValue === "" ? null : Number(next.maxValue),
         maxSelect: next.maxSelect === "" ? null : Number(next.maxSelect),
         status: next.status,
-        presentation: stageBlocks.length
-          ? { version: 1, blocks: stageBlocks, inherit: stageInherit }
-          : null,
+        presentation: stageBlocks.length ? { version: 1, blocks: stageBlocks, inherit: stageInherit } : null,
         ...(next.valueType !== definition.valueType ? { valueType: next.valueType } : {}),
       };
       await api.admin.updateAttributeDefinition(typeId, definition.id, body);
@@ -775,18 +721,14 @@ function AttributeEditor({
       <Field label="Question">
         <Input
           value={draft.question.en}
-          onChange={(e) =>
-            setDraft((d) => ({ ...d, question: { ...d.question, en: e.target.value } }))
-          }
+          onChange={(e) => setDraft((d) => ({ ...d, question: { ...d.question, en: e.target.value } }))}
         />
       </Field>
       <Field label="Help text">
         <Textarea
           rows={2}
           value={draft.helpText.en}
-          onChange={(e) =>
-            setDraft((d) => ({ ...d, helpText: { ...d.helpText, en: e.target.value } }))
-          }
+          onChange={(e) => setDraft((d) => ({ ...d, helpText: { ...d.helpText, en: e.target.value } }))}
           placeholder="Shown on the info icon"
         />
       </Field>
@@ -831,45 +773,28 @@ function AttributeEditor({
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <Field label="Answer type">
-          <select
-            className="rounded-lg border border-border/70 bg-background px-3 py-2 text-sm"
+          <SimpleSelect
             value={draft.valueType}
-            onChange={(e) =>
-              setDraft((d) => ({ ...d, valueType: e.target.value as AttributeValueType }))
-            }
-          >
-            {VALUE_TYPES.map((vt) => (
-              <option key={vt} value={vt}>
-                {vt}
-              </option>
-            ))}
-          </select>
+            onValueChange={(value) => setDraft((d) => ({ ...d, valueType: value as AttributeValueType }))}
+            aria-label="Answer type"
+            options={VALUE_TYPES.map((vt) => ({ value: vt, label: vt }))}
+          />
         </Field>
         <Field label="Layout">
-          <select
-            className="rounded-lg border border-border/70 bg-background px-3 py-2 text-sm"
+          <SimpleSelect
             value={draft.layout}
-            onChange={(e) => setDraft((d) => ({ ...d, layout: e.target.value as AttributeLayout }))}
-          >
-            {LAYOUTS.map((layout) => (
-              <option key={layout} value={layout}>
-                {layout}
-              </option>
-            ))}
-          </select>
+            onValueChange={(value) => setDraft((d) => ({ ...d, layout: value as AttributeLayout }))}
+            aria-label="Question layout"
+            options={LAYOUTS.map((layout) => ({ value: layout, label: layout }))}
+          />
         </Field>
         <Field label="Status">
-          <select
-            className="rounded-lg border border-border/70 bg-background px-3 py-2 text-sm"
+          <SimpleSelect
             value={draft.status}
-            onChange={(e) => setDraft((d) => ({ ...d, status: e.target.value as AttributeStatus }))}
-          >
-            {ATTR_STATUSES.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
+            onValueChange={(value) => setDraft((d) => ({ ...d, status: value as AttributeStatus }))}
+            aria-label="Question status"
+            options={ATTR_STATUSES.map((s) => ({ value: s, label: s }))}
+          />
         </Field>
         <Field label="Filter label">
           <Input
@@ -917,102 +842,84 @@ function AttributeEditor({
           <p className="text-xs text-muted-foreground">
             Click Edit to change a label or help text — this is not an answer picker.
           </p>
-          <ul className="grid gap-2">
+          <SettingsList>
             {options.map((opt) => {
               const editing = editingOptionId === opt.id;
               return (
-                <li key={opt.id} className="rounded-lg border border-border/50 px-3 py-2">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium">{opt.label.en}</p>
-                      <p className="text-label text-muted-foreground">
-                        {opt.key}
-                        {!opt.active ? " · archived" : ""}
-                      </p>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setEditingOptionId(editing ? null : opt.id)}
-                    >
-                      {editing ? "Close" : "Edit"}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={busy}
-                      onClick={() => void moveOption(opt, -1)}
-                    >
-                      <ArrowUp className="size-3.5" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={busy}
-                      onClick={() => void moveOption(opt, 1)}
-                    >
-                      <ArrowDown className="size-3.5" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={busy || !opt.active}
-                      onClick={async () => {
-                        if (!(await confirm({ title: "Archive this option?", destructive: true, confirmLabel: "Archive" }))) return;
-                        setBusy(true);
-                        try {
-                          await api.admin.deleteAttributeOption(typeId, definition.id, opt.id);
-                          await onSaved("Option archived");
-                        } catch (err) {
-                          await onSaved(err instanceof Error ? err.message : "Archive failed");
-                        } finally {
-                          setBusy(false);
-                        }
-                      }}
-                    >
-                      Archive
-                    </Button>
-                  </div>
-                  {editing ? (
-                    <div className="mt-3 grid gap-2 border-t border-border/40 pt-3">
-                      <OptionLabelEditor
-                        option={opt}
-                        busy={busy}
-                        onSave={async (patch) => {
+                <SettingsListRow
+                  key={opt.id}
+                  title={opt.label.en}
+                  description={`${opt.key}${!opt.active ? " · archived" : ""}`}
+                  meta={
+                    editing ? (
+                      <div className="mt-2 grid gap-2 border-t border-border/40 pt-3">
+                        <OptionLabelEditor
+                          option={opt}
+                          busy={busy}
+                          onSave={async (patch) => {
+                            setBusy(true);
+                            try {
+                              await api.admin.updateAttributeOption(typeId, definition.id, opt.id, patch);
+                              await onSaved("Option updated");
+                              setEditingOptionId(null);
+                            } catch (err) {
+                              await onSaved(err instanceof Error ? err.message : "Option update failed");
+                            } finally {
+                              setBusy(false);
+                            }
+                          }}
+                        />
+                      </div>
+                    ) : undefined
+                  }
+                  actions={
+                    <>
+                      <Button size="sm" variant="outline" onClick={() => setEditingOptionId(editing ? null : opt.id)}>
+                        {editing ? "Close" : "Edit"}
+                      </Button>
+                      <Button size="sm" variant="outline" disabled={busy} onClick={() => void moveOption(opt, -1)}>
+                        <ArrowUp className="size-3.5" />
+                      </Button>
+                      <Button size="sm" variant="outline" disabled={busy} onClick={() => void moveOption(opt, 1)}>
+                        <ArrowDown className="size-3.5" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={busy || !opt.active}
+                        onClick={async () => {
+                          if (
+                            !(await confirm({
+                              title: "Archive this option?",
+                              destructive: true,
+                              confirmLabel: "Archive",
+                            }))
+                          )
+                            return;
                           setBusy(true);
                           try {
-                            await api.admin.updateAttributeOption(
-                              typeId,
-                              definition.id,
-                              opt.id,
-                              patch,
-                            );
-                            await onSaved("Option updated");
-                            setEditingOptionId(null);
+                            await api.admin.deleteAttributeOption(typeId, definition.id, opt.id);
+                            await onSaved("Option archived");
                           } catch (err) {
-                            await onSaved(
-                              err instanceof Error ? err.message : "Option update failed",
-                            );
+                            await onSaved(err instanceof Error ? err.message : "Archive failed");
                           } finally {
                             setBusy(false);
                           }
                         }}
-                      />
-                    </div>
-                  ) : null}
-                </li>
+                      >
+                        Archive
+                      </Button>
+                    </>
+                  }
+                />
               );
             })}
-          </ul>
+          </SettingsList>
           <div className="flex flex-wrap gap-2">
             <Input
               className="max-w-[10rem]"
               value={newOptKey}
-              onChange={(e) =>
-                setNewOptKey(
-                  e.target.value.replace(/[^a-zA-Z0-9_]/g, "").replace(/^([^a-z])/, ""),
-                )
-              }
+              onChange={(e) => setNewOptKey(e.target.value.replace(/[^a-zA-Z0-9_]/g, "").replace(/^([^a-z])/, ""))}
               placeholder="optionKey"
             />
             <Input
@@ -1059,10 +966,7 @@ function OptionLabelEditor({
 }: {
   option: VendorAttributeOption;
   busy: boolean;
-  onSave: (patch: {
-    label?: LocalizedString;
-    helpText?: LocalizedString | null;
-  }) => Promise<void>;
+  onSave: (patch: { label?: LocalizedString; helpText?: LocalizedString | null }) => Promise<void>;
 }) {
   const [label, setLabel] = useState(option.label.en);
   const [help, setHelp] = useState(option.helpText?.en ?? "");
@@ -1075,12 +979,7 @@ function OptionLabelEditor({
   return (
     <div className="grid gap-2">
       <Input value={label} onChange={(e) => setLabel(e.target.value)} />
-      <Textarea
-        rows={2}
-        value={help}
-        onChange={(e) => setHelp(e.target.value)}
-        placeholder="Option help"
-      />
+      <Textarea rows={2} value={help} onChange={(e) => setHelp(e.target.value)} placeholder="Option help" />
       <Button
         size="sm"
         className="w-fit"

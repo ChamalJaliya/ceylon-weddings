@@ -7,7 +7,9 @@ import { api } from "@ceylonweddings/web";
 import type { AdminArticle, ArticleCategory, ArticleStatus, UpsertAdminArticleBody } from "@ceylonweddings/contracts";
 import { Button } from "@ceylonweddings/ui/components/button";
 import { FormStatus } from "@ceylonweddings/ui/components/form-status";
+import { CheckboxField } from "@ceylonweddings/ui/components/checkbox";
 import { Input } from "@ceylonweddings/ui/components/input";
+import { SimpleSelect } from "@ceylonweddings/ui/components/select";
 import { Textarea } from "@ceylonweddings/ui/components/textarea";
 import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
 import { SectionCard } from "@ceylonweddings/ui/domain/section-card";
@@ -137,19 +139,12 @@ export default function AdminContentEditorPage() {
             value={form.coverUrl}
             onChange={(e) => setForm((current) => ({ ...current, coverUrl: e.target.value }))}
           />
-          <select
-            className="rounded-lg border border-border/70 bg-background px-3 py-2 text-sm"
+          <SimpleSelect
             value={form.category}
-            onChange={(e) =>
-              setForm((current) => ({ ...current, category: e.target.value as ArticleCategory }))
-            }
-          >
-            {CATEGORIES.map((category) => (
-              <option key={category} value={category}>
-                {category}
-              </option>
-            ))}
-          </select>
+            onValueChange={(category) => setForm((current) => ({ ...current, category: category as ArticleCategory }))}
+            aria-label="Category"
+            options={CATEGORIES.map((category) => ({ value: category, label: category }))}
+          />
           <Textarea
             placeholder="Excerpt"
             value={form.excerpt}
@@ -162,14 +157,11 @@ export default function AdminContentEditorPage() {
             onChange={(e) => setForm((current) => ({ ...current, body: e.target.value }))}
             rows={12}
           />
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={form.featured}
-              onChange={(e) => setForm((current) => ({ ...current, featured: e.target.checked }))}
-            />
-            Featured on Ideas
-          </label>
+          <CheckboxField
+            label="Featured on Ideas"
+            checked={form.featured}
+            onCheckedChange={(checked) => setForm((current) => ({ ...current, featured: checked === true }))}
+          />
           <p className="text-xs text-muted-foreground">
             Public page: <Link href={`/ideas/${form.slug || "slug"}`}>/ideas/{form.slug || "slug"}</Link>
           </p>

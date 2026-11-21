@@ -23,6 +23,7 @@ import {
   toPaginatedResult,
   vendorCompleteness,
   normalizeVendorWebsiteUrl,
+  MEMBERSHIP_ACCESS_STATUSES,
 } from "@ceylonweddings/contracts";
 import { uniqueVendorSlug } from "../../common/vendor-slug";
 import { WeddingAccessService } from "./wedding-access.service";
@@ -882,7 +883,9 @@ export class VendorsService {
       moderationStatus: { not: "HIDDEN" },
       categoryId: { not: null },
       onboardingCompletedAt: { not: null },
-      OR: [{ subscription: null }, { subscription: { status: { in: ["TRIAL", "ACTIVE", "GRACE", "COMPED"] } } }],
+      // Catalog visibility uses stored status; subscription sync-on-read keeps GRACE/EXPIRED aligned when vendors open billing.
+      // Effective membership access matches MEMBERSHIP_ACCESS_STATUSES / canAppearInCatalog from contracts.
+      OR: [{ subscription: null }, { subscription: { status: { in: [...MEMBERSHIP_ACCESS_STATUSES] } } }],
       categoryType: {
         status: "ACTIVE",
         ...(query.category ? { slug: query.category } : {}),

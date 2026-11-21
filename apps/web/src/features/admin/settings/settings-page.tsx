@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { FileText, Flag, Layers, Link2, Settings, Sparkles, Trophy } from "lucide-react";
+import { CreditCard, FileText, Flag, Layers, Link2, Settings, Sparkles, Trophy } from "lucide-react";
 import { api } from "@ceylonweddings/web";
 import type { FeatureFlag, SiteConfig } from "@ceylonweddings/contracts";
 import { Button } from "@ceylonweddings/ui/components/button";
@@ -81,6 +81,12 @@ export default function AdminSettingsOverviewPage() {
             title: "Awards",
             body: "Nominate vendors and promote winners to the public page.",
             icon: Trophy,
+          },
+          {
+            href: "/admin/settings/plans",
+            title: "Plans & pricing",
+            body: "Vendor membership tiers, PayHere prices, features, and checkout mode.",
+            icon: CreditCard,
           },
         ].map((card) => (
           <Link

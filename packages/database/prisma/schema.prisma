@@ -1262,7 +1262,7 @@ model VendorSubscription {
   trialOverrideBy  String?
 
   planId           String?
-  plan             SubscriptionPlan?  @relation(fields: [planId], references: [id])
+  plan             SubscriptionPlan?  @relation("VendorSubscriptionPlan", fields: [planId], references: [id])
   interval         BillingInterval?
   currentPeriodStart DateTime?
   currentPeriodEnd   DateTime?
@@ -1270,6 +1270,14 @@ model VendorSubscription {
   gracePeriodDays  Int                @default(7)
   cancelledAt      DateTime?
   cancelReason     String?
+  cancelAtPeriodEnd Boolean           @default(false)
+
+  pendingPlanId    String?
+  pendingPlan      SubscriptionPlan?  @relation("VendorSubscriptionPendingPlan", fields: [pendingPlanId], references: [id])
+  pendingInterval  BillingInterval?
+
+  stripeCustomerId     String?
+  stripeSubscriptionId String?
 
   compedById       String?
   compedUntil      DateTime?
@@ -1278,22 +1286,52 @@ model VendorSubscription {
   updatedAt        DateTime           @updatedAt
 
   invoices         SubscriptionInvoice[]
+  events           VendorSubscriptionEvent[]
 
   @@index([status])
   @@index([trialEndsAt])
   @@index([currentPeriodEnd])
+  @@index([stripeCustomerId])
 }
 
 model SubscriptionPlan {
   id            String             @id @default(cuid())
+  slug          String             @default("pro")
   name          String
+  description   String?
   interval      BillingInterval
   priceLkr      Int
+  features      Json               @default("[]")
+  limits        Json?
+  billingMode   String             @default("checkout")
+  recommended   Boolean            @default(false)
+  sortOrder     Int                @default(0)
   active        Boolean            @default(true)
+  /** Optional Stripe Price id; when empty Checkout uses ad-hoc price_data. */
+  stripePriceId String?
   createdAt     DateTime           @default(now())
   updatedAt     DateTime           @updatedAt
 
-  subscriptions VendorSubscription[]
+  subscriptions VendorSubscription[] @relation("VendorSubscriptionPlan")
+  pendingFor    VendorSubscription[] @relation("VendorSubscriptionPendingPlan")
+
+  @@unique([slug, interval])
+  @@index([active, sortOrder])
+}
+
+model VendorSubscriptionEvent {
+  id             String             @id @default(cuid())
+  subscriptionId String
+  subscription   VendorSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  vendorId       String
+  type           String
+  payload        Json?
+  actorUserId    String?
+  createdAt      DateTime           @default(now())
+
+  @@index([subscriptionId, createdAt])
+  @@index([vendorId, createdAt])
+  @@index([type, createdAt])
 }
 
 model SubscriptionInvoice {

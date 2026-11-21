@@ -19,14 +19,12 @@ import {
   vendorProfileAttributeChipSchema,
 } from "./attributes";
 import {
-  billingIntervalSchema,
   packageBadgeSchema,
   packageEventTypeSchema,
   packagePricingModeSchema,
   packageStatusSchema,
   packageTierSchema,
   priceDisplayModeSchema,
-  subscriptionStatusSchema,
   vendorCategorySchema,
   type PackagePricingMode,
   type PriceDisplayMode,
@@ -705,74 +703,20 @@ export function presentationGateFailures(vendor: {
   return failures;
 }
 
-export const subscriptionPlanSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  interval: billingIntervalSchema,
-  priceLkr: z.number().int(),
-  active: z.boolean(),
-});
-
-export const subscriptionInvoiceSchema = z.object({
-  id: z.string(),
-  subscriptionId: z.string(),
-  planId: z.string().nullable(),
-  interval: billingIntervalSchema.nullable(),
-  amountLkr: z.number().int(),
-  periodStart: z.string(),
-  periodEnd: z.string(),
-  status: z.string(),
-  paidAt: z.string().nullable(),
-  paymentRef: z.string().nullable(),
-  notes: z.string().nullable(),
-  createdAt: z.string(),
-});
-
-export const vendorSubscriptionSchema = z.object({
-  id: z.string(),
-  vendorId: z.string(),
-  status: subscriptionStatusSchema,
-  trialEndsAt: z.string(),
-  trialOverrideBy: z.string().nullable(),
-  planId: z.string().nullable(),
-  plan: subscriptionPlanSchema.nullable().optional(),
-  interval: billingIntervalSchema.nullable(),
-  currentPeriodStart: z.string().nullable(),
-  currentPeriodEnd: z.string().nullable(),
-  gracePeriodDays: z.number().int(),
-  cancelledAt: z.string().nullable(),
-  cancelReason: z.string().nullable(),
-  compedById: z.string().nullable(),
-  compedUntil: z.string().nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-  daysRemaining: z.number().int(),
-  invoices: z.array(subscriptionInvoiceSchema).optional(),
-});
-
-export const adminOverrideTrialBodySchema = z.object({
-  trialEndsAt: z.string(),
-  notes: z.string().optional(),
-});
-
-export const adminGrantCompedBodySchema = z.object({
-  compedUntil: z.string().optional(),
-  notes: z.string().optional(),
-});
-
-export const adminActivatePaidBodySchema = z.object({
-  planId: z.string(),
-  interval: billingIntervalSchema,
-  paymentRef: z.string().optional(),
-  notes: z.string().optional(),
-});
-
-export type SubscriptionPlan = z.infer<typeof subscriptionPlanSchema>;
-export type SubscriptionInvoice = z.infer<typeof subscriptionInvoiceSchema>;
-export type VendorSubscription = z.infer<typeof vendorSubscriptionSchema>;
-export type AdminOverrideTrialBody = z.infer<typeof adminOverrideTrialBodySchema>;
-export type AdminGrantCompedBody = z.infer<typeof adminGrantCompedBodySchema>;
-export type AdminActivatePaidBody = z.infer<typeof adminActivatePaidBodySchema>;
+export {
+  subscriptionPlanSchema,
+  subscriptionInvoiceSchema,
+  vendorSubscriptionSchema,
+  adminOverrideTrialBodySchema,
+  adminGrantCompedBodySchema,
+  adminActivatePaidBodySchema,
+  type SubscriptionPlan,
+  type SubscriptionInvoice,
+  type VendorSubscription,
+  type AdminOverrideTrialBody,
+  type AdminGrantCompedBody,
+  type AdminActivatePaidBody,
+} from "../subscription/schemas";
 
 export type Vendor = z.infer<typeof vendorSchema>;
 export type UpdateVendorBody = z.infer<typeof updateVendorBodySchema>;

@@ -3,24 +3,22 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Download, Layers, Plus, Upload } from "lucide-react";
 import { api, type TaxonomyImportResult } from "@ceylonweddings/web";
-import {
-  LEGACY_VENDOR_CATEGORY_SLUGS,
-  taxonomyPackSchema,
-  type VendorType,
-} from "@ceylonweddings/contracts";
+import { LEGACY_VENDOR_CATEGORY_SLUGS, taxonomyPackSchema, type VendorType } from "@ceylonweddings/contracts";
 import { Badge } from "@ceylonweddings/ui/components/badge";
 import { Button } from "@ceylonweddings/ui/components/button";
 import { FormStatus } from "@ceylonweddings/ui/components/form-status";
 import { Input } from "@ceylonweddings/ui/components/input";
-import { EmptyState } from "@ceylonweddings/ui/domain/empty-state";
+import { AdminListToolbar } from "@ceylonweddings/ui/domain/admin-list-toolbar";
+import { DataTableCell, DataTableHead } from "@ceylonweddings/ui/domain/data-table";
+import { DataTableList } from "@ceylonweddings/ui/domain/data-table-list";
 import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
 import { SectionCard } from "@ceylonweddings/ui/domain/section-card";
-import {
-  AdminDataCell,
-  AdminDataRow,
-  AdminDataTable,
-} from "@ceylonweddings/ui/domain/admin-data-table";
+import { SettingsList, SettingsListRow } from "@ceylonweddings/ui/domain/settings-list-row";
+import { getListEmptyMode, showListChrome } from "@ceylonweddings/ui/lib/list-state";
+import { useClientTablePagination } from "@ceylonweddings/ui/lib/use-client-table-pagination";
 import { Link, useRouter } from "@/i18n/navigation";
+
+const TYPE_COLUMNS = ["type", "questions", "required", "status", "actions"] as const;
 
 function activeAttrs(type: VendorType) {
   return (type.attributes ?? []).filter((a) => a.status !== "ARCHIVED");
@@ -50,17 +48,20 @@ export default function AdminCategoriesPage() {
   const [newSlug, setNewSlug] = useState("");
   const [newLabel, setNewLabel] = useState("");
   const [importPreview, setImportPreview] = useState<TaxonomyImportResult | null>(null);
-  const [pendingPack, setPendingPack] = useState<ReturnType<typeof taxonomyPackSchema.parse> | null>(
-    null,
-  );
+  const [pendingPack, setPendingPack] = useState<ReturnType<typeof taxonomyPackSchema.parse> | null>(null);
   const [busy, setBusy] = useState(false);
   const [q, setQ] = useState("");
+  const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     try {
+      setLoading(true);
       setTypes(await api.admin.vendorTypes());
+      setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load");
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -71,11 +72,12 @@ export default function AdminCategoriesPage() {
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
     if (!needle) return types;
-    return types.filter(
-      (t) =>
-        t.slug.toLowerCase().includes(needle) || t.label.en.toLowerCase().includes(needle),
-    );
+    return types.filter((t) => t.slug.toLowerCase().includes(needle) || t.label.en.toLowerCase().includes(needle));
   }, [types, q]);
+
+  const { page, setPage, setLimit, pageItems, total, totalPages, limit } = useClientTablePagination(filtered, 25, q);
+  const emptyMode = getListEmptyMode({ sourceCount: types.length, filteredCount: filtered.length });
+  const chrome = showListChrome(emptyMode, loading);
 
   if (error) {
     return (
@@ -162,14 +164,15 @@ export default function AdminCategoriesPage() {
               Conflicts detected — resolve them before importing.
             </FormStatus>
           ) : null}
-          <ul className="mb-4 grid gap-2 text-sm">
+          <SettingsList className="mb-4 text-sm">
             {importPreview.preview.map((item) => (
-              <li key={item.slug} className="rounded-lg border border-border/60 px-3 py-2">
-                <span className="font-medium">{item.slug}</span>{" "}
-                <Badge intent="outline">{item.action}</Badge>
-              </li>
+              <SettingsListRow
+                key={item.slug}
+                title={item.slug}
+                actions={<Badge intent="outline">{item.action}</Badge>}
+              />
             ))}
-          </ul>
+          </SettingsList>
           <div className="flex flex-wrap gap-2">
             <Button
               size="sm"
@@ -231,11 +234,7 @@ export default function AdminCategoriesPage() {
               <span className="text-compact font-medium leading-none tracking-normal text-foreground/80">
                 Display name
               </span>
-              <Input
-                value={newLabel}
-                onChange={(e) => setNewLabel(e.target.value)}
-                placeholder="Photography & Video"
-              />
+              <Input value={newLabel} onChange={(e) => setNewLabel(e.target.value)} placeholder="Photography & Video" />
             </label>
           </div>
           <div className="mt-3 flex flex-wrap gap-2">
@@ -276,64 +275,99 @@ export default function AdminCategoriesPage() {
       ) : null}
 
       <SectionCard title="Types" icon={Layers}>
-        <div className="mb-4">
-          <Input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Search name or slug…"
+        {chrome ? (
+          <AdminListToolbar
+            searchValue={q}
+            onSearchChange={setQ}
+            searchPlaceholder="Search name or slug…"
+            summary={loading ? "Loading…" : `${total} type${total === 1 ? "" : "s"}`}
           />
-        </div>
-
-        {filtered.length === 0 ? (
-          types.length === 0 ? (
-            <EmptyState icon={Layers} title="No vendor types" description="Add a type, then configure its questions." />
-          ) : (
-            <EmptyState kind="no-results" onClearFilters={() => setQ("")} clearFiltersLabel="Clear search" />
-          )
-        ) : (
-          <AdminDataTable headers={["Type", "Questions", "Required", "Status", ""]}>
-            {filtered.map((type) => {
-              const attrs = activeAttrs(type);
-              const required = requiredCount(type);
-              return (
-                <AdminDataRow key={type.id}>
-                  <AdminDataCell>
+        ) : null}
+        <DataTableList
+          framed={false}
+          loading={loading}
+          loadingColumns={TYPE_COLUMNS.length}
+          sourceCount={types.length}
+          filteredCount={filtered.length}
+          empty={{
+            icon: Layers,
+            title: "No vendor types",
+            description: "Add a type, then configure its questions.",
+          }}
+          filteredEmpty={{
+            onClearFilters: () => setQ(""),
+          }}
+          pagination={
+            totalPages > 0
+              ? {
+                  page,
+                  totalPages,
+                  total,
+                  limit,
+                  onPageChange: setPage,
+                  onLimitChange: setLimit,
+                }
+              : null
+          }
+          items={pageItems}
+          getRowId={(type) => type.id}
+          orderedVisibleIds={TYPE_COLUMNS}
+          renderHead={(id) => {
+            const labels: Record<(typeof TYPE_COLUMNS)[number], string> = {
+              type: "Type",
+              questions: "Questions",
+              required: "Required",
+              status: "Status",
+              actions: "",
+            };
+            return <DataTableHead key={id}>{labels[id as (typeof TYPE_COLUMNS)[number]]}</DataTableHead>;
+          }}
+          renderCell={(id, type) => {
+            const attrs = activeAttrs(type);
+            const required = requiredCount(type);
+            switch (id) {
+              case "type":
+                return (
+                  <DataTableCell key={id}>
                     <p className="font-medium">{type.label.en}</p>
                     <p className="text-xs text-muted-foreground">{type.slug}</p>
-                  </AdminDataCell>
-                  <AdminDataCell>
+                  </DataTableCell>
+                );
+              case "questions":
+                return (
+                  <DataTableCell key={id}>
                     <span className="tabular-nums">{attrs.length}</span>
-                  </AdminDataCell>
-                  <AdminDataCell>
-                    <span
-                      className={
-                        required > 4
-                          ? "font-medium text-warning-fg"
-                          : "tabular-nums"
-                      }
-                    >
-                      {required}
-                    </span>
-                  </AdminDataCell>
-                  <AdminDataCell>
+                  </DataTableCell>
+                );
+              case "required":
+                return (
+                  <DataTableCell key={id}>
+                    <span className={required > 4 ? "font-medium text-warning-fg" : "tabular-nums"}>{required}</span>
+                  </DataTableCell>
+                );
+              case "status":
+                return (
+                  <DataTableCell key={id}>
                     <div className="flex flex-wrap gap-1">
-                      <Badge intent={type.status === "ACTIVE" ? "success" : "outline"}>
-                        {type.status}
-                      </Badge>
+                      <Badge intent={type.status === "ACTIVE" ? "success" : "outline"}>{type.status}</Badge>
                       {type.featured ? <Badge intent="outline">Featured</Badge> : null}
                       {type.coreTeam ? <Badge intent="outline">Core</Badge> : null}
                     </div>
-                  </AdminDataCell>
-                  <AdminDataCell>
+                  </DataTableCell>
+                );
+              case "actions":
+                return (
+                  <DataTableCell key={id}>
                     <Button asChild size="sm" variant="ghost">
                       <Link href={`/admin/settings/categories/${type.slug}`}>Open</Link>
                     </Button>
-                  </AdminDataCell>
-                </AdminDataRow>
-              );
-            })}
-          </AdminDataTable>
-        )}
+                  </DataTableCell>
+                );
+              default:
+                return null;
+            }
+          }}
+        />
       </SectionCard>
     </div>
   );

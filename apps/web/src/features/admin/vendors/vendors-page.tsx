@@ -1,32 +1,43 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Store } from "lucide-react";
 import { api } from "@ceylonweddings/web";
 import { presentationGateFailures, type Vendor } from "@ceylonweddings/contracts";
 import { Badge } from "@ceylonweddings/ui/components/badge";
 import { Button } from "@ceylonweddings/ui/components/button";
+import { Checkbox } from "@ceylonweddings/ui/components/checkbox";
 import { FormStatus } from "@ceylonweddings/ui/components/form-status";
-import { Input } from "@ceylonweddings/ui/components/input";
-import { EmptyState } from "@ceylonweddings/ui/domain/empty-state";
+import { CategoryPills, FilterChip } from "@ceylonweddings/ui/domain/async-list";
+import { AdminListToolbar } from "@ceylonweddings/ui/domain/admin-list-toolbar";
+import { DataTableCell, DataTableHead } from "@ceylonweddings/ui/domain/data-table";
+import { DataTableList } from "@ceylonweddings/ui/domain/data-table-list";
 import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
 import { SectionCard } from "@ceylonweddings/ui/domain/section-card";
-import { AdminDataCell, AdminDataRow, AdminDataTable } from "@ceylonweddings/ui/domain/admin-data-table";
+import { getListEmptyMode, serverSourceCount, showListChrome } from "@ceylonweddings/ui/lib/list-state";
+import { useClientTablePagination } from "@ceylonweddings/ui/lib/use-client-table-pagination";
 import { Link } from "@/i18n/navigation";
 import { CATEGORY_LABELS } from "@/lib/labels";
+
+const COLUMNS = ["select", "vendor", "location", "status", "gate", "actions"] as const;
 
 export default function AdminVendorsPage() {
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [q, setQ] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
+      setLoading(true);
       setVendors(await api.admin.vendors({ q: q || undefined }));
+      setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load");
+    } finally {
+      setLoading(false);
     }
   }, [q]);
 
@@ -34,7 +45,6 @@ export default function AdminVendorsPage() {
     void load();
   }, [load]);
 
-  // Read ?category= from URL on mount
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
@@ -42,6 +52,30 @@ export default function AdminVendorsPage() {
       if (cat) setActiveCategory(cat);
     }
   }, []);
+
+  const categories = useMemo(
+    () =>
+      Array.from(new Set(vendors.map((v) => v.category))).sort((a, b) =>
+        (CATEGORY_LABELS[a] ?? a).localeCompare(CATEGORY_LABELS[b] ?? b),
+      ),
+    [vendors],
+  );
+
+  const displayed = useMemo(
+    () => (activeCategory ? vendors.filter((v) => v.category === activeCategory) : vendors),
+    [vendors, activeCategory],
+  );
+
+  const filterKey = `${q}|${activeCategory ?? ""}`;
+  const { page, setPage, setLimit, pageItems, total, totalPages, limit } = useClientTablePagination(
+    displayed,
+    25,
+    filterKey,
+  );
+  const isDefaultView = !q && !activeCategory;
+  const sourceCount = activeCategory ? vendors.length : serverSourceCount(vendors.length, isDefaultView);
+  const emptyMode = getListEmptyMode({ sourceCount, filteredCount: displayed.length });
+  const chrome = showListChrome(emptyMode, loading);
 
   async function exportCsv() {
     const csv = await api.admin.exportCsv("vendors");
@@ -69,16 +103,6 @@ export default function AdminVendorsPage() {
     );
   }
 
-  // Derive available categories from current vendor list
-  const categories = Array.from(new Set(vendors.map((v) => v.category))).sort(
-    (a, b) => (CATEGORY_LABELS[a] ?? a).localeCompare(CATEGORY_LABELS[b] ?? b),
-  );
-
-  // Apply category filter client-side
-  const displayed = activeCategory
-    ? vendors.filter((v) => v.category === activeCategory)
-    : vendors;
-
   return (
     <div className="grid gap-8">
       <PageHeader
@@ -87,120 +111,160 @@ export default function AdminVendorsPage() {
         title="Vendors"
         description="Search, filter, verify, and open listing detail."
         actions={
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm" onClick={() => void exportCsv()}>
-              Export CSV
-            </Button>
-            <Button size="sm" disabled={!selected.length} onClick={() => void bulkVerify()}>
-              Bulk verify ({selected.length})
-            </Button>
-          </div>
+          chrome ? (
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" size="sm" onClick={() => void exportCsv()}>
+                Export CSV
+              </Button>
+              <Button size="sm" disabled={!selected.length} onClick={() => void bulkVerify()}>
+                Bulk verify ({selected.length})
+              </Button>
+            </div>
+          ) : null
         }
       />
       <SectionCard title="Listings" icon={Store}>
-        {/* Category chip rail */}
-        {categories.length > 0 && (
-          <div className="mb-4 -mx-1 flex gap-2 overflow-x-auto pb-1 px-1 scrollbar-none">
-            <button
-              type="button"
-              onClick={() => setActiveCategory(null)}
-              className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-all duration-200 ${
-                !activeCategory
-                  ? "border-primary bg-primary text-primary-foreground shadow-sm"
-                  : "border-border bg-secondary/60 text-muted-foreground hover:border-primary/40 hover:text-foreground"
-              }`}
-            >
-              All
-            </button>
-            {categories.map((cat) => {
-              const isActive = activeCategory === cat;
-              const count = vendors.filter((v) => v.category === cat).length;
-              return (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => setActiveCategory(isActive ? null : cat)}
-                  className={`shrink-0 inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-all duration-200 ${
-                    isActive
-                      ? "border-primary bg-primary text-primary-foreground shadow-sm"
-                      : "border-border bg-secondary/60 text-muted-foreground hover:border-primary/40 hover:text-foreground"
-                  }`}
-                >
-                  {CATEGORY_LABELS[cat] ?? cat}
-                  <span
-                    className={`rounded-full px-1.5 py-px text-label tabular-nums ${
-                      isActive ? "bg-primary-foreground/20" : "bg-border"
-                    }`}
-                  >
-                    {count}
-                  </span>
-                </button>
-              );
-            })}
+        {chrome && categories.length > 0 ? (
+          <div className="mb-4">
+            <CategoryPills>
+              <FilterChip active={!activeCategory} onClick={() => setActiveCategory(null)}>
+                All
+              </FilterChip>
+              {categories.map((cat) => {
+                const isActive = activeCategory === cat;
+                const count = vendors.filter((v) => v.category === cat).length;
+                return (
+                  <FilterChip key={cat} active={isActive} onClick={() => setActiveCategory(isActive ? null : cat)}>
+                    {CATEGORY_LABELS[cat] ?? cat}
+                    <span
+                      className={`ml-1.5 rounded-full px-1.5 py-px text-label tabular-nums ${
+                        isActive ? "bg-primary-foreground/20" : "bg-border"
+                      }`}
+                    >
+                      {count}
+                    </span>
+                  </FilterChip>
+                );
+              })}
+            </CategoryPills>
           </div>
-        )}
-
-        <div className="mb-4">
-          <Input
-            value={q}
-            onChange={(event) => setQ(event.target.value)}
-            placeholder="Search name, city, slug…"
+        ) : null}
+        {chrome ? (
+          <AdminListToolbar
+            searchValue={q}
+            onSearchChange={setQ}
+            searchPlaceholder="Search name, city, slug…"
+            summary={loading ? "Loading…" : `${total} listing${total === 1 ? "" : "s"}`}
           />
-        </div>
-        {displayed.length === 0 ? (
-          <EmptyState icon={Store} title="No vendors" description="Vendor listings will appear here." />
-        ) : (
-          <AdminDataTable headers={["", "Vendor", "Location", "Status", "Gate", ""]}>
-            {displayed.map((vendor) => {
-              const failures = presentationGateFailures(vendor);
-              return (
-                <AdminDataRow key={vendor.id}>
-                  <AdminDataCell>
-                    <input
-                      type="checkbox"
+        ) : null}
+        <DataTableList
+          framed={false}
+          loading={loading}
+          loadingColumns={COLUMNS.length}
+          sourceCount={sourceCount}
+          filteredCount={displayed.length}
+          empty={{
+            icon: Store,
+            title: "No vendors",
+            description: "Vendor listings will appear here.",
+          }}
+          filteredEmpty={{
+            onClearFilters: () => {
+              setQ("");
+              setActiveCategory(null);
+            },
+          }}
+          pagination={
+            totalPages > 0
+              ? {
+                  page,
+                  totalPages,
+                  total,
+                  limit,
+                  onPageChange: setPage,
+                  onLimitChange: setLimit,
+                }
+              : null
+          }
+          items={pageItems}
+          getRowId={(vendor) => vendor.id}
+          orderedVisibleIds={COLUMNS}
+          renderHead={(id) => {
+            const labels: Record<(typeof COLUMNS)[number], string> = {
+              select: "",
+              vendor: "Vendor",
+              location: "Location",
+              status: "Status",
+              gate: "Gate",
+              actions: "",
+            };
+            return <DataTableHead key={id}>{labels[id as (typeof COLUMNS)[number]]}</DataTableHead>;
+          }}
+          renderCell={(id, vendor) => {
+            const failures = presentationGateFailures(vendor);
+            switch (id) {
+              case "select":
+                return (
+                  <DataTableCell key={id}>
+                    <Checkbox
                       checked={selected.includes(vendor.id)}
-                      onChange={(event) => {
+                      onCheckedChange={(checked) => {
                         setSelected((current) =>
-                          event.target.checked
-                            ? [...current, vendor.id]
-                            : current.filter((id) => id !== vendor.id),
+                          checked === true ? [...current, vendor.id] : current.filter((itemId) => itemId !== vendor.id),
                         );
                       }}
+                      aria-label={`Select ${vendor.name}`}
                     />
-                  </AdminDataCell>
-                  <AdminDataCell>
+                  </DataTableCell>
+                );
+              case "vendor":
+                return (
+                  <DataTableCell key={id}>
                     <p className="font-medium">{vendor.name}</p>
                     <p className="text-xs text-muted-foreground">
                       {CATEGORY_LABELS[vendor.category] ?? vendor.category}
                     </p>
-                  </AdminDataCell>
-                  <AdminDataCell>
+                  </DataTableCell>
+                );
+              case "location":
+                return (
+                  <DataTableCell key={id}>
                     {vendor.city}, {vendor.district}
-                  </AdminDataCell>
-                  <AdminDataCell>
+                  </DataTableCell>
+                );
+              case "status":
+                return (
+                  <DataTableCell key={id}>
                     <div className="flex flex-wrap gap-1">
                       {vendor.verified ? <Badge intent="success">Verified</Badge> : <Badge>Unverified</Badge>}
                       {vendor.featured ? <Badge intent="love">Featured</Badge> : null}
                       {vendor.moderationStatus ? <Badge>{vendor.moderationStatus}</Badge> : null}
                     </div>
-                  </AdminDataCell>
-                  <AdminDataCell>
+                  </DataTableCell>
+                );
+              case "gate":
+                return (
+                  <DataTableCell key={id}>
                     {failures.length === 0 ? (
                       <Badge intent="success">Ready</Badge>
                     ) : (
                       <span className="text-xs text-muted-foreground">{failures[0]}</span>
                     )}
-                  </AdminDataCell>
-                  <AdminDataCell>
+                  </DataTableCell>
+                );
+              case "actions":
+                return (
+                  <DataTableCell key={id}>
                     <Button asChild size="sm" variant="ghost">
                       <Link href={`/admin/vendors/${vendor.id}`}>Open</Link>
                     </Button>
-                  </AdminDataCell>
-                </AdminDataRow>
-              );
-            })}
-          </AdminDataTable>
-        )}
+                  </DataTableCell>
+                );
+              default:
+                return null;
+            }
+          }}
+        />
       </SectionCard>
     </div>
   );

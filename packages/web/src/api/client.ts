@@ -104,6 +104,10 @@ import {
   VENDOR_CATALOG_DEFAULTS,
   type VendorSubscription,
   type SubscriptionPlan,
+  type PricingCatalog,
+  type CancelSubscriptionBody,
+  type ChangeSubscriptionPlanBody,
+  type UpsertSubscriptionPlanBody,
   type AdminOverrideTrialBody,
   type AdminGrantCompedBody,
   type AdminActivatePaidBody,
@@ -754,6 +758,17 @@ export const api = {
       request<VendorSubscription>(`/admin/vendors/${vendorId}/subscription/suspend`, {
         method: "PATCH",
       }),
+    subscriptionPlans: () => request<SubscriptionPlan[]>("/admin/subscription-plans"),
+    upsertSubscriptionPlan: (body: UpsertSubscriptionPlanBody) =>
+      request<SubscriptionPlan>("/admin/subscription-plans", {
+        method: "PUT",
+        body: JSON.stringify(body),
+      }),
+    setSubscriptionPlanActive: (id: string, active: boolean) =>
+      request<SubscriptionPlan>(`/admin/subscription-plans/${id}/active`, {
+        method: "PATCH",
+        body: JSON.stringify({ active }),
+      }),
     consultations: (query: ConsultationListQuery = {}) => {
       const qs = toSearchParams(query as unknown as Record<string, unknown>).toString();
       return request<Consultation[]>(qs ? `/admin/consultations?${qs}` : "/admin/consultations");
@@ -789,22 +804,41 @@ export const api = {
       }),
   },
   subscription: {
+    pricing: () => request<PricingCatalog>("/subscription/pricing"),
     plans: () => request<SubscriptionPlan[]>("/subscription/plans"),
+    providers: () =>
+      request<{ payhere: boolean; stripe: boolean; defaultProvider: "payhere" | "stripe" }>("/subscription/providers"),
     vendor: (vendorId: string) => request<VendorSubscription>(`/subscription/vendor/${vendorId}`),
+    cancel: (vendorId: string, body: CancelSubscriptionBody) =>
+      request<VendorSubscription>(`/subscription/vendor/${vendorId}/cancel`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    reactivate: (vendorId: string) =>
+      request<VendorSubscription>(`/subscription/vendor/${vendorId}/reactivate`, { method: "POST" }),
+    changePlan: (vendorId: string, body: ChangeSubscriptionPlanBody) =>
+      request<VendorSubscription>(`/subscription/vendor/${vendorId}/change-plan`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
     checkout: (body: {
       vendorId: string;
       planId: string;
       interval: "MONTHLY" | "ANNUAL";
+      provider?: "payhere" | "stripe";
       returnUrl?: string;
       cancelUrl?: string;
     }) =>
-      request<{ paymentIntentId: string; orderId: string; actionUrl: string; fields: Record<string, string> }>(
-        "/subscription/checkout",
-        {
-          method: "POST",
-          body: JSON.stringify(body),
-        },
-      ),
+      request<{
+        provider: "payhere" | "stripe";
+        paymentIntentId: string;
+        orderId: string;
+        actionUrl: string;
+        fields: Record<string, string> | null;
+      }>("/subscription/checkout", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
   },
   promotions: {
     mine: () => request<Promotion[]>("/vendors/me/promotions"),
