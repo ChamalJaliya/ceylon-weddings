@@ -5,6 +5,12 @@ export {
   type VendorTypeAnalytics,
 } from "./api/client";
 export {
+  ApiError,
+  isApiError,
+  refreshSession,
+  SESSION_EXPIRED_EVENT,
+} from "./api/request";
+export {
   getRealtimeSocket,
   connectRealtime,
   disconnectRealtime,

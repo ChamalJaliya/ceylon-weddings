@@ -180,6 +180,7 @@ import {
   type UpdateContactMessageBody,
 } from "@ceylonweddings/contracts";
 import { apiBase } from "./base-url";
+import { clearInflightRequests, request } from "./request";
 
 const guestListSchema = guestHouseholdSchema.array();
 const inquiryListSchema = inquirySchema.array();
@@ -188,30 +189,7 @@ const budgetListSchema = budgetLineSchema.array();
 const inviteTemplateListSchema = inviteTemplateSchema.array();
 const familyListSchema = familyPersonSchema.array();
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${apiBase()}${path}`, {
-    ...init,
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      ...init?.headers,
-    },
-  });
 
-  if (!response.ok) {
-    const body = (await response.json().catch(() => ({ message: response.statusText }))) as {
-      message?: string | string[];
-    };
-    const message = Array.isArray(body.message) ? body.message.join(", ") : body.message;
-    throw new Error(message ?? "Request failed");
-  }
-
-  if (response.status === 204) {
-    return undefined as T;
-  }
-
-  return (await response.json()) as T;
-}
 
 export type TaxonomyImportPreviewItem = {
   slug: string;
@@ -251,7 +229,10 @@ export const api = {
     authResponseSchema.parse(
       await request<AuthResponse>("/auth/google", { method: "POST", body: JSON.stringify(body) }),
     ),
-  logout: () => request<void>("/auth/logout", { method: "POST" }),
+  logout: async () => {
+    clearInflightRequests();
+    await request<void>("/auth/logout", { method: "POST" });
+  },
   search: async (query: SearchQuery) => {
     const params = toSearchParams(query);
     return searchResponseSchema.parse(await request(`/search?${params.toString()}`));

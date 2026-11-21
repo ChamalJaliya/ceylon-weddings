@@ -42,6 +42,13 @@ export class AuthController {
     return this.auth.google(body, response);
   }
 
+  @Post("refresh")
+  @RateLimit({ points: 30, duration: 60 })
+  @ZodResponse({ type: AuthResponseDto })
+  refresh(@Req() request: Request, @Res({ passthrough: true }) response: Response) {
+    return this.auth.refresh(request, response);
+  }
+
   @Post("logout")
   logout(@Req() request: Request, @Res({ passthrough: true }) response: Response) {
     return this.auth.logout(request, response);

@@ -153,6 +153,29 @@ export class AuthService {
     return { user: this.toUser(user) };
   }
 
+  /**
+   * Rotate the refresh session: the presented refresh token is single-use.
+   * Deleting by hash first makes concurrent reuse lose (count 0 → 401), so a
+   * stolen-and-replayed token can't mint a second session.
+   */
+  async refresh(request: Request, response: Response) {
+    const refresh = request.cookies?.[COOKIES.refresh] as string | undefined;
+    if (!refresh) {
+      throw new UnauthorizedException("Missing refresh cookie");
+    }
+    const refreshHash = createHash("sha256").update(refresh).digest("hex");
+    const session = await this.prisma.session.findFirst({ where: { refreshTokenHash: refreshHash } });
+    const { count } = await this.prisma.session.deleteMany({ where: { refreshTokenHash: refreshHash } });
+    if (!session || count === 0 || session.expiresAt.getTime() <= Date.now()) {
+      this.clearCookies(response);
+      throw new UnauthorizedException("Session expired");
+    }
+
+    await this.issueCookies(session.userId, response);
+    const user = await this.prisma.user.findUniqueOrThrow({ where: { id: session.userId } });
+    return { user: this.toUser(user) };
+  }
+
   async logout(request: Request, response: Response) {
     const refresh = request.cookies?.[COOKIES.refresh] as string | undefined;
     if (refresh) {

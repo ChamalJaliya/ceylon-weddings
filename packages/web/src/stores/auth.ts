@@ -2,6 +2,7 @@
 
 import type { User } from "@ceylonweddings/contracts";
 import { create } from "zustand";
+import { SESSION_EXPIRED_EVENT } from "../api/request";
 
 type AuthState = {
   user: User | null;
@@ -12,3 +13,8 @@ export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   setUser: (user) => set({ user }),
 }));
+
+// The API client fires this when a 401 could not be refreshed: drop the stale user.
+if (typeof window !== "undefined") {
+  window.addEventListener(SESSION_EXPIRED_EVENT, () => useAuthStore.getState().setUser(null));
+}
