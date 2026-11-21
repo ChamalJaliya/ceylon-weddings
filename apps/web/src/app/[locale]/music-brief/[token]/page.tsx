@@ -46,7 +46,7 @@ export default function MusicBriefPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-8 px-4 py-10 print:py-4">
       <header className="space-y-2 border-b border-border/60 pb-6">
-        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Ceylon Weddings · Music brief</p>
+        <p className="text-xs uppercase tracking-eyebrow text-muted-foreground">Ceylon Weddings · Music brief</p>
         <h1 className="font-display text-4xl">{brief.eventName}</h1>
         <p className="text-muted-foreground">
           {brief.eventKind}

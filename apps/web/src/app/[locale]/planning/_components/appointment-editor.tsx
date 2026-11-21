@@ -20,6 +20,7 @@ import { SimpleSelect } from "@ceylonweddings/ui/components/select";
 import { Textarea } from "@ceylonweddings/ui/components/textarea";
 import { FieldBlock, InlineFieldRow } from "@ceylonweddings/ui/domain/creator-form";
 
+/** Default appointment colours — saved onto the record (user data). design-system: user-data-colors */
 export const KIND_COLOR: Record<AppointmentKind, string> = {
   VENDOR_MEETING: "#c4e0ff",
   TASTING: "#d8f0c8",

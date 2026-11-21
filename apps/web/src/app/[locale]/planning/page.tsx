@@ -1,5 +1,6 @@
 "use client";
 
+import { weddingStyleColors } from "@ceylonweddings/contracts";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { CalendarDays, Heart, Music2, Store, Wallet } from "lucide-react";
@@ -31,14 +32,6 @@ import { Link } from "../../../i18n/navigation";
 import { SignInPrompt, useWedding } from "../../../components/use-wedding";
 import { AiStub } from "../../../components/ai-stub";
 import { CATEGORY_LABELS } from "../../../lib/labels";
-
-const STYLE_COLORS: Record<WeddingStyle, string[]> = {
-  MINIMALIST: ["#F7F3EC", "#D9D2C5", "#2F2F2F", "#9A9488", "#E8E2D6"],
-  TRADITIONAL: ["#7A1F2B", "#C4A574", "#F4E4D0", "#1F4D3A", "#E8D5B5"],
-  KANDYAN: ["#C4A574", "#F4E4D0", "#7A1F2B", "#1F4D3A", "#E8D5B5"],
-  MODERN: ["#1F4B73", "#D7E6F5", "#0F172A", "#94A3B8", "#F8FAFC"],
-  BEACH: ["#0F766E", "#F4E1C1", "#155E75", "#F8FAFC", "#67E8F9"],
-};
 
 const INSPIRATION = [
   { key: "FLORIST_DECOR", src: "https://images.unsplash.com/photo-1520854221256-17451cc331bf?w=600&q=80" },
@@ -92,7 +85,7 @@ export default function PlanningHubPage() {
   }
 
   async function setStyle(style: WeddingStyle) {
-    await api.wedding.update({ style, colors: STYLE_COLORS[style] });
+    await api.wedding.update({ style, colors: weddingStyleColors(style) });
     await reload();
   }
 
@@ -237,7 +230,7 @@ export default function PlanningHubPage() {
             </div>
             {data.settingNotes ? <p className="text-sm text-muted-foreground">{data.settingNotes}</p> : null}
             <div className="flex gap-2">
-              {(data.colors.length ? data.colors : STYLE_COLORS[data.style]).map((color) => (
+              {(data.colors.length ? data.colors : weddingStyleColors(data.style)).map((color) => (
                 <span key={color} className="size-8 rounded-full border border-border" style={{ background: color }} />
               ))}
             </div>
@@ -403,7 +396,7 @@ export default function PlanningHubPage() {
                 alt=""
                 className="aspect-[4/3] w-full object-cover transition duration-700 group-hover:scale-105"
               />
-              <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-3 py-2 text-xs text-white">
+              <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/70 to-transparent px-3 py-2 text-xs text-paper">
                 {CATEGORY_LABELS[item.key] ?? item.key}
               </span>
             </Link>

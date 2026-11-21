@@ -1,0 +1,42 @@
+/* One block: .card. */
+@layer components {
+  .card {
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--card-radius);
+    background: var(--color-bg-card);
+    color: var(--color-text-heading);
+  }
+
+  .card--raised {
+    box-shadow: var(--shadow-card);
+  }
+
+  .card--interactive {
+    box-shadow: var(--shadow-card);
+    transition:
+      border-color var(--motion-base) var(--motion-ease-out),
+      box-shadow var(--motion-base) var(--motion-ease-out);
+  }
+
+  .card--interactive:hover {
+    border-color: color-mix(in srgb, var(--color-focus-ring) 30%, var(--color-border));
+    box-shadow: var(--shadow-raised);
+  }
+
+  .card--selected {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 1px var(--color-primary);
+  }
+
+  .card__title {
+    font-size: var(--text-h3-size);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.2;
+    letter-spacing: var(--text-h3-tracking);
+  }
+
+  .card__description {
+    color: var(--color-text-muted);
+    font-size: var(--text-body-size);
+  }
+}

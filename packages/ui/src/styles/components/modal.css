@@ -1,0 +1,93 @@
+/* One block: .modal — Dialog, AppModal, ConfirmDialog, Sheet share it. */
+@layer components {
+  .modal__overlay {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-modal);
+    background: color-mix(in srgb, var(--color-text-heading) 25%, transparent);
+    backdrop-filter: blur(2px);
+  }
+
+  .modal {
+    z-index: var(--z-modal);
+    max-height: var(--modal-max-height);
+    overflow-y: auto;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--modal-radius);
+    background: var(--color-bg-card);
+    color: var(--color-text-heading);
+    padding: var(--modal-padding);
+    box-shadow: var(--shadow-floating);
+    outline: none;
+  }
+
+  .modal__title {
+    font-family: var(--font-family-serif);
+    font-size: var(--text-h3-size);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.25;
+    letter-spacing: var(--text-h3-tracking);
+  }
+
+  .modal__description {
+    color: var(--color-text-muted);
+    font-size: var(--text-body-size);
+  }
+
+  .modal__close {
+    position: absolute;
+    top: var(--space-4);
+    right: var(--space-4);
+    border-radius: var(--radius-full);
+    padding: 6px;
+    color: var(--color-text-muted);
+    transition:
+      background-color var(--motion-fast) var(--motion-ease-out),
+      color var(--motion-fast) var(--motion-ease-out);
+  }
+
+  .modal__close:hover {
+    background: var(--color-secondary);
+    color: var(--color-text-heading);
+  }
+
+  .modal__close:focus-visible {
+    outline: var(--border-width-focus) solid var(--color-focus-ring);
+    outline-offset: 2px;
+  }
+
+  .modal__footer {
+    border-top: var(--border-width) solid var(--color-border);
+    margin-inline: calc(var(--modal-padding) * -1);
+    margin-bottom: calc(var(--modal-padding) * -1);
+    padding: var(--space-4) var(--modal-padding);
+  }
+
+  .modal__icon {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-md);
+  }
+
+  .modal__icon--default {
+    background: var(--color-primary-subtle);
+    color: var(--color-primary-text);
+  }
+
+  .modal__icon--warning {
+    border-color: var(--status-warning-border);
+    background: var(--status-warning-bg);
+    color: var(--status-warning-fg);
+  }
+
+  .modal__icon--destructive {
+    border-color: var(--status-danger-border);
+    background: var(--status-danger-bg);
+    color: var(--status-danger-fg);
+  }
+}

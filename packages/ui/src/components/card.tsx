@@ -29,7 +29,7 @@ export function CardTitle({ className, ...props }: React.HTMLAttributes<HTMLHead
   return (
     <h2
       data-slot="card-title"
-      className={cn("text-lg font-semibold leading-none tracking-tight", className)}
+      className={cn("card__title", className)}
       {...props}
     />
   );
@@ -37,7 +37,7 @@ export function CardTitle({ className, ...props }: React.HTMLAttributes<HTMLHead
 
 export function CardDescription({ className, ...props }: React.HTMLAttributes<HTMLParagraphElement>) {
   return (
-    <p data-slot="card-description" className={cn("text-sm text-muted-foreground", className)} {...props} />
+    <p data-slot="card-description" className={cn("card__description", className)} {...props} />
   );
 }
 
@@ -55,7 +55,7 @@ export function CardMedia({
   className?: string;
 }) {
   return (
-    <div data-slot="card-media" className={cn("aspect-[4/3] overflow-hidden rounded-t-xl", className)}>
+    <div data-slot="card-media" className={cn("aspect-[4/3] overflow-hidden rounded-t-2xl", className)}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={src} alt={alt} className="size-full object-cover" />
     </div>

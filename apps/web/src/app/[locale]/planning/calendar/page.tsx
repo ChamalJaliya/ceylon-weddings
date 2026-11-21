@@ -351,7 +351,7 @@ export default function CalendarPage() {
                               key={item.id}
                               type="button"
                               data-appt-id={item.id}
-                              className="mb-1 w-full touch-none rounded-xl px-2 py-1 text-left text-[11px] select-none"
+                              className="mb-1 w-full touch-none rounded-xl px-2 py-1 text-left text-label select-none"
                               style={{ background: shown.color ?? KIND_COLOR[shown.kind] }}
                               onClick={() => setSelected(item)}
                               onPointerDown={(e) => onBlockPointerDown(e, item)}

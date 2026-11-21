@@ -6,6 +6,8 @@
   "exports": {
     "./globals.css": "./src/styles/globals.css",
     "./utils": "./src/lib/utils.ts",
+    "./tokens": "./src/lib/css-tokens.ts",
+    "./responsive-tiers": "./src/lib/responsive-tiers.ts",
     "./contracts": "./src/contracts/index.ts",
     "./contracts/*": "./src/contracts/*.ts",
     "./components/*": "./src/components/*.tsx",

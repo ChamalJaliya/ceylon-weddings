@@ -120,15 +120,15 @@ export function MoodboardImageModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[min(34rem,calc(100vw-1.5rem))] gap-5 border-[#e8ddd0] bg-[#fffaf5] text-[#1f1a16] sm:max-w-lg">
+      <DialogContent className="w-[min(34rem,calc(100vw-1.5rem))] gap-5 border-studio-line bg-studio-paper text-studio-ink sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 font-display text-2xl tracking-tight">
-            <span className="inline-flex size-9 items-center justify-center rounded-full bg-[#b4532a]/12 text-[#b4532a]">
+            <span className="inline-flex size-9 items-center justify-center rounded-full bg-studio-accent/12 text-studio-accent">
               <ImageIcon className="size-4" />
             </span>
             Add image
           </DialogTitle>
-          <DialogDescription className="text-[15px] leading-relaxed">
+          <DialogDescription className="text-h4 leading-relaxed">
             Drop a photo, browse, or paste from the clipboard. Preview it before it goes on the board.
           </DialogDescription>
         </DialogHeader>
@@ -159,16 +159,16 @@ export function MoodboardImageModal({
           }}
           className={cn(
             "overflow-hidden rounded-xl border border-dashed text-left transition",
-            dragging ? "border-[#b4532a] bg-[#b4532a]/8" : "border-[#e8ddd0] bg-white",
+            dragging ? "border-studio-accent bg-studio-accent/8" : "border-studio-line bg-paper",
           )}
         >
           {preview && size ? (
             <div className="space-y-3 p-3">
-              <div className="flex aspect-video items-center justify-center overflow-hidden rounded-lg bg-[#1f1a16]">
+              <div className="flex aspect-video items-center justify-center overflow-hidden rounded-lg bg-studio-ink">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={preview} alt="Upload preview" className="max-h-full max-w-full object-contain" />
               </div>
-              <div className="flex items-center justify-between gap-3 px-1 text-xs text-[#5c4a3a]/75">
+              <div className="flex items-center justify-between gap-3 px-1 text-xs text-studio-text/75">
                 <span className="truncate">{file?.name}</span>
                 <span className="shrink-0 tabular-nums">
                   {size.width} × {size.height}
@@ -177,12 +177,12 @@ export function MoodboardImageModal({
             </div>
           ) : (
             <div className="flex aspect-video flex-col items-center justify-center gap-3 px-6 text-center">
-              <div className="flex size-14 items-center justify-center rounded-full bg-[#b4532a]/10 text-[#b4532a]">
+              <div className="flex size-14 items-center justify-center rounded-full bg-studio-accent/10 text-studio-accent">
                 <Upload className="size-6" />
               </div>
               <div className="space-y-1">
                 <p className="text-sm font-medium">Drop an image here</p>
-                <p className="max-w-[18rem] text-xs leading-relaxed text-[#5c4a3a]/70">
+                <p className="max-w-[18rem] text-xs leading-relaxed text-studio-text/70">
                   JPEG, PNG, WebP, or GIF. You can also paste with ⌘V.
                 </p>
               </div>

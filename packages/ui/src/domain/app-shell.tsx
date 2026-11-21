@@ -128,7 +128,7 @@ export function AppShellNavGroup({
   return (
     <div data-slot="nav-group" className="grid gap-0.5">
       {!collapsed ? (
-        <p className="px-3 pb-1.5 text-[10px] font-medium tracking-[0.2em] text-muted-foreground uppercase">{label}</p>
+        <p className="px-3 pb-1.5 text-label font-medium tracking-eyebrow text-muted-foreground uppercase">{label}</p>
       ) : (
         <div className="mx-auto mb-1 h-px w-6 bg-sidebar-border" aria-hidden />
       )}
@@ -192,7 +192,7 @@ export function AppShellBrand({
       {!collapsed ? (
         <div className="min-w-0 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-200">
           {kicker ? (
-            <p className="text-[10px] font-medium tracking-[0.22em] text-muted-foreground uppercase">{kicker}</p>
+            <p className="text-label font-medium tracking-eyebrow text-muted-foreground uppercase">{kicker}</p>
           ) : null}
           <p className="truncate font-serif text-base leading-tight">{name}</p>
         </div>
@@ -215,17 +215,17 @@ export function AppShellCouple({
   return (
     <div className={cn("flex items-center gap-3", collapsed && "justify-center")}>
       <div className="flex shrink-0">
-        <span className="flex size-8 items-center justify-center rounded-full border border-sidebar bg-secondary text-[10px] font-semibold text-secondary-foreground">
+        <span className="flex size-8 items-center justify-center rounded-full border border-sidebar bg-secondary text-label font-medium text-secondary-foreground">
           {initials[0]}
         </span>
-        <span className="-ml-2 flex size-8 items-center justify-center rounded-full border border-sidebar bg-primary text-[10px] font-semibold text-primary-foreground">
+        <span className="-ml-2 flex size-8 items-center justify-center rounded-full border border-sidebar bg-primary text-label font-medium text-primary-foreground">
           {initials[1]}
         </span>
       </div>
       {!collapsed ? (
         <div className="min-w-0 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-200">
           <p className="truncate font-serif text-sm">{names}</p>
-          <p className="truncate text-[11px] text-muted-foreground">{meta}</p>
+          <p className="truncate text-label text-muted-foreground">{meta}</p>
         </div>
       ) : null}
     </div>

@@ -214,7 +214,7 @@ export default function AdminCategoriesPage() {
         <SectionCard title="Add vendor type" icon={Plus}>
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="grid gap-1.5">
-              <span className="text-[13px] font-medium leading-none tracking-[0.01em] text-foreground/80">Slug</span>
+              <span className="text-compact font-medium leading-none tracking-normal text-foreground/80">Slug</span>
               <Input
                 value={newSlug}
                 onChange={(e) => setNewSlug(e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, ""))}
@@ -228,7 +228,7 @@ export default function AdminCategoriesPage() {
               </datalist>
             </label>
             <label className="grid gap-1.5">
-              <span className="text-[13px] font-medium leading-none tracking-[0.01em] text-foreground/80">
+              <span className="text-compact font-medium leading-none tracking-normal text-foreground/80">
                 Display name
               </span>
               <Input
@@ -312,7 +312,7 @@ export default function AdminCategoriesPage() {
                     <span
                       className={
                         required > 4
-                          ? "font-medium text-amber-700 dark:text-amber-400"
+                          ? "font-medium text-warning-fg"
                           : "tabular-nums"
                       }
                     >

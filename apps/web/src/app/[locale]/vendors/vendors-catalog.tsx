@@ -509,11 +509,11 @@ export function VendorsCatalog() {
 
       <header className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
         <div className="max-w-xl space-y-2">
-          <p className="text-[11px] font-medium tracking-[0.2em] text-muted-foreground uppercase">
+          <p className="text-label font-medium tracking-eyebrow text-muted-foreground uppercase">
             {t("catalog.kicker")}
           </p>
-          <h1 className="font-serif text-4xl font-semibold tracking-tight sm:text-5xl">{t("nav.catalog")}</h1>
-          <p className="text-sm leading-relaxed text-muted-foreground sm:text-[15px]">
+          <h1 className="font-serif text-4xl font-medium tracking-tight sm:text-5xl">{t("nav.catalog")}</h1>
+          <p className="text-sm leading-relaxed text-muted-foreground sm:text-h4">
             {selectedType
               ? `${total} ${typeLabel(selectedType, selectedType.slug, locale).toLowerCase()}`
               : t("catalog.subtitle")}
@@ -581,7 +581,7 @@ export function VendorsCatalog() {
               return (
                 <div key={attr.key} className="grid gap-2">
                   <div className="flex items-center gap-1.5">
-                    <p className="text-[11px] font-medium tracking-[0.16em] text-muted-foreground uppercase">
+                    <p className="text-label font-medium tracking-spaced text-muted-foreground uppercase">
                       {label}
                     </p>
                     <AttributeHelp text={help} />
@@ -601,7 +601,7 @@ export function VendorsCatalog() {
                           }}
                         >
                           {localizedText(option.label, locale)}
-                          <span className="text-[10px] opacity-70">{count}</span>
+                          <span className="text-label opacity-70">{count}</span>
                         </FilterChip>
                       );
                     })}
@@ -635,7 +635,7 @@ export function VendorsCatalog() {
               </SheetHeader>
               <div className="grid gap-8 p-5 pt-2">
                 <div className="grid gap-4">
-                  <p className="text-[11px] font-medium tracking-[0.16em] text-muted-foreground uppercase">
+                  <p className="text-label font-medium tracking-spaced text-muted-foreground uppercase">
                     {t("catalog.filterLocation")}
                   </p>
                   <div className="grid gap-2">
@@ -719,7 +719,7 @@ export function VendorsCatalog() {
                 </div>
 
                 <div className="grid gap-4">
-                  <p className="text-[11px] font-medium tracking-[0.16em] text-muted-foreground uppercase">
+                  <p className="text-label font-medium tracking-spaced text-muted-foreground uppercase">
                     {t("catalog.filterAttributes")}
                   </p>
                   {query.category && studioAttrs.length ? (

@@ -15,6 +15,7 @@ import {
   type InviteTemplate,
   type Payer,
   type WeddingStyle,
+  WEDDING_STYLE_OPTIONS,
 } from "@ceylonweddings/contracts";
 import { Button } from "@ceylonweddings/ui/components/button";
 import { CheckboxField } from "@ceylonweddings/ui/components/checkbox";
@@ -48,14 +49,6 @@ const areaClass =
   "min-h-28 w-full rounded-xl border border-border/80 bg-background/70 px-3 py-2.5 text-sm leading-relaxed outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
 type Section = "basics" | "style" | "events" | "website" | "family" | "publish";
-
-const STYLE_OPTIONS: Array<{ value: WeddingStyle; label: string; swatches: string[] }> = [
-  { value: "MINIMALIST", label: "Minimalist", swatches: ["#F7F3EC", "#D9D2C5", "#2F2F2F", "#9A9488", "#E8E2D6"] },
-  { value: "TRADITIONAL", label: "Traditional", swatches: ["#7A1F2B", "#C4A574", "#F4E4D0", "#1F4D3A", "#E8D5B5"] },
-  { value: "KANDYAN", label: "Kandyan", swatches: ["#C4A574", "#F4E4D0", "#7A1F2B", "#1F4D3A", "#E8D5B5"] },
-  { value: "MODERN", label: "Modern", swatches: ["#1F4B73", "#D7E6F5", "#0F172A", "#94A3B8", "#F8FAFC"] },
-  { value: "BEACH", label: "Beach", swatches: ["#0F766E", "#F4E1C1", "#155E75", "#F8FAFC", "#67E8F9"] },
-];
 
 const HERO =
   "https://images.unsplash.com/photo-1519741497674-611481863552?w=1600&q=80";
@@ -397,10 +390,10 @@ export default function WeddingStudioPage() {
               <FormSection title="Style" description="The visual story guests and vendors should feel.">
                 <StyleStoryPicker
                   value={form.style}
-                  options={STYLE_OPTIONS}
+                  options={WEDDING_STYLE_OPTIONS}
                   colors={form.colors}
                   onChange={(value) => {
-                    const option = STYLE_OPTIONS.find((item) => item.value === value);
+                    const option = WEDDING_STYLE_OPTIONS.find((item) => item.value === value);
                     setForm({
                       ...form,
                       style: value as WeddingStyle,

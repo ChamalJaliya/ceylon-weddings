@@ -21,7 +21,7 @@ export function CoupleIdentity({
 }) {
   return (
     <div className={cn("grid gap-2", className)}>
-      <h2 className="font-serif text-3xl leading-tight font-semibold sm:text-4xl">{names}</h2>
+      <h2 className="font-serif text-3xl leading-tight font-medium sm:text-4xl">{names}</h2>
       <p className="text-sm text-muted-foreground">
         {[date, place, styleLabel].filter(Boolean).join(" · ")}
       </p>
@@ -57,14 +57,14 @@ export function GuestSiteHero({
         animate={{ scale: 1 }}
         transition={{ duration: 1.35, ease: [0.22, 1, 0.36, 1] }}
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-black/35" />
+      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-ink/35" />
       <div className="relative flex min-h-[28rem] flex-col justify-end px-6 py-10 sm:min-h-[34rem] sm:px-10 sm:py-14">
         <Stagger className="max-w-2xl" stagger={0.08}>
           <StaggerItem>
-            <p className="text-[11px] tracking-[0.28em] text-hero-muted uppercase">{kicker}</p>
+            <p className="text-label tracking-ornate text-hero-muted uppercase">{kicker}</p>
           </StaggerItem>
           <StaggerItem>
-            <h1 className="mt-3 font-serif text-4xl leading-[0.95] font-semibold text-hero-foreground sm:text-6xl">
+            <h1 className="mt-3 font-serif text-4xl leading-[0.95] font-medium text-hero-foreground sm:text-6xl">
               {names}
             </h1>
           </StaggerItem>
@@ -110,7 +110,7 @@ export function CeremonySchedule({
           <div className="grid gap-2 rounded-3xl border border-border/50 bg-secondary/20 px-5 py-4 transition duration-300 hover:border-border hover:bg-secondary/35">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <p className="font-serif text-xl">{event.name}</p>
-              <span className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
+              <span className="text-label tracking-eyebrow text-muted-foreground uppercase">
                 {event.kind}
               </span>
             </div>
@@ -176,7 +176,7 @@ export function TravelGuideBlock({ notes }: { notes: string | null | undefined }
   return (
     <Reveal direction="up" y={18}>
       <div className="rounded-3xl border border-border/70 bg-card/40 px-5 py-5">
-        <p className="text-[11px] tracking-[0.2em] text-muted-foreground uppercase">Travel</p>
+        <p className="text-label tracking-eyebrow text-muted-foreground uppercase">Travel</p>
         <p className="mt-3 text-sm leading-relaxed whitespace-pre-wrap">{notes}</p>
       </div>
     </Reveal>
@@ -231,7 +231,7 @@ export function PlateSummaryCard({
   return (
     <div className="grid gap-4 rounded-3xl border border-border/70 bg-card/40 p-5">
       <div>
-        <p className="text-[11px] tracking-[0.2em] text-muted-foreground uppercase">{title}</p>
+        <p className="text-label tracking-eyebrow text-muted-foreground uppercase">{title}</p>
         <p className="mt-2 font-serif text-3xl">
           {confirmed}
           <span className="text-lg text-muted-foreground"> / {estimate}</span>
@@ -276,7 +276,7 @@ export function PayerPots({
   };
   return (
     <div className="grid gap-3">
-      <p className="text-[11px] tracking-[0.2em] text-muted-foreground uppercase">{title}</p>
+      <p className="text-label tracking-eyebrow text-muted-foreground uppercase">{title}</p>
       <div className="grid gap-3 sm:grid-cols-3">
         {pots.map((pot) => (
           <div key={pot.payer} className="rounded-2xl border border-border/70 bg-card/40 p-4">
@@ -311,7 +311,7 @@ export function RsvpSummaryStrip({
         {byStatus.map((row) => (
           <span
             key={row.status}
-            className="rounded-full bg-secondary/60 px-2.5 py-1 text-[11px] tracking-wide uppercase"
+            className="rounded-full bg-secondary/60 px-2.5 py-1 text-label tracking-wide uppercase"
           >
             {row.status} {row.households}
           </span>
@@ -334,7 +334,7 @@ export function ShareInvitePanel({
 }) {
   return (
     <div className="grid gap-3 rounded-3xl border border-border/70 bg-card/40 p-5">
-      <p className="text-[11px] tracking-[0.2em] text-muted-foreground uppercase">Share</p>
+      <p className="text-label tracking-eyebrow text-muted-foreground uppercase">Share</p>
       <p className="truncate font-mono text-xs text-muted-foreground">{url}</p>
       <div className="flex flex-wrap gap-2">
         <Button type="button" onClick={onCopy}>
@@ -391,7 +391,7 @@ export function PlanningProgress({
     <div className="grid gap-3 rounded-3xl border border-border/70 bg-card/40 p-5">
       <div className="flex items-end justify-between gap-3">
         <div>
-          <p className="text-[11px] tracking-[0.2em] text-muted-foreground uppercase">{title}</p>
+          <p className="text-label tracking-eyebrow text-muted-foreground uppercase">{title}</p>
           <p className="mt-1 font-serif text-3xl">{percent}%</p>
         </div>
         <p className={cn("text-sm", ready ? "text-primary" : "text-muted-foreground")}>
@@ -465,19 +465,19 @@ export function WeddingSitePreview({
         }
       />
       <section className="grid gap-3">
-        <p className="text-[11px] tracking-[0.2em] text-muted-foreground uppercase">Ceremony</p>
+        <p className="text-label tracking-eyebrow text-muted-foreground uppercase">Ceremony</p>
         <CeremonySchedule events={events} formatWhen={formatWhen} />
       </section>
       {travelNotes ? <TravelGuideBlock notes={travelNotes} /> : null}
       {faq ? (
         <section className="grid gap-3">
-          <p className="text-[11px] tracking-[0.2em] text-muted-foreground uppercase">FAQ</p>
+          <p className="text-label tracking-eyebrow text-muted-foreground uppercase">FAQ</p>
           <FaqAccordion faq={faq} />
         </section>
       ) : null}
       {team?.length ? (
         <section className="grid gap-3">
-          <p className="text-[11px] tracking-[0.2em] text-muted-foreground uppercase">Our team</p>
+          <p className="text-label tracking-eyebrow text-muted-foreground uppercase">Our team</p>
           <OurTeamStrip items={team} />
         </section>
       ) : null}
@@ -492,7 +492,7 @@ export function StyleStoryPicker({
   colors,
 }: {
   value: string;
-  options: Array<{ value: string; label: string; swatches: string[] }>;
+  options: ReadonlyArray<{ value: string; label: string; swatches: readonly string[] }>;
   onChange: (value: string) => void;
   colors?: string[];
 }) {
@@ -542,7 +542,7 @@ export function EventCeremonyCard({
     <div className="grid gap-4 rounded-3xl border border-border/70 bg-card/40 p-5">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">{kind}</p>
+          <p className="text-label tracking-eyebrow text-muted-foreground uppercase">{kind}</p>
           <p className="font-serif text-xl">{title}</p>
         </div>
         {onRemove ? (

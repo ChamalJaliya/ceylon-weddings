@@ -18,7 +18,8 @@ import { PageFrame } from "../../../components/public-chrome";
 import { AuthPasswordField, GoogleMark } from "../../../components/auth-bifold";
 import { requestGoogleAuthCode } from "../../../lib/google-identity";
 import { passwordStrength } from "../../../lib/password-strength";
-import { CoupleWizardInline, STYLE_COLORS, type CoupleWizardData } from "./_components/couple-wizard-inline";
+import { weddingStyleColors } from "@ceylonweddings/contracts";
+import { CoupleWizardInline, type CoupleWizardData } from "./_components/couple-wizard-inline";
 import { VendorWizardInline, type VendorWizardData } from "./_components/vendor-wizard-inline";
 
 function roleFromParam(raw: string | null): "COUPLE" | "VENDOR" {
@@ -55,9 +56,9 @@ const ROLE_OPTIONS: Array<{
     tagline: "Plan your Sri Lankan wedding with all-in-one tools, budgets, checklists & invites.",
     image: "https://images.unsplash.com/photo-1519741497674-611481863552?w=900&q=80",
     icon: Heart,
-    accentClass: "border-rose-500/30 hover:border-rose-500/70",
-    glowClass: "from-rose-500/15 via-amber-500/10 to-transparent",
-    badgeClass: "bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/25",
+    accentClass: "border-love/30 hover:border-love/70",
+    glowClass: "from-love/15 via-warning/10 to-transparent",
+    badgeClass: "bg-love/15 text-love-fg border-love/25",
     features: [
       "Custom wedding website & digital RSVPs",
       "Dynamic Sri Lankan Poruwa & church checklists",
@@ -72,9 +73,9 @@ const ROLE_OPTIONS: Array<{
     tagline: "Showcase your storefront, packages, and book couples looking across Sri Lanka.",
     image: "https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=900&q=80",
     icon: Store,
-    accentClass: "border-indigo-500/30 hover:border-indigo-500/70",
-    glowClass: "from-indigo-500/15 via-sky-500/10 to-transparent",
-    badgeClass: "bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border-indigo-500/25",
+    accentClass: "border-info/30 hover:border-info/70",
+    glowClass: "from-info/15 via-info/10 to-transparent",
+    badgeClass: "bg-info/15 text-info-fg border-info/25",
     features: [
       "Verified storefront listing & high-res gallery",
       "Direct inquiry inbox & couple lead manager",
@@ -129,7 +130,7 @@ function RegisterHeader({
             {index > 0 ? <span className="text-muted-foreground/40">→</span> : null}
             <span
               className={cn(
-                "flex size-6 items-center justify-center rounded-full text-[11px] font-bold transition-colors",
+                "flex size-6 items-center justify-center rounded-full text-label font-medium transition-colors",
                 item.active
                   ? "bg-primary text-primary-foreground"
                   : item.done
@@ -166,10 +167,10 @@ function RolePicker({
       className="mx-auto flex min-h-0 w-full max-w-5xl flex-1 flex-col gap-3 sm:gap-4"
     >
       <div className="shrink-0 text-center">
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card/80 px-3 py-0.5 text-[11px] font-semibold text-foreground">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card/80 px-3 py-0.5 text-label font-medium text-foreground">
           <Icon icon={Sparkles} size="xs" lottie={false} className="text-primary" /> Welcome to Ceylon Weddings
         </span>
-        <h1 className="mt-2 font-serif text-xl font-semibold tracking-tight sm:text-3xl">
+        <h1 className="mt-2 font-serif text-xl font-medium tracking-tight sm:text-3xl">
           How would you like to use the platform?
         </h1>
         <p className="mx-auto mt-1 hidden max-w-lg text-sm leading-relaxed text-muted-foreground sm:block">
@@ -209,19 +210,19 @@ function RolePicker({
               <div className="shrink-0">
                 <span
                   className={cn(
-                    "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wider uppercase",
+                    "inline-flex items-center rounded-full border px-2 py-0.5 text-label font-medium tracking-wider uppercase",
                     opt.badgeClass,
                   )}
                 >
                   {opt.badge}
                 </span>
-                <h2 className="mt-1.5 font-serif text-xl font-semibold leading-tight tracking-tight sm:text-2xl">
+                <h2 className="mt-1.5 font-serif text-xl font-medium leading-tight tracking-tight sm:text-2xl">
                   {opt.headline}
                 </h2>
                 <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">{opt.tagline}</p>
               </div>
 
-              <ul className="hidden min-h-0 flex-1 flex-col justify-center gap-1.5 overflow-hidden border-t border-border/40 pt-3 text-[11px] text-muted-foreground sm:flex sm:text-xs">
+              <ul className="hidden min-h-0 flex-1 flex-col justify-center gap-1.5 overflow-hidden border-t border-border/40 pt-3 text-label text-muted-foreground sm:flex sm:text-xs">
                 {opt.features.map((feat) => (
                   <li key={feat} className="flex items-center gap-2">
                     <Icon icon={Check} size="xs" lottie={false} className="shrink-0 text-primary" />
@@ -231,7 +232,7 @@ function RolePicker({
               </ul>
 
               <div className="flex shrink-0 items-center justify-between border-t border-border/50 pt-3">
-                <span className="text-xs font-semibold text-foreground">Get Started</span>
+                <span className="text-xs font-medium text-foreground">Get Started</span>
                 <span className="grid size-7 place-items-center rounded-full bg-foreground/10 text-foreground transition-all group-hover:bg-foreground group-hover:text-background">
                   <Icon icon={ArrowRight} size="xs" lottie={false} />
                 </span>
@@ -243,7 +244,7 @@ function RolePicker({
 
       <p className="shrink-0 pb-1 text-center text-sm text-muted-foreground">
         Already have an account?{" "}
-        <Link href="/login" className="font-semibold text-primary underline-offset-4 hover:underline">
+        <Link href="/login" className="font-medium text-primary underline-offset-4 hover:underline">
           Sign in here
         </Link>
       </p>
@@ -296,7 +297,7 @@ function CredentialForm({
         types: coupleData.types,
         guestCountEstimate: coupleData.guestCountEstimate,
         style: coupleData.style,
-        colors: STYLE_COLORS[coupleData.style],
+        colors: weddingStyleColors(coupleData.style),
         seedMissingTasks: true,
         completeOnboarding: true,
       });
@@ -398,10 +399,10 @@ function CredentialForm({
             <Icon icon={roleOption.icon} size="md" className="text-foreground" />
           </span>
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">
+            <p className="text-label font-medium uppercase tracking-wider text-primary">
               {role === "COUPLE" ? "Couple Planning Space" : "Vendor Storefront"}
             </p>
-            <p className="text-sm font-semibold text-foreground">
+            <p className="text-sm font-medium text-foreground">
               {role === "COUPLE" && coupleData?.partnerOneName && coupleData?.partnerTwoName
                 ? `${coupleData.partnerOneName} & ${coupleData.partnerTwoName}`
                 : role === "VENDOR" && vendorData?.categoryLabel
@@ -414,7 +415,7 @@ function CredentialForm({
         <button
           type="button"
           onClick={onBack}
-          className="text-xs font-semibold text-primary underline-offset-4 hover:underline"
+          className="text-xs font-medium text-primary underline-offset-4 hover:underline"
         >
           Edit details
         </button>
@@ -423,7 +424,7 @@ function CredentialForm({
       {/* Main Form Card */}
       <div className="rounded-3xl border border-border/80 bg-card/80 p-6 shadow-xl backdrop-blur-md sm:p-8">
         <header className="mb-6">
-          <h2 className="font-serif text-2xl font-semibold tracking-tight sm:text-3xl">
+          <h2 className="font-serif text-2xl font-medium tracking-tight sm:text-3xl">
             Create your account
           </h2>
           <p className="mt-1 text-xs text-muted-foreground">
@@ -619,7 +620,7 @@ function RegisterPageContent() {
     <PageFrame lock header={<RegisterHeader step={step} onBack={handleGlobalBack} />}>
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -top-24 left-1/2 size-[420px] -translate-x-1/2 rounded-full bg-gradient-to-br from-primary/10 via-rose-500/5 to-transparent blur-3xl"
+        className="pointer-events-none absolute -top-24 left-1/2 size-[420px] -translate-x-1/2 rounded-full bg-gradient-to-br from-primary/10 via-love/5 to-transparent blur-3xl"
       />
       <main
         className={cn(

@@ -177,24 +177,24 @@ export default function BudgetPage() {
         {/* Plate & Catering Benchmark Estimator */}
         <div className="rounded-2xl border bg-card p-5 space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="font-bold text-sm">Sri Lankan Plate & Catering Calculator</h3>
+            <h3 className="font-medium text-sm">Sri Lankan Plate & Catering Calculator</h3>
             <span className="text-xs text-muted-foreground">{data.guestCountEstimate || 150} estimated guests</span>
           </div>
           <div className="grid gap-3 sm:grid-cols-3 text-xs">
             <div className="p-3 rounded-xl border bg-secondary/30">
-              <span className="font-semibold text-primary">5-Star Luxury (Colombo/Bentota)</span>
-              <p className="text-[11px] text-muted-foreground mt-0.5">LKR 14,500 / plate</p>
-              <p className="font-bold mt-2 text-sm">{formatMoney((data.guestCountEstimate || 150) * 14500, currency)}</p>
+              <span className="font-medium text-primary">5-Star Luxury (Colombo/Bentota)</span>
+              <p className="text-label text-muted-foreground mt-0.5">LKR 14,500 / plate</p>
+              <p className="font-medium mt-2 text-sm">{formatMoney((data.guestCountEstimate || 150) * 14500, currency)}</p>
             </div>
             <div className="p-3 rounded-xl border bg-secondary/30">
-              <span className="font-semibold text-primary">4-Star & Heritage Resort</span>
-              <p className="text-[11px] text-muted-foreground mt-0.5">LKR 9,500 / plate</p>
-              <p className="font-bold mt-2 text-sm">{formatMoney((data.guestCountEstimate || 150) * 9500, currency)}</p>
+              <span className="font-medium text-primary">4-Star & Heritage Resort</span>
+              <p className="text-label text-muted-foreground mt-0.5">LKR 9,500 / plate</p>
+              <p className="font-medium mt-2 text-sm">{formatMoney((data.guestCountEstimate || 150) * 9500, currency)}</p>
             </div>
             <div className="p-3 rounded-xl border bg-secondary/30">
-              <span className="font-semibold text-primary">Banquet Hall & Reception</span>
-              <p className="text-[11px] text-muted-foreground mt-0.5">LKR 6,200 / plate</p>
-              <p className="font-bold mt-2 text-sm">{formatMoney((data.guestCountEstimate || 150) * 6200, currency)}</p>
+              <span className="font-medium text-primary">Banquet Hall & Reception</span>
+              <p className="text-label text-muted-foreground mt-0.5">LKR 6,200 / plate</p>
+              <p className="font-medium mt-2 text-sm">{formatMoney((data.guestCountEstimate || 150) * 6200, currency)}</p>
             </div>
           </div>
         </div>
@@ -213,7 +213,7 @@ export default function BudgetPage() {
         <PayerPots title="Family pots" pots={pots} formatMoney={(value) => formatMoney(value, currency)} />
         <div className="grid gap-4 md:grid-cols-2">
           <SectionCard title={t("knotly.estimated")} delay={1} variant="muted">
-            <p className="font-serif text-3xl font-semibold tracking-tight">
+            <p className="font-serif text-3xl font-medium tracking-tight">
               {formatMoney(estimated, currency)}
               <span className="text-base font-normal text-muted-foreground">
                 {" "}
@@ -222,7 +222,7 @@ export default function BudgetPage() {
             </p>
           </SectionCard>
           <SectionCard title={t("knotly.finalCost")} delay={2} variant="muted">
-            <p className="font-serif text-3xl font-semibold tracking-tight">{formatMoney(spent, currency)}</p>
+            <p className="font-serif text-3xl font-medium tracking-tight">{formatMoney(spent, currency)}</p>
             <p className="text-sm text-muted-foreground">
               {t("planning.spent")}: {formatMoney(paid, currency)} · {t("knotly.pending")}: {formatMoney(pending, currency)}
             </p>
@@ -239,7 +239,7 @@ export default function BudgetPage() {
                     background: BAR_COLORS[index % BAR_COLORS.length],
                   }}
                 />
-                <span className="line-clamp-1 text-[10px]">{name}</span>
+                <span className="line-clamp-1 text-label">{name}</span>
               </div>
             ))}
           </div>

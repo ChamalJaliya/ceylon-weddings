@@ -2,13 +2,35 @@
 
 import { useCallback } from "react";
 import { useReducedMotion } from "motion/react";
+import { readCssTokens } from "../lib/css-tokens";
 
 // ─── Wedding colour palettes ─────────────────────────────────────────────────
 
-/** Champagne gold · blush · ivory · rose · sand */
-const WEDDING_PALETTE = ["#D4AF6A", "#E8C4B8", "#F5F0E8", "#A0796A", "#C8B8A2"];
-/** Soft pinks for heart / shortlist bursts */
-const HEART_PALETTE = ["#FF85A2", "#FFB6C1", "#FF69B4", "#E8C4B8", "#FFAEC0"];
+// canvas-confetti draws on <canvas>, so read the brand primitives at fire time.
+
+/** Champagne gold · blush · ivory · gold leaf · sand */
+const weddingPalette = () =>
+  Object.values(
+    readCssTokens({
+      a: "--cw-gold-300",
+      b: "--cw-lotus-100",
+      c: "--cw-ivory-100",
+      d: "--cw-gold-400",
+      e: "--cw-sand-strong",
+    }),
+  ).filter(Boolean);
+
+/** Lotus pinks for heart / shortlist bursts */
+const heartPalette = () =>
+  Object.values(
+    readCssTokens({
+      a: "--cw-lotus-500",
+      b: "--cw-lotus-300",
+      c: "--cw-lotus-100",
+      d: "--cw-maroon-500",
+      e: "--cw-gold-300",
+    }),
+  ).filter(Boolean);
 
 // ─── Hook ────────────────────────────────────────────────────────────────────
 
@@ -29,7 +51,7 @@ export function useConfetti() {
         particleCount: 30,
         spread: 55,
         origin: origin ?? { x: 0.5, y: 0.5 },
-        colors: HEART_PALETTE,
+        colors: heartPalette(),
         gravity: 1.6,
         scalar: 0.65,
         ticks: 100,
@@ -49,7 +71,7 @@ export function useConfetti() {
         particleCount: 80,
         spread: 70,
         origin: origin ?? { x: 0.5, y: 0.65 },
-        colors: WEDDING_PALETTE,
+        colors: weddingPalette(),
         gravity: 1.2,
         scalar: 0.9,
         ticks: 220,
@@ -69,7 +91,7 @@ export function useConfetti() {
     const { default: confetti } = await import("canvas-confetti");
 
     const fire = (opts: Parameters<typeof confetti>[0]) =>
-      confetti({ colors: WEDDING_PALETTE, disableForReducedMotion: true, ...opts });
+      confetti({ colors: weddingPalette(), disableForReducedMotion: true, ...opts });
 
     await fire({ particleCount: 60, angle: 60, spread: 58, origin: { x: 0, y: 1 } });
     await new Promise<void>((r) => setTimeout(r, 160));

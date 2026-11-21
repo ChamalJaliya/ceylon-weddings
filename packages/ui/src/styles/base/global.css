@@ -1,0 +1,31 @@
+/* Unlayered — applies before paint. */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  body {
+    background: var(--color-bg-page);
+    color: var(--color-text-heading);
+    font-family: var(--font-family-sans);
+    font-size: var(--text-body-size);
+    line-height: var(--text-body-leading);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  :focus-visible {
+    outline-color: var(--color-focus-ring);
+  }
+
+  ::selection {
+    background: var(--color-primary);
+    color: var(--color-primary-fg);
+  }
+}

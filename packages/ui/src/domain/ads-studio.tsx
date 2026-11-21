@@ -12,6 +12,10 @@ import { Reveal } from "./motion";
 
 const fieldClass = "h-11 rounded-xl border-border/80 bg-background/70";
 
+
+/** Default accent saved onto a new promotion (user data). design-system: user-data-colors */
+const DEFAULT_PROMO_ACCENT = "#7c2d12";
+
 export type AdsPromotionLayout = "SPOTLIGHT" | "BANNER" | "CARD" | "STRIP" | "PICKS_TILE";
 export type AdsPromotionSlot =
   | "HOME_HERO"
@@ -333,12 +337,12 @@ export function PromotionPreview({
   slotHint?: string;
 }) {
   const light = promo.overlayTone === "light";
-  const accent = promo.accentColor || "#1c1917";
+  const accent = promo.accentColor || "var(--color-text-heading)";
 
   return (
     <Reveal className="sticky top-24 grid gap-3" y={8}>
       <div className="flex items-center justify-between gap-2">
-        <p className="text-xs font-medium tracking-[0.16em] text-muted-foreground uppercase">Live preview</p>
+        <p className="text-xs font-medium tracking-spaced text-muted-foreground uppercase">Live preview</p>
         <Badge>{promo.status}</Badge>
       </div>
       {slotHint ? <p className="text-xs text-muted-foreground">{slotHint}</p> : null}
@@ -408,18 +412,18 @@ export function PromotionCreative({
           className={cn(
             "absolute inset-0",
             light
-              ? "bg-gradient-to-t from-black/55 via-black/15 to-transparent"
-              : "bg-gradient-to-t from-white/80 via-white/20 to-transparent",
+              ? "bg-gradient-to-t from-ink/55 via-ink/15 to-transparent"
+              : "bg-gradient-to-t from-paper/80 via-paper/20 to-transparent",
           )}
         />
       </div>
-      <div className={cn("relative grid gap-2 p-4", light ? "text-white" : "text-foreground")}>
+      <div className={cn("relative grid gap-2 p-4", light ? "text-paper" : "text-foreground")}>
         <div className="flex flex-wrap items-center gap-2">
           {promo.badgeLabel ? <Badge intent="love">{promo.badgeLabel}</Badge> : null}
           {promo.vendorName ? <span className="text-xs opacity-80">{promo.vendorName}</span> : null}
           {promo.logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={promo.logoUrl} alt="" className="ml-auto h-7 w-auto rounded-md bg-white/80 p-1" />
+            <img src={promo.logoUrl} alt="" className="ml-auto h-7 w-auto rounded-md bg-paper/80 p-1" />
           ) : null}
         </div>
         <h3 className={cn("font-serif tracking-tight", isBanner ? "text-2xl" : "text-xl")}>{promo.headline || "Headline"}</h3>
@@ -430,8 +434,8 @@ export function PromotionCreative({
         <div className="mt-1 flex flex-wrap items-center gap-2">
           {promo.ctaLabel ? (
             <span
-              className="inline-flex rounded-full px-3 py-1.5 text-xs font-medium text-white"
-              style={{ background: "var(--promo-accent, #1c1917)" }}
+              className="inline-flex rounded-full px-3 py-1.5 text-xs font-medium text-paper"
+              style={{ background: "var(--promo-accent, var(--color-text-heading))" }}
             >
               {promo.ctaLabel}
             </span>
@@ -463,7 +467,7 @@ export function emptyPromotionDraft(partial?: Partial<AdsPromotionDraft>): AdsPr
     coverUrl: null,
     secondaryUrl: null,
     logoUrl: null,
-    accentColor: "#7c2d12",
+    accentColor: DEFAULT_PROMO_ACCENT,
     overlayTone: "light",
     layout: "CARD",
     badgeLabel: "Featured",

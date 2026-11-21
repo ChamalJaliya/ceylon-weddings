@@ -16,3 +16,4 @@ export * from "./presentation";
 export * from "./helpers";
 export * from "./wedding";
 export * from "./inquiries";
+export * from "./style-palettes";

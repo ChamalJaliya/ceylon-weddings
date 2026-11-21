@@ -181,7 +181,7 @@ export function AttributeField({
       {definition.valueType === "RANGE" ? (
         <div className="grid max-w-lg gap-3 sm:grid-cols-2">
           <label className="grid gap-1.5">
-            <span className="text-[13px] font-medium leading-none tracking-[0.01em] text-foreground/80">
+            <span className="text-compact font-medium leading-none tracking-normal text-foreground/80">
               Min{definition.unit ? ` (${definition.unit})` : ""}
             </span>
             <Input
@@ -203,7 +203,7 @@ export function AttributeField({
             />
           </label>
           <label className="grid gap-1.5">
-            <span className="text-[13px] font-medium leading-none tracking-[0.01em] text-foreground/80">
+            <span className="text-compact font-medium leading-none tracking-normal text-foreground/80">
               Max{definition.unit ? ` (${definition.unit})` : ""}
             </span>
             <Input
@@ -253,7 +253,7 @@ export function AttributeField({
       {!hideHeader ? (
         <div className="grid gap-1">
           <div className="flex items-start gap-2">
-            <h3 className="font-serif text-2xl font-semibold tracking-tight">{definition.question}</h3>
+            <h3 className="font-serif text-2xl font-medium tracking-tight">{definition.question}</h3>
             <AttributeHelp text={definition.helpText} />
           </div>
           {definition.instruction ? (

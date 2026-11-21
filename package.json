@@ -9,14 +9,16 @@
     "dev": "turbo dev",
     "build": "turbo build",
     "start": "turbo start",
-    "lint": "node -e \"console.log('No dedicated linter configured')\"",
+    "lint": "node scripts/check-design-system.mjs",
     "typecheck": "turbo typecheck",
     "db:generate": "pnpm --filter @ceylonweddings/database generate",
     "db:migrate": "pnpm --filter @ceylonweddings/database migrate",
     "db:seed": "pnpm --filter @ceylonweddings/database seed",
     "db:studio": "pnpm --filter @ceylonweddings/database studio",
     "ai:dev": "cd apps/ai && uvicorn app:app --reload --port 8001",
-    "ai:test": "cd apps/ai && pytest tests/ -v"
+    "ai:test": "cd apps/ai && pytest tests/ -v",
+    "check:design-system": "node scripts/check-design-system.mjs",
+    "test:design-system": "node --test scripts/check-design-system.mjs && node --experimental-strip-types --test packages/ui/src/lib/utils.test.ts"
   },
   "devDependencies": {
     "turbo": "^2.5.6",

@@ -1,5 +1,6 @@
 "use client";
 
+import { MOODBOARD_DEFAULT_FILL, MOODBOARD_FILL_SWATCHES } from "./palette";
 import type { ReactNode } from "react";
 import {
   Bold,
@@ -45,7 +46,7 @@ const RADIUS_PRESETS = [
   { value: 12, label: "Round" },
   { value: 28, label: "Pill" },
 ] as const;
-const FILL_SWATCHES = ["#f5e6c8", "#f8d9d0", "#d9e8df", "#dde4f0", "#efe6f5", "#fffaf5", "#1f1a16"] as const;
+const FILL_SWATCHES = MOODBOARD_FILL_SWATCHES;
 
 function hexColor(value: string | undefined, fallback: string) {
   if (!value || value === "transparent") return fallback;
@@ -61,8 +62,8 @@ function hexColor(value: string | undefined, fallback: string) {
 
 function Group({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="flex h-11 shrink-0 items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-2.5">
-      <span className="w-11 shrink-0 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/45">
+    <div className="flex h-11 shrink-0 items-center gap-2 rounded-xl border border-paper/10 bg-paper/5 px-2.5">
+      <span className="w-11 shrink-0 text-label font-medium uppercase tracking-spaced text-paper/45">
         {label}
       </span>
       <div className="flex items-center gap-1.5">{children}</div>
@@ -90,7 +91,7 @@ function IconBtn({
         onClick={onClick}
         className={cn(
           "inline-flex size-8 items-center justify-center rounded-lg text-xs transition",
-          active ? "bg-[#fffaf5] text-[#1f1a16]" : "text-[#fffaf5]/85 hover:bg-white/10",
+          active ? "bg-studio-paper text-studio-ink" : "text-studio-paper/85 hover:bg-paper/10",
         )}
       >
         {children}
@@ -111,19 +112,20 @@ function ColorWell({
   label: string;
 }) {
   const isEmpty = empty || value === "transparent" || !value;
-  const picker = hexColor(value, "#f5e6c8");
+  const picker = hexColor(value, MOODBOARD_DEFAULT_FILL);
   return (
-    <label className="relative size-8 shrink-0 cursor-pointer overflow-hidden rounded-lg border border-white/20 bg-[#2a241f]">
+    <label className="relative size-8 shrink-0 cursor-pointer overflow-hidden rounded-lg border border-paper/20 bg-studio-ink-soft">
       <span
         className="absolute inset-0"
         style={
           isEmpty
             ? {
                 background:
-                  "linear-gradient(45deg, #8a8178 25%, transparent 25%), linear-gradient(-45deg, #8a8178 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #8a8178 75%), linear-gradient(-45deg, transparent 75%, #8a8178 75%)",
+                  "linear-gradient(45deg, var(--checker) 25%, transparent 25%), linear-gradient(-45deg, var(--checker) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, var(--checker) 75%), linear-gradient(-45deg, transparent 75%, var(--checker) 75%)",
                 backgroundSize: "8px 8px",
                 backgroundPosition: "0 0, 0 4px, 4px -4px, -4px 0",
-                backgroundColor: "#fffaf5",
+                backgroundColor: "var(--color-studio-paper)",
+                ["--checker" as string]: "color-mix(in srgb, var(--color-studio-text) 70%, var(--color-studio-paper))",
               }
             : { backgroundColor: picker }
         }
@@ -159,7 +161,7 @@ function Swatches({
           onClick={() => onPick(color)}
           className={cn(
             "size-5 rounded-full border transition",
-            current?.toLowerCase() === color ? "border-[#fffaf5] ring-1 ring-[#fffaf5]/40" : "border-white/20",
+            current?.toLowerCase() === color ? "border-studio-paper ring-1 ring-studio-paper/40" : "border-paper/20",
           )}
           style={{ backgroundColor: color }}
         />
@@ -170,7 +172,7 @@ function Swatches({
 
 function WeightPicker({ value, onChange }: { value: number; onChange: (n: number) => void }) {
   return (
-    <div className="flex overflow-hidden rounded-lg bg-black/25">
+    <div className="flex overflow-hidden rounded-lg bg-ink/25">
       {WIDTH_PRESETS.map((w) => (
         <button
           key={w}
@@ -180,7 +182,7 @@ function WeightPicker({ value, onChange }: { value: number; onChange: (n: number
           onClick={() => onChange(w)}
           className={cn(
             "flex h-8 w-8 items-center justify-center transition",
-            value === w ? "bg-[#fffaf5] text-[#1f1a16]" : "text-[#fffaf5]/80 hover:bg-white/10",
+            value === w ? "bg-studio-paper text-studio-ink" : "text-studio-paper/80 hover:bg-paper/10",
           )}
         >
           <span className="block w-4 rounded-full bg-current" style={{ height: Math.max(1, w) }} />
@@ -212,7 +214,7 @@ function SelectionActions() {
         <SendToBack className="size-3.5" />
       </IconBtn>
       <IconBtn label="Delete" onClick={deleteSelected}>
-        <Trash2 className="size-3.5 text-red-300" />
+        <Trash2 className="size-3.5 text-studio-danger" />
       </IconBtn>
     </Group>
   );
@@ -234,7 +236,7 @@ export function MoodboardZoomControls() {
         type="button"
         title="Reset to 100%"
         onClick={() => zoomTo(1)}
-        className="inline-flex h-8 min-w-12 items-center justify-center rounded-lg text-xs tabular-nums text-[#fffaf5]/90 hover:bg-white/10"
+        className="inline-flex h-8 min-w-12 items-center justify-center rounded-lg text-xs tabular-nums text-studio-paper/90 hover:bg-paper/10"
       >
         {percent}%
       </button>
@@ -350,10 +352,10 @@ export function MoodboardOptionsBar({
   const showText = kind === "text" || kind === "sticky";
 
   return (
-    <div className="flex shrink-0 items-center gap-2 overflow-x-auto border-b border-white/10 bg-[#17130f] px-3 py-2">
+    <div className="flex shrink-0 items-center gap-2 overflow-x-auto border-b border-paper/10 bg-studio-ink-deep px-3 py-2">
       <div className="flex min-w-[8.5rem] shrink-0 flex-col justify-center">
-        <span className="text-xs font-medium text-[#fffaf5]">{meta.label}</span>
-        <span className="text-[11px] text-white/40">{meta.hint}</span>
+        <span className="text-xs font-medium text-studio-paper">{meta.label}</span>
+        <span className="text-label text-paper/40">{meta.hint}</span>
       </div>
 
       <Group label="History">
@@ -374,8 +376,8 @@ export function MoodboardOptionsBar({
             aria-pressed={noFill}
             onClick={() => apply({ fill: "transparent" })}
             className={cn(
-              "h-7 rounded-md px-2 text-[10px] font-medium uppercase tracking-wide",
-              noFill ? "bg-[#fffaf5] text-[#1f1a16]" : "text-[#fffaf5]/65 hover:bg-white/10",
+              "h-7 rounded-md px-2 text-label font-medium uppercase tracking-wide",
+              noFill ? "bg-studio-paper text-studio-ink" : "text-studio-paper/65 hover:bg-paper/10",
             )}
           >
             None
@@ -408,10 +410,10 @@ export function MoodboardOptionsBar({
               aria-pressed={liveRadius === preset.value}
               onClick={() => apply({ cornerRadius: preset.value })}
               className={cn(
-                "h-7 rounded-md px-2 text-[11px]",
+                "h-7 rounded-md px-2 text-label",
                 liveRadius === preset.value
-                  ? "bg-[#fffaf5] text-[#1f1a16]"
-                  : "text-[#fffaf5]/75 hover:bg-white/10",
+                  ? "bg-studio-paper text-studio-ink"
+                  : "text-studio-paper/75 hover:bg-paper/10",
               )}
             >
               {preset.label}
@@ -445,7 +447,7 @@ export function MoodboardOptionsBar({
               }
               onChange={(textFill) => apply({ textFill })}
             />
-            <div className="flex overflow-hidden rounded-lg bg-black/25">
+            <div className="flex overflow-hidden rounded-lg bg-ink/25">
               {SIZE_PRESETS.map((size) => {
                 const current =
                   selected?.type === "text" || selected?.type === "sticky"
@@ -457,8 +459,8 @@ export function MoodboardOptionsBar({
                     type="button"
                     onClick={() => apply({ fontSize: size })}
                     className={cn(
-                      "h-8 min-w-8 px-1.5 text-[11px] tabular-nums",
-                      current === size ? "bg-[#fffaf5] text-[#1f1a16]" : "text-[#fffaf5]/80 hover:bg-white/10",
+                      "h-8 min-w-8 px-1.5 text-label tabular-nums",
+                      current === size ? "bg-studio-paper text-studio-ink" : "text-studio-paper/80 hover:bg-paper/10",
                     )}
                   >
                     {size}
@@ -500,7 +502,7 @@ export function MoodboardOptionsBar({
           <button
             type="button"
             onClick={onUploadImage}
-            className="h-8 rounded-lg bg-[#fffaf5] px-3 text-xs font-medium text-[#1f1a16]"
+            className="h-8 rounded-lg bg-studio-paper px-3 text-xs font-medium text-studio-ink"
           >
             Upload image
           </button>
@@ -512,7 +514,7 @@ export function MoodboardOptionsBar({
           <button
             type="button"
             onClick={onAddVideo}
-            className="h-8 rounded-lg bg-[#fffaf5] px-3 text-xs font-medium text-[#1f1a16]"
+            className="h-8 rounded-lg bg-studio-paper px-3 text-xs font-medium text-studio-ink"
           >
             Paste video URL
           </button>
@@ -524,30 +526,30 @@ export function MoodboardOptionsBar({
           <button
             type="button"
             onClick={() => setPreviewVideo(previewVideoId === selected.id ? null : selected.id)}
-            className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-[#fffaf5] px-3 text-xs font-medium text-[#1f1a16]"
+            className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-studio-paper px-3 text-xs font-medium text-studio-ink"
           >
             <Play className="size-3.5" />
             {previewVideoId === selected.id ? "Done" : "Play"}
           </button>
-          <span className="text-[11px] text-white/45">Drag corners to resize</span>
+          <span className="text-label text-paper/45">Drag corners to resize</span>
         </Group>
       ) : null}
 
       {kind === "image" && editingSelection ? (
         <Group label="Image">
-          <span className="text-[11px] text-white/45">Drag to move · corners to resize</span>
+          <span className="text-label text-paper/45">Drag to move · corners to resize</span>
         </Group>
       ) : null}
 
       {tool === "eraser" ? (
         <Group label="Eraser">
-          <span className="text-[11px] text-white/55">Click any object to remove it</span>
+          <span className="text-label text-paper/55">Click any object to remove it</span>
         </Group>
       ) : null}
 
       {tool === "hand" ? (
         <Group label="Hand">
-          <span className="text-[11px] text-white/55">Drag the canvas · hold Space anytime</span>
+          <span className="text-label text-paper/55">Drag the canvas · hold Space anytime</span>
         </Group>
       ) : null}
 

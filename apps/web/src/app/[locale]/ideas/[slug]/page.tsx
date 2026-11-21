@@ -69,8 +69,8 @@ export default async function IdeaArticlePage({ params }: { params: Promise<{ sl
       </Reveal>
 
       <Reveal className="grid gap-4" y={12}>
-        <p className="text-[11px] font-medium tracking-[0.22em] text-primary uppercase">{categoryLabel}</p>
-        <h1 className="font-serif text-4xl leading-[1.05] font-semibold tracking-tight sm:text-5xl">
+        <p className="text-label font-medium tracking-eyebrow text-primary uppercase">{categoryLabel}</p>
+        <h1 className="font-serif text-4xl leading-[1.05] font-medium tracking-tight sm:text-5xl">
           {article.title}
         </h1>
         <p className="text-lg leading-relaxed text-muted-foreground">{article.excerpt}</p>
@@ -85,7 +85,7 @@ export default async function IdeaArticlePage({ params }: { params: Promise<{ sl
       {vendors.length ? (
         <Reveal className="grid gap-5 rounded-[1.75rem] border border-border/50 bg-secondary/20 p-6 sm:p-8" y={12}>
           <div className="grid gap-1">
-            <p className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">{t("knotly.asSeenIn")}</p>
+            <p className="text-label tracking-eyebrow text-muted-foreground uppercase">{t("knotly.asSeenIn")}</p>
             <h2 className="font-serif text-2xl tracking-tight">Vendors from this story</h2>
           </div>
           <Stagger className="grid gap-3 sm:grid-cols-2" stagger={0.06}>

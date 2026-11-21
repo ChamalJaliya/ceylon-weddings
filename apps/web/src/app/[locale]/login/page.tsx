@@ -59,7 +59,7 @@ export default function LoginPage() {
 
   return (
     <AuthBifold>
-      <h1 className="text-center font-serif text-3xl font-semibold tracking-tight sm:text-4xl">
+      <h1 className="text-center font-serif text-3xl font-medium tracking-tight sm:text-4xl">
         {t("auth.loginHeading")}
       </h1>
       <p className="mt-2 text-center text-sm text-muted-foreground">{t("auth.loginSub")}</p>

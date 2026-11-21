@@ -37,7 +37,7 @@ export function GuestRow({
       data-slot="guest-row"
       className={cn("flex flex-wrap items-center gap-3 border-b border-border/60 py-3 last:border-0", className)}
     >
-      <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-semibold text-secondary-foreground">
+      <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-medium text-secondary-foreground">
         {initials}
       </div>
       <div className="min-w-0 flex-1">
@@ -63,7 +63,7 @@ export function GuestInviteChip({
   onClick?: () => void;
 }) {
   return (
-    <Button type="button" size="sm" variant="outline" className="h-7 rounded-full text-[11px]" onClick={onClick}>
+    <Button type="button" size="sm" variant="outline" className="h-7 rounded-full text-label" onClick={onClick}>
       {label}: {status}
     </Button>
   );

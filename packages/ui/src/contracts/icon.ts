@@ -20,4 +20,5 @@ export const buttonIconSizeMap = {
   default: "sm",
   lg: "md",
   icon: "sm",
+  "icon-sm": "xs",
 } as const;

@@ -91,7 +91,7 @@ export default function ChecklistPage() {
       />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="rounded-3xl border border-border/70 bg-card/40 p-5 flex-1 min-w-[280px]">
-          <p className="text-[11px] tracking-[0.2em] text-muted-foreground uppercase">Progress</p>
+          <p className="text-label tracking-eyebrow text-muted-foreground uppercase">Progress</p>
           <p className="mt-1 font-serif text-3xl">
             {done}
             <span className="text-lg text-muted-foreground"> / {tasks.length}</span>

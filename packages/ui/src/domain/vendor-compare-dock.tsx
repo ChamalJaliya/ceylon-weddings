@@ -31,13 +31,13 @@ export function VendorCompareDock({
   return (
     <div
       className={cn(
-        "fixed inset-x-0 bottom-0 z-40 border-t border-border/80 bg-background/95 shadow-[0_-10px_36px_rgba(0,0,0,0.14)] backdrop-blur",
+        "fixed inset-x-0 bottom-0 z-40 border-t border-border/80 bg-background/95 shadow-dock backdrop-blur",
         className,
       )}
     >
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-4 px-4 py-3 md:px-6">
         <div className="grid min-w-0 flex-1 gap-1">
-          <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-primary/90">
+          <p className="text-label font-medium uppercase tracking-eyebrow text-primary/90">
             Compare · {items.length}/{max}
           </p>
           <div className="flex flex-wrap items-center gap-2">

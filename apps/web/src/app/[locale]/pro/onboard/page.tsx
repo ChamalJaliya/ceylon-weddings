@@ -299,9 +299,9 @@ export default function ProOnboardPage() {
         </div>
 
         <div className="grid gap-2">
-          <h2 className="font-serif text-2xl font-semibold tracking-tight">Welcome to Ceylon Weddings Pro</h2>
+          <h2 className="font-serif text-2xl font-medium tracking-tight">Welcome to Ceylon Weddings Pro</h2>
           <p className="mx-auto max-w-md text-sm text-muted-foreground">
-            You’re registered as a <span className="font-semibold text-foreground">{categoryLabel}</span>. Your
+            You’re registered as a <span className="font-medium text-foreground">{categoryLabel}</span>. Your
             listing is verified ready and awaiting couples.
           </p>
           <button
@@ -322,7 +322,7 @@ export default function ProOnboardPage() {
               <Sparkles className="size-5" />
             </span>
             <div>
-              <p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+              <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
                 Required criteria met
               </p>
               <p className="text-sm font-medium">

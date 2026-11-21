@@ -155,7 +155,7 @@ export default function VendorBillingPage() {
   if (!vendor) {
     return (
       <div className="rounded-2xl border p-8 text-center">
-        <h2 className="text-lg font-semibold">Vendor Profile Required</h2>
+        <h2 className="text-lg font-medium">Vendor Profile Required</h2>
         <p className="mt-2 text-sm text-muted-foreground">
           Please register or claim your vendor storefront before managing subscriptions.
         </p>
@@ -218,18 +218,18 @@ export default function VendorBillingPage() {
                     <td className="px-4 py-3 font-medium">
                       {new Date(inv.createdAt).toLocaleDateString("en-LK")}
                     </td>
-                    <td className="px-4 py-3 font-mono text-[11px]">{inv.paymentRef || "—"}</td>
+                    <td className="px-4 py-3 font-mono text-label">{inv.paymentRef || "—"}</td>
                     <td className="px-4 py-3 text-muted-foreground">
                       {new Date(inv.periodStart).toLocaleDateString("en-LK")} –{" "}
                       {new Date(inv.periodEnd).toLocaleDateString("en-LK")}
                     </td>
-                    <td className="px-4 py-3 font-semibold">{formatMoney(inv.amountLkr, currency)}</td>
+                    <td className="px-4 py-3 font-medium">{formatMoney(inv.amountLkr, currency)}</td>
                     <td className="px-4 py-3">
                       <span
-                        className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                        className={`inline-flex rounded-full px-2 py-0.5 text-label font-medium ${
                           inv.status === "PAID"
-                            ? "bg-emerald-500/15 text-emerald-600"
-                            : "bg-amber-500/15 text-amber-600"
+                            ? "bg-success/15 text-success-fg"
+                            : "bg-warning/15 text-warning-fg"
                         }`}
                       >
                         {inv.status}

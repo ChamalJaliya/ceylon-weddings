@@ -4,7 +4,7 @@ import * as React from "react";
 import { cn } from "../lib/utils";
 
 const radioFace =
-  "pointer-events-none absolute inset-0 rounded-full border border-border/80 bg-muted/50 shadow-[inset_0_1px_0_0_color-mix(in_oklch,var(--foreground)_5%,transparent)] transition-[border-color,box-shadow,background-color] duration-200 after:absolute after:inset-[3.5px] after:rounded-full after:bg-primary after:opacity-0 after:transition-opacity after:duration-150 peer-hover:border-border peer-hover:bg-muted/80 peer-focus-visible:border-ring/70 peer-focus-visible:shadow-[0_0_0_4px_color-mix(in_oklch,var(--ring)_18%,transparent)] peer-checked:border-primary peer-checked:bg-background peer-checked:after:opacity-100 peer-disabled:opacity-50";
+  "pointer-events-none absolute inset-0 rounded-full border border-border/80 bg-muted/50 shadow-field transition-[border-color,box-shadow,background-color] duration-200 after:absolute after:inset-[3.5px] after:rounded-full after:bg-primary after:opacity-0 after:transition-opacity after:duration-150 peer-hover:border-border peer-hover:bg-muted/80 peer-focus-visible:border-ring/70 peer-focus-visible:shadow-focus peer-checked:border-primary peer-checked:bg-background peer-checked:after:opacity-100 peer-disabled:opacity-50";
 
 export const Radio = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
   ({ className, ...props }, ref) => (

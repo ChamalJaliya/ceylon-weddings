@@ -1,5 +1,6 @@
 "use client";
 
+import { MOODBOARD_DEFAULT_FILL, MOODBOARD_INK, MOODBOARD_SWATCHES } from "./palette";
 import type { ReactNode } from "react";
 import {
   AlignCenter,
@@ -49,7 +50,7 @@ function Toggle({
       onClick={onClick}
       className={cn(
         "flex size-8 items-center justify-center rounded-lg transition",
-        active ? "bg-[#fffaf5] text-[#1f1a16]" : "bg-white/10 text-[#fffaf5]/80 hover:bg-white/15",
+        active ? "bg-studio-paper text-studio-ink" : "bg-paper/10 text-studio-paper/80 hover:bg-paper/15",
       )}
     >
       {children}
@@ -73,7 +74,7 @@ export function MoodboardTextInspector({
     <div className="space-y-3">
 
       <div className="space-y-1.5">
-        <Label className="text-white/60">Font</Label>
+        <Label className="text-paper/60">Font</Label>
         <div className="grid grid-cols-1 gap-1">
           {(Object.keys(MOODBOARD_FONTS) as MoodboardFontId[]).map((id) => {
             const font = MOODBOARD_FONTS[id];
@@ -87,11 +88,11 @@ export function MoodboardTextInspector({
                 className={cn(
                   "flex items-center justify-between rounded-lg px-2.5 py-1.5 text-left transition",
                   active
-                    ? "bg-[#fffaf5] text-[#1f1a16]"
-                    : "bg-white/5 text-[#fffaf5]/85 hover:bg-white/10",
+                    ? "bg-studio-paper text-studio-ink"
+                    : "bg-paper/5 text-studio-paper/85 hover:bg-paper/10",
                 )}
               >
-                <span className="text-[11px] tracking-wide uppercase opacity-60">{font.label}</span>
+                <span className="text-label tracking-wide uppercase opacity-60">{font.label}</span>
                 <span className="text-base leading-none" style={{ fontFamily: moodboardFontStack(id) }}>
                   {font.sample}
                 </span>
@@ -102,7 +103,7 @@ export function MoodboardTextInspector({
       </div>
 
       <div className="space-y-1.5">
-        <Label className="text-white/60">Size</Label>
+        <Label className="text-paper/60">Size</Label>
         <div className="flex flex-wrap gap-1">
           {SIZE_CHIPS.map((size) => (
             <button
@@ -113,8 +114,8 @@ export function MoodboardTextInspector({
               className={cn(
                 "h-7 min-w-8 rounded-md px-1.5 text-xs tabular-nums transition",
                 item.fontSize === size
-                  ? "bg-[#fffaf5] text-[#1f1a16]"
-                  : "bg-white/10 text-[#fffaf5]/80 hover:bg-white/15",
+                  ? "bg-studio-paper text-studio-ink"
+                  : "bg-paper/10 text-studio-paper/80 hover:bg-paper/15",
               )}
             >
               {size}
@@ -127,7 +128,7 @@ export function MoodboardTextInspector({
           max={120}
           value={item.fontSize}
           aria-label="Custom font size"
-          className="h-8 border-white/15 bg-white/5 text-[#fffaf5]"
+          className="h-8 border-paper/15 bg-paper/5 text-studio-paper"
           onChange={(e) =>
             onChange({ fontSize: Math.min(120, Math.max(10, Number(e.target.value) || 16)) })
           }
@@ -135,7 +136,7 @@ export function MoodboardTextInspector({
       </div>
 
       <div className="space-y-1.5">
-        <Label className="text-white/60">{item.type === "sticky" ? "Text color" : "Color"}</Label>
+        <Label className="text-paper/60">{item.type === "sticky" ? "Text color" : "Color"}</Label>
         <div className="flex flex-wrap gap-1.5">
           {MOODBOARD_TEXT_COLORS.map((swatch) => (
             <button
@@ -147,7 +148,7 @@ export function MoodboardTextInspector({
               onClick={() => setColor(swatch)}
               className={cn(
                 "size-7 rounded-full border-2 transition",
-                color?.toLowerCase() === swatch ? "border-[#fffaf5]" : "border-transparent",
+                color?.toLowerCase() === swatch ? "border-studio-paper" : "border-transparent",
               )}
               style={{ backgroundColor: swatch }}
             />
@@ -156,13 +157,13 @@ export function MoodboardTextInspector({
         <div className="flex items-center gap-2">
           <Input
             type="color"
-            value={color?.startsWith("#") ? color : "#1f1a16"}
-            className="h-8 w-12 border-white/10 bg-transparent p-1"
+            value={color?.startsWith("#") ? color : MOODBOARD_INK}
+            className="h-8 w-12 border-paper/10 bg-transparent p-1"
             onChange={(e) => setColor(e.target.value)}
           />
           <Input
             value={color}
-            className="h-8 flex-1 border-white/15 bg-white/5 font-mono text-xs text-[#fffaf5]"
+            className="h-8 flex-1 border-paper/15 bg-paper/5 font-mono text-xs text-studio-paper"
             onChange={(e) => setColor(e.target.value)}
           />
         </div>
@@ -170,9 +171,9 @@ export function MoodboardTextInspector({
 
       {item.type === "sticky" ? (
         <div className="space-y-1.5">
-          <Label className="text-white/60">Sticky color</Label>
+          <Label className="text-paper/60">Sticky color</Label>
           <div className="flex flex-wrap gap-1.5">
-            {["#f5e6c8", "#f8d9d0", "#d9e8df", "#dde4f0", "#efe6f5", "#fffaf5"].map((swatch) => (
+            {MOODBOARD_SWATCHES.map((swatch) => (
               <button
                 key={swatch}
                 type="button"
@@ -182,7 +183,7 @@ export function MoodboardTextInspector({
                 onClick={() => onChange({ fill: swatch })}
                 className={cn(
                   "size-7 rounded-full border-2 transition",
-                  item.fill.toLowerCase() === swatch ? "border-[#fffaf5]" : "border-white/20",
+                  item.fill.toLowerCase() === swatch ? "border-studio-paper" : "border-paper/20",
                 )}
                 style={{ backgroundColor: swatch }}
               />
@@ -190,15 +191,15 @@ export function MoodboardTextInspector({
           </div>
           <Input
             type="color"
-            value={item.fill.startsWith("#") ? item.fill : "#f5e6c8"}
-            className="h-8 border-white/10 bg-transparent p-1"
+            value={item.fill.startsWith("#") ? item.fill : MOODBOARD_DEFAULT_FILL}
+            className="h-8 border-paper/10 bg-transparent p-1"
             onChange={(e) => onChange({ fill: e.target.value })}
           />
         </div>
       ) : null}
 
       <div className="space-y-1">
-        <Label className="text-white/60">Style</Label>
+        <Label className="text-paper/60">Style</Label>
         <div className="flex flex-wrap gap-1.5">
           <Toggle active={Boolean(item.bold)} label="Bold" onClick={() => onChange({ bold: !item.bold })}>
             <Bold className="size-3.5" />
@@ -221,7 +222,7 @@ export function MoodboardTextInspector({
       </div>
 
       <div className="space-y-1">
-        <Label className="text-white/60">Align</Label>
+        <Label className="text-paper/60">Align</Label>
         <div className="flex gap-1.5">
           {(
             [

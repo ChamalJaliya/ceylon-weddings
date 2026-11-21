@@ -31,7 +31,7 @@ export default function AwardsPage() {
   if (!enabled) {
     return (
       <div className="mx-auto max-w-2xl space-y-4 py-16 text-center">
-        <h1 className="font-serif text-3xl font-semibold">Awards coming soon</h1>
+        <h1 className="font-serif text-3xl font-medium">Awards coming soon</h1>
         <p className="text-sm text-muted-foreground">
           The Best of Ceylon awards page is currently unpublished.
         </p>
@@ -48,11 +48,11 @@ export default function AwardsPage() {
   return (
     <div className="space-y-8">
       <div className="mx-auto max-w-2xl space-y-3 py-4 text-center">
-        <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/20 bg-amber-500/10 px-3.5 py-1 text-xs font-semibold text-amber-700 dark:text-amber-300">
+        <div className="inline-flex items-center gap-1.5 rounded-full border border-warning/20 bg-warning/10 px-3.5 py-1 text-xs font-medium text-warning-fg">
           <Icon icon={Trophy} size="xs" animateOnView />
           Best of Ceylon
         </div>
-        <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">
+        <h1 className="text-3xl font-medium tracking-tight sm:text-4xl">
           Best of Ceylon Weddings Awards {selectedYear}
         </h1>
         <p className="text-sm leading-relaxed text-muted-foreground">
@@ -75,29 +75,29 @@ export default function AwardsPage() {
 
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="space-y-1.5 rounded-2xl border bg-card p-4">
-          <div className="flex items-center gap-2 text-xs font-semibold text-primary">
+          <div className="flex items-center gap-2 text-xs font-medium text-primary">
             <Icon icon={CheckCircle2} size="sm" />
             Verified couple signal
           </div>
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-label text-muted-foreground">
             Winners and shortlists are promoted from admin nominations tied to live vendor storefronts.
           </p>
         </div>
         <div className="space-y-1.5 rounded-2xl border bg-card p-4">
-          <div className="flex items-center gap-2 text-xs font-semibold text-primary">
+          <div className="flex items-center gap-2 text-xs font-medium text-primary">
             <Icon icon={ShieldCheck} size="sm" />
             Cultural authenticity
           </div>
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-label text-muted-foreground">
             Recognizing expertise across Poruwa, Church, Hindu, and Nikah traditions.
           </p>
         </div>
         <div className="space-y-1.5 rounded-2xl border bg-card p-4">
-          <div className="flex items-center gap-2 text-xs font-semibold text-primary">
+          <div className="flex items-center gap-2 text-xs font-medium text-primary">
             <Icon icon={Sparkles} size="sm" />
             Service excellence
           </div>
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-label text-muted-foreground">
             Editorial status flows from Nominated → Shortlisted → Winner in Admin Settings.
           </p>
         </div>
@@ -113,7 +113,7 @@ export default function AwardsPage() {
 
       {winners.length > 0 ? (
         <section className="space-y-4">
-          <h2 className="font-serif text-2xl font-semibold">Winners</h2>
+          <h2 className="font-serif text-2xl font-medium">Winners</h2>
           <div className="grid gap-4 md:grid-cols-2">
             {winners.map((award) => (
               <AwardCard key={award.id} award={award} />
@@ -124,7 +124,7 @@ export default function AwardsPage() {
 
       {shortlist.length > 0 ? (
         <section className="space-y-4">
-          <h2 className="font-serif text-2xl font-semibold">Shortlist</h2>
+          <h2 className="font-serif text-2xl font-medium">Shortlist</h2>
           <div className="grid gap-4 md:grid-cols-2">
             {shortlist.map((award) => (
               <AwardCard key={award.id} award={award} />
@@ -134,7 +134,7 @@ export default function AwardsPage() {
       ) : null}
 
       <div className="rounded-3xl border bg-card p-8 text-center">
-        <h3 className="mb-2 font-serif text-2xl font-semibold">Vendors: get nominated</h3>
+        <h3 className="mb-2 font-serif text-2xl font-medium">Vendors: get nominated</h3>
         <p className="mx-auto mb-4 max-w-xl text-sm text-muted-foreground">
           Keep your storefront complete and verified. Ceylon Ops nominates standout partners each year.
         </p>
@@ -161,10 +161,10 @@ function AwardCard({ award }: { award: PublicAward }) {
         }}
       />
       <div className="space-y-1 p-4">
-        <p className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+        <p className="text-label font-medium tracking-wide text-muted-foreground uppercase">
           {CATEGORY_LABELS[award.category] ?? award.category} · {award.status}
         </p>
-        <h3 className="font-serif text-xl font-semibold group-hover:text-primary">{award.vendor.name}</h3>
+        <h3 className="font-serif text-xl font-medium group-hover:text-primary">{award.vendor.name}</h3>
         <p className="text-xs text-muted-foreground">
           {[award.vendor.city, award.vendor.district].filter(Boolean).join(", ")}
           {award.vendor.ratingAvg != null

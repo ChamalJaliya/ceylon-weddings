@@ -205,7 +205,7 @@ export function VendorGallery({
       ) : null}
 
       {introEmbed ? (
-        <div className="overflow-hidden rounded-3xl border border-border/70 bg-black">
+        <div className="overflow-hidden rounded-3xl border border-border/70 bg-ink">
           <iframe
             title={`${name} intro video`}
             src={introEmbed}
@@ -218,7 +218,7 @@ export function VendorGallery({
 
       {videos.length ? (
         <div className="grid gap-2">
-          <p className="text-[11px] font-medium tracking-[0.18em] text-primary/90 uppercase">Videos</p>
+          <p className="text-label font-medium tracking-eyebrow text-primary/90 uppercase">Videos</p>
           <div className="flex gap-2 overflow-x-auto pb-1">
             {videos.map((video) => {
               const thumb = youtubeThumb(video.url);
@@ -233,10 +233,10 @@ export function VendorGallery({
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={thumb} alt="" className="h-full w-full object-cover" />
                   ) : null}
-                  <span className="absolute inset-0 grid place-items-center bg-black/35 text-white">
+                  <span className="absolute inset-0 grid place-items-center bg-ink/35 text-paper">
                     <Icon icon={Play} size="sm" />
                   </span>
-                  <span className="absolute inset-x-0 bottom-0 truncate bg-black/50 px-2 py-1 text-[10px] text-white">
+                  <span className="absolute inset-x-0 bottom-0 truncate bg-ink/50 px-2 py-1 text-label text-paper">
                     {video.title || "Watch"}
                   </span>
                 </button>
@@ -250,7 +250,7 @@ export function VendorGallery({
         {open && list.length ? (
           <motion.div
             key="gallery-lightbox"
-            className="fixed inset-0 z-50 grid place-items-center p-4"
+            className="fixed inset-0 z-50 grid place-items-center bg-ink/80 p-4"
             role="dialog"
             aria-modal="true"
             aria-label={`${name} gallery`}
@@ -259,11 +259,10 @@ export function VendorGallery({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.22 }}
-            style={{ backgroundColor: "rgba(0,0,0,0.82)" }}
           >
             <button
               type="button"
-              className="absolute top-4 right-4 rounded-full bg-white/10 p-2 text-white"
+              className="absolute top-4 right-4 rounded-full bg-paper/10 p-2 text-paper"
               onClick={() => setOpen(false)}
               aria-label="Close"
             >
@@ -273,7 +272,7 @@ export function VendorGallery({
               <>
                 <button
                   type="button"
-                  className="absolute left-4 rounded-full bg-white/10 p-2 text-white"
+                  className="absolute left-4 rounded-full bg-paper/10 p-2 text-paper"
                   onClick={(event) => {
                     event.stopPropagation();
                     setActive((current) => (current - 1 + list.length) % list.length);
@@ -284,7 +283,7 @@ export function VendorGallery({
                 </button>
                 <button
                   type="button"
-                  className="absolute right-4 rounded-full bg-white/10 p-2 text-white md:right-16"
+                  className="absolute right-4 rounded-full bg-paper/10 p-2 text-paper md:right-16"
                   onClick={(event) => {
                     event.stopPropagation();
                     setActive((current) => (current + 1) % list.length);
@@ -304,7 +303,7 @@ export function VendorGallery({
               className="max-h-[85vh] max-w-5xl rounded-2xl object-contain"
               onClick={(event) => event.stopPropagation()}
             />
-            <p className="absolute bottom-4 text-sm text-white/80">
+            <p className="absolute bottom-4 text-sm text-paper/80">
               {active + 1} / {list.length}
               {activeAlbum && activeAlbum.key !== "gallery" ? ` · ${activeAlbum.label}` : ""}
             </p>
@@ -314,7 +313,7 @@ export function VendorGallery({
 
       {videoOpen ? (
         <div
-          className="fixed inset-0 z-50 grid place-items-center bg-black/80 p-4"
+          className="fixed inset-0 z-50 grid place-items-center bg-ink/80 p-4"
           role="dialog"
           aria-modal="true"
           aria-label={`${name} video`}
@@ -322,7 +321,7 @@ export function VendorGallery({
         >
           <button
             type="button"
-            className="absolute top-4 right-4 rounded-full bg-white/10 p-2 text-white"
+            className="absolute top-4 right-4 rounded-full bg-paper/10 p-2 text-paper"
             onClick={() => setVideoOpen(null)}
             aria-label="Close"
           >

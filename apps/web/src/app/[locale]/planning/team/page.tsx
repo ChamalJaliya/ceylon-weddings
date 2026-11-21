@@ -181,7 +181,7 @@ export default function TeamPage() {
             if (!items.length) return null;
             return (
               <section key={status} className="grid gap-4">
-                <p className="text-[11px] tracking-[0.2em] text-muted-foreground uppercase">
+                <p className="text-label tracking-eyebrow text-muted-foreground uppercase">
                   {status} · {items.length}
                 </p>
                 <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">

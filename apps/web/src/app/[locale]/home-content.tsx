@@ -158,7 +158,7 @@ export function HomeContent({
                     </span>
                     <div className="min-w-0">
                       <p className="font-serif text-2xl leading-none text-hero-foreground sm:text-3xl">{value}</p>
-                      <p className="mt-1.5 text-[10px] tracking-[0.18em] text-hero-muted uppercase">{label}</p>
+                      <p className="mt-1.5 text-label tracking-eyebrow text-hero-muted uppercase">{label}</p>
                     </div>
                   </div>
                 </motion.div>
@@ -178,10 +178,10 @@ export function HomeContent({
         <section>
           <Reveal className="mb-8 flex flex-wrap items-end justify-between gap-4">
             <div>
-              <p className="mb-1 text-[11px] font-medium tracking-[0.2em] text-muted-foreground uppercase">
+              <p className="mb-1 text-label font-medium tracking-eyebrow text-muted-foreground uppercase">
                 Marketplace
               </p>
-              <Heading as="h2" icon={Sparkles} className="text-3xl font-semibold sm:text-4xl md:text-4xl">
+              <Heading as="h2" icon={Sparkles} className="text-3xl font-medium sm:text-4xl md:text-4xl">
                 Browse by category
               </Heading>
             </div>
@@ -217,10 +217,10 @@ export function HomeContent({
           <section>
             <Reveal className="mb-8 flex flex-wrap items-end justify-between gap-4">
               <div>
-                <p className="mb-1 text-[11px] font-medium tracking-[0.2em] text-muted-foreground uppercase">
+                <p className="mb-1 text-label font-medium tracking-eyebrow text-muted-foreground uppercase">
                   {copy.ceylonPicks}
                 </p>
-                <h2 className="font-serif text-3xl font-semibold tracking-tight sm:text-4xl">
+                <h2 className="font-serif text-3xl font-medium tracking-tight sm:text-4xl">
                   {copy.suggestedVendors}
                 </h2>
               </div>
@@ -270,13 +270,13 @@ export function HomeContent({
 
         <section>
           <Reveal className="mb-10 text-center">
-            <p className="mb-2 text-[11px] font-medium tracking-[0.2em] text-muted-foreground uppercase">
+            <p className="mb-2 text-label font-medium tracking-eyebrow text-muted-foreground uppercase">
               How it works
             </p>
-            <h2 className="font-serif text-3xl font-semibold tracking-tight sm:text-4xl">
+            <h2 className="font-serif text-3xl font-medium tracking-tight sm:text-4xl">
               Plan your wedding in three steps
             </h2>
-            <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-[15px]">
+            <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-h4">
               {copy.marketingSub}
             </p>
           </Reveal>
@@ -288,13 +288,13 @@ export function HomeContent({
                 <StaggerItem key={step.title}>
                   <AnimateIcon animateOnHover animateOnView asChild>
                     <div className="group relative rounded-3xl border border-border bg-card px-6 py-8 shadow-card transition-all duration-300 motion-safe:hover:-translate-y-1 hover:shadow-md">
-                      <p className="mb-4 font-serif text-5xl font-semibold text-primary/20 transition-colors duration-300 group-hover:text-primary/30">
+                      <p className="mb-4 font-serif text-5xl font-medium text-primary/20 transition-colors duration-300 group-hover:text-primary/30">
                         {stepNumber}
                       </p>
                       <div className="mb-4 inline-flex size-11 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-transform duration-300 group-hover:scale-110">
                         <Icon icon={StepIcon} size="md" lottie={false} />
                       </div>
-                      <h3 className="mb-2 font-serif text-lg font-semibold">{step.title}</h3>
+                      <h3 className="mb-2 font-serif text-lg font-medium">{step.title}</h3>
                       <p className="text-sm leading-relaxed text-muted-foreground">{step.body}</p>
                     </div>
                   </AnimateIcon>
@@ -307,10 +307,10 @@ export function HomeContent({
         <Reveal className="overflow-hidden rounded-3xl bg-primary/5 ring-1 ring-primary/15">
           <div className="grid items-center gap-0 md:grid-cols-2">
             <div className="px-8 py-12 md:px-12">
-              <p className="mb-2 text-[11px] font-medium tracking-[0.2em] text-primary uppercase">
+              <p className="mb-2 text-label font-medium tracking-eyebrow text-primary uppercase">
                 Free planning tools
               </p>
-              <h2 className="mb-3 font-serif text-3xl font-semibold tracking-tight sm:text-4xl">
+              <h2 className="mb-3 font-serif text-3xl font-medium tracking-tight sm:text-4xl">
                 Checklist, budget & guests — ready for Sri Lankan weddings
               </h2>
               <p className="mb-6 text-sm leading-relaxed text-muted-foreground">

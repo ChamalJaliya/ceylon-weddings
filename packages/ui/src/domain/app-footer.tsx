@@ -43,16 +43,16 @@ export function AppFooter({
             <div className="flex flex-col justify-between space-y-4 sm:col-span-2 lg:col-span-2">
               <div className="space-y-3">
                 <div className="flex items-center gap-2.5">
-                  <span className="flex size-9 items-center justify-center rounded-full border border-primary/40 bg-primary/10 font-serif text-xs font-semibold text-primary">
+                  <span className="flex size-9 items-center justify-center rounded-full border border-primary/40 bg-primary/10 font-serif text-xs font-medium text-primary">
                     CW
                   </span>
                   <div>
                     {kicker ? (
-                      <p className="text-[10px] font-medium tracking-[0.22em] text-muted-foreground uppercase">
+                      <p className="text-label font-medium tracking-eyebrow text-muted-foreground uppercase">
                         {kicker}
                       </p>
                     ) : null}
-                    <h3 className="font-serif text-xl font-semibold tracking-tight text-foreground">{wordmark}</h3>
+                    <h3 className="font-serif text-xl font-medium tracking-tight text-foreground">{wordmark}</h3>
                   </div>
                 </div>
 
@@ -68,7 +68,7 @@ export function AppFooter({
               </div>
 
               <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-[11px] font-medium text-secondary-foreground">
+                <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-label font-medium text-secondary-foreground">
                   📍 All Island Coverage
                 </span>
                 <span>Poruwa · Church · Nikah · Walima</span>
@@ -78,7 +78,7 @@ export function AppFooter({
             {/* Structured link columns */}
             {sections.map((section) => (
               <div key={section.title} className="flex flex-col gap-3 lg:col-span-1">
-                <p className="text-xs font-semibold tracking-wider text-foreground uppercase">{section.title}</p>
+                <p className="text-xs font-medium tracking-wider text-foreground uppercase">{section.title}</p>
                 <ul className="flex flex-col gap-2.5 text-xs">
                   {section.links.map((link) => (
                     <li key={link.href + link.label}>
@@ -88,7 +88,7 @@ export function AppFooter({
                       >
                         <span>{link.label}</span>
                         {link.badge ? (
-                          <span className="rounded-full bg-primary/15 px-1.5 py-0.5 text-[9px] font-semibold text-primary">
+                          <span className="rounded-full bg-primary/15 px-1.5 py-0.5 text-label font-medium text-primary">
                             {link.badge}
                           </span>
                         ) : null}
@@ -111,7 +111,7 @@ export function AppFooter({
         <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-4 px-8 py-6">
           <div>
             {kicker ? (
-              <p className="text-[10px] tracking-[0.22em] text-muted-foreground uppercase">{kicker}</p>
+              <p className="text-label tracking-eyebrow text-muted-foreground uppercase">{kicker}</p>
             ) : null}
             <p className="font-serif text-lg leading-tight text-foreground">{wordmark}</p>
           </div>

@@ -338,7 +338,7 @@ export function AnimatedTabs<T extends string>({
             onClick={() => onChange(tab.id)}
             className={cn(
               "relative z-10 inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-              isActive ? "text-foreground font-semibold" : "hover:text-foreground/80",
+              isActive ? "text-foreground font-medium" : "hover:text-foreground/80",
               tabClassName,
             )}
           >
@@ -476,7 +476,7 @@ export function AnimatedBadge({
   return (
     <motion.span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold border transition-colors",
+        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium border transition-colors",
         pulse && "cw-pulse-subtle",
         className,
       )}

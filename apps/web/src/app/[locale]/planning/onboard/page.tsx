@@ -10,6 +10,8 @@ import {
   type MineWedding,
   type WeddingStyle,
   type WeddingType,
+  WEDDING_STYLE_OPTIONS,
+  weddingStyleColors,
 } from "@ceylonweddings/contracts";
 import { Button } from "@ceylonweddings/ui/components/button";
 import { DatePicker } from "@ceylonweddings/ui/components/date-picker";
@@ -27,22 +29,6 @@ import { PlaceFields } from "../../../../components/place-fields";
 
 const STEPS = ["names", "date", "place", "types", "guests", "style", "celebrate"] as const;
 type Step = (typeof STEPS)[number];
-
-const STYLE_OPTIONS: Array<{ value: WeddingStyle; label: string; swatches: string[] }> = [
-  { value: "MINIMALIST", label: "Minimalist", swatches: ["#F7F3EC", "#D9D2C5", "#2F2F2F", "#9A9488", "#E8E2D6"] },
-  { value: "TRADITIONAL", label: "Traditional", swatches: ["#7A1F2B", "#C4A574", "#F4E4D0", "#1F4D3A", "#E8D5B5"] },
-  { value: "KANDYAN", label: "Kandyan", swatches: ["#C4A574", "#F4E4D0", "#7A1F2B", "#1F4D3A", "#E8D5B5"] },
-  { value: "MODERN", label: "Modern", swatches: ["#1F4B73", "#D7E6F5", "#0F172A", "#94A3B8", "#F8FAFC"] },
-  { value: "BEACH", label: "Beach", swatches: ["#0F766E", "#F4E1C1", "#155E75", "#F8FAFC", "#67E8F9"] },
-];
-
-const STYLE_COLORS: Record<WeddingStyle, string[]> = {
-  MINIMALIST: ["#F7F3EC", "#D9D2C5", "#2F2F2F", "#9A9488", "#E8E2D6"],
-  TRADITIONAL: ["#7A1F2B", "#C4A574", "#F4E4D0", "#1F4D3A", "#E8D5B5"],
-  KANDYAN: ["#C4A574", "#F4E4D0", "#7A1F2B", "#1F4D3A", "#E8D5B5"],
-  MODERN: ["#1F4B73", "#D7E6F5", "#0F172A", "#94A3B8", "#F8FAFC"],
-  BEACH: ["#0F766E", "#F4E1C1", "#155E75", "#F8FAFC", "#67E8F9"],
-};
 
 const TYPE_OPTIONS: Array<{
   value: WeddingType;
@@ -219,7 +205,7 @@ export default function CoupleOnboardPage() {
         return;
       }
       if (current === "style") {
-        await persist({ style, colors: STYLE_COLORS[style], completeOnboarding: true });
+        await persist({ style, colors: weddingStyleColors(style), completeOnboarding: true });
         goTo("celebrate");
       }
     } catch {
@@ -400,8 +386,8 @@ export default function CoupleOnboardPage() {
         {error ? <FormStatus tone="destructive">{error}</FormStatus> : null}
         <StyleStoryPicker
           value={style}
-          options={STYLE_OPTIONS}
-          colors={STYLE_COLORS[style]}
+          options={WEDDING_STYLE_OPTIONS}
+          colors={weddingStyleColors(style)}
           onChange={(value) => setStyle(weddingStyleSchema.parse(value))}
         />
       </div>
@@ -422,7 +408,7 @@ export default function CoupleOnboardPage() {
           </motion.div>
         </div>
         <div className="grid gap-2">
-          <h2 className="font-serif text-2xl font-semibold tracking-tight">
+          <h2 className="font-serif text-2xl font-medium tracking-tight">
             {partnerOneName} & {partnerTwoName}
           </h2>
           <p className="mx-auto max-w-md text-sm text-muted-foreground">
@@ -436,7 +422,7 @@ export default function CoupleOnboardPage() {
               <Heart className="size-5" />
             </span>
             <div>
-              <p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Ceremonies</p>
+              <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">Ceremonies</p>
               <p className="text-sm font-medium">{typeTitles || "Your wedding types"}</p>
             </div>
           </div>
@@ -445,7 +431,7 @@ export default function CoupleOnboardPage() {
               <Sparkles className="size-5" />
             </span>
             <div>
-              <p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Guest estimate</p>
+              <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">Guest estimate</p>
               <p className="text-sm font-medium">{guestCountEstimate} guests</p>
             </div>
           </div>

@@ -159,7 +159,7 @@ function BlockBody({ block }: { block: StageBlock }) {
       return (
         <div className={cn("grid gap-1.5", TEXT_TONE_CLASS[block.tone])}>
           {block.heading ? (
-            <p className="font-serif text-xl font-semibold leading-tight sm:text-2xl">{block.heading}</p>
+            <p className="font-serif text-xl font-medium leading-tight sm:text-2xl">{block.heading}</p>
           ) : null}
           {block.body ? (
             <p

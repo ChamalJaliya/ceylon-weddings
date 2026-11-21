@@ -326,7 +326,7 @@ export default function VendorStorefrontPage() {
             <div className="grid gap-3 rounded-2xl border border-border/70 bg-card/50 p-4">
               {profileAttributes.map((group) => (
                 <div key={group.key} className="grid gap-2">
-                  <p className="text-[11px] font-medium tracking-[0.16em] text-muted-foreground uppercase">
+                  <p className="text-label font-medium tracking-spaced text-muted-foreground uppercase">
                     {localizedText(group.label, locale)}
                   </p>
                   <div className="flex flex-wrap gap-1.5">
@@ -443,7 +443,7 @@ export default function VendorStorefrontPage() {
           {compareHint ? <p className="text-xs text-destructive">{compareHint}</p> : null}
           {features.length ? (
             <div className="grid gap-2 rounded-2xl border border-border/70 bg-card/50 p-4">
-              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{t("knotly.asSeenIn")}</p>
+              <p className="text-xs uppercase tracking-eyebrow text-muted-foreground">{t("knotly.asSeenIn")}</p>
               {features.slice(0, 3).map((article) => (
                 <Link
                   key={article.id}
@@ -573,7 +573,7 @@ export default function VendorStorefrontPage() {
         <TabsContent value="reviews" className="mt-4">
           <div className="grid gap-6 rounded-3xl border border-border/70 bg-card/60 p-6 shadow-sm md:p-8">
             <div>
-              <p className="font-serif text-4xl font-semibold tracking-tight">★ {(vendor.ratingAvg ?? 0).toFixed(1)}</p>
+              <p className="font-serif text-4xl font-medium tracking-tight">★ {(vendor.ratingAvg ?? 0).toFixed(1)}</p>
               <p className="text-sm text-muted-foreground">
                 {vendor.ratingCount ?? 0} {t("knotly.recommended")}
               </p>

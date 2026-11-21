@@ -68,7 +68,7 @@ export function ShellTrail({
             <Button size="icon" variant="ghost" shape="pill" aria-label={t("nav.messages")} className="relative">
               <Icon icon={MessageCircle} size="sm" className={unreadTotal ? "text-primary" : undefined} />
               {unreadTotal > 0 ? (
-                <span className="absolute -top-0.5 -right-0.5 grid min-w-4 place-items-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
+                <span className="absolute -top-0.5 -right-0.5 grid min-w-4 place-items-center rounded-full bg-primary px-1 text-label font-medium text-primary-foreground">
                   {unreadTotal > 9 ? "9+" : unreadTotal}
                 </span>
               ) : null}
@@ -76,7 +76,7 @@ export function ShellTrail({
           </PopoverTrigger>
           <PopoverContent className="w-80">
             <div className="mb-3 flex items-center justify-between gap-2">
-              <p className="font-semibold">{t("nav.messages")}</p>
+              <p className="font-medium">{t("nav.messages")}</p>
               <button
                 type="button"
                 className="text-xs font-medium text-primary"
@@ -105,7 +105,7 @@ export function ShellTrail({
 
               {(user?.role === "COUPLE" || user?.role === "FAMILY") && inquiries.length > 0 ? (
                 <div className="border-t border-border/60 pt-3">
-                  <p className="mb-2 text-[11px] font-medium tracking-[0.14em] text-muted-foreground uppercase">
+                  <p className="mb-2 text-label font-medium tracking-spaced text-muted-foreground uppercase">
                     {t("messaging.whatsappLeads")}
                   </p>
                   {inquiries.slice(0, 4).map((item) => (
@@ -141,14 +141,14 @@ export function ShellTrail({
             <Button size="icon" variant="ghost" shape="pill" aria-label={t("nav.notifications")} className="relative">
               <Icon icon={Bell} size="sm" className={notificationUnread ? "text-primary" : undefined} />
               {notificationUnread > 0 ? (
-                <span className="absolute -top-0.5 -right-0.5 grid min-w-4 place-items-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
+                <span className="absolute -top-0.5 -right-0.5 grid min-w-4 place-items-center rounded-full bg-primary px-1 text-label font-medium text-primary-foreground">
                   {notificationUnread > 9 ? "9+" : notificationUnread}
                 </span>
               ) : null}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-80">
-            <p className="mb-3 font-semibold">{t("nav.notifications")}</p>
+            <p className="mb-3 font-medium">{t("nav.notifications")}</p>
             <div className="grid max-h-72 gap-2 overflow-auto">
               {notifications.length ? (
                 notifications.slice(0, 8).map((note) => (
@@ -177,7 +177,7 @@ export function ShellTrail({
         <PopoverTrigger asChild>
           <button
             type="button"
-            className="flex size-9 items-center justify-center rounded-full bg-secondary text-xs font-semibold"
+            className="flex size-9 items-center justify-center rounded-full bg-secondary text-xs font-medium"
             aria-label={user?.name ?? t("nav.dashboard")}
           >
             {initials}

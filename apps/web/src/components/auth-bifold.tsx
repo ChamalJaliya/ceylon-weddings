@@ -22,6 +22,7 @@ const SLIDES = [
   },
 ];
 
+/** Google brand mark — official fills. design-system: brand-mark-colors */
 export function GoogleMark() {
   return (
     <svg viewBox="0 0 24 24" className="size-5" aria-hidden="true">
@@ -63,10 +64,10 @@ export function AuthVisualPanel() {
           )}
         />
       ))}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-black/20" />
+      <div className="absolute inset-0 bg-gradient-to-t from-ink/70 via-ink/25 to-ink/20" />
       <div className="absolute inset-0 flex flex-col justify-end p-10 pb-14 text-hero-foreground">
         <p className="font-serif text-5xl leading-none">“</p>
-        <p className="mt-2 max-w-md font-serif text-2xl leading-snug font-semibold">{t(SLIDES[slide].quoteKey)}</p>
+        <p className="mt-2 max-w-md font-serif text-2xl leading-snug font-medium">{t(SLIDES[slide].quoteKey)}</p>
         <div className="mt-8 flex gap-2">
           {SLIDES.map((item, index) => (
             <button

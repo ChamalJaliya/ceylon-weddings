@@ -177,7 +177,7 @@ export function StickyActionBar({
     <div
       data-slot="sticky-action-bar"
       className={cn(
-        "sticky bottom-0 z-20 mt-2 flex flex-wrap items-center gap-3 rounded-2xl border border-border/80 bg-card/95 px-4 py-3 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] backdrop-blur",
+        "sticky bottom-0 z-20 mt-2 flex flex-wrap items-center gap-3 rounded-2xl border border-border/80 bg-card/95 px-4 py-3 shadow-dock backdrop-blur",
         "motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-300",
         className,
       )}
@@ -221,7 +221,7 @@ export function CreatorSectionNav({
             ) : null}
             <span
               className={cn(
-                "relative z-10 grid size-6 place-items-center rounded-full text-[11px] font-medium",
+                "relative z-10 grid size-6 place-items-center rounded-full text-label font-medium",
                 isActive ? "bg-primary-foreground/15 text-primary-foreground" : "bg-secondary text-foreground/70",
               )}
             >
@@ -426,7 +426,7 @@ function StudioPreviewStage({
             role="dialog"
             aria-modal="false"
             aria-label={label}
-            className="fixed z-40 flex w-[min(26rem,calc(100vw-1.25rem))] flex-col overflow-hidden rounded-[1.85rem] border border-border/70 bg-card/95 shadow-[0_24px_80px_rgba(40,24,12,0.18)] backdrop-blur-xl"
+            className="fixed z-40 flex w-[min(26rem,calc(100vw-1.25rem))] flex-col overflow-hidden rounded-[1.85rem] border border-border/70 bg-card/95 shadow-floating backdrop-blur-xl"
             style={{
               top: "calc(var(--cw-frame-top) + 5rem)",
               right: "calc(var(--cw-frame-right) + 0.7rem)",
@@ -440,10 +440,10 @@ function StudioPreviewStage({
             <div className="flex items-center gap-3 border-b border-border/50 px-4 py-3">
               <PulseDot />
               <div className="min-w-0 flex-1">
-                <p className="text-[11px] font-medium tracking-[0.2em] text-primary/90 uppercase">{label}</p>
+                <p className="text-label font-medium tracking-eyebrow text-primary/90 uppercase">{label}</p>
                 {title ? <p className="truncate font-serif text-lg leading-tight tracking-tight">{title}</p> : null}
               </div>
-              {hint ? <span className="text-[11px] text-muted-foreground tabular-nums">{hint}</span> : null}
+              {hint ? <span className="text-label text-muted-foreground tabular-nums">{hint}</span> : null}
               <IconButton type="button" aria-label="Close preview" icon={X} onClick={() => onOpenChange(false)} />
             </div>
             <div className="min-h-0 flex-1 overflow-y-auto p-3">
@@ -467,7 +467,7 @@ function StudioPreviewStage({
             aria-expanded={false}
             aria-controls={panelId}
             onClick={() => onOpenChange(true)}
-            className="fixed z-30 flex max-w-[min(16.5rem,calc(100vw-1.5rem))] items-center gap-2.5 rounded-2xl border border-border/70 bg-card/90 p-1.5 pr-3 text-left shadow-[0_16px_50px_rgba(40,24,12,0.16)] backdrop-blur-md transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-[0_18px_56px_rgba(40,24,12,0.2)]"
+            className="fixed z-30 flex max-w-[min(16.5rem,calc(100vw-1.5rem))] items-center gap-2.5 rounded-2xl border border-border/70 bg-card/90 p-1.5 pr-3 text-left shadow-overlay backdrop-blur-md transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-floating"
             style={{
               right: "calc(var(--cw-frame-right) + 0.85rem)",
               bottom: "calc(var(--cw-frame-bottom) + 5.75rem)",
@@ -488,14 +488,14 @@ function StudioPreviewStage({
               )}
             </span>
             <span className="min-w-0 flex-1">
-              <span className="flex items-center gap-1.5 text-[10px] font-medium tracking-[0.18em] text-primary/90 uppercase">
+              <span className="flex items-center gap-1.5 text-label font-medium tracking-eyebrow text-primary/90 uppercase">
                 <PulseDot className="h-2 w-2" />
                 {label}
               </span>
               <span className="mt-0.5 block truncate font-serif text-base leading-tight tracking-tight">
                 {title || "See how couples see you"}
               </span>
-              <span className="mt-0.5 block text-[11px] text-muted-foreground">
+              <span className="mt-0.5 block text-label text-muted-foreground">
                 {hint ? `${hint} · Open` : "Open listing preview"}
               </span>
             </span>

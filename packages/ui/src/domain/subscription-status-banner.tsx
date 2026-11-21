@@ -41,9 +41,9 @@ export function SubscriptionStatusBanner({
             description: `Your 3-month free trial ends in ${daysRemaining} day${daysRemaining === 1 ? "" : "s"}. Subscribe to maintain storefront visibility.`,
             cta: "Choose a Plan",
             badge: "Trial Ending",
-            badgeBg: "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/20",
-            bannerBg: "bg-amber-500/5 border-amber-500/20 text-amber-900 dark:text-amber-100",
-            buttonStyle: "bg-amber-600 hover:bg-amber-700 text-white shadow-amber-500/20",
+            badgeBg: "bg-status-warning-bg text-status-warning-fg border-status-warning-border",
+            bannerBg: "bg-warning/5 border-warning/25 text-warning-fg",
+            buttonStyle: "bg-warning hover:bg-warning/90 text-warning-foreground shadow-warning/20",
           };
         }
         return {
@@ -55,9 +55,9 @@ export function SubscriptionStatusBanner({
           descriptionSuffix: ` days remaining in your complimentary vendor trial.`,
           cta: "View Plans",
           badge: "Free Trial",
-          badgeBg: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
-          bannerBg: "bg-emerald-500/5 border-emerald-500/20 text-emerald-950 dark:text-emerald-50",
-          buttonStyle: "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/20",
+          badgeBg: "bg-status-success-bg text-status-success-fg border-status-success-border",
+          bannerBg: "bg-success/5 border-success/25 text-success-fg",
+          buttonStyle: "bg-success hover:bg-success/90 text-success-foreground shadow-success/20",
         };
 
       case "GRACE":
@@ -68,9 +68,9 @@ export function SubscriptionStatusBanner({
           description: `Your trial has expired. You have ${daysRemaining} day${daysRemaining === 1 ? "" : "s"} of grace period left before your listing is hidden from search.`,
           cta: "Subscribe Now",
           badge: "Grace Period",
-          badgeBg: "bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/20",
-          bannerBg: "bg-rose-500/5 border-rose-500/20 text-rose-950 dark:text-rose-50",
-          buttonStyle: "bg-rose-600 hover:bg-rose-700 text-white shadow-rose-500/20",
+          badgeBg: "bg-status-danger-bg text-status-danger-fg border-status-danger-border",
+          bannerBg: "bg-destructive/5 border-destructive/25 text-danger-fg",
+          buttonStyle: "bg-destructive hover:bg-destructive/90 text-destructive-foreground shadow-destructive/20",
         };
 
       case "EXPIRED":
@@ -81,9 +81,9 @@ export function SubscriptionStatusBanner({
           description: "Your vendor profile is currently hidden from public search and catalog. Subscribe now to instantly restore visibility.",
           cta: "Re-activate Storefront",
           badge: "Expired",
-          badgeBg: "bg-red-500/20 text-red-600 dark:text-red-400 border-red-500/30",
-          bannerBg: "bg-red-500/10 border-red-500/30 text-red-950 dark:text-red-50",
-          buttonStyle: "bg-red-600 hover:bg-red-700 text-white shadow-red-500/20 animate-pulse",
+          badgeBg: "bg-status-danger-bg text-status-danger-fg border-status-danger-border",
+          bannerBg: "bg-destructive/5 border-destructive/25 text-danger-fg",
+          buttonStyle: "bg-destructive hover:bg-destructive/90 text-destructive-foreground shadow-destructive/20 animate-pulse",
         };
 
       case "COMPED":
@@ -94,8 +94,8 @@ export function SubscriptionStatusBanner({
           description: "You have full partner access granted by CeylonWeddings editorial support.",
           cta: null,
           badge: "Verified Partner",
-          badgeBg: "bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/20",
-          bannerBg: "bg-purple-500/5 border-purple-500/20 text-purple-950 dark:text-purple-50",
+          badgeBg: "bg-status-premium-bg text-status-premium-fg border-status-premium-border",
+          bannerBg: "bg-premium/5 border-premium/25 text-premium-fg",
           buttonStyle: "",
         };
 
@@ -108,9 +108,9 @@ export function SubscriptionStatusBanner({
           description: `Renews in ${daysRemaining} days. All storefront features enabled.`,
           cta: "Manage Billing",
           badge: "Active",
-          badgeBg: "bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/20",
-          bannerBg: "bg-blue-500/5 border-blue-500/20 text-blue-950 dark:text-blue-50",
-          buttonStyle: "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/20",
+          badgeBg: "bg-status-info-bg text-status-info-fg border-status-info-border",
+          bannerBg: "bg-info/5 border-info/25 text-info-fg",
+          buttonStyle: "bg-info hover:bg-info/90 text-info-foreground shadow-info/20",
         };
     }
   };
@@ -135,7 +135,7 @@ export function SubscriptionStatusBanner({
 
             <div className="space-y-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-semibold text-sm tracking-tight">{config.title}</span>
+                <span className="font-medium text-sm tracking-tight">{config.title}</span>
                 <span
                   className={cn(
                     "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium",
@@ -148,7 +148,7 @@ export function SubscriptionStatusBanner({
               <p className="text-xs sm:text-sm opacity-90 leading-relaxed">
                 {config.description}
                 {config.counterValue !== undefined && (
-                  <span className="font-bold text-foreground mx-1">
+                  <span className="font-medium text-foreground mx-1">
                     <AnimatedCounter value={config.counterValue} />
                   </span>
                 )}
@@ -162,7 +162,7 @@ export function SubscriptionStatusBanner({
               type="button"
               onClick={onUpgradeClick}
               className={cn(
-                "inline-flex shrink-0 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold shadow-xs transition-all active:scale-[0.98] cursor-pointer",
+                "inline-flex shrink-0 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-medium shadow-xs transition-all active:scale-[0.98] cursor-pointer",
                 config.buttonStyle,
               )}
             >

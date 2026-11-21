@@ -84,14 +84,14 @@ export default function IdeasPage() {
       <Reveal className="relative overflow-hidden rounded-[2rem] bg-secondary/35 px-6 py-14 sm:px-10 sm:py-16" y={14}>
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_oklch(0.55_0.1_78_/_0.12),_transparent_55%),radial-gradient(ellipse_at_bottom_right,_oklch(0.68_0.12_15_/_0.08),_transparent_50%)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_color-mix(in_srgb,var(--color-primary)_12%,transparent),_transparent_55%),radial-gradient(ellipse_at_bottom_right,_color-mix(in_srgb,var(--color-love)_8%,transparent),_transparent_50%)]"
         />
         <div className="relative mx-auto grid max-w-3xl gap-6 text-center">
-          <p className="text-[11px] font-medium tracking-[0.28em] text-primary uppercase">{t("app.name")}</p>
-          <h1 className="font-serif text-4xl leading-[0.95] font-semibold tracking-tight sm:text-5xl lg:text-6xl">
+          <p className="text-label font-medium tracking-ornate text-primary uppercase">{t("app.name")}</p>
+          <h1 className="font-serif text-4xl leading-[0.95] font-medium tracking-tight sm:text-5xl lg:text-6xl">
             {t("knotly.ideasHero")}
           </h1>
-          <p className="mx-auto max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-[15px]">
+          <p className="mx-auto max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-h4">
             {t("knotly.ideasSub")}
           </p>
           <label className="relative mx-auto mt-2 flex w-full max-w-md items-center">
@@ -156,16 +156,16 @@ export default function IdeasPage() {
               animate={{ scale: 1 }}
               transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/15" />
+            <div className="absolute inset-0 bg-gradient-to-t from-ink/85 via-ink/35 to-ink/15" />
             <div className="relative flex min-h-[22rem] flex-col justify-end gap-3 px-6 py-8 sm:min-h-[28rem] sm:px-10 sm:py-12">
-              <p className="text-[11px] font-medium tracking-[0.22em] text-primary uppercase">
+              <p className="text-label font-medium tracking-eyebrow text-primary uppercase">
                 {t("nav.featured")}
               </p>
-              <h2 className="max-w-2xl font-serif text-3xl leading-[1.05] font-semibold tracking-tight text-white sm:text-4xl lg:text-5xl">
+              <h2 className="max-w-2xl font-serif text-3xl leading-[1.05] font-medium tracking-tight text-paper sm:text-4xl lg:text-5xl">
                 {featured.title}
               </h2>
-              <p className="max-w-xl text-sm leading-relaxed text-white/75 sm:text-[15px]">{featured.excerpt}</p>
-              <span className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-white transition group-hover:gap-2">
+              <p className="max-w-xl text-sm leading-relaxed text-paper/75 sm:text-h4">{featured.excerpt}</p>
+              <span className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-paper transition group-hover:gap-2">
                 {t("knotly.read")}
                 <span aria-hidden>→</span>
               </span>
@@ -177,7 +177,7 @@ export default function IdeasPage() {
       {rest.length ? (
         <section className="grid gap-6">
           <Reveal y={8}>
-            <p className="text-[11px] font-medium tracking-[0.22em] text-muted-foreground uppercase">
+            <p className="text-label font-medium tracking-eyebrow text-muted-foreground uppercase">
               {t("nav.ideas")}
             </p>
           </Reveal>
@@ -198,7 +198,7 @@ export default function IdeasPage() {
                     <div className="absolute inset-0 bg-gradient-to-t from-background/40 to-transparent opacity-0 transition group-hover:opacity-100" />
                   </div>
                   <div className="grid gap-2 px-1">
-                    <p className="text-[11px] tracking-[0.16em] text-muted-foreground uppercase">
+                    <p className="text-label tracking-spaced text-muted-foreground uppercase">
                       {t(`knotly.cat_${article.category.toLowerCase()}`)}
                     </p>
                     <h3 className="font-serif text-2xl leading-tight tracking-tight transition group-hover:text-primary">

@@ -20,8 +20,8 @@ export default function Error({
       <div className="mb-6 inline-flex size-16 items-center justify-center rounded-3xl bg-destructive/10 text-destructive">
         <AlertTriangle className="size-8" />
       </div>
-      <h1 className="mb-3 font-serif text-3xl font-semibold sm:text-4xl">Something went wrong</h1>
-      <p className="mb-8 max-w-md text-sm leading-relaxed text-muted-foreground sm:text-[15px]">
+      <h1 className="mb-3 font-serif text-3xl font-medium sm:text-4xl">Something went wrong</h1>
+      <p className="mb-8 max-w-md text-sm leading-relaxed text-muted-foreground sm:text-h4">
         An unexpected error occurred. Please try again, or go back to the homepage if the problem persists.
       </p>
       <div className="flex flex-wrap justify-center gap-3">

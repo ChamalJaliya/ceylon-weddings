@@ -89,7 +89,7 @@ function Field({
 }) {
   return (
     <label className="grid gap-1.5">
-      <span className="text-[13px] font-medium leading-none tracking-[0.01em] text-foreground/80">
+      <span className="text-compact font-medium leading-none tracking-normal text-foreground/80">
         {label}
       </span>
       {children}
@@ -918,7 +918,7 @@ function AttributeEditor({
                   <div className="flex flex-wrap items-center gap-2">
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium">{opt.label.en}</p>
-                      <p className="text-[11px] text-muted-foreground">
+                      <p className="text-label text-muted-foreground">
                         {opt.key}
                         {!opt.active ? " · archived" : ""}
                       </p>

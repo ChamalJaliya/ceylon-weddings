@@ -1,5 +1,6 @@
 "use client";
 
+import { MOODBOARD_DEFAULT_FILL, MOODBOARD_INK } from "./palette";
 import { create } from "zustand";
 import {
   emptyMoodboardScene,
@@ -30,11 +31,11 @@ export type MoodboardToolStyle = {
 };
 
 export const DEFAULT_TOOL_STYLE: MoodboardToolStyle = {
-  fill: "#f5e6c8",
-  stroke: "#1f1a16",
+  fill: MOODBOARD_DEFAULT_FILL,
+  stroke: MOODBOARD_INK,
   strokeWidth: 2,
-  textFill: "#1f1a16",
-  stickyFill: "#f5e6c8",
+  textFill: MOODBOARD_INK,
+  stickyFill: MOODBOARD_DEFAULT_FILL,
   fontSize: 24,
   cornerRadius: 4,
 };

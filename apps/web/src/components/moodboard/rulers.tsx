@@ -41,7 +41,7 @@ export function MoodboardRulers({
   }
 
   return (
-    <div className="pointer-events-none absolute inset-0 z-20 overflow-hidden text-[#5c5346]">
+    <div className="pointer-events-none absolute inset-0 z-20 overflow-hidden text-studio-text">
       <svg className="absolute left-6 top-0 h-6 w-[calc(100%-1.5rem)]" aria-hidden>
         <rect width="100%" height="100%" fill="rgba(255,250,245,0.96)" />
         {top.map((m, i) => (
@@ -77,15 +77,15 @@ export function MoodboardRulers({
           </g>
         ))}
       </svg>
-      <div className="absolute left-0 top-0 size-6 bg-[#fffaf5]" />
+      <div className="absolute left-0 top-0 size-6 bg-studio-paper" />
       {cursor ? (
         <>
           <div
-            className="absolute top-6 bottom-0 w-px bg-[#b4532a]/35"
+            className="absolute top-6 bottom-0 w-px bg-studio-accent/35"
             style={{ left: cursor.x }}
           />
           <div
-            className="absolute left-6 right-0 h-px bg-[#b4532a]/35"
+            className="absolute left-6 right-0 h-px bg-studio-accent/35"
             style={{ top: cursor.y }}
           />
         </>

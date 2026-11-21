@@ -1,0 +1,27 @@
+/* Named type roles — use instead of stacking text-[11px] uppercase tracking-[0.2em]. */
+@layer components {
+  .cw-eyebrow {
+    font-size: var(--text-label-size);
+    font-weight: var(--font-weight-medium);
+    line-height: var(--text-label-leading);
+    letter-spacing: var(--tracking-eyebrow);
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+
+  .cw-overline {
+    font-size: var(--text-label-size);
+    font-weight: var(--font-weight-medium);
+    line-height: var(--text-label-leading);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+  }
+
+  .cw-display {
+    font-family: var(--font-family-serif);
+    font-size: var(--text-display-size);
+    font-weight: var(--font-weight-medium);
+    line-height: var(--text-display-leading);
+    letter-spacing: var(--text-display-tracking);
+  }
+}

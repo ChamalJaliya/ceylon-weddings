@@ -81,7 +81,7 @@ function newBlock(kind: DecorationKind, slot: DecorationSlot, sortOrder: number)
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="grid gap-1.5">
-      <span className="text-[12px] font-medium tracking-[0.01em] text-foreground/75">{label}</span>
+      <span className="text-caption font-medium tracking-normal text-foreground/75">{label}</span>
       {children}
     </label>
   );
@@ -222,7 +222,7 @@ export function StageEditor({
               )}
             >
               {SLOT_LABEL[option]}
-              {count ? <span className="text-[10px] text-primary">{count}</span> : null}
+              {count ? <span className="text-label text-primary">{count}</span> : null}
             </button>
           );
         })}
@@ -310,7 +310,7 @@ export function StageEditor({
           >
             <OnboardingStage presentation={stagePreview}>
               <div className="rounded-2xl border border-border/80 bg-card/80 p-5 shadow-sm">
-                <p className="font-serif text-xl font-semibold">{previewTitle || "Question"}</p>
+                <p className="font-serif text-xl font-medium">{previewTitle || "Question"}</p>
                 <p className="mt-1 text-xs text-muted-foreground">
                   Fill in this key vendor specification.
                 </p>
@@ -393,7 +393,7 @@ function BlockForm({
       </div>
 
       <div className="grid gap-1.5">
-        <span className="text-[12px] font-medium text-foreground/75">Hide on</span>
+        <span className="text-caption font-medium text-foreground/75">Hide on</span>
         <div className="flex flex-wrap gap-1.5">
           {(["MOBILE", "TABLET", "DESKTOP"] as const).map((breakpoint) => {
             const active = block.hideOn.includes(breakpoint);
@@ -411,7 +411,7 @@ function BlockForm({
                   })
                 }
                 className={cn(
-                  "rounded-lg border px-2.5 py-1 text-[11px] font-medium transition",
+                  "rounded-lg border px-2.5 py-1 text-label font-medium transition",
                   active
                     ? "border-primary bg-primary/10 text-foreground"
                     : "border-border/60 text-muted-foreground hover:text-foreground",
@@ -609,7 +609,7 @@ function KindFields({
               />
             </label>
           </div>
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-label text-muted-foreground">
             Videos always play muted and inline, and fall back to a poster with controls when a
             visitor prefers reduced motion.
           </p>
@@ -737,7 +737,7 @@ function AssetField({
           if (file) void upload(file);
         }}
       />
-      {uploadError ? <p className="text-[11px] text-destructive">{uploadError}</p> : null}
+      {uploadError ? <p className="text-label text-destructive">{uploadError}</p> : null}
     </div>
   );
 }

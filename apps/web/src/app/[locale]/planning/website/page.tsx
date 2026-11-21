@@ -131,7 +131,7 @@ export default function WeddingWebsiteManagerPage() {
 
       {successToast && (
         <Reveal direction="down">
-          <div className="rounded-xl bg-emerald-500/15 border border-emerald-500/30 p-3 text-xs text-emerald-700 dark:text-emerald-300 flex items-center gap-2">
+          <div className="rounded-xl bg-success/15 border border-success/30 p-3 text-xs text-success-fg flex items-center gap-2">
             <Check className="size-4" />
             Wedding website settings updated successfully!
           </div>
@@ -143,7 +143,7 @@ export default function WeddingWebsiteManagerPage() {
         <div className="space-y-4">
           <div className="flex items-center justify-between p-4 rounded-xl bg-secondary/50 border">
             <div>
-              <p className="font-semibold text-sm">Enable Public Wedding Website</p>
+              <p className="font-medium text-sm">Enable Public Wedding Website</p>
               <p className="text-xs text-muted-foreground">
                 When enabled, guests can view your schedule, travel info, and submit RSVPs online.
               </p>
@@ -152,7 +152,7 @@ export default function WeddingWebsiteManagerPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold">Custom Web Address (URL Slug)</label>
+            <label className="text-xs font-medium">Custom Web Address (URL Slug)</label>
             <div className="flex gap-2">
               <div className="flex flex-1 items-center rounded-xl border bg-secondary/30 px-3 text-xs text-muted-foreground">
                 <span className="shrink-0">{typeof window !== "undefined" ? window.location.origin : ""}/w/</span>
@@ -165,7 +165,7 @@ export default function WeddingWebsiteManagerPage() {
                 />
               </div>
               <Button type="button" variant="secondary" onClick={copyLink} size="sm">
-                {copied ? <Check className="size-4 text-emerald-600 mr-1" /> : <Copy className="size-4 mr-1" />}
+                {copied ? <Check className="size-4 text-success-fg mr-1" /> : <Copy className="size-4 mr-1" />}
                 {copied ? "Copied" : "Copy Link"}
               </Button>
             </div>

@@ -75,8 +75,8 @@ export default function ProHomePage() {
           </div>
           <div className="relative hidden overflow-hidden rounded-2xl md:block">
             <MediaFrame src={cover} alt={vendor.name} aspect="aspect-[4/5]" className="h-full rounded-2xl" />
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/55 to-transparent p-4 text-hero-foreground">
-              <p className="text-[10px] tracking-[0.18em] uppercase opacity-80">Live listing</p>
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/55 to-transparent p-4 text-hero-foreground">
+              <p className="text-label tracking-eyebrow uppercase opacity-80">Live listing</p>
               <p className="font-serif text-lg leading-tight">/vendors/{vendor.slug}</p>
             </div>
           </div>

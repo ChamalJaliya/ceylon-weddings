@@ -174,7 +174,7 @@ function HeroControls({
             <ChevronRight className="size-4" strokeWidth={1.5} />
           </button>
         </div>
-        <p className="font-serif text-[11px] tracking-[0.2em] text-hero-foreground/80">
+        <p className="font-serif text-label tracking-eyebrow text-hero-foreground/80">
           {String(index + 1).padStart(2, "0")}
           <span className="mx-1 opacity-50">/</span>
           {String(count).padStart(2, "0")}
@@ -259,11 +259,11 @@ export function CoupleHero({
         current={carousel.current}
       />
       {hub ? (
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-black/40" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-ink/40" />
       ) : (
         <>
-          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/35 to-black/15" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-black/35" />
+          <div className="absolute inset-0 bg-gradient-to-r from-ink/70 via-ink/35 to-ink/15" />
+          <div className="absolute inset-0 bg-gradient-to-t from-ink/75 via-ink/10 to-ink/35" />
         </>
       )}
       <div
@@ -284,13 +284,13 @@ export function CoupleHero({
             <Stagger className={hub ? "max-w-2xl" : "max-w-3xl"} stagger={0.08}>
               {kicker ? (
                 <StaggerItem>
-                  <p className="text-[11px] tracking-[0.28em] text-hero-muted uppercase">{kicker}</p>
+                  <p className="text-label tracking-ornate text-hero-muted uppercase">{kicker}</p>
                 </StaggerItem>
               ) : null}
               <StaggerItem>
                 <h1
                   className={cn(
-                    "mt-2 font-serif leading-[0.95] font-semibold text-hero-foreground",
+                    "mt-2 font-serif leading-[0.95] font-medium text-hero-foreground",
                     hub ? "text-4xl sm:text-5xl lg:text-6xl" : "text-5xl sm:text-6xl lg:text-7xl",
                   )}
                 >
@@ -302,7 +302,7 @@ export function CoupleHero({
               </StaggerItem>
               {date || place ? (
                 <StaggerItem>
-                  <p className={cn("mt-4 text-hero-muted", hub ? "text-sm" : "max-w-lg text-[15px] leading-relaxed")}>
+                  <p className={cn("mt-4 text-hero-muted", hub ? "text-sm" : "max-w-lg text-h4 leading-relaxed")}>
                     {date}
                     {date && place ? <span className="mx-2 text-primary">·</span> : null}
                     {place}
@@ -315,7 +315,7 @@ export function CoupleHero({
                     {chips.map((chip) => (
                       <li
                         key={chip}
-                        className="rounded-full border border-hero-foreground/20 px-3 py-1 text-[11px] tracking-wide text-hero-foreground"
+                        className="rounded-full border border-hero-foreground/20 px-3 py-1 text-label tracking-wide text-hero-foreground"
                       >
                         {chip}
                       </li>
@@ -361,7 +361,7 @@ export function CoupleHero({
                     </span>
                   </p>
                   {daysLabel ? (
-                    <p className="mt-1 text-[10px] tracking-[0.28em] text-hero-muted uppercase">{daysLabel}</p>
+                    <p className="mt-1 text-label tracking-ornate text-hero-muted uppercase">{daysLabel}</p>
                   ) : null}
                 </motion.div>
               ) : null}

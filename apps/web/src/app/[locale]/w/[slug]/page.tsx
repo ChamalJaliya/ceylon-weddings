@@ -83,7 +83,7 @@ export default function GuestWebsitePage() {
 
       <section className="grid gap-4">
         <Reveal direction="none" delay={0.05}>
-          <p className="text-[11px] tracking-[0.22em] text-muted-foreground uppercase">Ceremony</p>
+          <p className="text-label tracking-eyebrow text-muted-foreground uppercase">Ceremony</p>
         </Reveal>
         <CeremonySchedule events={site.events} formatWhen={formatWhen} />
       </section>
@@ -93,7 +93,7 @@ export default function GuestWebsitePage() {
       {site.websiteFaq ? (
         <section className="grid gap-4">
           <Reveal direction="none" delay={0.05}>
-            <p className="text-[11px] tracking-[0.22em] text-muted-foreground uppercase">FAQ</p>
+            <p className="text-label tracking-eyebrow text-muted-foreground uppercase">FAQ</p>
           </Reveal>
           <FaqAccordion faq={site.websiteFaq} />
         </section>
@@ -102,7 +102,7 @@ export default function GuestWebsitePage() {
       {(site.team ?? []).length ? (
         <section className="grid gap-4">
           <Reveal direction="none" delay={0.05}>
-            <p className="text-[11px] tracking-[0.22em] text-muted-foreground uppercase">Our team</p>
+            <p className="text-label tracking-eyebrow text-muted-foreground uppercase">Our team</p>
           </Reveal>
           <OurTeamStrip
             items={(site.team ?? []).map((member) => ({

@@ -46,8 +46,8 @@ export function StatCard({
           <Icon icon={icon} size="md" />
         </div>
         <div className="min-w-0">
-          <p className="text-[11px] font-medium tracking-[0.12em] text-muted-foreground uppercase">{label}</p>
-          <div className="mt-1.5 font-serif text-3xl font-semibold leading-none tracking-tight">
+          <p className="text-label font-medium tracking-spaced text-muted-foreground uppercase">{label}</p>
+          <div className="mt-1.5 font-serif text-3xl font-medium leading-none tracking-tight">
             {typeof value === "number" ? <AnimatedCounter value={value} /> : value}
           </div>
           {hint ? <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{hint}</p> : null}

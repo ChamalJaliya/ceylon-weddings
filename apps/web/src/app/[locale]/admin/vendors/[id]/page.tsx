@@ -163,7 +163,7 @@ export default function AdminVendorDetailPage() {
                 </div>
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>Days remaining</span>
-                  <span className="font-semibold text-foreground">{subscription.daysRemaining} days</span>
+                  <span className="font-medium text-foreground">{subscription.daysRemaining} days</span>
                 </div>
                 {subscription.trialEndsAt && (
                   <div className="flex items-center justify-between text-xs text-muted-foreground">

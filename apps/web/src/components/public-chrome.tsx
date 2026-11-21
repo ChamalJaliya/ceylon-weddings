@@ -122,7 +122,7 @@ export function PublicChrome({ children }: { children: ReactNode }) {
         <div className="cw-notch-ear" aria-hidden />
       </header>
       {showMaintenance && branding.maintenanceBanner.message ? (
-        <div className="relative z-10 mt-[calc(var(--cw-frame-top)+var(--cw-notch-height))] bg-amber-500/15 px-4 py-2 text-center text-xs text-amber-900 dark:text-amber-100">
+        <div className="relative z-10 mt-[calc(var(--cw-frame-top)+var(--cw-notch-height))] bg-warning/15 px-4 py-2 text-center text-xs text-warning-fg">
           {branding.maintenanceBanner.message}
         </div>
       ) : null}

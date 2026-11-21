@@ -95,27 +95,27 @@ export default function LegalGuidePage() {
         {track === "GENERAL" && (
           <div className="space-y-4 text-xs text-muted-foreground leading-relaxed">
             <div className="p-4 rounded-xl bg-secondary/30 border space-y-2">
-              <h4 className="font-semibold text-foreground text-sm">General Civil Marriage in Sri Lanka</h4>
+              <h4 className="font-medium text-foreground text-sm">General Civil Marriage in Sri Lanka</h4>
               <p>
                 Governed by the General Marriage Ordinance. Applicable to all Sri Lankan citizens regardless of ethnicity, except where customary Kandyan or Muslim laws are chosen.
               </p>
             </div>
             <div className="grid gap-3 sm:grid-cols-3">
               <div className="p-3.5 rounded-xl border bg-card">
-                <span className="font-bold text-primary">Step 1: Notice of Marriage</span>
-                <p className="mt-1 text-[11px]">
+                <span className="font-medium text-primary">Step 1: Notice of Marriage</span>
+                <p className="mt-1 text-label">
                   Submit the Notice of Marriage to the Divisional Secretariat / Registrar of Marriages in the division where either party has resided for at least 10 days.
                 </p>
               </div>
               <div className="p-3.5 rounded-xl border bg-card">
-                <span className="font-bold text-primary">Step 2: 14-Day Waiting Period</span>
-                <p className="mt-1 text-[11px]">
+                <span className="font-medium text-primary">Step 2: 14-Day Waiting Period</span>
+                <p className="mt-1 text-label">
                   The notice is displayed publicly for 14 calendar days. Alternatively, a Special License can be requested from the District Registrar for immediate registration with a nominal stamp duty.
                 </p>
               </div>
               <div className="p-3.5 rounded-xl border bg-card">
-                <span className="font-bold text-primary">Step 3: Solemnization</span>
-                <p className="mt-1 text-[11px]">
+                <span className="font-medium text-primary">Step 3: Solemnization</span>
+                <p className="mt-1 text-label">
                   Registration takes place either at the Registrar’s office or at your wedding venue / Poruwa ceremony with two witnesses present.
                 </p>
               </div>
@@ -126,7 +126,7 @@ export default function LegalGuidePage() {
         {track === "KANDYAN" && (
           <div className="space-y-4 text-xs text-muted-foreground leading-relaxed">
             <div className="p-4 rounded-xl bg-secondary/30 border space-y-2">
-              <h4 className="font-semibold text-foreground text-sm">Kandyan Marriage Ordinance</h4>
+              <h4 className="font-medium text-foreground text-sm">Kandyan Marriage Ordinance</h4>
               <p>
                 Applicable when both parties are Kandyan Sinhalese whose parents were subject to Kandyan customary law. Distinct property rights apply between <strong>Diga</strong> (bride moves to groom's house) and <strong>Binna</strong> (groom moves to bride's ancestral house) marriages.
               </p>
@@ -142,7 +142,7 @@ export default function LegalGuidePage() {
         {track === "MUSLIM" && (
           <div className="space-y-4 text-xs text-muted-foreground leading-relaxed">
             <div className="p-4 rounded-xl bg-secondary/30 border space-y-2">
-              <h4 className="font-semibold text-foreground text-sm">Muslim Marriage & Divorce Act (MMDA)</h4>
+              <h4 className="font-medium text-foreground text-sm">Muslim Marriage & Divorce Act (MMDA)</h4>
               <p>
                 Applicable to citizens who profess Islam. Nikah contracts are solemnized by an authorized Muslim Marriage Registrar or Quazi.
               </p>
@@ -157,22 +157,22 @@ export default function LegalGuidePage() {
 
         {track === "DESTINATION" && (
           <div className="space-y-4 text-xs text-muted-foreground leading-relaxed">
-            <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-900 dark:text-amber-100 p-4 space-y-2">
-              <h4 className="font-semibold text-sm">Destination & Foreign Citizen Requirements</h4>
+            <div className="p-4 rounded-xl bg-warning/10 border border-warning/20 text-warning-fg p-4 space-y-2">
+              <h4 className="font-medium text-sm">Destination & Foreign Citizen Requirements</h4>
               <p>
                 Foreign nationals or Sri Lankan dual citizens can register legally in Sri Lanka. Under current Registrar General’s Department regulations, foreign nationals must obtain a Security Clearance Report / No Objection Certificate from their embassy or through the RGD portal.
               </p>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="p-3.5 rounded-xl border bg-card">
-                <span className="font-bold">4-Day Minimum Residency</span>
-                <p className="mt-1 text-[11px] text-muted-foreground">
+                <span className="font-medium">4-Day Minimum Residency</span>
+                <p className="mt-1 text-label text-muted-foreground">
                   Couples must reside in Sri Lanka for at least 4 full days prior to submitting the notice of marriage to the local registrar.
                 </p>
               </div>
               <div className="p-3.5 rounded-xl border bg-card">
-                <span className="font-bold">Certificate Legalization / Apostille</span>
-                <p className="mt-1 text-[11px] text-muted-foreground">
+                <span className="font-medium">Certificate Legalization / Apostille</span>
+                <p className="mt-1 text-label text-muted-foreground">
                   Following the wedding, submit the English marriage certificate to the Consular Affairs Division of the Ministry of Foreign Affairs (Colombo) for official authentication/Apostille.
                 </p>
               </div>
@@ -194,11 +194,11 @@ export default function LegalGuidePage() {
                 type="button"
                 onClick={() => toggleDoc(item.id)}
                 className={`flex w-full items-start gap-3 rounded-xl border p-3 text-left transition ${
-                  checkedDocs[item.id] ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-950 dark:text-emerald-50" : "bg-card hover:bg-secondary/30"
+                  checkedDocs[item.id] ? "bg-success/10 border-success/30 text-success-fg" : "bg-card hover:bg-secondary/30"
                 }`}
               >
                 {checkedDocs[item.id] ? (
-                  <CheckSquare className="size-4 shrink-0 text-emerald-600 dark:text-emerald-400 mt-0.5" />
+                  <CheckSquare className="size-4 shrink-0 text-success-fg mt-0.5" />
                 ) : (
                   <Square className="size-4 shrink-0 text-muted-foreground mt-0.5" />
                 )}

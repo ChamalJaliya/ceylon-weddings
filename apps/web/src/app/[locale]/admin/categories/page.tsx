@@ -26,26 +26,26 @@ const CATEGORY_META: Record<
   string,
   { emoji: string; gradient: string; accent: string }
 > = {
-  VENUE:         { emoji: "🏛️",  gradient: "from-amber-500/20 via-orange-400/10 to-transparent",    accent: "border-amber-400/40" },
-  PHOTO_VIDEO:   { emoji: "📷",  gradient: "from-blue-500/20 via-sky-400/10 to-transparent",         accent: "border-blue-400/40" },
-  BRIDAL_WEAR:   { emoji: "👗",  gradient: "from-rose-400/20 via-pink-300/10 to-transparent",        accent: "border-rose-400/40" },
-  GROOM_WEAR:    { emoji: "🤵",  gradient: "from-slate-500/20 via-zinc-400/10 to-transparent",       accent: "border-slate-400/40" },
-  JEWELLERY:     { emoji: "💎",  gradient: "from-violet-500/20 via-purple-400/10 to-transparent",    accent: "border-violet-400/40" },
-  HAIR_MAKEUP:   { emoji: "💄",  gradient: "from-fuchsia-500/20 via-pink-400/10 to-transparent",     accent: "border-fuchsia-400/40" },
-  BRIDAL_DRESSER:{ emoji: "✨",  gradient: "from-pink-400/20 via-rose-300/10 to-transparent",        accent: "border-pink-400/40" },
-  FLORIST_DECOR: { emoji: "🌸",  gradient: "from-green-500/20 via-emerald-400/10 to-transparent",   accent: "border-green-400/40" },
-  CATERER:       { emoji: "🍽️",  gradient: "from-orange-500/20 via-amber-400/10 to-transparent",    accent: "border-orange-400/40" },
-  CAKE:          { emoji: "🎂",  gradient: "from-yellow-400/20 via-amber-300/10 to-transparent",     accent: "border-yellow-400/40" },
-  ENTERTAINMENT: { emoji: "🎶",  gradient: "from-indigo-500/20 via-blue-400/10 to-transparent",      accent: "border-indigo-400/40" },
-  PORUWA:        { emoji: "🛕",  gradient: "from-red-500/20 via-rose-400/10 to-transparent",         accent: "border-red-400/40" },
-  ASTROLOGY:     { emoji: "🔮",  gradient: "from-purple-600/20 via-violet-400/10 to-transparent",   accent: "border-purple-400/40" },
-  WEDDING_CARS:  { emoji: "🚗",  gradient: "from-cyan-500/20 via-sky-400/10 to-transparent",         accent: "border-cyan-400/40" },
-  INVITATIONS:   { emoji: "📜",  gradient: "from-teal-500/20 via-emerald-400/10 to-transparent",     accent: "border-teal-400/40" },
-  PLANNER:       { emoji: "📋",  gradient: "from-lime-500/20 via-green-400/10 to-transparent",       accent: "border-lime-400/40" },
-  REGISTRAR:     { emoji: "⚖️",  gradient: "from-gray-500/20 via-slate-400/10 to-transparent",      accent: "border-gray-400/40" },
-  MEHNDI:        { emoji: "🌿",  gradient: "from-emerald-500/20 via-green-400/10 to-transparent",    accent: "border-emerald-400/40" },
-  TRANSPORT:     { emoji: "🚌",  gradient: "from-blue-600/20 via-blue-400/10 to-transparent",        accent: "border-blue-500/40" },
-  ACCOMMODATION: { emoji: "🏨",  gradient: "from-stone-500/20 via-neutral-400/10 to-transparent",   accent: "border-stone-400/40" },
+  VENUE:         { emoji: "🏛️",  gradient: "from-chart-1/20 via-chart-1/10 to-transparent", accent: "border-chart-1/40" },
+  PHOTO_VIDEO:   { emoji: "📷",  gradient: "from-chart-3/20 via-chart-3/10 to-transparent", accent: "border-chart-3/40" },
+  BRIDAL_WEAR:   { emoji: "👗",  gradient: "from-love/20 via-love/10 to-transparent", accent: "border-love/40" },
+  GROOM_WEAR:    { emoji: "🤵",  gradient: "from-muted-foreground/20 via-muted-foreground/10 to-transparent", accent: "border-muted-foreground/40" },
+  JEWELLERY:     { emoji: "💎",  gradient: "from-premium/20 via-premium/10 to-transparent", accent: "border-premium/40" },
+  HAIR_MAKEUP:   { emoji: "💄",  gradient: "from-love/20 via-love/10 to-transparent", accent: "border-love/40" },
+  BRIDAL_DRESSER:{ emoji: "✨",  gradient: "from-chart-4/20 via-chart-4/10 to-transparent", accent: "border-chart-4/40" },
+  FLORIST_DECOR: { emoji: "🌸",  gradient: "from-chart-2/20 via-chart-2/10 to-transparent", accent: "border-chart-2/40" },
+  CATERER:       { emoji: "🍽️",  gradient: "from-chart-5/20 via-chart-5/10 to-transparent", accent: "border-chart-5/40" },
+  CAKE:          { emoji: "🎂",  gradient: "from-chart-5/20 via-chart-5/10 to-transparent", accent: "border-chart-5/40" },
+  ENTERTAINMENT: { emoji: "🎶",  gradient: "from-info/20 via-info/10 to-transparent", accent: "border-info/40" },
+  PORUWA:        { emoji: "🛕",  gradient: "from-premium/20 via-premium/10 to-transparent", accent: "border-premium/40" },
+  ASTROLOGY:     { emoji: "🔮",  gradient: "from-premium/20 via-premium/10 to-transparent", accent: "border-premium/40" },
+  WEDDING_CARS:  { emoji: "🚗",  gradient: "from-chart-3/20 via-chart-3/10 to-transparent", accent: "border-chart-3/40" },
+  INVITATIONS:   { emoji: "📜",  gradient: "from-chart-1/20 via-chart-1/10 to-transparent", accent: "border-chart-1/40" },
+  PLANNER:       { emoji: "📋",  gradient: "from-chart-2/20 via-chart-2/10 to-transparent", accent: "border-chart-2/40" },
+  REGISTRAR:     { emoji: "⚖️",  gradient: "from-muted-foreground/20 via-muted-foreground/10 to-transparent", accent: "border-muted-foreground/40" },
+  MEHNDI:        { emoji: "🌿",  gradient: "from-chart-2/20 via-chart-2/10 to-transparent", accent: "border-chart-2/40" },
+  TRANSPORT:     { emoji: "🚌",  gradient: "from-info/20 via-info/10 to-transparent", accent: "border-info/40" },
+  ACCOMMODATION: { emoji: "🏨",  gradient: "from-muted-foreground/20 via-muted-foreground/10 to-transparent", accent: "border-muted-foreground/40" },
 };
 
 const FALLBACK_META = { emoji: "🏷️", gradient: "from-muted/30 via-transparent to-transparent", accent: "border-border/40" };
@@ -198,7 +198,7 @@ function Stat({
       <p className="text-xs text-muted-foreground">{label}</p>
       <p
         className={cn(
-          "font-serif text-2xl font-semibold tracking-tight tabular-nums",
+          "font-serif text-2xl font-medium tracking-tight tabular-nums",
           accent && "text-primary",
         )}
       >
@@ -257,18 +257,18 @@ function CategoryTile({
         </span>
 
         {/* Label */}
-        <p className="font-serif text-sm font-semibold leading-snug tracking-tight">
+        <p className="font-serif text-sm font-medium leading-snug tracking-tight">
           {label}
         </p>
 
         {/* Stats row */}
         <div className="mt-auto flex items-end justify-between gap-2">
           <p className="text-xs tabular-nums text-muted-foreground">
-            <span className="font-semibold text-foreground">{total}</span>{" "}
+            <span className="font-medium text-foreground">{total}</span>{" "}
             {total === 1 ? "listing" : "listings"}
           </p>
           {verified > 0 && (
-            <span className="rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-medium text-success">
+            <span className="rounded-full bg-success/15 px-2 py-0.5 text-label font-medium text-success">
               {verified} ✓
             </span>
           )}

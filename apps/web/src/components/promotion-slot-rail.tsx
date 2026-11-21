@@ -79,7 +79,7 @@ export function PromotionSlotRail({
                 promo={promo}
                 light={promo.overlayTone === "light"}
                 className="rounded-2xl transition hover:shadow-md"
-                style={{ ["--promo-accent" as string]: promo.accentColor || "#7c2d12" }}
+                style={{ ["--promo-accent" as string]: promo.accentColor || "var(--color-primary)" }}
               />
             </a>
           );

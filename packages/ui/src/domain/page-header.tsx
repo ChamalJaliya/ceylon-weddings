@@ -34,11 +34,11 @@ export function PageHeader({
         ) : null}
         <div className="min-w-0 space-y-2">
           {kicker ? (
-            <p className="text-[11px] font-medium tracking-[0.2em] text-muted-foreground uppercase">{kicker}</p>
+            <p className="text-label font-medium tracking-eyebrow text-muted-foreground uppercase">{kicker}</p>
           ) : null}
-          <h1 className="font-serif text-3xl font-semibold tracking-tight sm:text-4xl">{title}</h1>
+          <h1 className="font-serif text-3xl font-medium tracking-tight sm:text-4xl">{title}</h1>
           {description ? (
-            <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-[15px]">{description}</p>
+            <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-h4">{description}</p>
           ) : null}
         </div>
       </div>

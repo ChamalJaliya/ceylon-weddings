@@ -192,10 +192,10 @@ export function VendorCard({
 
         <div className="pointer-events-none relative flex flex-1 flex-col gap-3 px-4 py-4">
           <div className="grid gap-1">
-            <p className="text-[11px] font-medium tracking-[0.18em] text-muted-foreground uppercase">
+            <p className="text-label font-medium tracking-eyebrow text-muted-foreground uppercase">
               {category}
             </p>
-            <h3 className="truncate font-serif text-xl font-semibold tracking-tight">{name}</h3>
+            <h3 className="truncate font-serif text-xl font-medium tracking-tight">{name}</h3>
           </div>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
             <span className="inline-flex items-center gap-1">
@@ -211,7 +211,7 @@ export function VendorCard({
           {matchChips?.length ? (
             <div className="flex flex-wrap gap-1.5">
               {matchChips.map((chip) => (
-                <Badge key={chip} intent="outline" className="max-w-full truncate px-2 py-0.5 text-[10px]">
+                <Badge key={chip} intent="outline" className="max-w-full truncate px-2 py-0.5 text-label">
                   {chip}
                 </Badge>
               ))}

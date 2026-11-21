@@ -374,7 +374,7 @@ export default function StorefrontEditPage() {
       {({ open, toggle }) => (
         <>
       <div className="grid gap-1">
-        <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-primary/80">Pro storefront</p>
+        <p className="text-label font-medium uppercase tracking-eyebrow text-primary/80">Pro storefront</p>
         <PageHeader
           icon={Store}
           title="Storefront studio"
@@ -506,7 +506,7 @@ export default function StorefrontEditPage() {
               {(onboarding?.definitions.optional ?? []).length ? (
                 <div className="grid gap-3">
                   <div>
-                    <h3 className="font-serif text-xl font-semibold">Optional</h3>
+                    <h3 className="font-serif text-xl font-medium">Optional</h3>
                     <p className="text-sm text-muted-foreground">Unlocks couple filters when answered.</p>
                   </div>
                   {(onboarding?.definitions.optional ?? []).map((def) => (

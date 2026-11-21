@@ -14,9 +14,9 @@ export const Checkbox = React.forwardRef<
     ref={ref}
     data-slot="checkbox"
     className={cn(
-      "peer grid size-[1.125rem] shrink-0 place-items-center rounded-[6px] border border-border/80 bg-muted/50 shadow-[inset_0_1px_0_0_color-mix(in_oklch,var(--foreground)_5%,transparent)] transition-[border-color,box-shadow,background-color,transform] duration-200",
+      "peer grid size-[1.125rem] shrink-0 place-items-center rounded-xs border border-border/80 bg-muted/50 shadow-field transition-[border-color,box-shadow,background-color,transform] duration-200",
       "hover:border-border hover:bg-muted/80",
-      "focus-visible:border-ring/70 focus-visible:outline-none focus-visible:shadow-[0_0_0_4px_color-mix(in_oklch,var(--ring)_18%,transparent)]",
+      "focus-visible:border-ring/70 focus-visible:outline-none focus-visible:shadow-focus",
       "disabled:cursor-not-allowed disabled:opacity-50",
       "data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground data-[state=checked]:shadow-none",
       className,

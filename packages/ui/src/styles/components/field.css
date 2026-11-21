@@ -1,0 +1,98 @@
+/* One block: .field — Input, Textarea, NativeSelect, picker triggers. */
+@layer components {
+  .field {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    align-items: center;
+    appearance: none;
+    border: var(--border-width) solid color-mix(in srgb, var(--color-border) 70%, transparent);
+    border-radius: var(--input-radius);
+    background: color-mix(in srgb, var(--color-bg-muted) 50%, transparent);
+    color: var(--color-text-heading);
+    font-size: var(--text-body-size);
+    box-shadow: var(--shadow-field-inset);
+    transition:
+      color var(--motion-fast) var(--motion-ease-out),
+      background-color var(--motion-fast) var(--motion-ease-out),
+      border-color var(--motion-fast) var(--motion-ease-out),
+      box-shadow var(--motion-fast) var(--motion-ease-out);
+  }
+
+  .field::placeholder {
+    color: color-mix(in srgb, var(--color-text-muted) 65%, transparent);
+  }
+
+  .field:hover {
+    border-color: var(--color-border);
+    background: color-mix(in srgb, var(--color-bg-muted) 80%, transparent);
+  }
+
+  .field:focus-visible,
+  .field[data-state="open"] {
+    border-color: color-mix(in srgb, var(--color-focus-ring) 70%, transparent);
+    background: var(--color-bg-page);
+    box-shadow: var(--shadow-focus);
+    outline: none;
+  }
+
+  .field[aria-invalid="true"] {
+    border-color: color-mix(in srgb, var(--color-danger) 55%, transparent);
+    box-shadow: var(--shadow-invalid);
+  }
+
+  .field:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  .field:disabled:hover {
+    background: color-mix(in srgb, var(--color-bg-muted) 50%, transparent);
+  }
+
+  .field--default {
+    height: var(--field-height);
+    padding-inline: 0.875rem;
+  }
+
+  .field--sm {
+    height: var(--field-height-sm);
+    padding-inline: var(--space-3);
+    font-size: var(--text-compact-size);
+  }
+
+  .field--multiline {
+    height: auto;
+    min-height: 7rem;
+    align-items: flex-start;
+    padding: var(--space-3) 0.875rem;
+    line-height: var(--text-body-leading);
+    resize: vertical;
+  }
+
+  .field::file-selector-button {
+    margin-right: var(--space-3);
+    height: 1.75rem;
+    border: 0;
+    border-radius: var(--radius-xs);
+    background: var(--color-secondary);
+    padding-inline: 0.625rem;
+    color: var(--color-secondary-fg);
+    font-size: var(--text-caption-size);
+    font-weight: var(--font-weight-medium);
+  }
+
+  .field-label {
+    font-size: var(--text-compact-size);
+    font-weight: var(--font-weight-medium);
+    line-height: 1;
+    letter-spacing: 0.01em;
+    color: color-mix(in srgb, var(--color-text-heading) 80%, transparent);
+  }
+
+  /* Dense modal / wizard forms opt in with data-form-density="compact". */
+  [data-form-density="compact"] .field--default {
+    height: var(--field-height-sm);
+    font-size: var(--text-compact-size);
+  }
+}

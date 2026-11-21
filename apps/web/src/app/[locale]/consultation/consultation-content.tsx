@@ -285,11 +285,11 @@ export function ConsultationContent({
                           : "border-border/70 bg-background text-foreground hover:border-primary/40",
                       )}
                     >
-                      <span className={cn("text-[11px] uppercase", active ? "opacity-80" : "text-muted-foreground")}>
+                      <span className={cn("text-label uppercase", active ? "opacity-80" : "text-muted-foreground")}>
                         {tile.weekday}
                       </span>
                       <span className="font-serif text-xl font-medium leading-none">{tile.day}</span>
-                      <span className={cn("mt-1 text-[11px]", active ? "opacity-80" : "text-muted-foreground")}>
+                      <span className={cn("mt-1 text-label", active ? "opacity-80" : "text-muted-foreground")}>
                         {tile.month}
                       </span>
                     </button>

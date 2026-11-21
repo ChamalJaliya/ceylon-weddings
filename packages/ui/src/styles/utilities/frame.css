@@ -1,0 +1,85 @@
+/* Rounded page frame + top notch chrome (public site shell). */
+html:has(.cw-page-frame) {
+  overflow-x: clip;
+  scroll-padding-top: calc(var(--cw-frame-top) + var(--cw-notch-height));
+}
+
+html:has(.cw-page-frame) body {
+  overflow-x: clip;
+}
+
+html:has(.cw-page-locked),
+html:has(.cw-page-locked) body {
+  overflow: hidden;
+  height: 100dvh;
+}
+
+.cw-frame-ring {
+  position: fixed;
+  z-index: 30;
+  top: var(--cw-frame-top);
+  right: var(--cw-frame-right);
+  bottom: var(--cw-frame-bottom);
+  left: var(--cw-frame-left);
+  border-radius: var(--cw-frame-radius);
+  box-shadow: 0 0 0 100vw var(--color-frame);
+  pointer-events: none;
+}
+
+.cw-page-notch {
+  position: fixed;
+  z-index: 40;
+  top: var(--cw-frame-top);
+  right: var(--cw-frame-right);
+  left: var(--cw-frame-left);
+  display: flex;
+  align-items: flex-start;
+  pointer-events: none;
+}
+
+.cw-notch-ear {
+  width: var(--cw-notch-ear);
+  height: var(--cw-notch-height);
+  flex-shrink: 0;
+}
+
+.cw-notch-bar {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  height: var(--cw-notch-height);
+  flex: 1;
+  align-items: center;
+  pointer-events: auto;
+  background: var(--color-frame);
+  border-bottom-left-radius: var(--cw-notch-radius);
+  border-bottom-right-radius: var(--cw-notch-radius);
+}
+
+.cw-notch-bar::before,
+.cw-notch-bar::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: var(--cw-notch-radius);
+  height: var(--cw-notch-radius);
+  pointer-events: none;
+}
+
+.cw-notch-bar::before {
+  left: calc(var(--cw-notch-radius) * -1);
+  background: radial-gradient(
+    circle at 0 100%,
+    transparent var(--cw-notch-radius),
+    var(--color-frame) calc(var(--cw-notch-radius) + 0.5px)
+  );
+}
+
+.cw-notch-bar::after {
+  right: calc(var(--cw-notch-radius) * -1);
+  background: radial-gradient(
+    circle at 100% 100%,
+    transparent var(--cw-notch-radius),
+    var(--color-frame) calc(var(--cw-notch-radius) + 0.5px)
+  );
+}

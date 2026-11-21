@@ -361,7 +361,7 @@ function GlobalCommandPalette({
             aria-autocomplete="list"
             aria-controls="cw-search-results"
           />
-          <kbd className="hidden items-center rounded border border-border/80 bg-background px-2 py-0.5 font-mono text-[10px] font-semibold text-muted-foreground sm:inline-flex">
+          <kbd className="hidden items-center rounded border border-border/80 bg-background px-2 py-0.5 font-mono text-label font-medium text-muted-foreground sm:inline-flex">
             ESC
           </kbd>
         </div>
@@ -381,7 +381,7 @@ function GlobalCommandPalette({
             <div className="grid gap-3">
               {grouped.map(([category, items]) => (
                 <div key={category} className="grid gap-1">
-                  <p className="px-3 pt-1 text-[10px] font-semibold tracking-[0.18em] text-muted-foreground uppercase">
+                  <p className="px-3 pt-1 text-label font-medium tracking-eyebrow text-muted-foreground uppercase">
                     {category}
                   </p>
                   {items.map((item) => {
@@ -432,7 +432,7 @@ function GlobalCommandPalette({
                               {item.badge}
                             </Badge>
                           ) : item.live ? (
-                            <span className="text-[11px] font-medium tracking-wider text-muted-foreground uppercase">
+                            <span className="text-label font-medium tracking-wider text-muted-foreground uppercase">
                               Live
                             </span>
                           ) : null}
@@ -454,13 +454,13 @@ function GlobalCommandPalette({
           )}
         </div>
 
-        <div className="flex items-center justify-between border-t border-border bg-muted/40 px-4 py-2 text-[11px] text-muted-foreground">
+        <div className="flex items-center justify-between border-t border-border bg-muted/40 px-4 py-2 text-label text-muted-foreground">
           <span>
-            <kbd className="font-mono font-semibold">↑</kbd>{" "}
-            <kbd className="font-mono font-semibold">↓</kbd> navigate
+            <kbd className="font-mono font-medium">↑</kbd>{" "}
+            <kbd className="font-mono font-medium">↓</kbd> navigate
           </span>
           <span>
-            <kbd className="font-mono font-semibold">↵</kbd> open
+            <kbd className="font-mono font-medium">↵</kbd> open
           </span>
         </div>
       </DialogContent>

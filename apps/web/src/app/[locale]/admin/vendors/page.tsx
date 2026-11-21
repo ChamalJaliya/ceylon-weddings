@@ -128,7 +128,7 @@ export default function AdminVendorsPage() {
                 >
                   {CATEGORY_LABELS[cat] ?? cat}
                   <span
-                    className={`rounded-full px-1.5 py-px text-[10px] tabular-nums ${
+                    className={`rounded-full px-1.5 py-px text-label tabular-nums ${
                       isActive ? "bg-primary-foreground/20" : "bg-border"
                     }`}
                   >

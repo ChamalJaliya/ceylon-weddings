@@ -78,14 +78,14 @@ export function renderCmsBody(body: string) {
   return blocks.map((block, index) => {
     if (block.startsWith("### ")) {
       return (
-        <h3 key={index} className="font-serif text-xl font-semibold tracking-tight text-foreground">
+        <h3 key={index} className="font-serif text-xl font-medium tracking-tight text-foreground">
           {inlineFormat(block.slice(4))}
         </h3>
       );
     }
     if (block.startsWith("## ")) {
       return (
-        <h2 key={index} className="font-serif text-2xl font-semibold tracking-tight text-foreground">
+        <h2 key={index} className="font-serif text-2xl font-medium tracking-tight text-foreground">
           {inlineFormat(block.slice(3))}
         </h2>
       );

@@ -72,7 +72,7 @@ export default function PublicMoodboardPage() {
   return (
     <div className="mx-auto flex h-[100dvh] max-w-6xl flex-col gap-3 px-3 py-4 sm:px-6">
       <header className="shrink-0 space-y-1">
-        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+        <p className="text-xs uppercase tracking-eyebrow text-muted-foreground">
           Ceylon Weddings · Moodboard
         </p>
         <h1 className="font-display text-3xl sm:text-4xl">{brief.title}</h1>

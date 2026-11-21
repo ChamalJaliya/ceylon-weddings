@@ -588,7 +588,7 @@ export function InquirePanel({
       )}
     >
       <div className="grid gap-1">
-        <p className="text-[11px] font-medium tracking-[0.18em] text-primary/90 uppercase">Inquire</p>
+        <p className="text-label font-medium tracking-eyebrow text-primary/90 uppercase">Inquire</p>
         <h2 className="font-serif text-2xl tracking-tight">{title}</h2>
       </div>
       {children}
@@ -613,16 +613,16 @@ export function VendorStatStrip({
   return (
     <div className="grid grid-cols-3 gap-3 rounded-2xl border border-border/70 bg-card/60 p-3 text-center sm:gap-4 sm:p-4">
       <div className="grid gap-0.5">
-        <p className="font-serif text-xl font-semibold tracking-tight sm:text-2xl">★ {rating}</p>
-        <p className="text-[10px] tracking-wide text-muted-foreground uppercase sm:text-xs">Rating</p>
+        <p className="font-serif text-xl font-medium tracking-tight sm:text-2xl">★ {rating}</p>
+        <p className="text-label tracking-wide text-muted-foreground uppercase sm:text-xs">Rating</p>
       </div>
       <div className="grid gap-0.5 border-x border-border/60">
-        <p className="font-serif text-xl font-semibold tracking-tight sm:text-2xl">{couplesServed}</p>
-        <p className="text-[10px] tracking-wide text-muted-foreground uppercase sm:text-xs">{couplesLabel}</p>
+        <p className="font-serif text-xl font-medium tracking-tight sm:text-2xl">{couplesServed}</p>
+        <p className="text-label tracking-wide text-muted-foreground uppercase sm:text-xs">{couplesLabel}</p>
       </div>
       <div className="grid gap-0.5">
-        <p className="font-serif text-xl font-semibold tracking-tight sm:text-2xl">{yearsExperience}</p>
-        <p className="text-[10px] tracking-wide text-muted-foreground uppercase sm:text-xs">{yearsLabel}</p>
+        <p className="font-serif text-xl font-medium tracking-tight sm:text-2xl">{yearsExperience}</p>
+        <p className="text-label tracking-wide text-muted-foreground uppercase sm:text-xs">{yearsLabel}</p>
       </div>
     </div>
   );

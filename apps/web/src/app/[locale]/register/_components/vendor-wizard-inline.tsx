@@ -306,7 +306,7 @@ export function VendorWizardInline({
             <Icon icon={Store} size="sm" />
           </span>
           <div>
-            <p className="text-[11px] font-semibold tracking-wider text-primary uppercase">{stepLabel}</p>
+            <p className="text-label font-medium tracking-wider text-primary uppercase">{stepLabel}</p>
             <p className="text-xs text-muted-foreground">
               {pickingCategory ? "Category selection" : `Question ${stepIndex + 1} of ${required.length}`}
             </p>
@@ -335,7 +335,7 @@ export function VendorWizardInline({
       {/* Main Glassmorphic Panel */}
       <div className="relative overflow-hidden rounded-3xl border border-border/80 bg-card/80 p-6 shadow-xl backdrop-blur-md sm:p-8">
         <header className="mb-6 grid gap-1.5">
-          <Heading as="h2" icon={pickingCategory ? Sparkles : Store} className="text-2xl font-semibold sm:text-3xl">
+          <Heading as="h2" icon={pickingCategory ? Sparkles : Store} className="text-2xl font-medium sm:text-3xl">
             {title}
           </Heading>
           <p className="text-sm leading-relaxed text-muted-foreground">{subtitle}</p>

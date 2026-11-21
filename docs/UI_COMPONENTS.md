@@ -8,23 +8,27 @@ All UI lives in `packages/ui`. `apps/web` composes components; it does not defin
 
 ### Tokens
 
-CSS custom properties drive all theming. No hard-coded hex values in components.
+The full contract lives in [packages/ui/STYLEGUIDE.md](../packages/ui/STYLEGUIDE.md). `pnpm lint` (`scripts/check-design-system.mjs`) fails CI on any bypass.
 
-| Token group | Examples |
-|-------------|---------|
-| Colours | `--primary`, `--secondary`, `--background`, `--card`, `--muted`, `--border`, `--foreground` |
-| Semantic tones | `--info`, `--success`, `--warning`, `--love` (pink/rose) |
-| Charts | `--chart-1` … `--chart-5` |
-| Radius | `--radius` (1rem default) |
-| Elevation | `--elevation-card`, `shadow-card` |
+| Layer | File | Examples |
+|-------|------|---------|
+| Primitives (only hex) | `styles/tokens.css` | `--cw-gold-600`, `--cw-maroon-700`, `--cw-jade-700`, `--cw-night-950` |
+| Semantic | `styles/tokens.css` | `--color-primary`, `--color-text-muted`, `--color-bg-card`, `--color-success-subtle` |
+| Component | `styles/tokens.css` | `--button-radius`, `--field-height`, `--modal-padding`, `--shadow-dock` |
+| Theme bridge | `styles/theme.css` | shadcn names (`--primary`, `--muted-foreground`) + Tailwind `@theme inline` |
+| Density | `styles/density.css` + `lib/responsive-tiers.ts` | compact / dense / phone control heights and type |
+| Component CSS (BEM) | `styles/components/*.css` | `.button--primary`, `.field--sm`, `.card--interactive`, `.badge--success`, `.modal__title` |
+
+Themes: pearl (default), temple, night — they reassign semantic tokens only.
+Type scale: `text-display`, `text-h1`–`text-h4`, `text-body-lg`, `text-body`, `text-compact`, `text-caption`, `text-label`. Two weights: `font-normal`, `font-medium`.
 
 ### Themes
 
 | Theme | Character |
 |-------|-----------|
-| `pearl` | Ivory / warm white, cool teal secondary. Default. |
-| `temple` | Gold / saffron primary, rich warm tones. |
-| `night` | Dark canvas, gold accents. |
+| `pearl` | Ivory paper, champagne-gold primary, peacock-jade secondary and focus. Default. |
+| `temple` | Sandalwood surfaces, kumkum-maroon primary, gold accents. |
+| `night` | Warm ink canvas, cream text, gold-leaf primary. |
 
 All three themes use the same component tree — only CSS custom property values change.
 
@@ -191,7 +195,7 @@ All in `wedding-presentation.tsx`:
 ## Conventions
 
 1. **Apps compose; packages define.** `apps/web` pages assemble domain components — they do not invent radius, color, or spacing values ad-hoc.
-2. **Token-only styling.** Use CSS custom properties and Tailwind token classes. No one-off hex codes.
+2. **Token-only styling.** Use semantic Tailwind utilities from the theme bridge. No palette classes, hex, arbitrary sizes, or weights above 500 — see [STYLEGUIDE.md](../packages/ui/STYLEGUIDE.md); `pnpm lint` enforces it.
 3. **Domain components in `packages/ui/src/domain/`** — not in `apps/web/src/components/`. If a component is used in more than one page, it belongs in the package.
 4. **App-only components** (page-specific layouts, route-specific wiring) live in `apps/web/src/components/`.
 5. **Server components by default** in `apps/web`. Add `"use client"` only when the component requires hooks, event handlers, or browser APIs.

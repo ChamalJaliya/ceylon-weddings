@@ -186,7 +186,7 @@ export default function MoodboardPage() {
     <div className="flex h-[calc(100vh-5.5rem)] min-h-[42rem] flex-col gap-3">
       <header className="flex flex-wrap items-end justify-between gap-2">
         <div>
-          <h1 className="font-display text-2xl tracking-tight text-[#1f1a16] sm:text-3xl">
+          <h1 className="font-display text-2xl tracking-tight text-studio-ink sm:text-3xl">
             {t("nav.moodboard")}
           </h1>
           <p className="text-sm text-muted-foreground">
@@ -237,8 +237,8 @@ export default function MoodboardPage() {
                       className={cn(
                         "shrink-0 rounded-full px-3 py-1 text-xs transition",
                         item.id === selectedId
-                          ? "bg-[#fffaf5] text-[#1f1a16]"
-                          : "text-[#fffaf5]/70 hover:bg-white/10",
+                          ? "bg-studio-paper text-studio-ink"
+                          : "text-studio-paper/70 hover:bg-paper/10",
                       )}
                     >
                       {item.title}
@@ -248,7 +248,7 @@ export default function MoodboardPage() {
                     type="button"
                     disabled={busy}
                     onClick={() => void createBoard()}
-                    className="inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-xs text-[#fffaf5]/70 hover:bg-white/10"
+                    className="inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-xs text-studio-paper/70 hover:bg-paper/10"
                   >
                     <Plus className="size-3.5" />
                     New
@@ -258,7 +258,7 @@ export default function MoodboardPage() {
                   aria-label="Board title"
                   defaultValue={board.title}
                   key={`title-${board.id}-${board.title}`}
-                  className="h-8 w-32 border-white/15 bg-white/5 text-[#fffaf5] sm:w-40"
+                  className="h-8 w-32 border-paper/15 bg-paper/5 text-studio-paper sm:w-40"
                   onBlur={(e) => {
                     const next = e.target.value.trim();
                     if (next && next !== board.title) void renameBoard(next);
@@ -268,7 +268,7 @@ export default function MoodboardPage() {
                   value={board.eventId ?? "__none__"}
                   onValueChange={(value) => void linkEvent(value === "__none__" ? "" : value)}
                   options={eventOptions}
-                  className="h-8 w-32 border-white/15 bg-white/5 text-sm text-[#fffaf5] sm:w-36"
+                  className="h-8 w-32 border-paper/15 bg-paper/5 text-sm text-studio-paper sm:w-36"
                   aria-label="Link event"
                 />
                 <Button
@@ -283,7 +283,7 @@ export default function MoodboardPage() {
                   {board.shareEnabled ? "Shared" : "Share"}
                 </Button>
                 {shareUrl ? (
-                  <Button type="button" size="sm" variant="ghost" className="h-8 text-[#fffaf5]" onClick={() => void copyShareLink()}>
+                  <Button type="button" size="sm" variant="ghost" className="h-8 text-studio-paper" onClick={() => void copyShareLink()}>
                     {copied ? <Check className="mr-1 size-3.5" /> : <Copy className="mr-1 size-3.5" />}
                     {copied ? "Copied" : "Copy"}
                   </Button>
@@ -293,7 +293,7 @@ export default function MoodboardPage() {
                     type="button"
                     size="sm"
                     variant="ghost"
-                    className="h-8 text-red-300"
+                    className="h-8 text-studio-danger"
                     disabled={busy}
                     onClick={() => void deleteBoard()}
                   >

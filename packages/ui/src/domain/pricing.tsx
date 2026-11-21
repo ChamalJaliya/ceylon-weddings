@@ -108,7 +108,7 @@ export function Pricing({
         variant: popular ? "default" : "outline",
         size: "lg",
       }),
-      "group relative w-full overflow-hidden text-base font-semibold tracking-tight",
+      "group relative w-full overflow-hidden text-base font-medium tracking-tight",
       "ring-offset-background transition-all duration-300 ease-out hover:ring-2 hover:ring-primary hover:ring-offset-1",
       popular
         ? "bg-primary text-primary-foreground"
@@ -138,7 +138,7 @@ export function Pricing({
           onCheckedChange={handleToggle}
           aria-label="Annual billing"
         />
-        <span className={cn("text-sm font-semibold", !isMonthly ? "text-foreground" : "text-muted-foreground")}>
+        <span className={cn("text-sm font-medium", !isMonthly ? "text-foreground" : "text-muted-foreground")}>
           Annual billing <span className="text-primary">({annualSavingsLabel})</span>
         </span>
       </div>
@@ -182,12 +182,12 @@ export function Pricing({
               {plan.isPopular ? (
                 <div className="absolute top-0 right-0 flex items-center rounded-bl-xl rounded-tr-[0.9rem] bg-primary px-2.5 py-0.5">
                   <Icon icon={Star} size="sm" className="text-primary-foreground" animation="fill" />
-                  <span className="ml-1 text-xs font-semibold text-primary-foreground">Popular</span>
+                  <span className="ml-1 text-xs font-medium text-primary-foreground">Popular</span>
                 </div>
               ) : null}
 
               <div className="flex flex-1 flex-col">
-                <p className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">{plan.name}</p>
+                <p className="text-sm font-medium tracking-wide text-muted-foreground uppercase">{plan.name}</p>
 
                 <div className="mt-6 flex items-center justify-center gap-x-2">
                   {plan.priceLabel ? (
@@ -211,7 +211,7 @@ export function Pricing({
                     />
                   )}
                   {plan.period ? (
-                    <span className="text-sm font-semibold leading-6 tracking-wide text-muted-foreground">
+                    <span className="text-sm font-medium leading-6 tracking-wide text-muted-foreground">
                       / {plan.period}
                     </span>
                   ) : null}
