@@ -2,7 +2,9 @@
 
 import { useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
-import { usePreferenceStore } from "@ceylonweddings/web";
+import { useMessagingStore, usePreferenceStore } from "@ceylonweddings/web";
+import { useMediaQuery } from "@ceylonweddings/ui/hooks/use-media-query";
+import { DENSITY_MEDIA_QUERIES } from "@ceylonweddings/ui/responsive-tiers";
 import {
   Briefcase,
   CalendarClock,
@@ -169,8 +171,13 @@ function DashboardShellInner({
 }) {
   const t = useTranslations();
   const pathname = usePathname();
-  const collapsed = usePreferenceStore((s) => s.sidebarCollapsed);
+  const storedCollapsed = usePreferenceStore((s) => s.sidebarCollapsed);
+  const collapsedChosen = usePreferenceStore((s) => s.sidebarCollapsedChosen);
   const setSidebarCollapsed = usePreferenceStore((s) => s.setSidebarCollapsed);
+  const unreadMessages = useMessagingStore((s) => s.unreadTotal);
+  // Kloqra: compact laptops start collapsed until the user picks a width themselves.
+  const compact = useMediaQuery(DENSITY_MEDIA_QUERIES.compact);
+  const collapsed = collapsedChosen ? storedCollapsed : compact;
   const [mobileOpen, setMobileOpen] = useState(false);
   const { toggle } = useCommandPalette();
 
@@ -184,13 +191,20 @@ function DashboardShellInner({
       mobileTitle={t("app.name")}
       brand={(mode) => <AppShellBrand name={t("app.name")} collapsed={mode} />}
       nav={(mode) =>
-        groups.map((group) => (
-          <AppShellNavGroup key={group.labelKey} label={t(group.labelKey)} collapsed={mode}>
+        groups.map((group, groupIndex) => (
+          <AppShellNavGroup key={group.labelKey} label={t(group.labelKey)} collapsed={mode} first={groupIndex === 0}>
             {group.items.map((item) => {
               const label = t(`nav.${item.key}`);
               const isActive = isNavActive(pathname, item.href);
               return (
-                <AppShellNavItem key={item.href} asChild active={isActive} collapsed={mode} label={label}>
+                <AppShellNavItem
+                  key={item.href}
+                  asChild
+                  active={isActive}
+                  collapsed={mode}
+                  label={label}
+                  badge={item.key === "messages" ? unreadMessages : undefined}
+                >
                   <Link href={item.href} onClick={() => setMobileOpen(false)}>
                     <Icon icon={item.icon} size="sm" />
                     <span className={mode ? "sr-only" : undefined}>{label}</span>

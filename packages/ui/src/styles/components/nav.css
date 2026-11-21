@@ -1,0 +1,214 @@
+/* Sidebar rail (ported from Kloqra layout-shell + nav.css). One block: .shell-rail. */
+@layer components {
+  .shell-rail {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-sticky);
+    height: 100dvh;
+    flex-shrink: 0;
+    flex-direction: column;
+    border-right: var(--border-width) solid var(--color-border);
+    background: var(--color-bg-sidebar);
+    transition: width var(--motion-base) var(--motion-ease-out);
+  }
+
+  .shell-rail[data-collapsed="true"] {
+    width: 4.5rem;
+  }
+
+  .shell-rail[data-collapsed="false"] {
+    width: 16rem;
+  }
+
+  /* Edge toggle straddles the rail border, centred on the brand row. */
+  .shell-rail__toggle {
+    position: absolute;
+    top: 2.6rem;
+    right: -0.75rem;
+    z-index: 1;
+    display: grid;
+    width: 1.5rem;
+    height: 1.5rem;
+    place-items: center;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-full);
+    background: var(--color-bg-card);
+    color: var(--color-text-muted);
+    box-shadow: var(--shadow-rest);
+    opacity: 0;
+    transition:
+      opacity var(--motion-fast) var(--motion-ease-out),
+      color var(--motion-fast) var(--motion-ease-out),
+      transform var(--motion-fast) var(--motion-ease-out);
+  }
+
+  .shell-rail:hover .shell-rail__toggle,
+  .shell-rail__toggle:focus-visible {
+    opacity: 1;
+  }
+
+  .shell-rail__toggle:hover {
+    color: var(--color-text-heading);
+    transform: scale(1.08);
+  }
+
+  .shell-rail__toggle svg {
+    transition: transform var(--motion-base) var(--motion-ease-out);
+  }
+
+  .shell-rail[data-collapsed="true"] .shell-rail__toggle svg {
+    transform: rotate(180deg);
+  }
+
+  /* Collapsed logo doubles as "expand": mark swaps for a chevron on hover. */
+  .shell-rail__logo-expand {
+    display: none;
+  }
+
+  .shell-rail__logo:hover .shell-rail__logo-mark,
+  .shell-rail__logo:focus-visible .shell-rail__logo-mark {
+    display: none;
+  }
+
+  .shell-rail__logo:hover .shell-rail__logo-expand,
+  .shell-rail__logo:focus-visible .shell-rail__logo-expand {
+    display: grid;
+  }
+
+  .shell-rail__group-label {
+    padding: var(--space-1) var(--space-3);
+    font-size: var(--text-label-size);
+    font-weight: var(--font-weight-medium);
+    letter-spacing: var(--tracking-eyebrow);
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--color-text-muted) 90%, transparent);
+  }
+
+  .shell-rail__hairline {
+    width: 1.5rem;
+    height: 1px;
+    margin: var(--space-2) auto;
+    background: var(--color-border);
+  }
+
+  /* Nav item */
+  .shell-nav-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    border-radius: var(--radius-sm);
+    padding: 0.55rem var(--space-3);
+    color: var(--color-text-body);
+    font-size: var(--text-compact-size);
+    font-weight: var(--font-weight-medium);
+    transition:
+      background-color var(--motion-base) var(--motion-ease-out),
+      color var(--motion-base) var(--motion-ease-out),
+      box-shadow var(--motion-base) var(--motion-ease-out),
+      transform var(--motion-fast) var(--motion-ease-out);
+  }
+
+  .shell-nav-item svg {
+    flex-shrink: 0;
+    color: var(--color-text-body);
+    transition:
+      color var(--motion-base) var(--motion-ease-out),
+      transform var(--motion-base) var(--motion-ease-spring);
+  }
+
+  .shell-nav-item:hover {
+    background: color-mix(in srgb, var(--color-bg-muted) 75%, transparent);
+    color: var(--color-text-heading);
+    transform: translateX(2px);
+  }
+
+  .shell-nav-item:hover svg {
+    color: var(--color-text-heading);
+    transform: scale(1.06);
+  }
+
+  .shell-nav-item:active {
+    transform: scale(0.97);
+  }
+
+  .shell-nav-item:focus-visible {
+    outline: var(--border-width-focus) solid var(--color-focus-ring);
+    outline-offset: 2px;
+  }
+
+  /* Active — soft primary wash + inset ring + stronger label. */
+  .shell-nav-item[aria-current="page"] {
+    background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+    color: var(--color-primary-text);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-primary) 22%, transparent);
+    transform: none;
+  }
+
+  .shell-nav-item[aria-current="page"] svg {
+    color: var(--color-primary-text);
+    transform: scale(1.1);
+  }
+
+  .night .shell-nav-item[aria-current="page"],
+  .night .shell-nav-item[aria-current="page"] svg {
+    color: var(--color-text-heading);
+  }
+
+  .shell-nav-item--collapsed {
+    width: 2.5rem;
+    height: 2.5rem;
+    justify-content: center;
+    margin-inline: auto;
+    padding: 0;
+  }
+
+  .shell-nav-item--collapsed:hover {
+    transform: none;
+  }
+
+  .shell-nav-badge {
+    display: inline-grid;
+    min-width: 1.25rem;
+    height: 1.25rem;
+    margin-left: auto;
+    place-items: center;
+    border-radius: var(--radius-full);
+    background: var(--color-primary-subtle);
+    padding-inline: 0.35rem;
+    color: var(--color-primary-text);
+    font-size: var(--text-label-size);
+    font-weight: var(--font-weight-medium);
+  }
+
+  .shell-nav-item[aria-current="page"] .shell-nav-badge,
+  .shell-nav-badge--dot {
+    background: var(--color-primary);
+    color: var(--color-primary-fg);
+  }
+
+  .shell-nav-badge--dot {
+    position: absolute;
+    top: 0.2rem;
+    right: 0.2rem;
+    min-width: 0.95rem;
+    height: 0.95rem;
+    margin: 0;
+    padding: 0 0.2rem;
+    box-shadow: 0 0 0 2px var(--color-bg-sidebar);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .shell-nav-item,
+    .shell-nav-item svg,
+    .shell-rail,
+    .shell-rail__toggle svg {
+      transition: none;
+    }
+
+    .shell-nav-item:hover,
+    .shell-nav-item:active {
+      transform: none;
+    }
+  }
+}

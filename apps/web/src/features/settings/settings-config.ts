@@ -1,10 +1,10 @@
-import { type LucideIcon, Globe, Palette, Shield, User } from "lucide-react";
+import { type LucideIcon, Bell, Globe, Palette, Shield, User } from "lucide-react";
 
 /**
  * Settings sections (ported from Kloqra's settings-config). One list drives the
  * left tabs, the mobile picker, the header breadcrumb and settings search.
  */
-export type SettingsSectionId = "profile" | "security" | "language" | "appearance";
+export type SettingsSectionId = "profile" | "security" | "notifications" | "language" | "appearance";
 export type SettingsGroupId = "account" | "preferences";
 
 export type SettingsSection = {
@@ -45,6 +45,15 @@ export const SETTINGS_SECTIONS: ReadonlyArray<SettingsSection> = [
     keywords: ["password", "2fa", "two-factor", "authenticator", "sessions", "devices", "sign out"],
   },
   {
+    id: "notifications",
+    group: "preferences",
+    title: "Notifications",
+    description: "Choose which updates reach the bell and your inbox.",
+    icon: Bell,
+    href: "/settings/notifications",
+    keywords: ["email", "alerts", "bell", "inquiries", "rsvp", "messages", "reviews", "mute"],
+  },
+  {
     id: "language",
     group: "preferences",
     title: "Language & region",
@@ -57,10 +66,10 @@ export const SETTINGS_SECTIONS: ReadonlyArray<SettingsSection> = [
     id: "appearance",
     group: "preferences",
     title: "Appearance",
-    description: "Pick the theme that feels like your wedding.",
+    description: "Light or dark mode, and the palette that feels like your wedding.",
     icon: Palette,
     href: "/settings/appearance",
-    keywords: ["theme", "dark", "night", "pearl", "temple", "colour", "color"],
+    keywords: ["theme", "mode", "dark", "light", "system", "palette", "temple", "aurora", "noir", "colour", "color"],
   },
 ];
 

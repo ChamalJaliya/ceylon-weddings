@@ -22,6 +22,8 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SOURCE_ROOTS = ["apps/web/src", "packages/ui/src", "packages/web/src"];
 const STYLE_ROOT = "packages/ui/src/styles";
 const TOKENS = "packages/ui/src/styles/tokens.css";
+/** Raw-value files: the only stylesheets allowed to hold hex. */
+const RAW_VALUE_FILES = new Set([TOKENS, "packages/ui/src/styles/palettes.css"]);
 
 const HUES =
   "slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose";
@@ -154,29 +156,40 @@ export function run(only = null) {
     join(root, "apps/web/src/app/globals.css"),
   ];
   for (const file of cssFiles) {
-    if (relative(root, file) === TOKENS || !inScope(file)) continue;
+    if (RAW_VALUE_FILES.has(relative(root, file)) || !inScope(file)) continue;
     for (const hit of scanCss(readFileSync(file, "utf8"))) problems.push({ file, ...hit });
   }
 
-  // Themes reassign semantic tokens only — no new hex inside .temple / .night.
+  // Modes and palettes reassign semantic tokens only — no hex inside .night / [data-palette] blocks.
   const tokens = stripCssComments(readFileSync(join(root, TOKENS), "utf8"));
-  for (const theme of ["temple", "night"]) {
-    const body = tokens.match(new RegExp(`\\.${theme}\\s*\\{([\\s\\S]*?)\\n\\}`))?.[1] ?? "";
-    if (!body)
+  const night = tokens.match(/\.night\s*\{([\s\S]*?)\n\}/)?.[1] ?? "";
+  if (!night)
+    problems.push({
+      file: join(root, TOKENS),
+      line: 0,
+      rule: "theme-missing",
+      match: ".night",
+      hint: "dark mode block not found",
+    });
+  for (const m of night.matchAll(/#[0-9a-fA-F]{3,8}\b/g)) {
+    problems.push({
+      file: join(root, TOKENS),
+      line: 0,
+      rule: "theme-hex",
+      match: `.night ${m[0]}`,
+      hint: "point at a primitive with var()",
+    });
+  }
+  const palettesFile = join(root, STYLE_ROOT, "palettes.css");
+  const palettes = stripCssComments(readFileSync(palettesFile, "utf8"));
+  for (const block of palettes.matchAll(/([^{}]*\[data-palette[^{}]*)\{([^}]*)\}/g)) {
+    for (const m of block[2].matchAll(/#[0-9a-fA-F]{3,8}\b/g)) {
       problems.push({
-        file: join(root, TOKENS),
-        line: 0,
-        rule: "theme-missing",
-        match: `.${theme}`,
-        hint: "theme block not found",
-      });
-    for (const m of body.matchAll(/#[0-9a-fA-F]{3,8}\b/g)) {
-      problems.push({
-        file: join(root, TOKENS),
+        file: palettesFile,
         line: 0,
         rule: "theme-hex",
-        match: `.${theme} ${m[0]}`,
-        hint: "point at a primitive with var()",
+        match: `${block[1].trim().split("\n")[0]} ${m[0]}`,
+        hint: "palette blocks point at --pal-* primitives",
       });
     }
   }

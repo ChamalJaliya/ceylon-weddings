@@ -3,7 +3,7 @@ import { Cormorant_Garamond, Geist, Great_Vibes, Source_Serif_4 } from "next/fon
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
-import { AppProviders } from "@ceylonweddings/web";
+import { APPEARANCE_BOOT_SCRIPT, AppProviders } from "@ceylonweddings/web";
 import { isLocale, locales } from "@ceylonweddings/i18n";
 import { AppChrome } from "../../components/app-chrome";
 import "../globals.css";
@@ -55,6 +55,10 @@ export default async function LocaleLayout({
       className={`${geist.variable} ${display.variable} ${serif.variable} ${script.variable}`}
       suppressHydrationWarning
     >
+      <head>
+        {/* Palette before first paint + migrate old theme values (no flash). */}
+        <script dangerouslySetInnerHTML={{ __html: APPEARANCE_BOOT_SCRIPT }} />
+      </head>
       <body className="min-h-screen font-sans">
         <AppProviders>
           <NextIntlClientProvider messages={messages}>

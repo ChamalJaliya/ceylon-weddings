@@ -2,21 +2,25 @@
 
 import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
-import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "../lib/utils";
-import { Icon, AnimateIcon } from "../components/icon";
-import { IconButton } from "../components/icon-button";
+import { AnimateIcon, Icon } from "../components/icon";
+import { Tooltip } from "../components/tooltip";
 import { BrandLockup, BrandMark } from "./brand-mark";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "../components/sheet";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "../components/sheet";
 
 type RailRender = (collapsed: boolean) => React.ReactNode;
 
+const resolve = (value: RailRender | React.ReactNode | undefined, mode: boolean) => {
+  if (value == null) return null;
+  return typeof value === "function" ? (value as RailRender)(mode) : value;
+};
+
+/**
+ * Dashboard shell with a Kloqra-style rail: sticky brand, scrolling nav, footer,
+ * an edge toggle that straddles the border, and a collapsed logo that expands.
+ * Look lives in styles/components/nav.css (.shell-rail, .shell-nav-item).
+ */
 export function AppShell({
   chrome = "solid",
   brand,
@@ -44,19 +48,42 @@ export function AppShell({
   mobileTitle?: string;
   children: React.ReactNode;
 }) {
-  const resolve = (value: RailRender | React.ReactNode | undefined, mode: boolean) => {
-    if (value == null) return null;
-    return typeof value === "function" ? value(mode) : value;
-  };
-
-  const rail = (mode: boolean) => (
+  const rail = (mode: boolean, desktop: boolean) => (
     <>
-      <div className={cn("px-5 py-6", mode && "px-3")}>{resolve(brand, mode)}</div>
-      <nav className={cn("flex flex-1 flex-col gap-5 overflow-y-auto px-3 pb-4", mode && "px-2")}>
+      <div className={cn("shrink-0 px-4 pt-5 pb-4", mode && "flex justify-center px-2")}>
+        {mode && desktop && onCollapsedChange ? (
+          <button
+            type="button"
+            className="shell-rail__logo grid size-11 place-items-center rounded-xl focus-visible:outline-none"
+            aria-label="Expand sidebar"
+            onClick={() => onCollapsedChange(false)}
+          >
+            <span className="shell-rail__logo-mark">{resolve(brand, true)}</span>
+            <span className="shell-rail__logo-expand size-8 place-items-center rounded-full bg-accent text-foreground">
+              <Icon icon={ChevronRight} size="sm" lottie={false} />
+            </span>
+          </button>
+        ) : (
+          resolve(brand, mode)
+        )}
+      </div>
+      <div className={cn("mx-4 h-px shrink-0 bg-sidebar-border", mode && "mx-auto w-6")} aria-hidden />
+      <nav
+        aria-label="Main"
+        className={cn(
+          "flex min-h-0 flex-1 flex-col overflow-y-auto pt-4 pb-4",
+          mode ? "items-stretch px-2" : "gap-5 px-3",
+        )}
+      >
         {resolve(nav, mode)}
       </nav>
       {railFooter ? (
-        <div className={cn("mt-auto border-t border-sidebar-border px-4 py-4", mode && "px-2")}>
+        <div
+          className={cn(
+            "mt-auto shrink-0 border-t border-sidebar-border px-4 py-4",
+            mode && "flex justify-center px-2",
+          )}
+        >
           {resolve(railFooter, mode)}
         </div>
       ) : null}
@@ -64,36 +91,33 @@ export function AppShell({
   );
 
   return (
-    <div data-slot="app-shell" data-collapsed={collapsed ? "true" : undefined} className="flex min-h-screen bg-background">
-      <aside
-        className={cn(
-          "sticky top-0 z-30 hidden h-screen shrink-0 flex-col border-r border-sidebar-border bg-sidebar lg:flex",
-          "transition-[width] duration-300 ease-out motion-reduce:transition-none",
-          collapsed ? "w-[4.25rem]" : "w-[15.5rem]",
-        )}
-      >
-        {rail(collapsed)}
+    <div
+      data-slot="app-shell"
+      data-collapsed={collapsed ? "true" : undefined}
+      className="flex min-h-screen bg-background"
+    >
+      <aside className="shell-rail hidden lg:flex" data-collapsed={collapsed ? "true" : "false"}>
         {onCollapsedChange ? (
-          <div className={cn("border-t border-sidebar-border p-2", collapsed && "flex justify-center")}>
-            <IconButton
-              type="button"
-              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-              onClick={() => onCollapsedChange(!collapsed)}
-              className="text-muted-foreground"
-            >
-              <Icon icon={collapsed ? PanelLeftOpen : PanelLeftClose} size="sm" />
-            </IconButton>
-          </div>
+          <button
+            type="button"
+            className="shell-rail__toggle"
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            aria-expanded={!collapsed}
+            onClick={() => onCollapsedChange(!collapsed)}
+          >
+            <Icon icon={ChevronLeft} size="xs" lottie={false} />
+          </button>
         ) : null}
+        {rail(collapsed, true)}
       </aside>
 
       <Sheet open={mobileOpen} onOpenChange={onMobileOpenChange}>
-        <SheetContent side="left" className="gap-0 p-0 lg:hidden" showClose>
+        <SheetContent side="left" className="gap-0 bg-sidebar p-0 lg:hidden" showClose>
           <SheetHeader className="sr-only">
             <SheetTitle>{mobileTitle}</SheetTitle>
             <SheetDescription>{mobileTitle}</SheetDescription>
           </SheetHeader>
-          <div className="flex h-full flex-col">{rail(false)}</div>
+          <div className="flex h-full flex-col">{rail(false, false)}</div>
         </SheetContent>
       </Sheet>
 
@@ -117,77 +141,101 @@ export function AppShell({
   );
 }
 
+/** A labelled nav section; collapsed rails show a hairline between sections instead. */
 export function AppShellNavGroup({
   label,
   children,
   collapsed,
+  first = false,
 }: {
   label: string;
   children: React.ReactNode;
   collapsed?: boolean;
+  /** No hairline above the first collapsed section. */
+  first?: boolean;
 }) {
   return (
-    <div data-slot="nav-group" className="grid gap-0.5">
-      {!collapsed ? (
-        <p className="px-3 pb-1.5 text-label font-medium tracking-eyebrow text-muted-foreground uppercase">{label}</p>
+    <div data-slot="nav-group" className={cn("grid", collapsed ? "gap-1" : "gap-0.5")}>
+      {collapsed ? (
+        first ? null : (
+          <div className="shell-rail__hairline" aria-hidden />
+        )
       ) : (
-        <div className="mx-auto mb-1 h-px w-6 bg-sidebar-border" aria-hidden />
+        <p className="shell-rail__group-label">{label}</p>
       )}
       {children}
     </div>
   );
 }
 
+/**
+ * Rail link. Pass the link (Next `Link`) as the child with `asChild`.
+ * Collapsed items get a tooltip; `badge` shows a count (dot on the icon when collapsed).
+ */
 export function AppShellNavItem({
   className,
   active,
   asChild = false,
   collapsed,
   label,
+  badge,
+  children,
   ...props
 }: React.ComponentProps<"a"> & {
   active?: boolean;
   asChild?: boolean;
   collapsed?: boolean;
   label?: string;
+  badge?: number | string | null;
 }) {
   const Comp = asChild ? Slot : "a";
-  return (
+  const showBadge = badge !== undefined && badge !== null && badge !== "" && badge !== 0;
+  const badgeText = typeof badge === "number" && badge > 99 ? "99+" : badge;
+
+  const link = (
     <AnimateIcon animateOnHover animateOnTap asChild>
-    <Comp
-      data-slot="nav-item"
-      data-active={active ? "true" : undefined}
-      title={collapsed ? label ?? props.title : props.title}
-      aria-label={collapsed ? label ?? props["aria-label"] : props["aria-label"]}
-      className={cn(
-        "relative flex items-center gap-2.5 rounded-xl py-2 text-sm text-muted-foreground transition-[color,background-color,transform] duration-200 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground",
-        collapsed ? "justify-center px-2" : "pr-3 pl-3.5",
-        active && "bg-sidebar-accent/80 font-medium text-sidebar-foreground",
-        active &&
-          !collapsed &&
-          "before:absolute before:top-1/2 before:left-0 before:h-4 before:w-0.5 before:-translate-y-1/2 before:rounded-full before:bg-primary before:transition-[height,opacity] before:duration-300",
-        className,
-      )}
-      {...props}
-    />
+      <Comp
+        data-slot="nav-item"
+        aria-current={active ? "page" : undefined}
+        aria-label={collapsed ? label : undefined}
+        className={cn("shell-nav-item", collapsed && "shell-nav-item--collapsed", className)}
+        {...props}
+      >
+        {asChild && React.isValidElement(children) ? (
+          React.cloneElement(
+            children as React.ReactElement<{ children?: React.ReactNode }>,
+            undefined,
+            <>
+              {(children as React.ReactElement<{ children?: React.ReactNode }>).props.children}
+              {showBadge ? (
+                <span
+                  className={cn("shell-nav-badge", collapsed && "shell-nav-badge--dot")}
+                  aria-label={`${badge} new`}
+                >
+                  {badgeText}
+                </span>
+              ) : null}
+            </>,
+          )
+        ) : (
+          <>
+            {children}
+            {showBadge ? (
+              <span className={cn("shell-nav-badge", collapsed && "shell-nav-badge--dot")}>{badgeText}</span>
+            ) : null}
+          </>
+        )}
+      </Comp>
     </AnimateIcon>
   );
+
+  if (!collapsed || !label) return link;
+  return <Tooltip content={label}>{link}</Tooltip>;
 }
 
-export function AppShellBrand({
-  name,
-  collapsed,
-}: {
-  /** Accessible brand name (e.g. t("app.name")). */
-  name: string;
-  collapsed?: boolean;
-}) {
+export function AppShellBrand({ name, collapsed }: { name: string; collapsed?: boolean }) {
   if (collapsed) {
-    return (
-      <div className="flex justify-center">
-        <BrandMark title={name} cutColor="var(--sidebar)" className="h-11 w-auto text-primary" />
-      </div>
-    );
+    return <BrandMark title={name} cutColor="var(--sidebar)" className="h-10 w-auto text-primary" />;
   }
   return (
     <BrandLockup

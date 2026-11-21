@@ -1,15 +1,5 @@
-export {
-  api,
-  type TaxonomyImportResult,
-  type TaxonomyImportPreviewItem,
-  type VendorTypeAnalytics,
-} from "./api/client";
-export {
-  ApiError,
-  isApiError,
-  refreshSession,
-  SESSION_EXPIRED_EVENT,
-} from "./api/request";
+export { api, type TaxonomyImportResult, type TaxonomyImportPreviewItem, type VendorTypeAnalytics } from "./api/client";
+export { ApiError, isApiError, refreshSession, SESSION_EXPIRED_EVENT } from "./api/request";
 export {
   getRealtimeSocket,
   connectRealtime,
@@ -37,3 +27,5 @@ export {
   clearCatalogScroll,
 } from "./lib/catalog-session";
 export { useRealtimeMessaging } from "./hooks/use-realtime-messaging";
+export { applyDocumentPalette, usePaletteStore } from "./appearance/appearance";
+export { APPEARANCE_BOOT_SCRIPT, PALETTE_STORAGE_KEY, THEME_CLASS } from "./appearance/constants";

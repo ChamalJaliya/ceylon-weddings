@@ -5,7 +5,8 @@
  *   1. Primitives  (--cw-*)           raw palette values
  *   2. Semantic    (--color-*)        point at primitives with var()
  *   3. Component   (--button-radius…) point at semantic / scale tokens
- * Themes (.temple, .night) only reassign semantic tokens — never a new hex.
+ * Modes (.pearl light, .night dark) only reassign semantic tokens — never a new hex.
+ * Palettes ([data-palette], palettes.css) compose with either mode.
  * color-mix uses srgb so Chromium keeps the brand gold.
  */
 
@@ -230,7 +231,7 @@
 
 /*
  * Pearl semantics live on `.pearl` too, so a `.pearl` subtree (theme previews)
- * re-themes even inside .temple / .night.
+ * re-themes even inside .night.
  */
 :root,
 .pearl {
@@ -307,46 +308,6 @@
   --color-studio-accent: var(--cw-studio-clay);
   --color-studio-text: var(--cw-studio-text);
   --color-studio-danger: var(--cw-vermilion-300);
-}
-
-/* ── Temple: sandalwood + kumkum maroon ─────────────────────────────── */
-.temple {
-  --color-primary: var(--cw-maroon-700);
-  --color-primary-hover: var(--cw-maroon-800);
-  --color-primary-active: var(--cw-maroon-900);
-  --color-primary-subtle: var(--cw-maroon-100);
-  --color-primary-fg: var(--cw-sandal-50);
-  --color-primary-text: var(--cw-maroon-700);
-
-  --color-text-heading: var(--cw-sandal-ink-900);
-  --color-text-body: var(--cw-sandal-ink-700);
-  --color-text-muted: var(--cw-sandal-ink-500);
-  --color-text-inverse: var(--cw-sandal-50);
-
-  --color-bg-page: var(--cw-sandal-100);
-  --color-bg-card: var(--cw-sandal-50);
-  --color-bg-muted: var(--cw-sandal-200);
-  --color-bg-accent: color-mix(in srgb, var(--cw-gold-300) 35%, var(--cw-sandal-50));
-  --color-bg-sidebar: var(--cw-sandal-50);
-  --color-bg-inset: color-mix(in srgb, var(--cw-sandal-200) 60%, var(--cw-sandal-50));
-  --color-border: var(--cw-sandal-300);
-  --color-border-strong: color-mix(in srgb, var(--cw-sandal-300) 70%, var(--cw-sandal-ink-500));
-  --color-focus-ring: var(--cw-maroon-700);
-
-  --color-secondary: color-mix(in srgb, var(--cw-gold-300) 30%, var(--cw-sandal-100));
-  --color-secondary-fg: var(--cw-sandal-ink-900);
-  --color-premium: var(--cw-gold-700);
-  --color-premium-subtle: var(--cw-gold-100);
-  --color-premium-fg: var(--cw-gold-800);
-  --color-frame: var(--cw-sandal-50);
-
-  --color-chart-1: var(--cw-maroon-700);
-  --color-chart-3: var(--cw-jade-700);
-  --color-chart-5: var(--cw-gold-600);
-
-  --shadow-card:
-    0 1px 2px color-mix(in srgb, var(--cw-sandal-ink-900) 5%, transparent),
-    0 10px 28px color-mix(in srgb, var(--cw-sandal-ink-900) 8%, transparent);
 }
 
 /* ── Night: ink + cream, gold leaf accent ───────────────────────────── */

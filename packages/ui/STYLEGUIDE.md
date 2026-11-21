@@ -11,17 +11,21 @@ One change in `src/styles/tokens.css` re-themes the whole site. Pages do not own
 3. **Component tokens** (`--button-radius`, `--field-height`, `--modal-padding`, `--shadow-dock`) point at semantic tokens or the scales.
 4. **Theme bridge** in `styles/theme.css` maps shadcn names (`--primary`, `--muted-foreground`) and Tailwind `@theme inline` utilities onto those variables, so utilities follow the theme at runtime.
 
-## Themes
+## Themes: mode × palette
 
-| Theme | Class | Feel |
-| --- | --- | --- |
-| Pearl (default) | `:root` | Ivory paper, champagne gold, peacock-jade focus |
-| Temple | `.temple` | Sandalwood, kumkum maroon, gold accents |
-| Night | `.night` | Warm ink, cream text, gold leaf |
+Ported from Kloqra: two independent choices, saved on the device and on the account (`User.preferences`).
 
-`next-themes` sets the class (see `packages/web/src/providers/app-providers.tsx`). Add a theme override by reassigning a semantic variable inside the theme block in `tokens.css`.
+| Choice  | Values                                                                                                                                                          | Where it lives                                                |
+| ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| Mode    | Light · Dark · System                                                                                                                                           | next-themes → `<html class="pearl">` / `<html class="night">` |
+| Palette | **Ceylon** (default: ivory + champagne gold) · Temple · Modern · Aurora · Noir · Sunset · Forest & Walnut · Bordeaux & Taupe · Midnight & Ivory · Olive & Linen | `<html data-palette="…">` (absent for Ceylon)                 |
 
-Studio tokens (`studio-ink`, `studio-paper`, `studio-accent` …) are the moodboard canvas chrome and stay the same in every theme. `paper` and `ink` are fixed light/dark for copy and scrims over photography.
+- `tokens.css` holds the Ceylon brand: pearl semantics on `:root, .pearl`, dark on `.night`.
+- `palettes.css` holds every other palette: `--pal-*` primitives, then a light block (`[data-palette="x"]`) and a dark block (`.night[data-palette="x"]`) that only reassign semantic tokens. Status colours stay with the mode. Generated once from Kloqra's palettes by `scripts/gen-palettes.py`; Kloqra's brand blue is not used.
+- Any element can preview a theme: `<div class="night" data-palette="aurora">` renders with that theme's real tokens (Settings → Appearance does this).
+- `APPEARANCE_BOOT_SCRIPT` (in `<head>`) applies the palette before first paint and migrates the old `pearl / temple / night` values.
+
+Studio tokens (`studio-ink`, `studio-paper`, `studio-accent` …) are the moodboard canvas chrome and stay the same everywhere. `paper` and `ink` are fixed light/dark for copy and scrims over photography.
 
 ## File order
 
@@ -38,17 +42,17 @@ Studio tokens (`studio-ink`, `studio-paper`, `studio-accent` …) are the moodbo
 
 ## What a page may not use (CI fails)
 
-| Rule | Example | Use instead |
-| --- | --- | --- |
-| Raw palette | `bg-amber-500/15`, `text-emerald-600` | `bg-warning/15`, `text-success-fg` |
-| White / black | `text-white`, `from-black/70` | `text-paper`, `from-ink/70` |
-| Heavy weight | `font-semibold`, `font-bold` | `font-medium` |
-| Arbitrary size | `text-[11px]` | `text-label` |
-| Arbitrary tracking | `tracking-[0.2em]` | `tracking-eyebrow` |
-| Arbitrary colour | `bg-[#fffaf5]`, `shadow-[0_8px_rgba(0,0,0,.1)]` | `bg-studio-paper`, `shadow-raised` |
-| Density breakpoint | `max-[1400px]:hidden` | `compact:hidden` |
-| Hex in TS | `"#b4532a"` | token, or `readCssToken()` for canvas |
-| Stylesheet colour | `color: #333`, `rgba()`, `oklch()` | `var(--color-*)`, `color-mix(in srgb, var(--…) n%, transparent)` |
+| Rule               | Example                                         | Use instead                                                      |
+| ------------------ | ----------------------------------------------- | ---------------------------------------------------------------- |
+| Raw palette        | `bg-amber-500/15`, `text-emerald-600`           | `bg-warning/15`, `text-success-fg`                               |
+| White / black      | `text-white`, `from-black/70`                   | `text-paper`, `from-ink/70`                                      |
+| Heavy weight       | `font-semibold`, `font-bold`                    | `font-medium`                                                    |
+| Arbitrary size     | `text-[11px]`                                   | `text-label`                                                     |
+| Arbitrary tracking | `tracking-[0.2em]`                              | `tracking-eyebrow`                                               |
+| Arbitrary colour   | `bg-[#fffaf5]`, `shadow-[0_8px_rgba(0,0,0,.1)]` | `bg-studio-paper`, `shadow-raised`                               |
+| Density breakpoint | `max-[1400px]:hidden`                           | `compact:hidden`                                                 |
+| Hex in TS          | `"#b4532a"`                                     | token, or `readCssToken()` for canvas                            |
+| Stylesheet colour  | `color: #333`, `rgba()`, `oklch()`              | `var(--color-*)`, `color-mix(in srgb, var(--…) n%, transparent)` |
 
 Weights 600 and 700 are also mapped to 500 in the theme, so a stray `font-bold` from a dependency stays on-brand.
 
@@ -70,12 +74,12 @@ Weights 600 and 700 are also mapped to 500 in the theme, so a stray `font-bold` 
 
 `DENSITY_MEDIA_QUERIES` in `src/lib/responsive-tiers.ts` owns the viewport tiers; `styles/density.css` holds every token override for them; `globals.css` exposes `compact:` / `dense:` variants. The guard checks all three use the same strings.
 
-| Tier | When | Device |
-| --- | --- | --- |
-| comfortable | default | MacBook, large monitor |
-| compact | ≤1400px wide, low-DPI below 1700px, or ≤720px tall | Windows at 125–150% |
-| dense | ≥640px wide and ≤720px tall | 1366×768 at 100% |
-| phone | <640px | phones |
+| Tier        | When                                               | Device                 |
+| ----------- | -------------------------------------------------- | ---------------------- |
+| comfortable | default                                            | MacBook, large monitor |
+| compact     | ≤1400px wide, low-DPI below 1700px, or ≤720px tall | Windows at 125–150%    |
+| dense       | ≥640px wide and ≤720px tall                        | 1366×768 at 100%       |
+| phone       | <640px                                             | phones                 |
 
 Density tiers resize type and control heights only. Unlike Kloqra we keep Tailwind `--spacing` fixed — the photography-led public site needs its breathing room.
 

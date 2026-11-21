@@ -1,5 +1,6 @@
 /* Order: tokens → density → theme → base → layout → components → utilities. */
 @import "./tokens.css";
+@import "./palettes.css";
 @import "./density.css";
 @import "./theme.css";
 @import "./base/global.css";
@@ -12,6 +13,7 @@
 @import "./components/badge.css";
 @import "./components/modal.css";
 @import "./components/toast.css";
+@import "./components/nav.css";
 @import "./utilities/typography.css";
 @import "./utilities/motion.css";
 @import "./utilities/frame.css";

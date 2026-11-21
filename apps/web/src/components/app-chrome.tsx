@@ -43,6 +43,15 @@ export function AppChrome({ children }: { children: ReactNode }) {
       </RoleGate>
     );
   }
+  // The inbox lives in whichever dashboard the role uses (Kloqra: /notifications in the app shell).
+  if (pathname === "/notifications") {
+    const Shell = user?.role === "VENDOR" ? ProShell : user?.role === "ADMIN" ? AdminShell : PlanningShell;
+    return (
+      <RoleGate allow={SIGNED_IN_ROLES}>
+        <Shell>{children}</Shell>
+      </RoleGate>
+    );
+  }
   if (pathname.startsWith("/planning")) {
     return (
       <RoleGate allow={PLANNING_ROLES}>

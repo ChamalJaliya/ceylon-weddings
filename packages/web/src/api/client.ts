@@ -1,10 +1,14 @@
+import { z } from "zod";
 import {
   accountSecuritySchema,
+  notificationSchema,
+  type NotificationCategory,
   twoFactorSetupSchema,
   userSchema,
   type AccountSecurity,
   type ChangePasswordBody,
   type TwoFactorSetup,
+  type UpdatePreferencesBody,
   type UpdateProfileBody,
   authResponseSchema,
   mineWeddingSchema,
@@ -217,6 +221,12 @@ export type VendorTypeAnalytics = {
   }>;
 };
 
+const notificationPageSchema = z.object({
+  items: z.array(notificationSchema),
+  unreadCount: z.number().int().nonnegative(),
+  nextBefore: z.string().nullable(),
+});
+
 export const api = {
   health: () => request("/health"),
   me: () => request<User>("/auth/me"),
@@ -232,8 +242,27 @@ export const api = {
     authResponseSchema.parse(
       await request<AuthResponse>("/auth/google", { method: "POST", body: JSON.stringify(body) }),
     ),
+  /** In-app notifications (bell, /notifications). */
+  notifications: {
+    list: async (
+      query: { limit?: number; unread?: boolean; category?: NotificationCategory; before?: string } = {},
+    ) => {
+      const params = new URLSearchParams();
+      if (query.limit) params.set("limit", String(query.limit));
+      if (query.unread) params.set("unread", "true");
+      if (query.category) params.set("category", query.category);
+      if (query.before) params.set("before", query.before);
+      const qs = params.toString();
+      return notificationPageSchema.parse(await request(`/notifications${qs ? `?${qs}` : ""}`));
+    },
+    unreadCount: () => request<{ unreadCount: number }>("/notifications/unread-count"),
+    markRead: (body: { ids?: string[]; all?: boolean }) =>
+      request<{ ok: true; unreadCount: number }>("/notifications/read", { method: "POST", body: JSON.stringify(body) }),
+  },
   /** Account settings (/settings). */
   account: {
+    updatePreferences: async (body: UpdatePreferencesBody): Promise<User> =>
+      userSchema.parse(await request<User>("/auth/preferences", { method: "PATCH", body: JSON.stringify(body) })),
     updateProfile: async (body: UpdateProfileBody): Promise<User> =>
       userSchema.parse(await request<User>("/auth/me", { method: "PATCH", body: JSON.stringify(body) })),
     changePassword: (body: ChangePasswordBody) =>

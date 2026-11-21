@@ -2,16 +2,16 @@
  * Theme bridge — shadcn names + Tailwind v4 utilities.
  * No color literals. Everything points at semantic tokens in tokens.css.
  * `@theme inline` keeps utilities bound to the runtime variable, so
- * .temple / .night re-theme without a rebuild.
+ * modes (.night) and palettes ([data-palette]) re-theme without a rebuild.
  *
- * Declared on every theme scope (not just :root) so a nested .pearl/.temple/.night
+ * Declared on every theme scope (not just :root) so a nested .pearl/.night/[data-palette]
  * subtree re-resolves these aliases — used by the Appearance theme previews.
  */
 
 :root,
 .pearl,
-.temple,
-.night {
+.night,
+[data-palette] {
   --background: var(--color-bg-page);
   --foreground: var(--color-text-heading);
   --body-foreground: var(--color-text-body);

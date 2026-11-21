@@ -68,6 +68,8 @@ export type RealtimeHandlers = {
   onRead?: (event: MessageReadEvent) => void;
   onTyping?: (event: TypingUpdate) => void;
   onNotification?: (notification: AppNotification) => void;
+  /** Unread count changed elsewhere (another tab marked items read). */
+  onNotificationUnread?: (payload: { unreadCount: number }) => void;
   onConversationUpdated?: (payload: {
     conversationId: string;
     lastMessageAt: string;
@@ -81,6 +83,7 @@ export function bindRealtimeHandlers(handlers: RealtimeHandlers) {
   const onRead = (payload: MessageReadEvent) => handlers.onRead?.(payload);
   const onTyping = (payload: TypingUpdate) => handlers.onTyping?.(payload);
   const onNotification = (payload: AppNotification) => handlers.onNotification?.(payload);
+  const onNotificationUnread = (payload: { unreadCount: number }) => handlers.onNotificationUnread?.(payload);
   const onConversationUpdated = (payload: {
     conversationId: string;
     lastMessageAt: string;
@@ -91,6 +94,7 @@ export function bindRealtimeHandlers(handlers: RealtimeHandlers) {
   client.on("message.read", onRead);
   client.on("typing.update", onTyping);
   client.on("notification.new", onNotification);
+  client.on("notification.unread", onNotificationUnread);
   client.on("conversation.updated", onConversationUpdated);
 
   return () => {
@@ -98,6 +102,7 @@ export function bindRealtimeHandlers(handlers: RealtimeHandlers) {
     client.off("message.read", onRead);
     client.off("typing.update", onTyping);
     client.off("notification.new", onNotification);
+    client.off("notification.unread", onNotificationUnread);
     client.off("conversation.updated", onConversationUpdated);
   };
 }

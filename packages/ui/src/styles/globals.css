@@ -4,9 +4,8 @@
 
 @source "../**/*.{ts,tsx}";
 
-/* Themes: pearl (default :root), temple, night — set by next-themes. */
+/* Mode: pearl (light) / night (dark) set by next-themes; palette via <html data-palette>. */
 @custom-variant dark (&:where(.night, .night *));
-@custom-variant temple (&:where(.temple, .temple *));
 
 /*
  * Density variants — mirror DENSITY_MEDIA_QUERIES in ../lib/responsive-tiers.ts

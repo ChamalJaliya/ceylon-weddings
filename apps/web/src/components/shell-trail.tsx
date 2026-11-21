@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Bell, LogOut, MessageCircle, Settings, Shield, UserRound } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { api, useAuthStore, useMessagingStore, useRealtimeMessaging } from "@ceylonweddings/web";
 import type { Inquiry } from "@ceylonweddings/contracts";
@@ -10,6 +10,8 @@ import { Button } from "@ceylonweddings/ui/components/button";
 import { Icon } from "@ceylonweddings/ui/components/icon";
 import { useRouter } from "../i18n/navigation";
 import { PreferenceControls } from "./preference-controls";
+import { AccountMenu } from "./account-menu";
+import { NotificationBell } from "@/features/notifications/notification-bell";
 
 function messagesHref(role: string | undefined) {
   if (role === "VENDOR") return "/pro/messages";
@@ -21,14 +23,10 @@ export function ShellTrail({ overlay = false, messages = false }: { overlay?: bo
   const t = useTranslations();
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
-  const setUser = useAuthStore((state) => state.setUser);
   useRealtimeMessaging(messages && Boolean(user));
 
   const conversations = useMessagingStore((state) => state.conversations);
   const unreadTotal = useMessagingStore((state) => state.unreadTotal);
-  const notifications = useMessagingStore((state) => state.notifications);
-  const notificationUnread = useMessagingStore((state) => state.notificationUnread);
-  const markNotificationsLocalRead = useMessagingStore((state) => state.markNotificationsLocalRead);
 
   const [inquiries, setInquiries] = useState<(Inquiry & { vendorName?: string })[]>([]);
 
@@ -41,12 +39,6 @@ export function ShellTrail({ overlay = false, messages = false }: { overlay?: bo
         .catch(() => setInquiries([]));
     }
   }, [messages, user]);
-
-  const initials = (user?.name ?? "CW")
-    .split(" ")
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join("");
 
   const dmPreview = conversations.slice(0, 5);
   const href = messagesHref(user?.role);
@@ -114,96 +106,9 @@ export function ShellTrail({ overlay = false, messages = false }: { overlay?: bo
           </PopoverContent>
         </Popover>
       ) : null}
-      {messages ? (
-        <Popover
-          onOpenChange={(open) => {
-            if (open && notificationUnread > 0) {
-              void api.messaging.markNotificationsRead({ all: true }).then(() => markNotificationsLocalRead());
-            }
-          }}
-        >
-          <PopoverTrigger asChild>
-            <Button size="icon" variant="ghost" shape="pill" aria-label={t("nav.notifications")} className="relative">
-              <Icon icon={Bell} size="sm" className={notificationUnread ? "text-primary" : undefined} />
-              {notificationUnread > 0 ? (
-                <span className="absolute -top-0.5 -right-0.5 grid min-w-4 place-items-center rounded-full bg-primary px-1 text-label font-medium text-primary-foreground">
-                  {notificationUnread > 9 ? "9+" : notificationUnread}
-                </span>
-              ) : null}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-80">
-            <p className="mb-3 font-medium">{t("nav.notifications")}</p>
-            <div className="grid max-h-72 gap-2 overflow-auto">
-              {notifications.length ? (
-                notifications.slice(0, 8).map((note) => (
-                  <button
-                    key={note.id}
-                    type="button"
-                    className="rounded-lg p-2 text-left text-sm hover:bg-secondary"
-                    onClick={() => {
-                      if (note.href) router.push(note.href);
-                      else router.push(href);
-                    }}
-                  >
-                    <p className="font-medium">{note.title}</p>
-                    <p className="line-clamp-2 text-xs text-muted-foreground">{note.body}</p>
-                  </button>
-                ))
-              ) : (
-                <p className="text-sm text-muted-foreground">{t("knotly.noNotifications")}</p>
-              )}
-            </div>
-          </PopoverContent>
-        </Popover>
-      ) : null}
+      {user ? <NotificationBell overlay={overlay} /> : null}
       <PreferenceControls overlay={overlay} showSample />
-      <Popover>
-        <PopoverTrigger asChild>
-          <button
-            type="button"
-            className="flex size-9 items-center justify-center rounded-full bg-secondary text-xs font-medium"
-            aria-label={user?.name ?? t("nav.dashboard")}
-          >
-            {initials}
-          </button>
-        </PopoverTrigger>
-        <PopoverContent align="end" className="w-60 p-2">
-          <div className="px-2 pt-1 pb-2">
-            <p className="truncate text-sm font-medium">{user?.name}</p>
-            <p className="truncate text-caption text-muted-foreground">{user?.email}</p>
-          </div>
-          <div className="grid gap-0.5 border-t border-border pt-1.5">
-            {[
-              { href: "/settings/profile", label: "Profile", icon: UserRound },
-              { href: "/settings/security", label: "Security", icon: Shield },
-              { href: "/settings/appearance", label: "Settings", icon: Settings },
-            ].map((item) => (
-              <button
-                key={item.href}
-                type="button"
-                className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-left text-sm text-foreground hover:bg-accent"
-                onClick={() => router.push(item.href)}
-              >
-                <Icon icon={item.icon} size="xs" lottie={false} className="text-muted-foreground" />
-                {item.label}
-              </button>
-            ))}
-            <button
-              type="button"
-              className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-left text-sm text-muted-foreground hover:bg-accent"
-              onClick={async () => {
-                await api.logout();
-                setUser(null);
-                router.push("/login");
-              }}
-            >
-              <Icon icon={LogOut} size="xs" lottie={false} />
-              {t("nav.signOut")}
-            </button>
-          </div>
-        </PopoverContent>
-      </Popover>
+      <AccountMenu overlay={overlay} />
     </>
   );
 }

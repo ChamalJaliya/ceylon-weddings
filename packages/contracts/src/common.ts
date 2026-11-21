@@ -6,9 +6,6 @@ export type Locale = z.infer<typeof localeSchema>;
 export const currencySchema = z.enum(["LKR", "USD", "AUD", "GBP", "EUR"]);
 export type Currency = z.infer<typeof currencySchema>;
 
-export const themeSchema = z.enum(["pearl", "temple", "night"]);
-export type ThemeName = z.infer<typeof themeSchema>;
-
 export const roleSchema = z.enum(["COUPLE", "VENDOR", "ADMIN", "FAMILY"]);
 export type Role = z.infer<typeof roleSchema>;
 

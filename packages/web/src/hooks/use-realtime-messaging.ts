@@ -15,6 +15,7 @@ export function useRealtimeMessaging(enabled = true) {
   const upsertNotification = useMessagingStore((state) => state.upsertNotification);
   const setInbox = useMessagingStore((state) => state.setInbox);
   const setNotifications = useMessagingStore((state) => state.setNotifications);
+  const setNotificationUnread = useMessagingStore((state) => state.setNotificationUnread);
   const reset = useMessagingStore((state) => state.reset);
 
   useEffect(() => {
@@ -27,7 +28,7 @@ export function useRealtimeMessaging(enabled = true) {
     let cancelled = false;
     connectRealtime();
 
-    void Promise.all([api.messaging.conversations(), api.messaging.notifications()])
+    void Promise.all([api.messaging.conversations(), api.notifications.list({ limit: 20 })])
       .then(([inbox, notes]) => {
         if (cancelled) return;
         setInbox(inbox.items, inbox.unreadTotal);
@@ -40,6 +41,7 @@ export function useRealtimeMessaging(enabled = true) {
       onRead: applyRead,
       onTyping: applyTyping,
       onNotification: upsertNotification,
+      onNotificationUnread: ({ unreadCount }) => setNotificationUnread(unreadCount),
       onConversationUpdated: applyConversationUpdated,
     });
 
@@ -57,6 +59,7 @@ export function useRealtimeMessaging(enabled = true) {
     applyConversationUpdated,
     setInbox,
     setNotifications,
+    setNotificationUnread,
     reset,
   ]);
 }

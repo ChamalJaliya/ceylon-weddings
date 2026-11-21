@@ -1,13 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import type {
-  AppNotification,
-  Conversation,
-  Message,
-  MessageReadEvent,
-  TypingUpdate,
-} from "@ceylonweddings/contracts";
+import type { AppNotification, Conversation, Message, MessageReadEvent, TypingUpdate } from "@ceylonweddings/contracts";
 
 type MessagingState = {
   conversations: Conversation[];
@@ -32,6 +26,8 @@ type MessagingState = {
   setNotifications: (items: AppNotification[], unreadCount: number) => void;
   upsertNotification: (notification: AppNotification) => void;
   markNotificationsLocalRead: () => void;
+  markNotificationLocalRead: (id: string) => void;
+  setNotificationUnread: (unreadCount: number) => void;
   reset: () => void;
 };
 
@@ -83,7 +79,8 @@ export const useMessagingStore = create<MessagingState>((set, get) => ({
           lastMessageAt: message.createdAt,
           lastMessagePreview: message.deletedAt
             ? "Message deleted"
-            : message.body ?? (message.attachments[0] ? `Attachment: ${message.attachments[0].filename}` : item.lastMessagePreview),
+            : (message.body ??
+              (message.attachments[0] ? `Attachment: ${message.attachments[0].filename}` : item.lastMessagePreview)),
           unreadCount: isActive ? 0 : item.unreadCount + 1,
         };
       });
@@ -142,9 +139,7 @@ export const useMessagingStore = create<MessagingState>((set, get) => ({
     set((state) => {
       if (state.notifications.some((item) => item.id === notification.id)) {
         return {
-          notifications: state.notifications.map((item) =>
-            item.id === notification.id ? notification : item,
-          ),
+          notifications: state.notifications.map((item) => (item.id === notification.id ? notification : item)),
         };
       }
       return {
@@ -152,6 +147,20 @@ export const useMessagingStore = create<MessagingState>((set, get) => ({
         notificationUnread: state.notificationUnread + (notification.readAt ? 0 : 1),
       };
     }),
+
+  markNotificationLocalRead: (id) =>
+    set((state) => {
+      const target = state.notifications.find((item) => item.id === id);
+      if (!target || target.readAt) return {};
+      return {
+        notificationUnread: Math.max(0, state.notificationUnread - 1),
+        notifications: state.notifications.map((item) =>
+          item.id === id ? { ...item, readAt: new Date().toISOString() } : item,
+        ),
+      };
+    }),
+
+  setNotificationUnread: (notificationUnread) => set({ notificationUnread }),
 
   markNotificationsLocalRead: () =>
     set((state) => ({
