@@ -1,3 +1,4 @@
+// Force Vercel production redeploy after pnpm lockfile sync.
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 
