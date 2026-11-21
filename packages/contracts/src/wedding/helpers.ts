@@ -2,43 +2,31 @@ import type { CompletenessResult } from "../common";
 import type { AppointmentKind, Meal, Payer, RsvpStatus, GuestSide } from "./enums";
 import type { Event } from "./events";
 import type { BudgetLine } from "./budget";
-import {
-  GUEST_IMPORT_COLUMN_ALIASES,
-  guestImportRowSchema,
-  type GuestHousehold,
-  type GuestImportRow,
-} from "./guests";
+import { GUEST_IMPORT_COLUMN_ALIASES, guestImportRowSchema, type GuestHousehold, type GuestImportRow } from "./guests";
 import type { WeddingVendor } from "./team";
-import type {
-  GuestListSummary,
-  HubStats,
-  PayerPot,
-  PlateSummary,
-} from "./presentation";
-import type {
-  Appointment,
-  CreateAppointmentBody,
-  NekathAppointmentSpec,
-} from "./appointments";
+import type { GuestListSummary, HubStats, PayerPot, PlateSummary } from "./presentation";
+import type { Appointment, CreateAppointmentBody, NekathAppointmentSpec } from "./appointments";
 import type { SeatingPlan, SeatingSummary } from "./seating";
 
+/**
+ * Soft default cover when a couple hasn’t uploaded their own photo yet.
+ * Palms / outdoor couple — calmer than the old groom-and-bouquet stock.
+ */
+export const DEFAULT_WEDDING_COVER_IMAGE = "https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=1600&q=80";
+
+export function resolveWeddingCoverUrl(coverImageUrl?: string | null) {
+  const value = coverImageUrl?.trim();
+  return value || DEFAULT_WEDDING_COVER_IMAGE;
+}
+
 /** Fallback core-team slugs when VendorType.coreTeam is unavailable. */
-export const DEFAULT_CORE_TEAM_CATEGORY_SLUGS = [
-  "VENUE",
-  "PHOTO_VIDEO",
-  "CATERER",
-  "FLORIST_DECOR",
-] as const;
+export const DEFAULT_CORE_TEAM_CATEGORY_SLUGS = ["VENUE", "PHOTO_VIDEO", "CATERER", "FLORIST_DECOR"] as const;
 
 function heads(household: Pick<GuestHousehold, "plusCount">) {
   return 1 + Math.max(0, household.plusCount);
 }
 
-export function plateSummary(
-  households: GuestHousehold[],
-  estimate: number,
-  eventId?: string | null,
-): PlateSummary {
+export function plateSummary(households: GuestHousehold[], estimate: number, eventId?: string | null): PlateSummary {
   const scoped = eventId
     ? households.filter((h) => (h.invites ?? []).some((inv) => inv.eventId === eventId))
     : households;
@@ -171,10 +159,7 @@ export function hubStats(input: {
   const spent = input.budgetLines.reduce((sum, line) => sum + line.spentLkr, 0);
   const musicPlans = input.musicPlans ?? [];
   const musicReadyPlans = musicPlans.filter(
-    (plan) =>
-      plan.ready === true ||
-      (plan.mustCount ?? 0) >= 1 ||
-      (plan.cueCount ?? 0) >= 3,
+    (plan) => plan.ready === true || (plan.mustCount ?? 0) >= 1 || (plan.cueCount ?? 0) >= 3,
   ).length;
   const moodboards = input.moodboards ?? [];
   const moodboardReadyCount = moodboards.filter(
@@ -182,9 +167,7 @@ export function hubStats(input: {
   ).length;
 
   return {
-    daysToNextEvent: next
-      ? Math.max(0, Math.floor((next.at.getTime() - now.getTime()) / 86_400_000))
-      : null,
+    daysToNextEvent: next ? Math.max(0, Math.floor((next.at.getTime() - now.getTime()) / 86_400_000)) : null,
     nextEventId: next?.event.id ?? null,
     nextEventName: next?.event.name ?? null,
     nextEventAt: next?.at.toISOString() ?? null,
@@ -210,7 +193,9 @@ export function hubStats(input: {
   };
 }
 
-export function nekathAppointmentSpecs(event: Pick<Event, "name" | "kind" | "nekathAt" | "startsAt">): NekathAppointmentSpec[] {
+export function nekathAppointmentSpecs(
+  event: Pick<Event, "name" | "kind" | "nekathAt" | "startsAt">,
+): NekathAppointmentSpec[] {
   const anchor = event.nekathAt ?? event.startsAt;
   if (!anchor) return [];
 
@@ -434,7 +419,13 @@ export function seatingSummary(
 export function normalizeGuestImportRow(raw: Record<string, unknown>): GuestImportRow | { error: string } {
   const mapped: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(raw)) {
-    const alias = GUEST_IMPORT_COLUMN_ALIASES[key.trim().toLowerCase().replace(/[\s_]+/g, "")];
+    const alias =
+      GUEST_IMPORT_COLUMN_ALIASES[
+        key
+          .trim()
+          .toLowerCase()
+          .replace(/[\s_]+/g, "")
+      ];
     if (!alias || alias === "ignore") continue;
     if (alias === "eventNames" && typeof value === "string") {
       mapped.eventNames = value
@@ -520,9 +511,7 @@ export function weddingCompleteness(wedding: {
     },
     {
       key: "website",
-      ok:
-        !wedding.websiteEnabled ||
-        (Boolean(wedding.websiteFaq?.trim()) && Boolean(wedding.travelNotes?.trim())),
+      ok: !wedding.websiteEnabled || (Boolean(wedding.websiteFaq?.trim()) && Boolean(wedding.travelNotes?.trim())),
     },
     {
       key: "family",
@@ -545,17 +534,12 @@ export function weddingCompleteness(wedding: {
     {
       key: "music",
       ok: (wedding.musicPlans ?? []).some(
-        (plan) =>
-          plan.ready === true ||
-          (plan.mustCount ?? 0) >= 1 ||
-          (plan.cueCount ?? 0) >= 3,
+        (plan) => plan.ready === true || (plan.mustCount ?? 0) >= 1 || (plan.cueCount ?? 0) >= 3,
       ),
     },
     {
       key: "moodboard",
-      ok: (wedding.moodboards ?? []).some(
-        (board) => board.ready === true || (board.elementCount ?? 0) >= 1,
-      ),
+      ok: (wedding.moodboards ?? []).some((board) => board.ready === true || (board.elementCount ?? 0) >= 1),
     },
   ];
   const missing = checks.filter((item) => !item.ok).map((item) => item.key);

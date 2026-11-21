@@ -1,0 +1,42 @@
+/* Native control resets shared by Input / NativeSelect / Radio. */
+@layer base {
+  [data-slot="input"][type="number"] {
+    appearance: textfield;
+  }
+
+  [data-slot="input"][type="number"]::-webkit-inner-spin-button,
+  [data-slot="input"][type="number"]::-webkit-outer-spin-button {
+    appearance: none;
+    margin: 0;
+  }
+
+  [data-slot="input"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.45;
+  }
+
+  [data-slot="input"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 0.85;
+  }
+
+  [data-slot="input"]::-webkit-search-cancel-button {
+    cursor: pointer;
+  }
+
+  [data-slot="radio"] {
+    appearance: none;
+  }
+
+  /* Chevron drawn with currentColor so every theme tints it — no SVG hex. */
+  [data-slot="native-select"] {
+    appearance: none;
+    background-image:
+      linear-gradient(45deg, transparent 50%, color-mix(in srgb, currentColor 55%, transparent) 50%),
+      linear-gradient(135deg, color-mix(in srgb, currentColor 55%, transparent) 50%, transparent 50%);
+    background-position:
+      calc(100% - 1.3rem) 52%,
+      calc(100% - 0.95rem) 52%;
+    background-repeat: no-repeat;
+    background-size: 0.35rem 0.35rem;
+  }
+}

@@ -6,6 +6,15 @@ import { X } from "lucide-react";
 import { cn } from "../lib/utils";
 import { Icon } from "./icon";
 
+export type DialogSize = "sm" | "md" | "lg" | "xl";
+
+const DIALOG_WIDTH: Record<DialogSize, string> = {
+  sm: "w-[min(24rem,calc(100vw-2rem))]",
+  md: "w-[min(32rem,calc(100vw-2rem))]",
+  lg: "w-[min(40rem,calc(100vw-2rem))]",
+  xl: "w-[min(48rem,calc(100vw-2rem))]",
+};
+
 export const Dialog = DialogPrimitive.Root;
 export const DialogTrigger = DialogPrimitive.Trigger;
 export const DialogPortal = DialogPrimitive.Portal;
@@ -19,7 +28,7 @@ export const DialogOverlay = React.forwardRef<
     ref={ref}
     data-slot="dialog-overlay"
     className={cn(
-      "fixed inset-0 z-50 bg-foreground/25 backdrop-blur-[2px]",
+      "modal__overlay",
       "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
       "motion-reduce:animate-none",
       className,
@@ -31,15 +40,20 @@ DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
 
 export const DialogContent = React.forwardRef<
   React.ComponentRef<typeof DialogPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & { showClose?: boolean }
->(({ className, children, showClose = true, ...props }, ref) => (
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
+    showClose?: boolean;
+    /** sm 24rem · md 32rem (default) · lg 40rem · xl 48rem — always capped to the viewport. */
+    size?: DialogSize;
+  }
+>(({ className, children, showClose = true, size = "md", ...props }, ref) => (
   <DialogPortal>
     <DialogOverlay />
     <DialogPrimitive.Content
       ref={ref}
       data-slot="dialog-content"
       className={cn(
-        "fixed top-1/2 left-1/2 z-50 grid w-[min(32rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-2xl border border-border bg-card p-6 text-card-foreground shadow-card outline-none",
+        "modal fixed top-1/2 left-1/2 grid -translate-x-1/2 -translate-y-1/2 gap-4",
+        DIALOG_WIDTH[size],
         "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
         "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
         "motion-reduce:animate-none",
@@ -50,7 +64,7 @@ export const DialogContent = React.forwardRef<
       {children}
       {showClose ? (
         <DialogPrimitive.Close
-          className="absolute top-4 right-4 rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+          className="modal__close"
           aria-label="Close"
         >
           <Icon icon={X} size="sm" />
@@ -69,13 +83,18 @@ export function DialogFooter({ className, ...props }: React.ComponentProps<"div"
   return <div className={cn("flex flex-wrap items-center justify-end gap-2", className)} {...props} />;
 }
 
+/** Scrollable body between header and footer. */
+export function DialogBody({ className, ...props }: React.ComponentProps<"div">) {
+  return <div className={cn("grid min-h-0 gap-4", className)} {...props} />;
+}
+
 export const DialogTitle = React.forwardRef<
   React.ComponentRef<typeof DialogPrimitive.Title>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Title
     ref={ref}
-    className={cn("font-serif text-xl tracking-tight", className)}
+    className={cn("modal__title", className)}
     {...props}
   />
 ));
@@ -87,7 +106,7 @@ export const DialogDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Description
     ref={ref}
-    className={cn("text-sm text-muted-foreground", className)}
+    className={cn("modal__description", className)}
     {...props}
   />
 ));

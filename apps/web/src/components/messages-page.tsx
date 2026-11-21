@@ -12,10 +12,10 @@ import {
   useMessagingStore,
 } from "@ceylonweddings/web";
 import type { ConversationType } from "@ceylonweddings/contracts";
-import { MessagesStudio } from "@ceylonweddings/ui/domain/messages-studio";
-import type {
-  MessagesStudioConversation,
-  MessagesStudioMessage,
+import {
+  MessagesStudio,
+  type MessagesStudioConversation,
+  type MessagesStudioMessage,
 } from "@ceylonweddings/ui/domain/messages-studio";
 import { FormStatus } from "@ceylonweddings/ui/components/form-status";
 import { Link } from "../i18n/navigation";
@@ -58,16 +58,13 @@ export function MessagesPage({
       },
       emitTyping: (conversationId: string, typing: boolean) => emitTyping(conversationId, typing),
       presign: (body: Parameters<typeof api.messaging.presignMedia>[0]) => api.messaging.presignMedia(body),
-      openSupport: supportType
-        ? () => api.messaging.openConversation({ type: supportType })
-        : undefined,
+      openSupport: supportType ? () => api.messaging.openConversation({ type: supportType }) : undefined,
     }),
     [setActiveConversationId, supportType],
   );
 
   const onConversationsChange = useCallback(
-    (items: MessagesStudioConversation[], unreadTotal: number) =>
-      setInbox(items as typeof conversations, unreadTotal),
+    (items: MessagesStudioConversation[], unreadTotal: number) => setInbox(items as typeof conversations, unreadTotal),
     [setInbox],
   );
 

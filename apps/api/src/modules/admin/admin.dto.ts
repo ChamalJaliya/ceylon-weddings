@@ -22,7 +22,9 @@ import {
   upsertPromotionBodySchema,
   updateSiteConfigBodySchema,
   upsertCmsPageBodySchema,
+  upsertSubscriptionPlanBodySchema,
 } from "@ceylonweddings/contracts";
+import { z } from "zod";
 
 export class AdminVendorListQueryDto extends createZodDto(adminVendorListQuerySchema) {}
 export class AdminPatchVendorDto extends createZodDto(adminPatchVendorBodySchema) {}
@@ -46,4 +48,5 @@ export class PublicPromotionQueryDto extends createZodDto(publicPromotionQuerySc
 export class AdminOverrideTrialDto extends createZodDto(adminOverrideTrialBodySchema) {}
 export class AdminGrantCompedDto extends createZodDto(adminGrantCompedBodySchema) {}
 export class AdminActivatePaidDto extends createZodDto(adminActivatePaidBodySchema) {}
-
+export class AdminUpsertSubscriptionPlanDto extends createZodDto(upsertSubscriptionPlanBodySchema) {}
+export class AdminSetSubscriptionPlanActiveDto extends createZodDto(z.object({ active: z.boolean() })) {}

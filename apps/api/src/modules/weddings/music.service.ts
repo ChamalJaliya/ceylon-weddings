@@ -1,25 +1,19 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { randomBytes } from "node:crypto";
 import { PrismaService } from "@ceylonweddings/database";
-import type {
-  CreateMusicCueBody,
-  CreateMusicTrackBody,
-  MusicPlan,
-  ReorderMusicCuesBody,
-  ReorderMusicTracksBody,
-  SeedMusicCueTemplatesBody,
-  SetMusicShareBody,
-  UpdateMusicCueBody,
-  UpdateMusicPlanBody,
-  UpdateMusicTrackBody,
-  UpsertMusicPlanBody,
-  User,
-} from "@ceylonweddings/contracts";
 import {
+  type CreateMusicCueBody,
+  type CreateMusicTrackBody,
+  type MusicPlan,
+  type ReorderMusicCuesBody,
+  type ReorderMusicTracksBody,
+  type SeedMusicCueTemplatesBody,
+  type SetMusicShareBody,
+  type UpdateMusicCueBody,
+  type UpdateMusicPlanBody,
+  type UpdateMusicTrackBody,
+  type UpsertMusicPlanBody,
+  type User,
   buildMusicBrief,
   musicCueTemplatesForEventKind,
   type MusicCueKind,
@@ -77,8 +71,7 @@ export class MusicService {
           notes: body.notes === undefined ? undefined : body.notes,
           vibePrimary: body.vibePrimary === undefined ? undefined : body.vibePrimary,
           languages: body.languages === undefined ? undefined : body.languages,
-          entertainmentVendorId:
-            body.entertainmentVendorId === undefined ? undefined : body.entertainmentVendorId,
+          entertainmentVendorId: body.entertainmentVendorId === undefined ? undefined : body.entertainmentVendorId,
         },
         include: planInclude,
       });
@@ -115,8 +108,7 @@ export class MusicService {
         notes: body.notes === undefined ? undefined : body.notes,
         vibePrimary: body.vibePrimary === undefined ? undefined : body.vibePrimary,
         languages: body.languages === undefined ? undefined : body.languages,
-        entertainmentVendorId:
-          body.entertainmentVendorId === undefined ? undefined : body.entertainmentVendorId,
+        entertainmentVendorId: body.entertainmentVendorId === undefined ? undefined : body.entertainmentVendorId,
       },
       include: planInclude,
     });
@@ -127,15 +119,14 @@ export class MusicService {
     const { wedding } = await this.access.requireCouple(user);
     const plan = await this.requirePlan(wedding.id, planId);
     const sortOrder =
-      body.sortOrder ??
-      (await this.prisma.musicTrack.count({ where: { planId: plan.id, list: body.list } }));
+      body.sortOrder ?? (await this.prisma.musicTrack.count({ where: { planId: plan.id, list: body.list } }));
     const track = await this.prisma.musicTrack.create({
       data: {
         planId: plan.id,
         list: body.list,
         title: body.title,
         artist: body.artist ?? null,
-        url: body.url ?? null,
+        url: body.url === "" || body.url == null ? null : body.url,
         language: body.language ?? null,
         vibe: body.vibe ?? null,
         notes: body.notes ?? null,
@@ -156,7 +147,7 @@ export class MusicService {
         list: body.list,
         title: body.title,
         artist: body.artist === undefined ? undefined : body.artist,
-        url: body.url === undefined ? undefined : body.url,
+        url: body.url === undefined ? undefined : body.url === "" ? null : body.url,
         language: body.language === undefined ? undefined : body.language,
         vibe: body.vibe === undefined ? undefined : body.vibe,
         notes: body.notes === undefined ? undefined : body.notes,
@@ -184,9 +175,7 @@ export class MusicService {
       throw new BadRequestException("orderedIds must include every track exactly once");
     }
     await this.prisma.$transaction(
-      body.orderedIds.map((id, index) =>
-        this.prisma.musicTrack.update({ where: { id }, data: { sortOrder: index } }),
-      ),
+      body.orderedIds.map((id, index) => this.prisma.musicTrack.update({ where: { id }, data: { sortOrder: index } })),
     );
     return this.get(user, planId);
   }
@@ -196,8 +185,7 @@ export class MusicService {
     const plan = await this.requirePlan(wedding.id, planId);
     if (body.trackId) await this.assertTrack(plan.id, body.trackId);
     if (body.appointmentId) await this.assertAppointment(wedding.id, body.appointmentId);
-    const sortOrder =
-      body.sortOrder ?? (await this.prisma.musicCue.count({ where: { planId: plan.id } }));
+    const sortOrder = body.sortOrder ?? (await this.prisma.musicCue.count({ where: { planId: plan.id } }));
     const cue = await this.prisma.musicCue.create({
       data: {
         planId: plan.id,
@@ -232,12 +220,7 @@ export class MusicService {
         trackId: body.trackId === undefined ? undefined : body.trackId,
         appointmentId: body.appointmentId === undefined ? undefined : body.appointmentId,
         offsetMinutes: body.offsetMinutes === undefined ? undefined : body.offsetMinutes,
-        startsAt:
-          body.startsAt === undefined
-            ? undefined
-            : body.startsAt
-              ? new Date(body.startsAt)
-              : null,
+        startsAt: body.startsAt === undefined ? undefined : body.startsAt ? new Date(body.startsAt) : null,
         durationMinutes: body.durationMinutes === undefined ? undefined : body.durationMinutes,
         notes: body.notes === undefined ? undefined : body.notes,
         sortOrder: body.sortOrder,
@@ -264,9 +247,7 @@ export class MusicService {
       throw new BadRequestException("orderedIds must include every cue exactly once");
     }
     await this.prisma.$transaction(
-      body.orderedIds.map((id, index) =>
-        this.prisma.musicCue.update({ where: { id }, data: { sortOrder: index } }),
-      ),
+      body.orderedIds.map((id, index) => this.prisma.musicCue.update({ where: { id }, data: { sortOrder: index } })),
     );
     return this.get(user, planId);
   }
@@ -416,8 +397,8 @@ export class MusicService {
       vibe: track.vibe as MusicVibe | null,
       notes: track.notes,
       sortOrder: track.sortOrder,
-      createdAt: track.createdAt ? iso(track.createdAt) ?? undefined : undefined,
-      updatedAt: track.updatedAt ? iso(track.updatedAt) ?? undefined : undefined,
+      createdAt: track.createdAt ? (iso(track.createdAt) ?? undefined) : undefined,
+      updatedAt: track.updatedAt ? (iso(track.updatedAt) ?? undefined) : undefined,
     };
   }
 
@@ -450,8 +431,8 @@ export class MusicService {
       durationMinutes: cue.durationMinutes,
       notes: cue.notes,
       sortOrder: cue.sortOrder,
-      createdAt: cue.createdAt ? iso(cue.createdAt) ?? undefined : undefined,
-      updatedAt: cue.updatedAt ? iso(cue.updatedAt) ?? undefined : undefined,
+      createdAt: cue.createdAt ? (iso(cue.createdAt) ?? undefined) : undefined,
+      updatedAt: cue.updatedAt ? (iso(cue.updatedAt) ?? undefined) : undefined,
     };
   }
 

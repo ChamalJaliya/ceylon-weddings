@@ -60,7 +60,7 @@ export function SupplierStrip({
             <MediaFrame src={item.photoUrl} alt={item.name} aspect="aspect-square" className="rounded-none" />
             <div className="grid gap-0.5 p-2">
               <p className="truncate text-sm font-medium">{item.name}</p>
-              <p className="truncate text-[11px] text-muted-foreground">{item.category}</p>
+              <p className="truncate text-label text-muted-foreground">{item.category}</p>
               {item.status ? (
                 <Badge intent={STATUS_INTENT[item.status] ?? "info"} className="mt-1 w-fit">
                   {item.status}
@@ -149,7 +149,7 @@ export function AdminListingPreview({
         <p className="truncate text-xs text-muted-foreground">
           {category} · {location}
         </p>
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-label text-muted-foreground">
           {verified ? "Verified · " : ""}
           {featured ? "Featured · " : ""}
           {ready ? "Presentation ready" : "Needs polish"}

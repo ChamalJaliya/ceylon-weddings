@@ -34,9 +34,11 @@
     "helmet": "^8.1.0",
     "ioredis": "^5.7.0",
     "nestjs-zod": "5.5.0",
+    "nodemailer": "^8.0.11",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
     "socket.io": "^4.8.1",
+    "stripe": "17.7.0",
     "zod": "catalog:"
   },
   "devDependencies": {
@@ -47,6 +49,7 @@
     "@types/cookie-parser": "^1.4.9",
     "@types/express": "^5.0.3",
     "@types/node": "^24.3.0",
+    "@types/nodemailer": "^8.0.2",
     "ts-loader": "^9.5.4",
     "ts-node": "^10.9.2",
     "typescript": "catalog:",

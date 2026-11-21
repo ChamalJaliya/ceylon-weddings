@@ -1,29 +1,21 @@
-import {
-  BadRequestException,
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from "@nestjs/common";
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { randomBytes, randomUUID } from "node:crypto";
 import { extname } from "node:path";
-import { PrismaService } from "@ceylonweddings/database";
-import { Prisma } from "@ceylonweddings/database";
-import type {
-  CreateMoodboardBody,
-  Moodboard,
-  MoodboardAsset,
-  MoodboardBrief,
-  MoodboardPresignBody,
-  MoodboardPresignResponse,
-  MoodboardSummary,
-  SaveMoodboardSceneBody,
-  SetMoodboardShareBody,
-  UpdateMoodboardMetaBody,
-  User,
-} from "@ceylonweddings/contracts";
+import { PrismaService, Prisma } from "@ceylonweddings/database";
 import {
+  type CreateMoodboardBody,
+  type Moodboard,
+  type MoodboardAsset,
+  type MoodboardBrief,
+  type MoodboardPresignBody,
+  type MoodboardPresignResponse,
+  type MoodboardSummary,
+  type SaveMoodboardSceneBody,
+  type SetMoodboardShareBody,
+  type UpdateMoodboardMetaBody,
+  type User,
   MOODBOARD_IMAGE_CONTENT_TYPES,
   emptyMoodboardScene,
   migrateMoodboardScene,
@@ -175,11 +167,7 @@ export class MoodboardsService {
     return { ok: true as const };
   }
 
-  async presign(
-    user: User,
-    boardId: string,
-    body: MoodboardPresignBody,
-  ): Promise<MoodboardPresignResponse> {
+  async presign(user: User, boardId: string, body: MoodboardPresignBody): Promise<MoodboardPresignResponse> {
     const { wedding } = await this.access.requireCouple(user);
     await this.requireBoard(wedding.id, boardId);
 
@@ -199,7 +187,7 @@ export class MoodboardsService {
     const s3 = this.tryGetS3();
 
     if (!s3) {
-      const mockUrl = `https://images.unsplash.com/photo-1519741497674-611481863552?w=1200&q=80`;
+      const mockUrl = `https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=1200&q=80`;
       return {
         uploadUrl: `http://localhost:${this.env.PORT}/mock-upload`,
         key,
@@ -393,8 +381,7 @@ export class MoodboardsService {
   }
 
   private tryGetS3() {
-    const { AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION, S3_BUCKET, S3_PUBLIC_BASE_URL } =
-      this.env;
+    const { AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION, S3_BUCKET, S3_PUBLIC_BASE_URL } = this.env;
     if (!AWS_ACCESS_KEY_ID || !AWS_SECRET_ACCESS_KEY || !AWS_REGION || !S3_BUCKET || !S3_PUBLIC_BASE_URL) {
       return null;
     }

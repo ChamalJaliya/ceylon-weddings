@@ -80,7 +80,9 @@ CeylonWeddings/
 
 ### `apps/web` — Next.js 16 (:3000)
 
-- App Router under `src/app/[locale]/…`.
+- App Router under `src/app/[locale]/…` — **routing only**: each `page.tsx` re-exports a page from `src/features/<domain>/` (Kloqra layout).
+- `src/features/<domain>/` holds pages, feature components and hooks (`planning`, `admin`, `pro`, `vendors`, `consultation`, public pages…).
+- `src/components/` holds app-wide shell pieces (chrome, gates, command palette).
 - Locale segment: `en` | `si` | `ta` — driven by `cw_locale` cookie.
 - Chrome is role-driven: public header → couple top nav → vendor/admin left rail.
 - Fonts: Geist Sans (body), Cormorant Garamond (display), Source Serif 4 (serif mood), Great Vibes (script).

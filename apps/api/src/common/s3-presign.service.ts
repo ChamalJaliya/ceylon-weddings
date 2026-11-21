@@ -15,17 +15,7 @@ const EXT_BY_TYPE: Record<string, string> = {
   "application/json": ".json",
 };
 
-const KNOWN_EXTENSIONS = new Set([
-  ".jpg",
-  ".jpeg",
-  ".png",
-  ".webp",
-  ".gif",
-  ".mp4",
-  ".webm",
-  ".json",
-  ".lottie",
-]);
+const KNOWN_EXTENSIONS = new Set([".jpg", ".jpeg", ".png", ".webp", ".gif", ".mp4", ".webm", ".json", ".lottie"]);
 
 export type PresignRequest = {
   /** Object key prefix, without a trailing slash. */
@@ -43,7 +33,7 @@ export type PresignResult = {
   publicUrl: string;
 };
 
-const DEFAULT_MOCK_URL = "https://images.unsplash.com/photo-1519741497674-611481863552?w=1200&q=80";
+const DEFAULT_MOCK_URL = "https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=1200&q=80";
 
 @Injectable()
 export class S3PresignService {
@@ -79,8 +69,7 @@ export class S3PresignService {
   }
 
   private tryGetS3() {
-    const { AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION, S3_BUCKET, S3_PUBLIC_BASE_URL } =
-      this.env;
+    const { AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION, S3_BUCKET, S3_PUBLIC_BASE_URL } = this.env;
     if (!AWS_ACCESS_KEY_ID || !AWS_SECRET_ACCESS_KEY || !AWS_REGION || !S3_BUCKET || !S3_PUBLIC_BASE_URL) {
       return null;
     }

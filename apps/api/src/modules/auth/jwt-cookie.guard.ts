@@ -1,6 +1,6 @@
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
-import { COOKIES } from "@ceylonweddings/contracts";
+import { COOKIES, parseUserPreferences } from "@ceylonweddings/contracts";
 import type { Request } from "express";
 import { PrismaService } from "@ceylonweddings/database";
 
@@ -43,6 +43,7 @@ export class JwtCookieGuard implements CanActivate {
         locale: user.locale as "en" | "si" | "ta",
         currency: user.currency as "LKR" | "USD" | "AUD" | "GBP" | "EUR",
         createdAt: user.createdAt.toISOString(),
+        preferences: parseUserPreferences(user.preferences),
       };
       return true;
     } catch {

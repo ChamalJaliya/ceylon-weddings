@@ -135,7 +135,7 @@ export function VendorCompareBoard({
   }
 
   const shell = stickyFooter
-    ? "fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 shadow-[0_-12px_40px_rgba(0,0,0,0.12)] backdrop-blur"
+    ? "fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 shadow-dock backdrop-blur"
     : "rounded-3xl border border-border/70 bg-card/30";
 
   return (
@@ -143,7 +143,7 @@ export function VendorCompareBoard({
       <div className={cn("mx-auto grid max-w-6xl gap-5", stickyFooter ? "px-4 py-4 md:px-6" : "p-5 md:p-8")}>
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div className="grid gap-1">
-            <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-primary/90">Compare</p>
+            <p className="text-label font-medium uppercase tracking-eyebrow text-primary/90">Compare</p>
             <h2 className="font-serif text-2xl tracking-tight md:text-3xl">{title}</h2>
           </div>
           {onClose ? (
@@ -185,7 +185,7 @@ export function VendorCompareBoard({
 
           {rows.map((row) => (
             <div key={row.label} className="contents">
-              <p className="border-t border-border/70 pt-3 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+              <p className="border-t border-border/70 pt-3 text-label font-medium uppercase tracking-spaced text-muted-foreground">
                 {row.label}
               </p>
               {row.values.map((value, index) => (

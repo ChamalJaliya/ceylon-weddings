@@ -1,0 +1,418 @@
+"use client";
+
+import { type FormEvent, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
+import { KeyRound, Network, UserPlus } from "lucide-react";
+import { HorizontalTabs } from "@ceylonweddings/ui/components/horizontal-tabs";
+import { api } from "@ceylonweddings/web";
+import {
+  FAMILY_RELATION_LABELS,
+  familyBySide,
+  familyRelationSchema,
+  type FamilyPerson,
+  type FamilyRelation,
+  type GuestHousehold,
+  type GuestSide,
+} from "@ceylonweddings/contracts";
+import { Button } from "@ceylonweddings/ui/components/button";
+import { CheckboxField } from "@ceylonweddings/ui/components/checkbox";
+import { FormStatus } from "@ceylonweddings/ui/components/form-status";
+import { Input } from "@ceylonweddings/ui/components/input";
+import { Label } from "@ceylonweddings/ui/components/label";
+import { SimpleSelect } from "@ceylonweddings/ui/components/select";
+import { FieldBlock, FormGrid, FormPanel } from "@ceylonweddings/ui/domain/creator-form";
+import { EmptyState } from "@ceylonweddings/ui/domain/empty-state";
+import { PlanningFormPanel } from "@ceylonweddings/ui/domain/planning-form-panel";
+import { PlanningList, PlanningListRow } from "@ceylonweddings/ui/domain/planning-list-row";
+import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
+import { SignInPrompt, useWedding } from "@/components/use-wedding";
+import { useConfirm } from "@ceylonweddings/ui/components/confirm-dialog";
+
+const SIDE_LABELS: Record<GuestSide, string> = {
+  BRIDE: "Bride’s side",
+  GROOM: "Groom’s side",
+  BOTH: "Shared / friends",
+};
+
+const RELATIONS = familyRelationSchema.options;
+
+type Tab = "tree" | "access";
+
+export default function FamilyPage() {
+  const confirm = useConfirm();
+  const t = useTranslations();
+  const { data, error, reload } = useWedding();
+  const [tab, setTab] = useState<Tab>("tree");
+  const [people, setPeople] = useState<FamilyPerson[]>([]);
+  const [guests, setGuests] = useState<GuestHousehold[]>([]);
+  const [name, setName] = useState("");
+  const [side, setSide] = useState<GuestSide>("BRIDE");
+  const [relation, setRelation] = useState<FamilyRelation>("MOTHER");
+  const [phone, setPhone] = useState("");
+  const [notes, setNotes] = useState("");
+  const [parentId, setParentId] = useState("");
+  const [householdId, setHouseholdId] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [email, setEmail] = useState("");
+  const [accessName, setAccessName] = useState("");
+  const [canEditGuests, setCanEditGuests] = useState(true);
+  const [canViewBudget, setCanViewBudget] = useState(true);
+  const [canManageVendors, setCanManageVendors] = useState(false);
+  const [status, setStatus] = useState<string | null>(null);
+
+  useEffect(() => {
+    api.wedding
+      .family()
+      .then(setPeople)
+      .catch(() => setPeople([]));
+    api.wedding
+      .guests()
+      .then(setGuests)
+      .catch(() => setGuests([]));
+  }, []);
+
+  const groups = useMemo(() => familyBySide(people), [people]);
+
+  if (!data) return <SignInPrompt error={error} />;
+
+  const isCouple = data.myAccess.role === "COUPLE";
+  const canEdit = data.myAccess.canEditGuests;
+  const members = data.members ?? [];
+
+  function resetForm() {
+    setEditingId(null);
+    setName("");
+    setSide("BRIDE");
+    setRelation("MOTHER");
+    setPhone("");
+    setNotes("");
+    setParentId("");
+    setHouseholdId("");
+  }
+
+  function startEdit(person: FamilyPerson) {
+    setEditingId(person.id);
+    setName(person.name);
+    setSide(person.side);
+    setRelation(person.relation);
+    setPhone(person.phone ?? "");
+    setNotes(person.notes ?? "");
+    setParentId(person.parentId ?? "");
+    setHouseholdId(person.householdId ?? "");
+    setTab("tree");
+  }
+
+  async function refreshPeople() {
+    setPeople(await api.wedding.family());
+  }
+
+  async function onSavePerson(event: FormEvent) {
+    event.preventDefault();
+    setStatus(null);
+    const body = {
+      name,
+      side,
+      relation,
+      phone: phone || null,
+      notes: notes || null,
+      parentId: parentId || null,
+      householdId: householdId || null,
+    };
+    try {
+      if (editingId) await api.wedding.updateFamilyPerson(editingId, body);
+      else await api.wedding.createFamilyPerson(body);
+      resetForm();
+      await refreshPeople();
+      setStatus(editingId ? "Updated" : "Added to tree");
+    } catch (err) {
+      setStatus(err instanceof Error ? err.message : "Could not save");
+    }
+  }
+
+  async function onInviteAccess(event: FormEvent) {
+    event.preventDefault();
+    await api.wedding.inviteMember({
+      email,
+      name: accessName,
+      canEditGuests,
+      canViewBudget,
+      canManageVendors,
+    });
+    setStatus(t("planning.invitedTempPassword"));
+    setEmail("");
+    setAccessName("");
+    await reload();
+  }
+
+  async function toggleFlag(
+    memberId: string,
+    flag: "canEditGuests" | "canViewBudget" | "canManageVendors",
+    value: boolean,
+  ) {
+    await api.wedding.updateMember(memberId, { [flag]: value });
+    await reload();
+  }
+
+  return (
+    <div className="cw-stack">
+      <PageHeader
+        icon={Network}
+        kicker={t("hub.kicker")}
+        title={t("nav.family")}
+        description="Who is who — bride’s house, groom’s house, then who can log in."
+      />
+
+      <HorizontalTabs
+        ariaLabel="Family"
+        activeId={tab}
+        onChange={setTab}
+        items={[
+          { id: "tree", label: "Family tree", icon: Network },
+          { id: "access", label: "Hub access", icon: KeyRound },
+        ]}
+      />
+
+      {tab === "tree" ? (
+        <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="grid gap-6">
+            {groups.every((g) => g.people.length === 0) ? (
+              <EmptyState
+                icon={Network}
+                title="Start the tree"
+                description="Add Amma, Thaththa, aunties — by side — so the whole family map is clear."
+              />
+            ) : (
+              groups.map((group) =>
+                group.people.length === 0 ? null : (
+                  <section key={group.side} className="grid gap-3">
+                    <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
+                      {SIDE_LABELS[group.side]}
+                    </h2>
+                    <PlanningList>
+                      {group.people.map((person) => (
+                        <PlanningListRow
+                          key={person.id}
+                          variant="card"
+                          title={person.name}
+                          description={
+                            <>
+                              {FAMILY_RELATION_LABELS[person.relation]}
+                              {person.parentName ? ` · under ${person.parentName}` : ""}
+                              {person.householdLabel ? ` · guest: ${person.householdLabel}` : ""}
+                              {person.phone ? ` · ${person.phone}` : ""}
+                            </>
+                          }
+                          meta={
+                            person.notes ? <p className="mt-1 text-xs text-muted-foreground">{person.notes}</p> : null
+                          }
+                          actions={
+                            canEdit ? (
+                              <>
+                                <Button type="button" size="sm" variant="ghost" onClick={() => startEdit(person)}>
+                                  Edit
+                                </Button>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={async () => {
+                                    if (
+                                      !(await confirm({
+                                        title: `Remove ${person.name}?`,
+                                        destructive: true,
+                                        confirmLabel: "Remove",
+                                      }))
+                                    )
+                                      return;
+                                    await api.wedding.deleteFamilyPerson(person.id);
+                                    await refreshPeople();
+                                  }}
+                                >
+                                  Remove
+                                </Button>
+                              </>
+                            ) : null
+                          }
+                        />
+                      ))}
+                    </PlanningList>
+                  </section>
+                ),
+              )
+            )}
+          </div>
+
+          {canEdit ? (
+            <form className="h-fit" onSubmit={onSavePerson}>
+              <PlanningFormPanel title={editingId ? "Edit person" : "Add to tree"}>
+                <div className="grid gap-1">
+                  <Label>Name</Label>
+                  <Input value={name} onChange={(e) => setName(e.target.value)} required />
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="grid gap-1">
+                    <Label>Side</Label>
+                    <SimpleSelect
+                      value={side}
+                      onValueChange={(v) => setSide(v as GuestSide)}
+                      options={[
+                        { value: "BRIDE", label: SIDE_LABELS.BRIDE },
+                        { value: "GROOM", label: SIDE_LABELS.GROOM },
+                        { value: "BOTH", label: SIDE_LABELS.BOTH },
+                      ]}
+                    />
+                  </div>
+                  <div className="grid gap-1">
+                    <Label>Relation</Label>
+                    <SimpleSelect
+                      value={relation}
+                      onValueChange={(v) => setRelation(v as FamilyRelation)}
+                      options={RELATIONS.map((item) => ({
+                        value: item,
+                        label: FAMILY_RELATION_LABELS[item],
+                      }))}
+                    />
+                  </div>
+                </div>
+                <div className="grid gap-1">
+                  <Label>Under (parent)</Label>
+                  <SimpleSelect
+                    value={parentId}
+                    onValueChange={setParentId}
+                    options={[
+                      { value: "", label: "None" },
+                      ...people
+                        .filter((p) => p.id !== editingId)
+                        .map((p) => ({ value: p.id, label: `${p.name} (${SIDE_LABELS[p.side]})` })),
+                    ]}
+                  />
+                </div>
+                <div className="grid gap-1">
+                  <Label>Link guest household</Label>
+                  <SimpleSelect
+                    value={householdId}
+                    onValueChange={setHouseholdId}
+                    options={[
+                      { value: "", label: "None" },
+                      ...guests.map((g) => ({ value: g.id, label: `${g.label} · ${g.headName}` })),
+                    ]}
+                  />
+                </div>
+                <div className="grid gap-1">
+                  <Label>Phone</Label>
+                  <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+94…" />
+                </div>
+                <div className="grid gap-1">
+                  <Label>Notes</Label>
+                  <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Lives in Melbourne…" />
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button type="submit">{editingId ? "Save" : "Add person"}</Button>
+                  {editingId ? (
+                    <Button type="button" variant="ghost" onClick={resetForm}>
+                      Cancel
+                    </Button>
+                  ) : null}
+                </div>
+                {status && tab === "tree" ? <FormStatus>{status}</FormStatus> : null}
+              </PlanningFormPanel>
+            </form>
+          ) : null}
+        </div>
+      ) : (
+        <div className="grid max-w-2xl gap-8">
+          <div className="grid gap-3">
+            <h2 className="font-medium">Who can open the hub</h2>
+            {members.length === 0 ? (
+              <EmptyState icon={UserPlus} title={t("nav.family")} description={t("planning.familyHelp")} />
+            ) : (
+              <PlanningList>
+                {members.map((member) => (
+                  <PlanningListRow
+                    key={member.id}
+                    variant="card"
+                    className="text-sm"
+                    title={
+                      <span className="flex justify-between gap-3">
+                        <span>
+                          {member.name} · {member.email}
+                        </span>
+                        <span className="font-normal text-muted-foreground">{member.role}</span>
+                      </span>
+                    }
+                  >
+                    {member.role === "FAMILY" && isCouple ? (
+                      <div className="flex flex-wrap gap-4">
+                        <CheckboxField
+                          label={t("planning.canEditGuests")}
+                          checked={member.canEditGuests}
+                          onCheckedChange={(checked) => toggleFlag(member.id, "canEditGuests", checked === true)}
+                        />
+                        <CheckboxField
+                          label={t("planning.canViewBudget")}
+                          checked={member.canViewBudget}
+                          onCheckedChange={(checked) => toggleFlag(member.id, "canViewBudget", checked === true)}
+                        />
+                        <CheckboxField
+                          label={t("planning.canManageVendors")}
+                          checked={member.canManageVendors}
+                          onCheckedChange={(checked) => toggleFlag(member.id, "canManageVendors", checked === true)}
+                        />
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">
+                        {[
+                          member.canEditGuests ? t("planning.canEditGuests") : null,
+                          member.canViewBudget ? t("planning.canViewBudget") : null,
+                          member.canManageVendors ? t("planning.canManageVendors") : null,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </p>
+                    )}
+                  </PlanningListRow>
+                ))}
+              </PlanningList>
+            )}
+          </div>
+
+          {isCouple ? (
+            <form onSubmit={onInviteAccess}>
+              <FormPanel>
+                <FormGrid cols={2}>
+                  <FieldBlock label={t("auth.name")}>
+                    <Input value={accessName} onChange={(e) => setAccessName(e.target.value)} required />
+                  </FieldBlock>
+                  <FieldBlock label={t("auth.email")}>
+                    <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                  </FieldBlock>
+                </FormGrid>
+                <div className="flex flex-wrap gap-4 text-sm">
+                  <CheckboxField
+                    label={t("planning.canEditGuests")}
+                    checked={canEditGuests}
+                    onCheckedChange={(checked) => setCanEditGuests(checked === true)}
+                  />
+                  <CheckboxField
+                    label={t("planning.canViewBudget")}
+                    checked={canViewBudget}
+                    onCheckedChange={(checked) => setCanViewBudget(checked === true)}
+                  />
+                  <CheckboxField
+                    label={t("planning.canManageVendors")}
+                    checked={canManageVendors}
+                    onCheckedChange={(checked) => setCanManageVendors(checked === true)}
+                  />
+                </div>
+                <div className="flex flex-wrap items-center gap-3">
+                  <Button type="submit">{t("planning.invite")}</Button>
+                  {status && tab === "access" ? <FormStatus tone="success">{status}</FormStatus> : null}
+                </div>
+              </FormPanel>
+            </form>
+          ) : null}
+        </div>
+      )}
+    </div>
+  );
+}

@@ -12,6 +12,7 @@ export function PromotionSlotRail({
   locale,
   limit = 3,
   className,
+  layout,
 }: {
   slot: PromotionSlot;
   city?: string;
@@ -19,6 +20,8 @@ export function PromotionSlotRail({
   locale?: string;
   limit?: number;
   className?: string;
+  /** Force a creative layout (e.g. a slim STRIP) regardless of what the promo was booked as. */
+  layout?: Promotion["layout"];
 }) {
   const [items, setItems] = useState<Promotion[]>([]);
   const [adsEnabled, setAdsEnabled] = useState(true);
@@ -76,10 +79,10 @@ export function PromotionSlotRail({
               className="block"
             >
               <PromotionCreative
-                promo={promo}
+                promo={layout ? { ...promo, layout } : promo}
                 light={promo.overlayTone === "light"}
                 className="rounded-2xl transition hover:shadow-md"
-                style={{ ["--promo-accent" as string]: promo.accentColor || "#7c2d12" }}
+                style={{ ["--promo-accent" as string]: promo.accentColor || "var(--color-primary)" }}
               />
             </a>
           );

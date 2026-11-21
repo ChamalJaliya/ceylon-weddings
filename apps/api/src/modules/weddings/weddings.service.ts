@@ -1,21 +1,19 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "@ceylonweddings/database";
-import type {
-  CreateAppointmentBody,
-  CreateBudgetLineBody,
-  CreateEventBody,
-  CreateTaskBody,
-  Event,
-  GuestHousehold,
-  UpdateAppointmentBody,
-  UpdateBudgetLineBody,
-  UpdateEventBody,
-  UpdateTaskBody,
-  UpdateWeddingBody,
-  User,
-  WeddingType,
-} from "@ceylonweddings/contracts";
 import {
+  type CreateAppointmentBody,
+  type CreateBudgetLineBody,
+  type CreateEventBody,
+  type CreateTaskBody,
+  type Event,
+  type GuestHousehold,
+  type UpdateAppointmentBody,
+  type UpdateBudgetLineBody,
+  type UpdateEventBody,
+  type UpdateTaskBody,
+  type UpdateWeddingBody,
+  type User,
+  type WeddingType,
   musicPlanReady,
   moodboardElementCount,
   moodboardReady,
@@ -154,6 +152,7 @@ export class WeddingsService {
       styleNotes: full.styleNotes,
       settingNotes: full.settingNotes,
       colors: full.colors,
+      coverImageUrl: full.coverImageUrl,
       onboardingCompletedAt: iso(full.onboardingCompletedAt),
       events,
       tasks,
@@ -207,9 +206,7 @@ export class WeddingsService {
     const { seedMissingTasks, date, completeOnboarding, ...rest } = body;
     const current = await this.prisma.wedding.findUniqueOrThrow({ where: { id: context.wedding.id } });
     const nextTypes = (rest.types ?? current.types) as WeddingType[];
-    const typesChanged =
-      rest.types !== undefined &&
-      [...rest.types].sort().join() !== [...current.types].sort().join();
+    const typesChanged = rest.types !== undefined && [...rest.types].sort().join() !== [...current.types].sort().join();
 
     await this.prisma.wedding.update({
       where: { id: context.wedding.id },

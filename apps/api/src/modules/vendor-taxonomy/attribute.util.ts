@@ -1,16 +1,14 @@
-import type {
-  AttributeCompleteness,
-  AttributeValueType,
-  LocalizedString,
-  QuestionPresentation,
-  TypeOnboardingPresentation,
-  VendorAttributeAnswerValue,
-  VendorAttributeDefinition,
-  VendorAttributeOption,
-  VendorProfileAttributeChip,
-  VendorType,
-} from "@ceylonweddings/contracts";
 import {
+  type AttributeCompleteness,
+  type AttributeValueType,
+  type LocalizedString,
+  type QuestionPresentation,
+  type TypeOnboardingPresentation,
+  type VendorAttributeAnswerValue,
+  type VendorAttributeDefinition,
+  type VendorAttributeOption,
+  type VendorProfileAttributeChip,
+  type VendorType,
   computeDiscoverabilityScore,
   questionPresentationSchema,
   typeOnboardingPresentationSchema,
@@ -201,9 +199,7 @@ type ValueRow = {
 export function answerFromValue(row: ValueRow): VendorAttributeAnswerValue | null {
   const valueType = row.definition?.valueType;
   if (valueType === "SELECT" || valueType === "MULTISELECT") {
-    const keys = (row.selections ?? [])
-      .filter((sel) => sel.option.active)
-      .map((sel) => sel.option.key);
+    const keys = (row.selections ?? []).filter((sel) => sel.option.active).map((sel) => sel.option.key);
     if (keys.length === 0) return null;
     return { optionKeys: keys };
   }
@@ -278,10 +274,7 @@ export function computeAttributeCompleteness(
   };
 }
 
-export function profileChipsFromValues(
-  definitions: DefinitionRow[],
-  values: ValueRow[],
-): VendorProfileAttributeChip[] {
+export function profileChipsFromValues(definitions: DefinitionRow[], values: ValueRow[]): VendorProfileAttributeChip[] {
   const byDefId = new Map(values.map((row) => [row.definitionId, row]));
   const chips: VendorProfileAttributeChip[] = [];
 
@@ -292,8 +285,7 @@ export function profileChipsFromValues(
     const answer = answerFromValue({ ...row, definition: def });
     if (!answer) continue;
 
-    const label =
-      asLocalizedOrNull(def.filterLabel as LocalizedJson) ?? asLocalized(def.question as LocalizedJson);
+    const label = asLocalizedOrNull(def.filterLabel as LocalizedJson) ?? asLocalized(def.question as LocalizedJson);
 
     if ("optionKeys" in answer) {
       const options = (row.selections ?? [])

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { api } from "@ceylonweddings/web";
 import type { MineWedding } from "@ceylonweddings/contracts";
 import { Link } from "../i18n/navigation";
+import { CenteredLoader } from "@ceylonweddings/ui/components/spinner";
 
 export function useWedding() {
   const [data, setData] = useState<MineWedding | null>(null);
@@ -21,7 +22,7 @@ export function useWedding() {
 
 export function SignInPrompt({ error }: { error: string | null }) {
   if (!error) {
-    return <p className="text-sm text-muted-foreground">Loading…</p>;
+    return <CenteredLoader label="Loading…" />;
   }
   return (
     <p className="text-sm">

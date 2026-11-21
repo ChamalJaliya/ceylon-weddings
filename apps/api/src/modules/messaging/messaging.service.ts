@@ -11,25 +11,25 @@ import { randomUUID } from "node:crypto";
 import { extname } from "node:path";
 import { PrismaService } from "@ceylonweddings/database";
 import { loadApiEnv } from "@ceylonweddings/env";
-import type {
-  AppNotification,
-  Conversation,
-  ConversationListResponse,
-  ConversationType,
-  CreateConversationBody,
-  MarkNotificationsReadBody,
-  MarkReadBody,
-  Message,
-  MessageListQuery,
-  MessageListResponse,
-  MessagingMediaPresignBody,
-  MessagingMediaPresignResponse,
-  MessagingUserPreview,
-  NotificationListResponse,
-  SendMessageBody,
-  User,
+import {
+  type Conversation,
+  type ConversationListResponse,
+  type ConversationType,
+  type CreateConversationBody,
+  type MarkNotificationsReadBody,
+  type MarkReadBody,
+  type Message,
+  type MessageListQuery,
+  type MessageListResponse,
+  type MessagingMediaPresignBody,
+  type MessagingMediaPresignResponse,
+  type MessagingUserPreview,
+  type NotificationListResponse,
+  type SendMessageBody,
+  type User,
+  MESSAGE_ATTACHMENT_CONTENT_TYPES,
 } from "@ceylonweddings/contracts";
-import { MESSAGE_ATTACHMENT_CONTENT_TYPES } from "@ceylonweddings/contracts";
+import { NotificationsService } from "../notifications/notifications.service";
 import { RealtimeEmitter } from "../realtime/realtime.emitter";
 
 const EXT_BY_TYPE: Record<(typeof MESSAGE_ATTACHMENT_CONTENT_TYPES)[number], string> = {
@@ -76,6 +76,7 @@ export class MessagingService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly realtime: RealtimeEmitter,
+    private readonly notifications: NotificationsService,
   ) {}
 
   async listConversations(user: User): Promise<ConversationListResponse> {
@@ -165,7 +166,7 @@ export class MessagingService {
     const hasMore = rows.length > limit;
     const slice = hasMore ? rows.slice(0, limit) : rows;
     const items = slice.map((row) => this.mapMessage(row)).reverse();
-    const nextCursor = hasMore ? slice[slice.length - 1]?.createdAt.toISOString() ?? null : null;
+    const nextCursor = hasMore ? (slice[slice.length - 1]?.createdAt.toISOString() ?? null) : null;
     return { items, nextCursor };
   }
 
@@ -173,7 +174,11 @@ export class MessagingService {
     this.assertRateLimit(user.id);
     const conversation = await this.requireAccess(user, conversationId);
 
-    if (user.role === "ADMIN" && ["COUPLE_ADMIN", "VENDOR_ADMIN"].includes(conversation.type) && !conversation.assignedAdminId) {
+    if (
+      user.role === "ADMIN" &&
+      ["COUPLE_ADMIN", "VENDOR_ADMIN"].includes(conversation.type) &&
+      !conversation.assignedAdminId
+    ) {
       await this.prisma.conversation.update({
         where: { id: conversationId },
         data: { assignedAdminId: user.id },
@@ -226,35 +231,32 @@ export class MessagingService {
     const recipients = await this.recipientUsers(conversationId, user.id, conversation.type);
     const preview = text ?? (attachments[0]?.filename ? `Attachment: ${attachments[0].filename}` : "New message");
 
-    const notifications = await Promise.all(
-      recipients.map((recipient) =>
-        this.prisma.notification.create({
-          data: {
-            userId: recipient.id,
-            type: "MESSAGE",
-            title: user.name,
-            body: preview.slice(0, 240),
-            href: `${this.hrefForRole(recipient.role)}?c=${conversationId}`,
-            conversationId,
-            messageId: created.id,
-          },
-        }),
-      ),
-    );
     const recipientIds = recipients.map((item) => item.id);
 
     this.realtime.toConversation(conversationId, "message.new", mapped);
     this.realtime.toUsers(recipientIds, "message.new", mapped);
-    this.realtime.toUsers(
-      [...recipientIds, user.id],
-      "conversation.updated",
-      { conversationId, lastMessageAt: mapped.createdAt, lastMessagePreview: preview },
-    );
+    this.realtime.toUsers([...recipientIds, user.id], "conversation.updated", {
+      conversationId,
+      lastMessageAt: mapped.createdAt,
+      lastMessagePreview: preview,
+    });
 
-    for (const notification of notifications) {
-      const payload = this.mapNotification(notification);
-      this.realtime.toUser(notification.userId, "notification.new", payload);
-    }
+    // In-app row + socket push + email, per each recipient's notification settings.
+    await Promise.all(
+      recipients.map((recipient) =>
+        this.notifications.notify({
+          userId: recipient.id,
+          templateId: "message.received",
+          context: {
+            senderName: user.name,
+            preview,
+            href: `${this.hrefForRole(recipient.role)}?c=${conversationId}`,
+          },
+          conversationId,
+          messageId: created.id,
+        }),
+      ),
+    );
 
     return mapped;
   }
@@ -315,7 +317,7 @@ export class MessagingService {
     const unreadCount = await this.prisma.notification.count({
       where: { userId: user.id, readAt: null },
     });
-    return { items: items.map((item) => this.mapNotification(item)), unreadCount };
+    return { items: items.map((item) => this.notifications.map(item)), unreadCount };
   }
 
   async markNotificationsRead(user: User, body: MarkNotificationsReadBody) {
@@ -372,8 +374,7 @@ export class MessagingService {
     if (!row) throw new NotFoundException("Conversation not found");
 
     const isParticipant = row.participants.some((part) => part.userId === user.id);
-    const isAdminPool =
-      user.role === "ADMIN" && (row.type === "COUPLE_ADMIN" || row.type === "VENDOR_ADMIN");
+    const isAdminPool = user.role === "ADMIN" && (row.type === "COUPLE_ADMIN" || row.type === "VENDOR_ADMIN");
     if (!isParticipant && !isAdminPool) {
       throw new ForbiddenException("Not allowed for this conversation");
     }
@@ -506,7 +507,7 @@ export class MessagingService {
     const lastMessagePreview = last
       ? last.deletedAt
         ? "Message deleted"
-        : last.body ?? (last.attachments[0] ? `Attachment: ${last.attachments[0].filename}` : null)
+        : (last.body ?? (last.attachments[0] ? `Attachment: ${last.attachments[0].filename}` : null))
       : null;
 
     const peerPart = row.participants.find((part) => part.userId !== viewerId);
@@ -588,30 +589,6 @@ export class MessagingService {
       name: user.name,
       role: user.role,
       photoUrl: user.vendor?.photoUrl ?? null,
-    };
-  }
-
-  private mapNotification(row: {
-    id: string;
-    type: "MESSAGE";
-    title: string;
-    body: string;
-    href: string | null;
-    conversationId: string | null;
-    messageId: string | null;
-    readAt: Date | null;
-    createdAt: Date;
-  }): AppNotification {
-    return {
-      id: row.id,
-      type: row.type,
-      title: row.title,
-      body: row.body,
-      href: row.href,
-      conversationId: row.conversationId,
-      messageId: row.messageId,
-      readAt: row.readAt?.toISOString() ?? null,
-      createdAt: row.createdAt.toISOString(),
     };
   }
 

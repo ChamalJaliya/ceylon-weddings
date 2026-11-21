@@ -1,14 +1,11 @@
 import { z } from "zod";
+import { notificationMetadataSchema } from "../notifications/templates";
 
-export const conversationTypeSchema = z.enum([
-  "COUPLE_VENDOR",
-  "COUPLE_ADMIN",
-  "VENDOR_VENDOR",
-  "VENDOR_ADMIN",
-]);
+export const conversationTypeSchema = z.enum(["COUPLE_VENDOR", "COUPLE_ADMIN", "VENDOR_VENDOR", "VENDOR_ADMIN"]);
 export type ConversationType = z.infer<typeof conversationTypeSchema>;
 
-export const notificationTypeSchema = z.enum(["MESSAGE"]);
+/** Template id from the notification catalog ("message.received", "inquiry.received", …). */
+export const notificationTypeSchema = z.string();
 export type NotificationType = z.infer<typeof notificationTypeSchema>;
 
 export const MESSAGE_ATTACHMENT_CONTENT_TYPES = [
@@ -177,6 +174,7 @@ export const notificationSchema = z.object({
   href: z.string().nullable(),
   conversationId: z.string().nullable(),
   messageId: z.string().nullable(),
+  metadata: notificationMetadataSchema.default({}),
   readAt: z.string().nullable(),
   createdAt: z.string(),
 });

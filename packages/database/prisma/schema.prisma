@@ -379,6 +379,8 @@ model User {
   capabilities    AdminCapability[]
   totpSecret      String?
   totpEnabled     Boolean           @default(false)
+  /// Theme mode, palette and per-type notification channels (contracts: userPreferencesSchema).
+  preferences     Json              @default("{}")
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
   sessions        Session[]
@@ -431,6 +433,8 @@ model Wedding {
   styleNotes            String?
   settingNotes          String?
   colors                String[]
+  /** Couple cover / hero photo for planning hub + public guest site. */
+  coverImageUrl         String?
   onboardingCompletedAt DateTime?
   createdAt             DateTime      @default(now())
   updatedAt             DateTime      @updatedAt
@@ -1260,7 +1264,7 @@ model VendorSubscription {
   trialOverrideBy  String?
 
   planId           String?
-  plan             SubscriptionPlan?  @relation(fields: [planId], references: [id])
+  plan             SubscriptionPlan?  @relation("VendorSubscriptionPlan", fields: [planId], references: [id])
   interval         BillingInterval?
   currentPeriodStart DateTime?
   currentPeriodEnd   DateTime?
@@ -1268,6 +1272,14 @@ model VendorSubscription {
   gracePeriodDays  Int                @default(7)
   cancelledAt      DateTime?
   cancelReason     String?
+  cancelAtPeriodEnd Boolean           @default(false)
+
+  pendingPlanId    String?
+  pendingPlan      SubscriptionPlan?  @relation("VendorSubscriptionPendingPlan", fields: [pendingPlanId], references: [id])
+  pendingInterval  BillingInterval?
+
+  stripeCustomerId     String?
+  stripeSubscriptionId String?
 
   compedById       String?
   compedUntil      DateTime?
@@ -1276,22 +1288,52 @@ model VendorSubscription {
   updatedAt        DateTime           @updatedAt
 
   invoices         SubscriptionInvoice[]
+  events           VendorSubscriptionEvent[]
 
   @@index([status])
   @@index([trialEndsAt])
   @@index([currentPeriodEnd])
+  @@index([stripeCustomerId])
 }
 
 model SubscriptionPlan {
   id            String             @id @default(cuid())
+  slug          String             @default("pro")
   name          String
+  description   String?
   interval      BillingInterval
   priceLkr      Int
+  features      Json               @default("[]")
+  limits        Json?
+  billingMode   String             @default("checkout")
+  recommended   Boolean            @default(false)
+  sortOrder     Int                @default(0)
   active        Boolean            @default(true)
+  /** Optional Stripe Price id; when empty Checkout uses ad-hoc price_data. */
+  stripePriceId String?
   createdAt     DateTime           @default(now())
   updatedAt     DateTime           @updatedAt
 
-  subscriptions VendorSubscription[]
+  subscriptions VendorSubscription[] @relation("VendorSubscriptionPlan")
+  pendingFor    VendorSubscription[] @relation("VendorSubscriptionPendingPlan")
+
+  @@unique([slug, interval])
+  @@index([active, sortOrder])
+}
+
+model VendorSubscriptionEvent {
+  id             String             @id @default(cuid())
+  subscriptionId String
+  subscription   VendorSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  vendorId       String
+  type           String
+  payload        Json?
+  actorUserId    String?
+  createdAt      DateTime           @default(now())
+
+  @@index([subscriptionId, createdAt])
+  @@index([vendorId, createdAt])
+  @@index([type, createdAt])
 }
 
 model SubscriptionInvoice {
@@ -1319,10 +1361,6 @@ enum ConversationType {
   COUPLE_ADMIN
   VENDOR_VENDOR
   VENDOR_ADMIN
-}
-
-enum NotificationType {
-  MESSAGE
 }
 
 model Conversation {
@@ -1394,10 +1432,13 @@ model Notification {
   id             String           @id @default(cuid())
   userId         String
   user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type           NotificationType @default(MESSAGE)
+  /// Template id from contracts NOTIFICATION_TEMPLATES ("message.received", "inquiry.received", …).
+  type           String           @default("message.received")
   title          String
   body           String
   href           String?
+  /// Variant, category, CTA label, detail rows (contracts: notificationMetadataSchema).
+  metadata       Json             @default("{}")
   conversationId String?
   conversation   Conversation?    @relation(fields: [conversationId], references: [id], onDelete: SetNull)
   messageId      String?

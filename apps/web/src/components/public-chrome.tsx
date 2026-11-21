@@ -1,16 +1,12 @@
 "use client";
 
-import type { ReactNode } from "react";
-import { useEffect, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { api } from "@ceylonweddings/web";
-import {
-  DEFAULT_SITE_BRANDING,
-  type PublicFlags,
-  type SiteBranding,
-} from "@ceylonweddings/contracts";
+import { DEFAULT_SITE_BRANDING, type PublicFlags, type SiteBranding } from "@ceylonweddings/contracts";
 import { AppFooter } from "@ceylonweddings/ui/domain/app-footer";
 import { cn } from "@ceylonweddings/ui/utils";
+import { BrandLockup } from "@ceylonweddings/ui/domain/brand-mark";
 import { Link, usePathname } from "../i18n/navigation";
 import { AuthNav } from "./auth-nav";
 import { PreferenceControls } from "./preference-controls";
@@ -46,26 +42,21 @@ export function PublicHeader() {
     ...(flags["ideas.public"] !== false ? [{ href: "/ideas", label: t("nav.ideas") }] : []),
     { href: "/how-it-works", label: "How it works" },
     ...(flags["awards.public"] !== false ? [{ href: "/awards", label: "Awards" }] : []),
-    ...(flags["consultations.public"] !== false
-      ? [{ href: "/consultation", label: t("nav.consultation") }]
-      : []),
-    { href: "/for-vendors", label: t("nav.forVendors") },
+    ...(flags["consultations.public"] !== false ? [{ href: "/consultation", label: t("nav.consultation") }] : []),
   ];
 
   return (
-    <div className="flex h-full min-w-0 flex-1 items-center gap-3 px-2 sm:px-3">
-      <Link href="/" className="flex shrink-0 items-center gap-2 pl-1">
+    <div className="flex h-full min-w-0 flex-1 items-center gap-3 px-2 sm:px-3 md:grid md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
+      <Link href="/" className="flex shrink-0 items-center gap-2 justify-self-start pl-3">
         {branding.logoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={branding.logoUrl} alt="" className="size-8 rounded-full object-cover" />
         ) : (
-          <span className="flex size-8 items-center justify-center rounded-full border border-primary/35 font-serif text-xs text-primary">
-            CW
-          </span>
+          <BrandLockup name={t("app.name")} size="sm" />
         )}
-        <span className="hidden font-serif text-sm sm:inline">{t("app.name")}</span>
+        {branding.logoUrl ? <span className="hidden font-serif text-sm sm:inline">{t("app.name")}</span> : null}
       </Link>
-      <nav className="hidden min-w-0 flex-1 items-center justify-center gap-1 md:flex">
+      <nav className="hidden min-w-0 items-center justify-center gap-1 md:flex">
         {links.map((link) => (
           <Link
             key={link.href}
@@ -77,12 +68,11 @@ export function PublicHeader() {
                 : "text-muted-foreground hover:text-foreground",
             )}
           >
-
             {link.label}
           </Link>
         ))}
       </nav>
-      <div className="ml-auto flex shrink-0 items-center gap-1">
+      <div className="ml-auto flex shrink-0 items-center gap-1 justify-self-end">
         <PreferenceControls />
         <AuthNav />
       </div>
@@ -95,16 +85,13 @@ export function PublicChrome({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const isHome = pathname === "/";
   const { branding, flags } = usePublicSiteChrome();
-  const showMaintenance =
-    flags["site.maintenance"] === true || branding.maintenanceBanner.enabled;
+  const showMaintenance = flags["site.maintenance"] === true || branding.maintenanceBanner.enabled;
   const companyLinks = [
     { href: "/about", label: t("nav.about") },
     { href: "/how-it-works", label: "How It Works" },
     ...(flags["ideas.public"] !== false ? [{ href: "/ideas", label: "Ideas & Inspiration" }] : []),
     ...(flags["awards.public"] !== false ? [{ href: "/awards", label: "Awards" }] : []),
-    ...(flags["consultations.public"] !== false
-      ? [{ href: "/consultation", label: t("nav.consultation") }]
-      : []),
+    ...(flags["consultations.public"] !== false ? [{ href: "/consultation", label: t("nav.consultation") }] : []),
     { href: "/faq", label: t("nav.faq") },
     { href: "/contact", label: t("nav.contact") },
     { href: "/privacy", label: t("nav.privacy") },
@@ -122,7 +109,7 @@ export function PublicChrome({ children }: { children: ReactNode }) {
         <div className="cw-notch-ear" aria-hidden />
       </header>
       {showMaintenance && branding.maintenanceBanner.message ? (
-        <div className="relative z-10 mt-[calc(var(--cw-frame-top)+var(--cw-notch-height))] bg-amber-500/15 px-4 py-2 text-center text-xs text-amber-900 dark:text-amber-100">
+        <div className="relative z-10 mt-[calc(var(--cw-frame-top)+var(--cw-notch-height))] bg-warning/15 px-4 py-2 text-center text-xs text-warning-fg">
           {branding.maintenanceBanner.message}
         </div>
       ) : null}
@@ -167,7 +154,7 @@ export function PublicChrome({ children }: { children: ReactNode }) {
           {
             title: "For Vendors",
             links: [
-              { href: "/for-vendors", label: "Vendor Overview" },
+              { href: "/how-it-works?for=vendors", label: "Vendor Overview" },
               { href: "/register?role=VENDOR", label: "List Your Business", badge: "Join" },
               { href: "/login", label: "Vendor Portal Login" },
             ],

@@ -1,0 +1,901 @@
+/*
+ * Widget dashboards (ported from Kloqra: widget.css, dashboard-grid.css, stat-card).
+ * Blocks: .widget, .widget-panel, .widget-empty, .kpi, .dash-grid (react-grid-layout chrome),
+ * .chart. Colours come from semantic tokens only, so every palette and mode re-themes them.
+ *
+ * react-grid-layout's own stylesheet is not imported; .dash-grid owns item motion,
+ * placeholder and resize handles, so nothing here needs !important.
+ */
+@layer components {
+  /* ── Widget shell ──────────────────────────────────────────────────── */
+  .widget {
+    --widget-radius: var(--radius-2xl);
+    position: relative;
+    display: flex;
+    height: 100%;
+    width: 100%;
+    flex-direction: column;
+    overflow: hidden;
+    border: var(--border-width) solid color-mix(in srgb, var(--color-border) 80%, transparent);
+    border-radius: var(--widget-radius);
+    background: color-mix(in srgb, var(--color-bg-card) 92%, transparent);
+    color: var(--color-text-heading);
+    box-shadow: var(--shadow-rest);
+    transition:
+      box-shadow var(--motion-base) var(--motion-ease-out),
+      border-color var(--motion-base) var(--motion-ease-out),
+      background-color var(--motion-base) var(--motion-ease-out);
+  }
+
+  .widget:hover {
+    border-color: color-mix(in srgb, var(--color-primary) 22%, var(--color-border));
+    box-shadow: var(--shadow-card);
+  }
+
+  .widget__header {
+    display: flex;
+    min-width: 0;
+    flex-shrink: 0;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-4) var(--space-5) var(--space-2);
+  }
+
+  .widget__title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: var(--font-family-serif);
+    font-size: var(--text-h4-size);
+    font-weight: var(--font-weight-medium);
+    letter-spacing: -0.01em;
+    color: var(--color-text-heading);
+  }
+
+  .widget__icon {
+    display: inline-grid;
+    flex-shrink: 0;
+    place-items: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: var(--radius-full);
+    background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+    color: var(--color-primary-text);
+  }
+
+  /* Quiet "View all →" style link in a widget header. */
+  .widget__link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    border-radius: var(--radius-full);
+    padding: 0.125rem var(--space-2);
+    font-size: var(--text-caption-size);
+    font-weight: var(--font-weight-medium);
+    white-space: nowrap;
+    color: var(--color-primary-text);
+    transition: background-color var(--motion-fast) var(--motion-ease-out);
+  }
+
+  .widget__link:hover {
+    background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  }
+
+  .widget__link:focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-focus);
+  }
+
+  .widget__body {
+    position: relative;
+    min-height: 0;
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: auto;
+    padding: var(--space-2) var(--space-5) var(--space-5);
+    animation: widget-body-in var(--motion-slow) var(--motion-ease-out) both;
+  }
+
+  .widget__body--flush {
+    padding: 0;
+  }
+
+  /* Hover chrome (highlight / remove): revealed on hover or keyboard focus; always while arranging. */
+  /* Takes no room until revealed, so header links stay pinned to the right edge. */
+  .widget__chrome {
+    display: none;
+    align-items: center;
+    gap: var(--space-1);
+  }
+
+  .widget:hover .widget__chrome,
+  .widget:focus-within .widget__chrome,
+  .widget--editing .widget__chrome {
+    display: flex;
+    animation: widget-body-in var(--motion-fast) var(--motion-ease-out) both;
+  }
+
+  .widget__chrome--floating {
+    position: absolute;
+    top: var(--space-2);
+    right: var(--space-2);
+    z-index: 30;
+  }
+
+  .widget__chrome-button {
+    display: inline-grid;
+    place-items: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-full);
+    background: color-mix(in srgb, var(--color-bg-card) 94%, transparent);
+    color: var(--color-text-muted);
+    box-shadow: var(--shadow-rest);
+    backdrop-filter: blur(6px);
+    transition:
+      color var(--motion-fast) var(--motion-ease-out),
+      background-color var(--motion-fast) var(--motion-ease-out),
+      border-color var(--motion-fast) var(--motion-ease-out);
+  }
+
+  .widget__chrome-button:hover {
+    background: var(--color-bg-muted);
+    color: var(--color-text-heading);
+  }
+
+  .widget__chrome-button:focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-focus);
+  }
+
+  .widget__chrome-button[aria-pressed="true"] {
+    border-color: color-mix(in srgb, var(--color-primary) 45%, var(--color-border));
+    color: var(--color-primary-text);
+  }
+
+  .widget__chrome-button--danger:hover {
+    border-color: color-mix(in srgb, var(--color-danger) 40%, var(--color-border));
+    background: var(--color-danger-subtle);
+    color: var(--color-danger-fg);
+  }
+
+  /* Outline emphasis: transparent surface, accent line, charts drawn as strokes. */
+  .widget--outline {
+    border-color: color-mix(in srgb, var(--color-primary) 45%, var(--color-border));
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .widget--outline:hover {
+    border-color: color-mix(in srgb, var(--color-primary) 62%, var(--color-border));
+    box-shadow: none;
+  }
+
+  .widget--outline .chart__fill {
+    fill-opacity: 0.08;
+  }
+
+  .widget--outline .chart__bar,
+  .widget--outline .chart__slice {
+    fill-opacity: 0.14;
+    stroke: currentColor;
+    stroke-width: 1.5;
+  }
+
+  .widget--outline .widget-panel {
+    background: transparent;
+  }
+
+  /* Bare: KPI tiles are their own surface; the grid gutter owns the spacing. */
+  .widget--bare {
+    border-color: transparent;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .widget--bare:hover {
+    border-color: transparent;
+    box-shadow: none;
+  }
+
+  .widget--bare:is(:hover, :focus-within) .kpi__icon,
+  .widget--bare.widget--editing .kpi__icon,
+  .widget--bare:is(:hover, :focus-within) .kpi__status,
+  .widget--bare.widget--editing .kpi__status {
+    opacity: 0;
+  }
+
+  .widget--editing {
+    cursor: grab;
+    border-color: color-mix(in srgb, var(--color-primary) 45%, var(--color-border));
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--color-primary) 18%, transparent),
+      var(--shadow-rest);
+  }
+
+  .widget--editing .widget__body {
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .widget--stagger {
+    animation: widget-in var(--motion-slow) var(--motion-ease-out) both;
+    animation-delay: var(--widget-stagger, 0ms);
+  }
+
+  /* Nested soft panel inside a widget. */
+  .widget-panel {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: var(--space-2);
+    border: var(--border-width) solid color-mix(in srgb, var(--color-border) 75%, transparent);
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg-card));
+    padding: var(--space-3);
+  }
+
+  .widget-panel__title {
+    font-size: var(--text-label-size);
+    font-weight: var(--font-weight-medium);
+    letter-spacing: var(--tracking-spaced);
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+
+  /* Calm empty state for chart / list widgets. */
+  .widget-empty {
+    display: flex;
+    height: 100%;
+    min-height: 0;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: var(--space-4);
+    text-align: center;
+    color: var(--color-text-muted);
+  }
+
+  .widget-empty__icon {
+    display: inline-grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: var(--border-width) solid color-mix(in srgb, var(--color-primary) 18%, var(--color-border));
+    border-radius: var(--radius-full);
+    background: color-mix(in srgb, var(--color-primary) 6%, var(--color-bg-card));
+    color: var(--color-primary-text);
+  }
+
+  .widget-empty__title {
+    font-size: var(--text-body-size);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-heading);
+  }
+
+  .widget-empty__description {
+    max-width: 18rem;
+    font-size: var(--text-caption-size);
+    line-height: var(--text-caption-leading);
+  }
+
+  /* ── KPI tile ──────────────────────────────────────────────────────── */
+  .kpi {
+    --kpi-accent: var(--color-primary);
+    --kpi-accent-fg: var(--color-primary-text);
+    --kpi-track: color-mix(in srgb, var(--color-text-heading) 9%, var(--color-bg-card));
+    container: kpi / inline-size;
+    position: relative;
+    display: flex;
+    height: 100%;
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    border: var(--border-width) solid color-mix(in srgb, var(--kpi-accent) 20%, var(--color-border));
+    border-radius: var(--radius-2xl);
+    background: color-mix(in srgb, var(--kpi-accent) 7%, var(--color-bg-card));
+    color: var(--color-text-heading);
+    box-shadow: var(--shadow-rest);
+    transition:
+      border-color var(--motion-base) var(--motion-ease-out),
+      box-shadow var(--motion-base) var(--motion-ease-out);
+  }
+
+  .kpi:hover {
+    border-color: color-mix(in srgb, var(--kpi-accent) 34%, var(--color-border));
+    box-shadow: var(--shadow-card);
+  }
+
+  .kpi--outlined {
+    background: var(--color-bg-card);
+    border-color: color-mix(in srgb, var(--kpi-accent) 45%, var(--color-border));
+    box-shadow: none;
+  }
+
+  .kpi--outlined .kpi__glow {
+    display: none;
+  }
+
+  .kpi--primary {
+    --kpi-accent: var(--color-primary);
+    --kpi-accent-fg: var(--color-primary-text);
+  }
+  .kpi--success {
+    --kpi-accent: var(--color-success);
+    --kpi-accent-fg: var(--color-success-fg);
+  }
+  .kpi--warning {
+    --kpi-accent: var(--color-warning);
+    --kpi-accent-fg: var(--color-warning-fg);
+  }
+  .kpi--danger {
+    --kpi-accent: var(--color-danger);
+    --kpi-accent-fg: var(--color-danger-fg);
+  }
+  .kpi--info {
+    --kpi-accent: var(--color-info);
+    --kpi-accent-fg: var(--color-info-fg);
+  }
+  .kpi--love {
+    --kpi-accent: var(--color-love);
+    --kpi-accent-fg: var(--color-love-fg);
+  }
+  .kpi--premium {
+    --kpi-accent: var(--color-premium);
+    --kpi-accent-fg: var(--color-premium-fg);
+  }
+
+  .kpi__glow {
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      120% 90% at 100% 0%,
+      color-mix(in srgb, var(--kpi-accent) 16%, transparent),
+      transparent 60%
+    );
+  }
+
+  .kpi__body {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding: var(--space-3) var(--space-4) var(--space-3);
+  }
+
+  .kpi__header {
+    display: flex;
+    min-width: 0;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-2);
+  }
+
+  .kpi__label {
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--text-label-size);
+    font-weight: var(--font-weight-medium);
+    letter-spacing: var(--tracking-spaced);
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+
+  .kpi__icon {
+    display: inline-grid;
+    flex-shrink: 0;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: var(--radius-full);
+    background: color-mix(in srgb, var(--kpi-accent) 16%, transparent);
+    color: var(--kpi-accent-fg);
+    transition:
+      transform var(--motion-base) var(--motion-ease-spring),
+      opacity var(--motion-fast) var(--motion-ease-out);
+  }
+
+  .kpi:hover .kpi__icon {
+    transform: scale(1.06);
+  }
+
+  .kpi__split {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+  }
+
+  .kpi__main {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    flex-direction: column;
+    justify-content: center;
+    gap: var(--space-1);
+  }
+
+  .kpi__value-row {
+    display: flex;
+    min-width: 0;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-1) var(--space-2);
+  }
+
+  .kpi__value {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: var(--font-family-serif);
+    font-size: clamp(1.75rem, 1rem + 4cqi, 2.5rem);
+    font-weight: var(--font-weight-medium);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .kpi__trend {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 0.125rem;
+    border-radius: var(--radius-full);
+    padding: 0.125rem var(--space-2);
+    font-size: var(--text-label-size);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.3;
+  }
+
+  .kpi__trend--up {
+    background: var(--color-success-subtle);
+    color: var(--color-success-fg);
+  }
+
+  .kpi__trend--down {
+    background: var(--color-danger-subtle);
+    color: var(--color-danger-fg);
+  }
+
+  .kpi__trend--flat {
+    background: var(--color-bg-muted);
+    color: var(--color-text-muted);
+  }
+
+  .kpi__hint {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--text-caption-size);
+    color: var(--color-text-muted);
+  }
+
+  .kpi__status {
+    display: inline-flex;
+    max-width: 7rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    border-radius: var(--radius-full);
+    padding: 0.125rem var(--space-2);
+    font-size: var(--text-label-size);
+    font-weight: var(--font-weight-medium);
+    transition: opacity var(--motion-fast) var(--motion-ease-out);
+  }
+
+  .kpi__status--success {
+    background: var(--status-success-bg);
+    color: var(--status-success-fg);
+  }
+  .kpi__status--warning {
+    background: var(--status-warning-bg);
+    color: var(--status-warning-fg);
+  }
+  .kpi__status--danger {
+    background: var(--status-danger-bg);
+    color: var(--status-danger-fg);
+  }
+  .kpi__status--info {
+    background: color-mix(in srgb, var(--kpi-accent) 16%, transparent);
+    color: var(--kpi-accent-fg);
+  }
+
+  .kpi__progress {
+    height: 0.375rem;
+    overflow: hidden;
+    border-radius: var(--radius-full);
+    background: var(--kpi-track);
+  }
+
+  .kpi__progress-fill {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--kpi-accent);
+    transition: width var(--motion-slow) var(--motion-ease-out);
+  }
+
+  .kpi__sparkline {
+    display: block;
+    width: 100%;
+    max-width: 9rem;
+    height: 1.5rem;
+    color: var(--kpi-accent);
+  }
+
+  .kpi__bars {
+    display: flex;
+    height: 1.5rem;
+    width: 100%;
+    max-width: 8rem;
+    align-items: flex-end;
+    gap: 2px;
+  }
+
+  .kpi__bars span {
+    min-width: 0;
+    flex: 1;
+    border-radius: 3px 3px 0 0;
+    background: var(--kpi-accent);
+    opacity: 0.8;
+  }
+
+  .kpi__ring-track,
+  .kpi__gauge-track {
+    stroke: var(--kpi-track);
+  }
+
+  .kpi__ring-fill,
+  .kpi__gauge-fill {
+    stroke: var(--kpi-accent);
+    transition: stroke-dashoffset 700ms var(--motion-ease-out);
+  }
+
+  @container kpi (max-width: 13rem) {
+    .kpi__status {
+      display: none;
+    }
+
+    .kpi__visual {
+      transform: scale(0.86);
+      transform-origin: center right;
+    }
+  }
+
+  /* ── Charts (SVG, token colours via currentColor) ───────────────────── */
+  .chart {
+    position: relative;
+    display: flex;
+    height: 100%;
+    min-height: 0;
+    width: 100%;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .chart__plot {
+    position: relative;
+    min-height: 0;
+    flex: 1;
+  }
+
+  .chart__svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .chart__grid {
+    stroke: color-mix(in srgb, var(--color-text-heading) 8%, transparent);
+    stroke-dasharray: 3 4;
+  }
+
+  .chart__fill {
+    fill: currentColor;
+    fill-opacity: 0.16;
+  }
+
+  .chart__line {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .chart__bar {
+    fill: currentColor;
+    transition: fill-opacity var(--motion-fast) var(--motion-ease-out);
+  }
+
+  .chart__bar:hover {
+    fill-opacity: 0.82;
+  }
+
+  .chart__slice {
+    fill: none;
+    stroke: currentColor;
+    transition: stroke-width var(--motion-fast) var(--motion-ease-out);
+  }
+
+  .chart__slice-track {
+    fill: none;
+    stroke: color-mix(in srgb, var(--color-text-heading) 7%, var(--color-bg-card));
+  }
+
+  .chart__axis {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-2);
+    font-size: var(--text-label-size);
+    color: var(--color-text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .chart__cursor {
+    stroke: color-mix(in srgb, var(--color-text-heading) 25%, transparent);
+    stroke-dasharray: 2 3;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .chart__tooltip {
+    pointer-events: none;
+    position: absolute;
+    top: 0;
+    z-index: 5;
+    min-width: 7rem;
+    transform: translateX(-50%);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-xs);
+    background: var(--color-bg-card);
+    padding: var(--space-2) var(--space-3);
+    box-shadow: var(--shadow-raised);
+    font-size: var(--text-caption-size);
+    color: var(--color-text-heading);
+    white-space: nowrap;
+  }
+
+  .chart__swatch {
+    display: inline-block;
+    width: 0.5rem;
+    height: 0.5rem;
+    flex-shrink: 0;
+    border-radius: var(--radius-full);
+    background: currentColor;
+  }
+
+  .chart-tone-1 {
+    color: var(--color-chart-1);
+  }
+  .chart-tone-2 {
+    color: var(--color-chart-2);
+  }
+  .chart-tone-3 {
+    color: var(--color-chart-3);
+  }
+  .chart-tone-4 {
+    color: var(--color-chart-4);
+  }
+  .chart-tone-5 {
+    color: var(--color-chart-5);
+  }
+  .chart-tone-success {
+    color: var(--color-success);
+  }
+  .chart-tone-warning {
+    color: var(--color-warning);
+  }
+  .chart-tone-danger {
+    color: var(--color-danger);
+  }
+  .chart-tone-info {
+    color: var(--color-info);
+  }
+  .chart-tone-love {
+    color: var(--color-love);
+  }
+  .chart-tone-premium {
+    color: var(--color-premium);
+  }
+  .chart-tone-muted {
+    color: var(--color-text-muted);
+  }
+
+  /* ── Grid chrome (react-grid-layout) ───────────────────────────────── */
+  .dash-grid {
+    position: relative;
+    transition: height var(--motion-fast) var(--motion-ease-out);
+  }
+
+  .dash-grid .react-grid-item {
+    transition-property: transform, width, height;
+    transition-duration: var(--motion-fast);
+    transition-timing-function: var(--motion-ease-out);
+  }
+
+  .dash-grid .react-grid-item img {
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .dash-grid .react-grid-item.resizing {
+    z-index: 20;
+    transition: none;
+    will-change: width, height;
+  }
+
+  .dash-grid .react-grid-item.react-draggable-dragging {
+    z-index: 30;
+    transition: none;
+    will-change: transform;
+  }
+
+  .dash-grid .react-grid-item.dropping {
+    visibility: hidden;
+  }
+
+  /* Drop target — soft dotted landing slot. */
+  .dash-grid .react-grid-item.react-grid-placeholder {
+    z-index: 5;
+    border: 2px dotted color-mix(in srgb, var(--color-primary) 45%, transparent);
+    border-radius: var(--radius-2xl);
+    background: color-mix(in srgb, var(--color-primary) 7%, transparent);
+    transition-duration: 100ms;
+    user-select: none;
+  }
+
+  .dash-grid--editing .react-grid-item:hover .widget {
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--color-primary) 24%, transparent),
+      var(--shadow-rest);
+  }
+
+  .dash-grid--editing .react-grid-item.react-draggable-dragging .widget {
+    cursor: grabbing;
+    transform: scale(1.015);
+    box-shadow:
+      0 0 0 1.5px color-mix(in srgb, var(--color-primary) 45%, transparent),
+      var(--shadow-floating);
+  }
+
+  .dash-grid--editing:has(.react-draggable-dragging) .react-grid-item:not(.react-draggable-dragging) {
+    opacity: 0.55;
+  }
+
+  .dash-grid .react-resizable-hide > .react-resizable-handle {
+    display: none;
+  }
+
+  /* Resize grips: centred capsules on the edges, a rounded square in the corner. */
+  .dash-grid .react-resizable-handle {
+    position: absolute;
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.6;
+    transition: opacity var(--motion-fast) var(--motion-ease-out);
+  }
+
+  .dash-grid .react-grid-item:hover > .react-resizable-handle,
+  .dash-grid .react-grid-item.resizing > .react-resizable-handle {
+    opacity: 1;
+  }
+
+  .dash-grid .react-resizable-handle-s {
+    bottom: -2px;
+    left: 50%;
+    width: 3rem;
+    height: 0.875rem;
+    transform: translateX(-50%);
+    cursor: ns-resize;
+  }
+
+  .dash-grid .react-resizable-handle-e {
+    top: 50%;
+    right: -2px;
+    width: 0.875rem;
+    height: 3rem;
+    transform: translateY(-50%);
+    cursor: ew-resize;
+  }
+
+  .dash-grid .react-resizable-handle-s::before,
+  .dash-grid .react-resizable-handle-e::before {
+    content: "";
+    display: block;
+    border-radius: var(--radius-full);
+    background: color-mix(in srgb, var(--color-primary) 55%, var(--color-bg-card));
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-primary) 18%, transparent);
+  }
+
+  .dash-grid .react-resizable-handle-s::before {
+    width: 1.75rem;
+    height: 0.25rem;
+  }
+
+  .dash-grid .react-resizable-handle-e::before {
+    width: 0.25rem;
+    height: 1.75rem;
+  }
+
+  .dash-grid .react-resizable-handle-s:hover::before,
+  .dash-grid .react-resizable-handle-e:hover::before,
+  .dash-grid .resizing > .react-resizable-handle::before {
+    background: var(--color-primary);
+  }
+
+  .dash-grid .react-resizable-handle-se {
+    right: 3px;
+    bottom: 3px;
+    width: 1.125rem;
+    height: 1.125rem;
+    border-radius: var(--radius-xs);
+    background: color-mix(in srgb, var(--color-bg-card) 85%, var(--color-primary));
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-primary) 24%, transparent);
+    opacity: 1;
+    cursor: se-resize;
+  }
+
+  .dash-grid .react-resizable-handle-se::after {
+    content: "";
+    position: absolute;
+    inset: 4px;
+    border-right: 2px solid color-mix(in srgb, var(--color-primary) 70%, transparent);
+    border-bottom: 2px solid color-mix(in srgb, var(--color-primary) 70%, transparent);
+    border-radius: 0 0 2px 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .widget,
+    .widget__body,
+    .widget--stagger,
+    .dash-grid,
+    .dash-grid .react-grid-item,
+    .kpi__progress-fill,
+    .kpi__ring-fill,
+    .kpi__gauge-fill {
+      animation: none;
+      transition: none;
+    }
+
+    .dash-grid--editing .react-grid-item.react-draggable-dragging .widget {
+      transform: none;
+    }
+  }
+}
+
+@keyframes widget-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes widget-body-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

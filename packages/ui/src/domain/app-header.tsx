@@ -73,7 +73,7 @@ export function AppHeaderSearch({
         <span className="truncate">{placeholder}</span>
       </div>
       {shortcut ? (
-        <kbd className="hidden sm:inline-flex items-center rounded border border-border/80 bg-card/80 px-1.5 py-0.5 text-[10px] font-mono font-medium text-muted-foreground shadow-2xs group-hover:border-border">
+        <kbd className="hidden sm:inline-flex items-center rounded border border-border/80 bg-card/80 px-1.5 py-0.5 text-label font-mono font-medium text-muted-foreground shadow-2xs group-hover:border-border">
           {shortcut}
         </kbd>
       ) : null}

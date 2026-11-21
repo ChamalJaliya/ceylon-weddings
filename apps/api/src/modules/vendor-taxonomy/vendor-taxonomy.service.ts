@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { Prisma, PrismaService } from "@ceylonweddings/database";
 import type {
   CloneVendorTypeBody,
@@ -16,16 +12,10 @@ import type {
   UpdateAttributeOptionBody,
   UpdateVendorTypeBody,
   User,
-  VendorAttributeDefinition,
   VendorType,
 } from "@ceylonweddings/contracts";
 import { AdminAccessService } from "../admin/admin-access.service";
-import {
-  asLocalized,
-  asLocalizedOrNull,
-  serializeDefinition,
-  serializeVendorType,
-} from "./attribute.util";
+import { asLocalized, asLocalizedOrNull, serializeDefinition, serializeVendorType } from "./attribute.util";
 
 const CACHE_TTL_MS = 60_000;
 
@@ -191,9 +181,7 @@ export class VendorTaxonomyService {
       where: { id },
       data: {
         ...(body.label !== undefined ? { label: body.label as Prisma.InputJsonValue } : {}),
-        ...(body.description !== undefined
-          ? { description: (body.description ?? null) as Prisma.InputJsonValue }
-          : {}),
+        ...(body.description !== undefined ? { description: (body.description ?? null) as Prisma.InputJsonValue } : {}),
         ...(body.icon !== undefined ? { icon: body.icon } : {}),
         ...(body.coverUrl !== undefined ? { coverUrl: body.coverUrl } : {}),
         ...(body.galleryLayout !== undefined ? { galleryLayout: body.galleryLayout } : {}),
@@ -203,8 +191,7 @@ export class VendorTaxonomyService {
         ...(body.status !== undefined ? { status: body.status } : {}),
         ...(body.onboardingPresentation !== undefined
           ? {
-              onboardingPresentation: (body.onboardingPresentation ??
-                null) as Prisma.InputJsonValue,
+              onboardingPresentation: (body.onboardingPresentation ?? null) as Prisma.InputJsonValue,
             }
           : {}),
       },
@@ -263,9 +250,7 @@ export class VendorTaxonomyService {
   async reorderTypes(user: User, ids: string[], ip?: string | null) {
     this.access.assertAdmin(user);
     await this.prisma.$transaction(
-      ids.map((id, index) =>
-        this.prisma.vendorType.update({ where: { id }, data: { sortOrder: index } }),
-      ),
+      ids.map((id, index) => this.prisma.vendorType.update({ where: { id }, data: { sortOrder: index } })),
     );
     await this.access.append({
       actorUserId: user.id,
@@ -279,16 +264,10 @@ export class VendorTaxonomyService {
     return this.adminListTypes(user);
   }
 
-  async createDefinition(
-    user: User,
-    typeId: string,
-    body: CreateAttributeDefinitionBody,
-    ip?: string | null,
-  ) {
+  async createDefinition(user: User, typeId: string, body: CreateAttributeDefinitionBody, ip?: string | null) {
     this.access.assertAdmin(user);
     await this.requireType(typeId);
-    const filterableDefault =
-      body.filterable ?? (body.valueType !== "TEXT");
+    const filterableDefault = body.filterable ?? body.valueType !== "TEXT";
 
     try {
       const row = await this.prisma.vendorAttributeDefinition.create({
@@ -383,18 +362,10 @@ export class VendorTaxonomyService {
       data: {
         ...(body.valueType !== undefined ? { valueType: body.valueType } : {}),
         ...(body.question !== undefined ? { question: body.question as Prisma.InputJsonValue } : {}),
-        ...(body.instruction !== undefined
-          ? { instruction: (body.instruction ?? null) as Prisma.InputJsonValue }
-          : {}),
-        ...(body.helpText !== undefined
-          ? { helpText: (body.helpText ?? null) as Prisma.InputJsonValue }
-          : {}),
-        ...(body.filterLabel !== undefined
-          ? { filterLabel: (body.filterLabel ?? null) as Prisma.InputJsonValue }
-          : {}),
-        ...(body.filterHelp !== undefined
-          ? { filterHelp: (body.filterHelp ?? null) as Prisma.InputJsonValue }
-          : {}),
+        ...(body.instruction !== undefined ? { instruction: (body.instruction ?? null) as Prisma.InputJsonValue } : {}),
+        ...(body.helpText !== undefined ? { helpText: (body.helpText ?? null) as Prisma.InputJsonValue } : {}),
+        ...(body.filterLabel !== undefined ? { filterLabel: (body.filterLabel ?? null) as Prisma.InputJsonValue } : {}),
+        ...(body.filterHelp !== undefined ? { filterHelp: (body.filterHelp ?? null) as Prisma.InputJsonValue } : {}),
         ...(body.required !== undefined ? { required: body.required } : {}),
         ...(body.filterable !== undefined ? { filterable: body.filterable } : {}),
         ...(body.filterHighlight !== undefined ? { filterHighlight: body.filterHighlight } : {}),
@@ -403,9 +374,7 @@ export class VendorTaxonomyService {
         ...(body.collectOnboard !== undefined ? { collectOnboard: body.collectOnboard } : {}),
         ...(body.layout !== undefined ? { layout: body.layout } : {}),
         ...(body.groupKey !== undefined ? { groupKey: body.groupKey } : {}),
-        ...(body.groupLabel !== undefined
-          ? { groupLabel: (body.groupLabel ?? null) as Prisma.InputJsonValue }
-          : {}),
+        ...(body.groupLabel !== undefined ? { groupLabel: (body.groupLabel ?? null) as Prisma.InputJsonValue } : {}),
         ...(body.unit !== undefined ? { unit: body.unit } : {}),
         ...(body.minValue !== undefined ? { minValue: body.minValue } : {}),
         ...(body.maxValue !== undefined ? { maxValue: body.maxValue } : {}),
@@ -491,13 +460,7 @@ export class VendorTaxonomyService {
     return this.adminGetType(user, typeId);
   }
 
-  async createOption(
-    user: User,
-    typeId: string,
-    defId: string,
-    body: CreateAttributeOptionBody,
-    ip?: string | null,
-  ) {
+  async createOption(user: User, typeId: string, defId: string, body: CreateAttributeOptionBody, ip?: string | null) {
     this.access.assertAdmin(user);
     await this.requireDefinition(typeId, defId);
     try {
@@ -550,9 +513,7 @@ export class VendorTaxonomyService {
       where: { id },
       data: {
         ...(body.label !== undefined ? { label: body.label as Prisma.InputJsonValue } : {}),
-        ...(body.helpText !== undefined
-          ? { helpText: (body.helpText ?? null) as Prisma.InputJsonValue }
-          : {}),
+        ...(body.helpText !== undefined ? { helpText: (body.helpText ?? null) as Prisma.InputJsonValue } : {}),
         ...(body.sortOrder !== undefined ? { sortOrder: body.sortOrder } : {}),
         ...(body.active !== undefined ? { active: body.active } : {}),
       },
@@ -620,13 +581,7 @@ export class VendorTaxonomyService {
     return { ok: true as const };
   }
 
-  async reorderOptions(
-    user: User,
-    typeId: string,
-    defId: string,
-    ids: string[],
-    ip?: string | null,
-  ) {
+  async reorderOptions(user: User, typeId: string, defId: string, ids: string[], ip?: string | null) {
     this.access.assertAdmin(user);
     await this.requireDefinition(typeId, defId);
     await this.prisma.$transaction(
@@ -716,9 +671,7 @@ export class VendorTaxonomyService {
           const buckets = Array.from({ length: bucketCount }, (_, i) => {
             const lo = min + (span * i) / bucketCount;
             const hi = min + (span * (i + 1)) / bucketCount;
-            const count = nums.filter((n) =>
-              i === bucketCount - 1 ? n >= lo && n <= hi : n >= lo && n < hi,
-            ).length;
+            const count = nums.filter((n) => (i === bucketCount - 1 ? n >= lo && n <= hi : n >= lo && n < hi)).length;
             return {
               key: `${Math.round(lo)}-${Math.round(hi)}`,
               label: { en: `${Math.round(lo)} – ${Math.round(hi)}` },
@@ -803,12 +756,7 @@ export class VendorTaxonomyService {
     };
   }
 
-  async importPack(
-    user: User,
-    body: ImportTaxonomyBody,
-    dryRun: boolean,
-    ip?: string | null,
-  ) {
+  async importPack(user: User, body: ImportTaxonomyBody, dryRun: boolean, ip?: string | null) {
     this.access.assertAdmin(user);
     const pack: TaxonomyPack = {
       version: 1,
@@ -894,8 +842,7 @@ export class VendorTaxonomyService {
             featured: packType.featured,
             coreTeam: packType.coreTeam,
             status: packType.status,
-            onboardingPresentation: (packType.onboardingPresentation ??
-              null) as Prisma.InputJsonValue,
+            onboardingPresentation: (packType.onboardingPresentation ?? null) as Prisma.InputJsonValue,
           },
           include: typeInclude,
         });
@@ -912,8 +859,7 @@ export class VendorTaxonomyService {
             featured: packType.featured,
             coreTeam: packType.coreTeam,
             status: packType.status,
-            onboardingPresentation: (packType.onboardingPresentation ??
-              null) as Prisma.InputJsonValue,
+            onboardingPresentation: (packType.onboardingPresentation ?? null) as Prisma.InputJsonValue,
           },
           include: typeInclude,
         });
@@ -1055,8 +1001,7 @@ export class VendorTaxonomyService {
           featured: false,
           coreTeam: source.coreTeam,
           status: "DRAFT",
-          onboardingPresentation: (source.onboardingPresentation ??
-            null) as Prisma.InputJsonValue,
+          onboardingPresentation: (source.onboardingPresentation ?? null) as Prisma.InputJsonValue,
         },
       });
 

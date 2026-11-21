@@ -24,6 +24,8 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Install pnpm
         uses: pnpm/action-setup@v3
@@ -45,8 +47,15 @@ jobs:
       - name: Typecheck Monorepo
         run: pnpm run typecheck
 
-      - name: Lint Monorepo
+      - name: Lint (design-system guard + ESLint)
         run: pnpm run lint
+
+      - name: Unit Tests
+        run: pnpm run test
+
+      - name: Commit Messages
+        if: github.event_name == 'pull_request'
+        run: npx --no -- commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }}
 
       - name: Production Build
         run: pnpm run build

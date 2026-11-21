@@ -1,8 +1,5 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import { NotificationsService } from "../notifications/notifications.service";
 import { InjectQueue } from "@nestjs/bullmq";
 import type { Queue } from "bullmq";
 import { Prisma, PrismaService } from "@ceylonweddings/database";
@@ -17,6 +14,7 @@ import {
   type AdminPatchUserBody,
   type AdminPatchVendorBody,
   type AdminReview,
+  type AdminInsights,
   type AdminStats,
   type AdminUser,
   type AdminUserListQuery,
@@ -35,9 +33,11 @@ import {
   type AuditLog,
   type User,
   type Vendor,
+  type UpsertSubscriptionPlanBody,
   FEATURE_FLAG_CATALOG,
 } from "@ceylonweddings/contracts";
 import { AdminAccessService } from "./admin-access.service";
+import { dayCountsSql, insightWindow, seriesWithTotals, type DayCountRow } from "../../common/daily-series";
 import { VendorsService } from "../weddings/vendors.service";
 import { SubscriptionService } from "../subscription/subscription.service";
 import { SiteConfigService } from "./site-config.service";
@@ -51,6 +51,7 @@ export class AdminService {
     private readonly subscription: SubscriptionService,
     private readonly siteConfig: SiteConfigService,
     @InjectQueue("email") private readonly emailQueue: Queue,
+    private readonly notifications: NotificationsService,
   ) {}
 
   async stats(user: User): Promise<AdminStats> {
@@ -124,12 +125,8 @@ export class AdminService {
       ...(query.verified != null ? { verified: query.verified } : {}),
       ...(query.featured != null ? { featured: query.featured } : {}),
       ...(query.moderationStatus ? { moderationStatus: query.moderationStatus } : {}),
-      ...(query.queue === "verify"
-        ? { verified: false, moderationStatus: { in: ["PENDING", "APPROVED"] } }
-        : {}),
-      ...(query.queue === "picks"
-        ? { verified: true, featured: false, moderationStatus: { not: "HIDDEN" } }
-        : {}),
+      ...(query.queue === "verify" ? { verified: false, moderationStatus: { in: ["PENDING", "APPROVED"] } } : {}),
+      ...(query.queue === "picks" ? { verified: true, featured: false, moderationStatus: { not: "HIDDEN" } } : {}),
       ...(query.q
         ? {
             OR: [
@@ -158,7 +155,10 @@ export class AdminService {
     return vendors;
   }
 
-  async getVendor(user: User, id: string): Promise<{
+  async getVendor(
+    user: User,
+    id: string,
+  ): Promise<{
     vendor: Vendor;
     gateFailures: string[];
     audit: AuditLog[];
@@ -176,6 +176,27 @@ export class AdminService {
       gateFailures: presentationGateFailures(serialized),
       audit,
     };
+  }
+
+  /** Tell the vendor when moderation changes their listing (approved / rejected / featured). */
+  private async notifyListingChange(
+    before: { id: string; name: string; slug: string; moderationStatus: string; featured: boolean },
+    after: { moderationStatus: string; featured: boolean; moderationNote: string | null },
+  ) {
+    const base = { vendorName: before.name, vendorSlug: before.slug };
+    if (after.moderationStatus !== before.moderationStatus) {
+      if (after.moderationStatus === "APPROVED") {
+        await this.notifications.notifyVendor(before.id, { templateId: "listing.approved", context: base });
+      } else if (after.moderationStatus === "REJECTED") {
+        await this.notifications.notifyVendor(before.id, {
+          templateId: "listing.rejected",
+          context: { vendorName: before.name, note: after.moderationNote },
+        });
+      }
+    }
+    if (after.featured && !before.featured) {
+      await this.notifications.notifyVendor(before.id, { templateId: "listing.featured", context: base });
+    }
   }
 
   async patchVendor(user: User, id: string, body: AdminPatchVendorBody, ip?: string) {
@@ -230,6 +251,7 @@ export class AdminService {
       include: this.vendors.adminInclude(),
     });
     const after = this.vendors.serializePublic(updated);
+    await this.notifyListingChange(existing, updated);
     await this.access.append({
       actorUserId: user.id,
       action: "vendor.patch",
@@ -256,14 +278,7 @@ export class AdminService {
     this.access.assertAdmin(user);
     const results: Vendor[] = [];
     for (const id of body.ids) {
-      results.push(
-        await this.patchVendor(
-          user,
-          id,
-          { verified: body.verified, featured: body.featured },
-          ip,
-        ),
-      );
+      results.push(await this.patchVendor(user, id, { verified: body.verified, featured: body.featured }, ip));
     }
     return results;
   }
@@ -292,7 +307,10 @@ export class AdminService {
     return rows.map((row) => this.serializeUser(row));
   }
 
-  async getUser(user: User, id: string): Promise<{
+  async getUser(
+    user: User,
+    id: string,
+  ): Promise<{
     user: AdminUser;
     vendor: { id: string; name: string; slug: string } | null;
     weddings: Array<{ id: string; slug: string; partnerOneName: string; partnerTwoName: string }>;
@@ -579,7 +597,7 @@ export class AdminService {
       body.status === "PUBLISHED"
         ? body.publishedAt
           ? new Date(body.publishedAt)
-          : existing.publishedAt ?? new Date()
+          : (existing.publishedAt ?? new Date())
         : body.publishedAt
           ? new Date(body.publishedAt)
           : null;
@@ -1025,14 +1043,89 @@ export class AdminService {
     return { profileViews7d, whatsappTaps7d, inquiries7d, articleViews7d };
   }
 
+  /** 30-day marketplace trends and breakdowns for the admin dashboard widgets. */
+  async insights(user: User): Promise<AdminInsights> {
+    this.access.assertAdmin(user);
+    const window = insightWindow();
+    const eventDays = (kind: "VENDOR_PROFILE_VIEW" | "WHATSAPP_TAP") =>
+      this.prisma.$queryRaw<DayCountRow[]>(
+        dayCountsSql("AnalyticsEvent", window.since, Prisma.sql`"kind" = ${kind}::"AnalyticsEventKind"`),
+      );
+    const [views, taps, inquiries, couples, vendorUsers, roles, moderation, categories, consultationsUpcoming] =
+      await Promise.all([
+        eventDays("VENDOR_PROFILE_VIEW"),
+        eventDays("WHATSAPP_TAP"),
+        this.prisma.$queryRaw<DayCountRow[]>(dayCountsSql("Inquiry", window.since)),
+        this.prisma.$queryRaw<DayCountRow[]>(
+          dayCountsSql("User", window.since, Prisma.sql`"role" IN ('COUPLE'::"Role", 'FAMILY'::"Role")`),
+        ),
+        this.prisma.$queryRaw<DayCountRow[]>(dayCountsSql("User", window.since, Prisma.sql`"role" = 'VENDOR'::"Role"`)),
+        this.prisma.user.groupBy({ by: ["role"], _count: { _all: true } }),
+        this.prisma.vendor.groupBy({ by: ["moderationStatus"], _count: { _all: true } }),
+        this.prisma.vendor.groupBy({ by: ["categoryId"], _count: { _all: true } }),
+        this.prisma.consultation.count({
+          where: { startsAt: { gte: new Date() }, status: { in: ["PENDING", "CONFIRMED"] } },
+        }),
+      ]);
+
+    const categoryIds = categories.map((row) => row.categoryId).filter((id): id is string => Boolean(id));
+    const types = categoryIds.length
+      ? await this.prisma.vendorType.findMany({
+          where: { id: { in: categoryIds } },
+          select: { id: true, slug: true, label: true },
+        })
+      : [];
+    const typeById = new Map(types.map((type) => [type.id, type]));
+    const labelOf = (raw: unknown, fallback: string) =>
+      raw && typeof raw === "object" && "en" in raw && typeof (raw as { en: unknown }).en === "string"
+        ? (raw as { en: string }).en
+        : fallback;
+
+    const profileViews = seriesWithTotals(window, views);
+    const whatsappTaps = seriesWithTotals(window, taps);
+    const inquiryTrend = seriesWithTotals(window, inquiries);
+    const signups = seriesWithTotals(window, couples);
+    const newVendors = seriesWithTotals(window, vendorUsers);
+
+    return {
+      days: window.days,
+      series: {
+        profileViews: profileViews.series,
+        whatsappTaps: whatsappTaps.series,
+        inquiries: inquiryTrend.series,
+        signups: signups.series,
+        newVendors: newVendors.series,
+      },
+      totals: {
+        profileViews: profileViews.totals,
+        whatsappTaps: whatsappTaps.totals,
+        inquiries: inquiryTrend.totals,
+        signups: signups.totals,
+        newVendors: newVendors.totals,
+      },
+      usersByRole: roles.map((row) => ({ role: row.role, count: row._count._all })),
+      vendorsByModeration: moderation.map((row) => ({ status: row.moderationStatus, count: row._count._all })),
+      vendorsByCategory: categories
+        .map((row) => {
+          const type = row.categoryId ? typeById.get(row.categoryId) : undefined;
+          return {
+            category: type?.slug ?? "uncategorised",
+            label: type ? labelOf(type.label, type.slug) : "Uncategorised",
+            count: row._count._all,
+          };
+        })
+        .sort((a, b) => b.count - a.count),
+      consultationsUpcoming,
+    };
+  }
+
   async exportCsv(user: User, kind: "vendors" | "users") {
     this.access.assertAdmin(user);
     if (kind === "users") {
       const users = await this.listUsers(user, {});
       const header = "id,email,name,role,status,createdAt";
       const lines = users.map(
-        (row) =>
-          `${row.id},${csv(row.email)},${csv(row.name)},${row.role},${row.status},${row.createdAt}`,
+        (row) => `${row.id},${csv(row.email)},${csv(row.name)},${row.role},${row.status},${row.createdAt}`,
       );
       return [header, ...lines].join("\n");
     }
@@ -1249,6 +1342,21 @@ export class AdminService {
   async suspendVendorSubscription(user: User, vendorId: string) {
     this.access.assertAdmin(user);
     return this.subscription.adminSuspend(user.id, vendorId);
+  }
+
+  async listSubscriptionPlans(user: User) {
+    this.access.assertAdmin(user);
+    return this.subscription.listAllPlans();
+  }
+
+  async upsertSubscriptionPlan(user: User, body: UpsertSubscriptionPlanBody) {
+    this.access.assertAdmin(user);
+    return this.subscription.upsertPlan(body);
+  }
+
+  async setSubscriptionPlanActive(user: User, id: string, active: boolean) {
+    this.access.assertAdmin(user);
+    return this.subscription.setPlanActive(id, active);
   }
 
   private serializeFlag(row: {

@@ -1,27 +1,33 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
+import { NotificationsService } from "../notifications/notifications.service";
 import { Prisma, PrismaService } from "@ceylonweddings/database";
-import type {
-  CatalogAttrValue,
-  CreateInquiryBody,
-  CreateReviewBody,
-  ShortlistVendorBody,
-  UpdateTeamVendorBody,
-  UpdateVendorBody,
-  UpsertVendorAddOnBody,
-  UpsertVendorAttributesBody,
-  UpsertVendorMediaProjectBody,
-  UpsertVendorPackageBody,
-  UpsertVendorVideoBody,
-  User,
-  Vendor,
-  VendorAttributeAnswerValue,
-  VendorCatalogQuery,
-  VendorCatalogResult,
-  VendorOnboardingResponse,
-  VendorSort,
+import {
+  type CatalogAttrValue,
+  type CreateInquiryBody,
+  type CreateReviewBody,
+  type ShortlistVendorBody,
+  type UpdateTeamVendorBody,
+  type UpdateVendorBody,
+  type UpsertVendorAddOnBody,
+  type UpsertVendorAttributesBody,
+  type UpsertVendorMediaProjectBody,
+  type UpsertVendorPackageBody,
+  type UpsertVendorVideoBody,
+  type User,
+  type Vendor,
+  type VendorInsights,
+  type VendorAttributeAnswerValue,
+  type VendorCatalogQuery,
+  type VendorCatalogResult,
+  type VendorOnboardingResponse,
+  type VendorSort,
+  toPaginatedResult,
+  vendorCompleteness,
+  normalizeVendorWebsiteUrl,
+  MEMBERSHIP_ACCESS_STATUSES,
 } from "@ceylonweddings/contracts";
-import { toPaginatedResult, vendorCompleteness, normalizeVendorWebsiteUrl } from "@ceylonweddings/contracts";
 import { uniqueVendorSlug } from "../../common/vendor-slug";
+import { dayCountsSql, insightWindow, seriesWithTotals, type DayCountRow } from "../../common/daily-series";
 import { WeddingAccessService } from "./wedding-access.service";
 import { isFeatureEnabled } from "../admin/feature-flag.util";
 import {
@@ -63,6 +69,7 @@ export class VendorsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly access: WeddingAccessService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   list(category?: string, q?: string): Promise<Vendor[]> {
@@ -130,6 +137,8 @@ export class VendorsService {
     if (!vendor) {
       throw new NotFoundException("Vendor not found");
     }
+    // Storefront views feed the vendor's dashboard insights; never block the page on it.
+    void this.track("VENDOR_PROFILE_VIEW", vendor.id);
     const reviewsEnabled = await isFeatureEnabled(this.prisma, "reviews.enabled");
     const serialized = this.serializeVendor(vendor, { includeDrafts: false });
     if (!reviewsEnabled) {
@@ -264,8 +273,7 @@ export class VendorsService {
             ...(nextCategoryId !== undefined
               ? {
                   categoryId: nextCategoryId,
-                  onboardingCompletedAt:
-                    vendor.categoryId !== nextCategoryId ? null : undefined,
+                  onboardingCompletedAt: vendor.categoryId !== nextCategoryId ? null : undefined,
                 }
               : {}),
           },
@@ -391,9 +399,7 @@ export class VendorsService {
 
     const message = packageName ? `${body.message}\n\nPackage: ${packageName}` : body.message;
     const digits = vendor.whatsapp?.replace(/\D/g, "") ?? "";
-    const whatsappUrl = digits
-      ? `https://wa.me/${digits}?text=${encodeURIComponent(message)}`
-      : null;
+    const whatsappUrl = digits ? `https://wa.me/${digits}?text=${encodeURIComponent(message)}` : null;
 
     const inquiry = await this.prisma.inquiry.create({
       data: {
@@ -409,6 +415,16 @@ export class VendorsService {
       where: { weddingId_vendorId: { weddingId: wedding.id, vendorId: vendor.id } },
       update: { status: "INQUIRED" },
       create: { weddingId: wedding.id, vendorId: vendor.id, status: "INQUIRED" },
+    });
+
+    await this.notifications.notifyVendor(vendor.id, {
+      templateId: "inquiry.received",
+      context: {
+        coupleName: user.name,
+        message: body.message,
+        preferredDate: inquiry.preferredDate?.toLocaleDateString("en-LK", { dateStyle: "medium" }) ?? null,
+        packageName: packageName ?? null,
+      },
     });
 
     return {
@@ -463,6 +479,11 @@ export class VendorsService {
       },
     });
 
+    await this.notifications.notifyVendor(vendorId, {
+      templateId: "review.received",
+      context: { authorName: user.name, rating, excerpt: body.body ?? "", vendorSlug: vendor.slug },
+    });
+
     const agg = await this.prisma.review.aggregate({
       where: { vendorId },
       _avg: { rating: true },
@@ -488,6 +509,70 @@ export class VendorsService {
     });
   }
 
+  /** Record a storefront analytics event (best effort). */
+  async track(kind: "VENDOR_PROFILE_VIEW" | "WHATSAPP_TAP", vendorId: string) {
+    try {
+      await this.prisma.analyticsEvent.create({ data: { kind, entityType: "VENDOR", entityId: vendorId } });
+    } catch {
+      /* analytics never breaks a request */
+    }
+  }
+
+  /** A couple tapped "WhatsApp" on a storefront. Unknown / hidden vendors are ignored. */
+  async recordWhatsappTap(vendorId: string) {
+    const vendor = await this.prisma.vendor.findFirst({
+      where: { id: vendorId, moderationStatus: { not: "HIDDEN" } },
+      select: { id: true },
+    });
+    if (vendor) await this.track("WHATSAPP_TAP", vendor.id);
+    return { ok: true as const };
+  }
+
+  /** 30-day storefront performance for the vendor dashboard widgets. */
+  async insights(user: User): Promise<VendorInsights> {
+    const vendor = await this.prisma.vendor.findUnique({ where: { userId: user.id }, select: { id: true } });
+    if (!vendor || (user.role !== "VENDOR" && user.role !== "ADMIN")) {
+      throw new ForbiddenException();
+    }
+    const window = insightWindow();
+    const eventDays = (kind: "VENDOR_PROFILE_VIEW" | "WHATSAPP_TAP") =>
+      this.prisma.$queryRaw<DayCountRow[]>(
+        dayCountsSql(
+          "AnalyticsEvent",
+          window.since,
+          Prisma.sql`"kind" = ${kind}::"AnalyticsEventKind" AND "entityType" = 'VENDOR' AND "entityId" = ${vendor.id}`,
+        ),
+      );
+    const [views, taps, inquiries, leadStatus, teamLinks] = await Promise.all([
+      eventDays("VENDOR_PROFILE_VIEW"),
+      eventDays("WHATSAPP_TAP"),
+      this.prisma.$queryRaw<DayCountRow[]>(
+        dayCountsSql("Inquiry", window.since, Prisma.sql`"vendorId" = ${vendor.id}`),
+      ),
+      this.prisma.inquiry.groupBy({ by: ["status"], where: { vendorId: vendor.id }, _count: { _all: true } }),
+      this.prisma.weddingVendor.groupBy({ by: ["status"], where: { vendorId: vendor.id }, _count: { _all: true } }),
+    ]);
+    const profileViews = seriesWithTotals(window, views);
+    const whatsappTaps = seriesWithTotals(window, taps);
+    const inquiryTrend = seriesWithTotals(window, inquiries);
+    return {
+      days: window.days,
+      series: {
+        profileViews: profileViews.series,
+        whatsappTaps: whatsappTaps.series,
+        inquiries: inquiryTrend.series,
+      },
+      totals: {
+        profileViews: profileViews.totals,
+        whatsappTaps: whatsappTaps.totals,
+        inquiries: inquiryTrend.totals,
+      },
+      leadsByStatus: leadStatus.map((row) => ({ status: row.status, count: row._count._all })),
+      shortlistedBy: teamLinks.reduce((sum, row) => sum + row._count._all, 0),
+      bookedBy: teamLinks.find((row) => row.status === "BOOKED")?._count._all ?? 0,
+    };
+  }
+
   adminInclude() {
     return this.lightInclude();
   }
@@ -507,11 +592,7 @@ export class VendorsService {
     return this.serializeVendor(vendor, options);
   }
 
-  private async replaceAddOns(
-    tx: Prisma.TransactionClient,
-    vendorId: string,
-    addOns: UpsertVendorAddOnBody[],
-  ) {
+  private async replaceAddOns(tx: Prisma.TransactionClient, vendorId: string, addOns: UpsertVendorAddOnBody[]) {
     const keepIds: string[] = [];
     const idMap = new Map<string, string>();
 
@@ -693,11 +774,7 @@ export class VendorsService {
     });
   }
 
-  private async replaceVideos(
-    tx: Prisma.TransactionClient,
-    vendorId: string,
-    videos: UpsertVendorVideoBody[],
-  ) {
+  private async replaceVideos(tx: Prisma.TransactionClient, vendorId: string, videos: UpsertVendorVideoBody[]) {
     const keepIds: string[] = [];
     for (const [index, video] of videos.entries()) {
       const base = {
@@ -874,10 +951,9 @@ export class VendorsService {
       moderationStatus: { not: "HIDDEN" },
       categoryId: { not: null },
       onboardingCompletedAt: { not: null },
-      OR: [
-        { subscription: null },
-        { subscription: { status: { in: ["TRIAL", "ACTIVE", "GRACE", "COMPED"] } } },
-      ],
+      // Catalog visibility uses stored status; subscription sync-on-read keeps GRACE/EXPIRED aligned when vendors open billing.
+      // Effective membership access matches MEMBERSHIP_ACCESS_STATUSES / canAppearInCatalog from contracts.
+      OR: [{ subscription: null }, { subscription: { status: { in: [...MEMBERSHIP_ACCESS_STATUSES] } } }],
       categoryType: {
         status: "ACTIVE",
         ...(query.category ? { slug: query.category } : {}),
@@ -1115,17 +1191,9 @@ export class VendorsService {
       case "rating":
         return [{ ratingAvg: "desc" }, { ratingCount: "desc" }, { name: "asc" }];
       case "price_asc":
-        return [
-          { showPricing: "desc" },
-          { startingPriceLkr: { sort: "asc", nulls: "last" } },
-          { name: "asc" },
-        ];
+        return [{ showPricing: "desc" }, { startingPriceLkr: { sort: "asc", nulls: "last" } }, { name: "asc" }];
       case "price_desc":
-        return [
-          { showPricing: "desc" },
-          { startingPriceLkr: { sort: "desc", nulls: "last" } },
-          { name: "asc" },
-        ];
+        return [{ showPricing: "desc" }, { startingPriceLkr: { sort: "desc", nulls: "last" } }, { name: "asc" }];
       case "name":
         return [{ name: "asc" }];
       default:
@@ -1160,9 +1228,7 @@ export class VendorsService {
       attributeValues = [],
       ...rest
     } = vendor;
-    const packageRows = options?.includeDrafts
-      ? packages
-      : packages.filter((pkg) => pkg.status === "PUBLISHED");
+    const packageRows = options?.includeDrafts ? packages : packages.filter((pkg) => pkg.status === "PUBLISHED");
     const showPricing = rest.showPricing !== false;
     const listed = rest.listed !== false;
     const redactPricing = !options?.includeDrafts && !showPricing;
@@ -1193,10 +1259,9 @@ export class VendorsService {
 
     const reviewRows = Array.isArray(reviews) ? reviews.filter((review) => !review.hidden) : [];
     const valuesRecord = valuesRecordFromRows(attributeValues);
-    const defsForCompleteness =
-      categoryType?.attributes?.length
-        ? categoryType.attributes
-        : attributeValues.map((v) => v.definition);
+    const defsForCompleteness = categoryType?.attributes?.length
+      ? categoryType.attributes
+      : attributeValues.map((v) => v.definition);
     const attributeCompleteness = computeAttributeCompleteness(defsForCompleteness, valuesRecord);
     const attributes = profileChipsFromValues(
       attributeValues.map((row) => row.definition),
@@ -1326,17 +1391,12 @@ export class VendorsService {
         optional: definitions.filter((def) => !def.required),
       },
       values,
-      complete:
-        Boolean(type) && attributeCompleteness.requiredDone === attributeCompleteness.requiredTotal,
+      complete: Boolean(type) && attributeCompleteness.requiredDone === attributeCompleteness.requiredTotal,
       attributeCompleteness,
     };
   }
 
-  private async pruneAttributeValuesForType(
-    tx: Prisma.TransactionClient,
-    vendorId: string,
-    typeId: string,
-  ) {
+  private async pruneAttributeValuesForType(tx: Prisma.TransactionClient, vendorId: string, typeId: string) {
     const keepDefIds = (
       await tx.vendorAttributeDefinition.findMany({
         where: { OR: [{ typeId: null }, { typeId }] },

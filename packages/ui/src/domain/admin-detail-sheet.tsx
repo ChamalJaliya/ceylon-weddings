@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "../components/sheet";
+import { FloatingPanel, FloatingPanelBody, FloatingPanelContent, FloatingPanelHeader } from "./floating-panel";
 
 export function AdminDetailSheet({
   open,
@@ -17,14 +17,11 @@ export function AdminDetailSheet({
   children: ReactNode;
 }) {
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-lg">
-        <SheetHeader>
-          <SheetTitle>{title}</SheetTitle>
-          {description ? <SheetDescription>{description}</SheetDescription> : null}
-        </SheetHeader>
-        <div className="mt-6 grid gap-4">{children}</div>
-      </SheetContent>
-    </Sheet>
+    <FloatingPanel open={open} onOpenChange={onOpenChange}>
+      <FloatingPanelContent side="right" width="32rem">
+        <FloatingPanelHeader title={title} description={description} />
+        <FloatingPanelBody className="gap-4">{children}</FloatingPanelBody>
+      </FloatingPanelContent>
+    </FloatingPanel>
   );
 }

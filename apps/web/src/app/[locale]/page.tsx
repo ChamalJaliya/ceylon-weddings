@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import type { Vendor } from "@ceylonweddings/contracts";
-import { vendorPassesPresentationGate } from "@ceylonweddings/contracts";
+import { type Vendor, type PublicVendorTypeListItem , vendorPassesPresentationGate } from "@ceylonweddings/contracts";
 import { CATEGORY_LABELS, localizedText } from "../../lib/labels";
 import { fetchPublicFlags, fetchPublicSiteConfig } from "../../lib/public-site";
-import type { PublicVendorTypeListItem } from "@ceylonweddings/contracts";
-import { HomeContent } from "./home-content";
+import { HomeContent } from "@/features/home/home-content";
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
@@ -46,9 +44,7 @@ export default async function HomePage() {
     featuredVendors(),
     vendorTypes(),
   ]);
-  const typeLabelBySlug = Object.fromEntries(
-    types.map((type) => [type.slug, localizedText(type.label)]),
-  );
+  const typeLabelBySlug = Object.fromEntries(types.map((type) => [type.slug, localizedText(type.label)]));
   const adsEnabled = flags["ads.public"] !== false;
   const browseCategories = homepage.categoryKeys.map((key) => ({
     key,

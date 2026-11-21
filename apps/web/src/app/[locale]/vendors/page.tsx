@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { CatalogFallback, VendorsCatalog } from "./vendors-catalog";
+import { CatalogFallback, VendorsCatalog } from "@/features/vendors/vendors-catalog";
 
 export default function VendorsPage() {
   return (

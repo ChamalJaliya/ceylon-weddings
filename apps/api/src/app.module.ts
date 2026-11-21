@@ -9,6 +9,8 @@ import { AuthModule } from "./modules/auth/auth.module";
 import { ConsultationsModule } from "./modules/consultations/consultations.module";
 import { HealthModule } from "./modules/health/health.module";
 import { JobsModule } from "./modules/jobs/jobs.module";
+import { NotificationsModule } from "./modules/notifications/notifications.module";
+import { MailerModule } from "./common/mailer/mailer.module";
 import { MessagingModule } from "./modules/messaging/messaging.module";
 import { RealtimeModule } from "./modules/realtime/realtime.module";
 import { SearchModule } from "./modules/search/search.module";
@@ -33,7 +35,9 @@ import { RateLimitGuard } from "./common/rate-limit.guard";
     }),
     HealthModule,
     AuthModule,
+    MailerModule,
     JobsModule,
+    NotificationsModule,
     RealtimeModule,
     MessagingModule,
     WeddingsModule,
@@ -52,4 +56,3 @@ import { RateLimitGuard } from "./common/rate-limit.guard";
   ],
 })
 export class AppModule {}
-

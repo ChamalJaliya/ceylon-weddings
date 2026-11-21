@@ -30,6 +30,8 @@ export const weddingSchema = z.object({
   styleNotes: z.string().nullable(),
   settingNotes: z.string().nullable(),
   colors: z.array(z.string()),
+  /** Couple cover / hero photo. Null until uploaded in Studio → Style. */
+  coverImageUrl: z.string().url().nullable().optional(),
   onboardingCompletedAt: z.string().nullable().optional(),
   events: z.array(eventSchema).optional(),
   tasks: z.array(taskSchema).optional(),
@@ -63,6 +65,7 @@ export const updateWeddingBodySchema = z.object({
   styleNotes: z.string().nullable().optional(),
   settingNotes: z.string().nullable().optional(),
   colors: z.array(z.string()).optional(),
+  coverImageUrl: z.string().url().nullable().optional(),
   locale: z.string().optional(),
   currency: z.string().optional(),
   completeOnboarding: z.boolean().optional(),

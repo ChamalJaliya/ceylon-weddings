@@ -1,15 +1,15 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import type { IconSize } from "./icon";
 
-export const headingVariants = cva("font-serif tracking-tight text-foreground", {
+export const headingVariants = cva("font-serif font-medium text-foreground", {
   variants: {
     level: {
-      h1: "text-3xl font-semibold sm:text-4xl",
-      h2: "text-xl md:text-2xl",
-      h3: "text-lg font-semibold leading-none",
-      h4: "text-base font-semibold",
-      h5: "text-sm font-semibold",
-      h6: "text-xs font-semibold tracking-wide uppercase",
+      h1: "text-h1",
+      h2: "text-h2",
+      h3: "text-h3",
+      h4: "text-body-lg",
+      h5: "text-body",
+      h6: "cw-overline",
     },
   },
   defaultVariants: {

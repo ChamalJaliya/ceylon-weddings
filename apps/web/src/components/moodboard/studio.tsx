@@ -20,21 +20,17 @@ import {
   Video,
   Magnet,
 } from "lucide-react";
-import type {
-  Moodboard,
-  MoodboardAssetUpsert,
-  MoodboardTool,
+import {
+  type Moodboard,
+  type MoodboardAssetUpsert,
+  type MoodboardTool,
+  isAllowedMoodboardEmbedUrl,
+  newMoodboardItemId,
 } from "@ceylonweddings/contracts";
-import { isAllowedMoodboardEmbedUrl, newMoodboardItemId } from "@ceylonweddings/contracts";
 import { api } from "@ceylonweddings/web";
 import { cn } from "@ceylonweddings/ui/utils";
 import { MoodboardEngine } from "./engine";
-import {
-  fitMoodboardImage,
-  MoodboardImageModal,
-  pickMoodboardImage,
-  type MoodboardImagePick,
-} from "./image-modal";
+import { fitMoodboardImage, MoodboardImageModal, pickMoodboardImage, type MoodboardImagePick } from "./image-modal";
 import { MoodboardOptionsBar, MoodboardZoomControls } from "./options-bar";
 import { MoodboardTextInspector } from "./text-inspector";
 import { MoodboardToolRail } from "./tool-rail";
@@ -42,11 +38,7 @@ import { MoodboardTooltip } from "./tooltip";
 import { MoodboardVideoModal } from "./video-modal";
 import { useMoodboardAutosave, type AutosaveStatus } from "./use-autosave";
 import { useFullscreen } from "./use-fullscreen";
-import {
-  createImageItem,
-  createVideoItem,
-  useMoodboardStore,
-} from "./store";
+import { createImageItem, createVideoItem, useMoodboardStore } from "./store";
 
 const TOOL_GROUPS: Array<{
   label: string;
@@ -92,13 +84,7 @@ export type MoodboardStudioProps = {
   onStatus?: (status: AutosaveStatus, message?: string) => void;
 };
 
-export function MoodboardStudio({
-  board,
-  mode = "edit",
-  headerExtra,
-  onSaved,
-  onStatus,
-}: MoodboardStudioProps) {
+export function MoodboardStudio({ board, mode = "edit", headerExtra, onSaved, onStatus }: MoodboardStudioProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const { isFullscreen, toggle: toggleFullscreen } = useFullscreen(rootRef);
   const [pendingAssets, setPendingAssets] = useState<MoodboardAssetUpsert[]>([]);
@@ -286,11 +272,11 @@ export function MoodboardStudio({
     <div
       ref={rootRef}
       className={cn(
-        "moodboard-studio flex h-full min-h-[36rem] flex-col overflow-hidden rounded-2xl border border-[#e8ddd0] bg-[#1f1a16] text-[#fffaf5]",
+        "moodboard-studio flex h-full min-h-[36rem] flex-col overflow-hidden rounded-2xl border border-studio-line bg-studio-ink text-studio-paper",
         isFullscreen && "rounded-none border-0",
       )}
     >
-      <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-white/10 px-3 py-2">
+      <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-paper/10 px-3 py-2">
         {headerExtra}
         <div className="ml-auto flex items-center gap-1.5">
           {!readOnly ? (
@@ -302,7 +288,7 @@ export function MoodboardStudio({
                   onClick={() => setGrid({ enabled: !scene.grid.enabled })}
                   className={cn(
                     "inline-flex h-8 items-center gap-1.5 rounded-full px-2.5 text-xs",
-                    scene.grid.enabled ? "bg-[#fffaf5] text-[#1f1a16]" : "bg-white/10 hover:bg-white/15",
+                    scene.grid.enabled ? "bg-studio-paper text-studio-ink" : "bg-paper/10 hover:bg-paper/15",
                   )}
                 >
                   <Grid3x3 className="size-3.5" />
@@ -316,7 +302,7 @@ export function MoodboardStudio({
                   onClick={() => setGrid({ snap: !scene.grid.snap })}
                   className={cn(
                     "inline-flex h-8 items-center gap-1.5 rounded-full px-2.5 text-xs",
-                    scene.grid.snap ? "bg-[#fffaf5] text-[#1f1a16]" : "bg-white/10 hover:bg-white/15",
+                    scene.grid.snap ? "bg-studio-paper text-studio-ink" : "bg-paper/10 hover:bg-paper/15",
                   )}
                 >
                   <Magnet className="size-3.5" />
@@ -330,7 +316,7 @@ export function MoodboardStudio({
                   onClick={() => setRulers(!scene.rulers)}
                   className={cn(
                     "inline-flex h-8 items-center gap-1.5 rounded-full px-2.5 text-xs",
-                    scene.rulers ? "bg-[#fffaf5] text-[#1f1a16]" : "bg-white/10 hover:bg-white/15",
+                    scene.rulers ? "bg-studio-paper text-studio-ink" : "bg-paper/10 hover:bg-paper/15",
                   )}
                 >
                   <Ruler className="size-3.5" />
@@ -339,15 +325,11 @@ export function MoodboardStudio({
               </MoodboardTooltip>
             </>
           ) : null}
-          <MoodboardTooltip
-            label={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
-            shortcut="F"
-            side="bottom"
-          >
+          <MoodboardTooltip label={isFullscreen ? "Exit fullscreen" : "Fullscreen"} shortcut="F" side="bottom">
             <button
               type="button"
               onClick={() => toggleFullscreen()}
-              className="inline-flex h-8 items-center gap-1.5 rounded-full bg-white/10 px-2.5 text-xs hover:bg-white/15"
+              className="inline-flex h-8 items-center gap-1.5 rounded-full bg-paper/10 px-2.5 text-xs hover:bg-paper/15"
             >
               {isFullscreen ? <Minimize2 className="size-3.5" /> : <Maximize2 className="size-3.5" />}
               {isFullscreen ? "Exit" : "Fullscreen"}
@@ -357,18 +339,15 @@ export function MoodboardStudio({
       </div>
 
       {!readOnly ? (
-        <MoodboardOptionsBar
-          onUploadImage={() => setImageOpen(true)}
-          onAddVideo={() => setVideoOpen(true)}
-        />
+        <MoodboardOptionsBar onUploadImage={() => setImageOpen(true)} onAddVideo={() => setVideoOpen(true)} />
       ) : (
-        <div className="flex shrink-0 items-center border-b border-white/10 bg-[#17130f] px-3 py-1.5">
+        <div className="flex shrink-0 items-center border-b border-paper/10 bg-studio-ink-deep px-3 py-1.5">
           <MoodboardZoomControls />
         </div>
       )}
 
       {migrateNotice ? (
-        <div className="flex items-center justify-between gap-3 bg-[#b4532a]/90 px-3 py-2 text-xs">
+        <div className="flex items-center justify-between gap-3 bg-studio-accent/90 px-3 py-2 text-xs">
           <p>This board was reset for the new editor (previous sketch tools aren’t compatible).</p>
           <button type="button" className="underline" onClick={() => setMigrateNotice(false)}>
             Dismiss
@@ -376,7 +355,7 @@ export function MoodboardStudio({
         </div>
       ) : null}
 
-      <div className="relative min-h-0 flex-1 bg-[#fffaf5]">
+      <div className="relative min-h-0 flex-1 bg-studio-paper">
         <MoodboardEngine assets={allAssets} className="absolute inset-0" />
 
         {!readOnly ? (
@@ -406,8 +385,8 @@ export function MoodboardStudio({
                         className={cn(
                           "flex size-9 items-center justify-center rounded-xl transition",
                           tool === t.id
-                            ? "bg-[#fffaf5] text-[#1f1a16]"
-                            : "text-[#fffaf5]/75 hover:bg-white/10 hover:text-[#fffaf5]",
+                            ? "bg-studio-paper text-studio-ink"
+                            : "text-studio-paper/75 hover:bg-paper/10 hover:text-studio-paper",
                         )}
                       >
                         <Icon className="size-4" />
@@ -421,26 +400,15 @@ export function MoodboardStudio({
         ) : null}
 
         {!readOnly && selected && (selected.type === "text" || selected.type === "sticky") ? (
-          <aside className="absolute top-3 right-3 z-40 max-h-[70vh] w-64 space-y-3 overflow-y-auto rounded-2xl border border-white/10 bg-[#17130f]/95 p-3 text-sm text-[#fffaf5] shadow-xl backdrop-blur-sm">
-            <p className="text-xs uppercase tracking-[0.14em] text-white/45">Typography</p>
-            <MoodboardTextInspector
-              item={selected}
-              onChange={(patch) => updateItem(selected.id, patch as never)}
-            />
+          <aside className="absolute top-3 right-3 z-40 max-h-[70vh] w-64 space-y-3 overflow-y-auto rounded-2xl border border-paper/10 bg-studio-ink-deep/95 p-3 text-sm text-studio-paper shadow-xl backdrop-blur-sm">
+            <p className="text-xs uppercase tracking-spaced text-paper/45">Typography</p>
+            <MoodboardTextInspector item={selected} onChange={(patch) => updateItem(selected.id, patch as never)} />
           </aside>
         ) : null}
       </div>
 
-      <MoodboardImageModal
-        open={imageOpen}
-        onOpenChange={setImageOpen}
-        onInsert={(pick) => void uploadImage(pick)}
-      />
-      <MoodboardVideoModal
-        open={videoOpen}
-        onOpenChange={setVideoOpen}
-        onInsert={insertVideo}
-      />
+      <MoodboardImageModal open={imageOpen} onOpenChange={setImageOpen} onInsert={(pick) => void uploadImage(pick)} />
+      <MoodboardVideoModal open={videoOpen} onOpenChange={setVideoOpen} onInsert={insertVideo} />
     </div>
   );
 }

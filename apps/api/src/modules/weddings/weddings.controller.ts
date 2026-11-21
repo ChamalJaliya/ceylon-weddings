@@ -15,6 +15,7 @@ import {
 import { ApiTags } from "@nestjs/swagger";
 import type { User } from "@ceylonweddings/contracts";
 import { JwtCookieGuard } from "../auth/jwt-cookie.guard";
+import { RateLimit } from "../../common/rate-limit.guard";
 import { CurrentUser } from "../auth/current-user.decorator";
 import { WeddingsService } from "./weddings.service";
 import { GuestsService } from "./guests.service";
@@ -100,6 +101,12 @@ export class WeddingsController {
   @UseGuards(JwtCookieGuard)
   updateMine(@CurrentUser() user: User, @Body() body: UpdateWeddingDto) {
     return this.weddings.updateMine(user, body);
+  }
+
+  @Post("weddings/mine/cover/presign")
+  @UseGuards(JwtCookieGuard)
+  weddingCoverPresign(@CurrentUser() user: User, @Body() body: MediaPresignDto) {
+    return this.media.presignWeddingCover(user, body);
   }
 
   @Get("weddings/mine/guests")
@@ -301,11 +308,7 @@ export class WeddingsController {
 
   @Patch("weddings/mine/invite-templates/:id")
   @UseGuards(JwtCookieGuard)
-  updateInviteTemplate(
-    @CurrentUser() user: User,
-    @Param("id") id: string,
-    @Body() body: UpdateInviteTemplateDto,
-  ) {
+  updateInviteTemplate(@CurrentUser() user: User, @Param("id") id: string, @Body() body: UpdateInviteTemplateDto) {
     return this.inviteTemplates.update(user, id, body);
   }
 
@@ -324,11 +327,7 @@ export class WeddingsController {
 
   @Put("weddings/mine/events/:eventId/seating")
   @UseGuards(JwtCookieGuard)
-  upsertSeating(
-    @CurrentUser() user: User,
-    @Param("eventId") eventId: string,
-    @Body() body: UpsertSeatingPlanDto,
-  ) {
+  upsertSeating(@CurrentUser() user: User, @Param("eventId") eventId: string, @Body() body: UpsertSeatingPlanDto) {
     return this.seating.upsert(user, eventId, body);
   }
 
@@ -352,21 +351,13 @@ export class WeddingsController {
 
   @Patch("weddings/mine/music/:planId")
   @UseGuards(JwtCookieGuard)
-  updateMusicPlan(
-    @CurrentUser() user: User,
-    @Param("planId") planId: string,
-    @Body() body: UpdateMusicPlanDto,
-  ) {
+  updateMusicPlan(@CurrentUser() user: User, @Param("planId") planId: string, @Body() body: UpdateMusicPlanDto) {
     return this.music.update(user, planId, body);
   }
 
   @Post("weddings/mine/music/:planId/tracks")
   @UseGuards(JwtCookieGuard)
-  createMusicTrack(
-    @CurrentUser() user: User,
-    @Param("planId") planId: string,
-    @Body() body: CreateMusicTrackDto,
-  ) {
+  createMusicTrack(@CurrentUser() user: User, @Param("planId") planId: string, @Body() body: CreateMusicTrackDto) {
     return this.music.createTrack(user, planId, body);
   }
 
@@ -384,31 +375,19 @@ export class WeddingsController {
   @Delete("weddings/mine/music/:planId/tracks/:trackId")
   @UseGuards(JwtCookieGuard)
   @HttpCode(200)
-  deleteMusicTrack(
-    @CurrentUser() user: User,
-    @Param("planId") planId: string,
-    @Param("trackId") trackId: string,
-  ) {
+  deleteMusicTrack(@CurrentUser() user: User, @Param("planId") planId: string, @Param("trackId") trackId: string) {
     return this.music.deleteTrack(user, planId, trackId);
   }
 
   @Post("weddings/mine/music/:planId/tracks/reorder")
   @UseGuards(JwtCookieGuard)
-  reorderMusicTracks(
-    @CurrentUser() user: User,
-    @Param("planId") planId: string,
-    @Body() body: ReorderMusicTracksDto,
-  ) {
+  reorderMusicTracks(@CurrentUser() user: User, @Param("planId") planId: string, @Body() body: ReorderMusicTracksDto) {
     return this.music.reorderTracks(user, planId, body);
   }
 
   @Post("weddings/mine/music/:planId/cues")
   @UseGuards(JwtCookieGuard)
-  createMusicCue(
-    @CurrentUser() user: User,
-    @Param("planId") planId: string,
-    @Body() body: CreateMusicCueDto,
-  ) {
+  createMusicCue(@CurrentUser() user: User, @Param("planId") planId: string, @Body() body: CreateMusicCueDto) {
     return this.music.createCue(user, planId, body);
   }
 
@@ -426,41 +405,25 @@ export class WeddingsController {
   @Delete("weddings/mine/music/:planId/cues/:cueId")
   @UseGuards(JwtCookieGuard)
   @HttpCode(200)
-  deleteMusicCue(
-    @CurrentUser() user: User,
-    @Param("planId") planId: string,
-    @Param("cueId") cueId: string,
-  ) {
+  deleteMusicCue(@CurrentUser() user: User, @Param("planId") planId: string, @Param("cueId") cueId: string) {
     return this.music.deleteCue(user, planId, cueId);
   }
 
   @Post("weddings/mine/music/:planId/cues/reorder")
   @UseGuards(JwtCookieGuard)
-  reorderMusicCues(
-    @CurrentUser() user: User,
-    @Param("planId") planId: string,
-    @Body() body: ReorderMusicCuesDto,
-  ) {
+  reorderMusicCues(@CurrentUser() user: User, @Param("planId") planId: string, @Body() body: ReorderMusicCuesDto) {
     return this.music.reorderCues(user, planId, body);
   }
 
   @Post("weddings/mine/music/:planId/cues/seed-templates")
   @UseGuards(JwtCookieGuard)
-  seedMusicCues(
-    @CurrentUser() user: User,
-    @Param("planId") planId: string,
-    @Body() body: SeedMusicCueTemplatesDto,
-  ) {
+  seedMusicCues(@CurrentUser() user: User, @Param("planId") planId: string, @Body() body: SeedMusicCueTemplatesDto) {
     return this.music.seedTemplates(user, planId, body);
   }
 
   @Post("weddings/mine/music/:planId/share")
   @UseGuards(JwtCookieGuard)
-  setMusicShare(
-    @CurrentUser() user: User,
-    @Param("planId") planId: string,
-    @Body() body: SetMusicShareDto,
-  ) {
+  setMusicShare(@CurrentUser() user: User, @Param("planId") planId: string, @Body() body: SetMusicShareDto) {
     return this.music.setShare(user, planId, body);
   }
 
@@ -489,11 +452,7 @@ export class WeddingsController {
 
   @Patch("weddings/mine/moodboards/:boardId")
   @UseGuards(JwtCookieGuard)
-  updateMoodboard(
-    @CurrentUser() user: User,
-    @Param("boardId") boardId: string,
-    @Body() body: UpdateMoodboardMetaDto,
-  ) {
+  updateMoodboard(@CurrentUser() user: User, @Param("boardId") boardId: string, @Body() body: UpdateMoodboardMetaDto) {
     return this.moodboards.updateMeta(user, boardId, body);
   }
 
@@ -516,21 +475,13 @@ export class WeddingsController {
 
   @Post("weddings/mine/moodboards/:boardId/presign")
   @UseGuards(JwtCookieGuard)
-  moodboardPresign(
-    @CurrentUser() user: User,
-    @Param("boardId") boardId: string,
-    @Body() body: MoodboardPresignDto,
-  ) {
+  moodboardPresign(@CurrentUser() user: User, @Param("boardId") boardId: string, @Body() body: MoodboardPresignDto) {
     return this.moodboards.presign(user, boardId, body);
   }
 
   @Patch("weddings/mine/moodboards/:boardId/share")
   @UseGuards(JwtCookieGuard)
-  setMoodboardShare(
-    @CurrentUser() user: User,
-    @Param("boardId") boardId: string,
-    @Body() body: SetMoodboardShareDto,
-  ) {
+  setMoodboardShare(@CurrentUser() user: User, @Param("boardId") boardId: string, @Body() body: SetMoodboardShareDto) {
     return this.moodboards.setShare(user, boardId, body);
   }
 
@@ -611,6 +562,18 @@ export class WeddingsController {
     return this.vendors.leads(user);
   }
 
+  @Get("vendors/me/insights")
+  @UseGuards(JwtCookieGuard)
+  insights(@CurrentUser() user: User) {
+    return this.vendors.insights(user);
+  }
+
+  @Post("vendors/:id/whatsapp-tap")
+  @RateLimit({ points: 30, duration: 60 })
+  whatsappTap(@Param("id") id: string) {
+    return this.vendors.recordWhatsappTap(id);
+  }
+
   @Get("vendors/:slug")
   vendorBySlug(@Param("slug") slug: string) {
     return this.vendors.bySlug(slug);
@@ -623,11 +586,7 @@ export class WeddingsController {
   }
 
   @Get("articles")
-  articlesList(
-    @Query("category") category?: string,
-    @Query("q") q?: string,
-    @Query("vendorSlug") vendorSlug?: string,
-  ) {
+  articlesList(@Query("category") category?: string, @Query("q") q?: string, @Query("vendorSlug") vendorSlug?: string) {
     return this.articles.list(category, q, vendorSlug);
   }
 

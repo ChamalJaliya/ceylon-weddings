@@ -1,4 +1,19 @@
+import { z } from "zod";
 import {
+  adminInsightsSchema,
+  vendorInsightsSchema,
+  type AdminInsights,
+  type VendorInsights,
+  accountSecuritySchema,
+  notificationSchema,
+  type NotificationCategory,
+  twoFactorSetupSchema,
+  userSchema,
+  type AccountSecurity,
+  type ChangePasswordBody,
+  type TwoFactorSetup,
+  type UpdatePreferencesBody,
+  type UpdateProfileBody,
   authResponseSchema,
   mineWeddingSchema,
   guestHouseholdSchema,
@@ -68,7 +83,6 @@ import {
   type UpsertPromotionBody,
   type PromotionListQuery,
   type PublicPromotionQuery,
-  type PromotionSlot,
   type CreateTaskBody,
   type UpdateTaskBody,
   type CreateBudgetLineBody,
@@ -88,14 +102,16 @@ import {
   type VendorCatalogQuery,
   type VendorCatalogResult,
   type SearchQuery,
-  type SearchResponse,
   searchResponseSchema,
   toSearchParams,
   vendorCatalogQuerySchema,
   VENDOR_CATALOG_DEFAULTS,
-  vendorSubscriptionSchema,
   type VendorSubscription,
   type SubscriptionPlan,
+  type PricingCatalog,
+  type CancelSubscriptionBody,
+  type ChangeSubscriptionPlanBody,
+  type UpsertSubscriptionPlanBody,
   type AdminOverrideTrialBody,
   type AdminGrantCompedBody,
   type AdminActivatePaidBody,
@@ -133,7 +149,6 @@ import {
   type MessagingMediaPresignResponse,
   type NotificationListResponse,
   type MarkNotificationsReadBody,
-  type AppNotification,
   conversationListResponseSchema,
   messageListResponseSchema,
   messageSchema,
@@ -180,6 +195,7 @@ import {
   type UpdateContactMessageBody,
 } from "@ceylonweddings/contracts";
 import { apiBase } from "./base-url";
+import { clearInflightRequests, request } from "./request";
 
 const guestListSchema = guestHouseholdSchema.array();
 const inquiryListSchema = inquirySchema.array();
@@ -187,31 +203,6 @@ const appointmentListSchema = appointmentSchema.array();
 const budgetListSchema = budgetLineSchema.array();
 const inviteTemplateListSchema = inviteTemplateSchema.array();
 const familyListSchema = familyPersonSchema.array();
-
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${apiBase()}${path}`, {
-    ...init,
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      ...init?.headers,
-    },
-  });
-
-  if (!response.ok) {
-    const body = (await response.json().catch(() => ({ message: response.statusText }))) as {
-      message?: string | string[];
-    };
-    const message = Array.isArray(body.message) ? body.message.join(", ") : body.message;
-    throw new Error(message ?? "Request failed");
-  }
-
-  if (response.status === 204) {
-    return undefined as T;
-  }
-
-  return (await response.json()) as T;
-}
 
 export type TaxonomyImportPreviewItem = {
   slug: string;
@@ -238,11 +229,19 @@ export type VendorTypeAnalytics = {
   }>;
 };
 
+const notificationPageSchema = z.object({
+  items: z.array(notificationSchema),
+  unreadCount: z.number().int().nonnegative(),
+  nextBefore: z.string().nullable(),
+});
+
 export const api = {
   health: () => request("/health"),
   me: () => request<User>("/auth/me"),
   login: async (body: LoginBody) =>
-    authResponseSchema.parse(await request<AuthResponse>("/auth/login", { method: "POST", body: JSON.stringify(body) })),
+    authResponseSchema.parse(
+      await request<AuthResponse>("/auth/login", { method: "POST", body: JSON.stringify(body) }),
+    ),
   register: async (body: RegisterBody) =>
     authResponseSchema.parse(
       await request<AuthResponse>("/auth/register", { method: "POST", body: JSON.stringify(body) }),
@@ -251,18 +250,63 @@ export const api = {
     authResponseSchema.parse(
       await request<AuthResponse>("/auth/google", { method: "POST", body: JSON.stringify(body) }),
     ),
-  logout: () => request<void>("/auth/logout", { method: "POST" }),
+  /** In-app notifications (bell, /notifications). */
+  notifications: {
+    list: async (
+      query: { limit?: number; unread?: boolean; category?: NotificationCategory; before?: string } = {},
+    ) => {
+      const params = new URLSearchParams();
+      if (query.limit) params.set("limit", String(query.limit));
+      if (query.unread) params.set("unread", "true");
+      if (query.category) params.set("category", query.category);
+      if (query.before) params.set("before", query.before);
+      const qs = params.toString();
+      return notificationPageSchema.parse(await request(`/notifications${qs ? `?${qs}` : ""}`));
+    },
+    unreadCount: () => request<{ unreadCount: number }>("/notifications/unread-count"),
+    markRead: (body: { ids?: string[]; all?: boolean }) =>
+      request<{ ok: true; unreadCount: number }>("/notifications/read", { method: "POST", body: JSON.stringify(body) }),
+  },
+  /** Account settings (/settings). */
+  account: {
+    updatePreferences: async (body: UpdatePreferencesBody): Promise<User> =>
+      userSchema.parse(await request<User>("/auth/preferences", { method: "PATCH", body: JSON.stringify(body) })),
+    updateProfile: async (body: UpdateProfileBody): Promise<User> =>
+      userSchema.parse(await request<User>("/auth/me", { method: "PATCH", body: JSON.stringify(body) })),
+    changePassword: (body: ChangePasswordBody) =>
+      request<{ ok: boolean; signedOut: number }>("/auth/password", { method: "POST", body: JSON.stringify(body) }),
+    security: async (): Promise<AccountSecurity> =>
+      accountSecuritySchema.parse(await request<AccountSecurity>("/auth/security")),
+    revokeSession: (id: string) =>
+      request<{ ok: boolean }>(`/auth/sessions/${encodeURIComponent(id)}`, { method: "DELETE" }),
+    revokeOtherSessions: () =>
+      request<{ ok: boolean; count: number }>("/auth/sessions/revoke-others", { method: "POST" }),
+    startTwoFactor: async (): Promise<TwoFactorSetup> =>
+      twoFactorSetupSchema.parse(await request<TwoFactorSetup>("/auth/2fa/generate", { method: "POST" })),
+    enableTwoFactor: (token: string) =>
+      request<{ ok: boolean }>("/auth/2fa/enable", { method: "POST", body: JSON.stringify({ token }) }),
+    disableTwoFactor: (token: string) =>
+      request<{ ok: boolean }>("/auth/2fa/disable", { method: "POST", body: JSON.stringify({ token }) }),
+  },
+  logout: async () => {
+    clearInflightRequests();
+    await request<void>("/auth/logout", { method: "POST" });
+  },
   search: async (query: SearchQuery) => {
     const params = toSearchParams(query);
     return searchResponseSchema.parse(await request(`/search?${params.toString()}`));
   },
   vendorTypes: () => request<PublicVendorTypeListItem[]>("/vendor-types"),
-  vendorTypeSchema: (slug: string) =>
-    request<VendorType>(`/vendor-types/${encodeURIComponent(slug)}/schema`),
+  vendorTypeSchema: (slug: string) => request<VendorType>(`/vendor-types/${encodeURIComponent(slug)}/schema`),
   wedding: {
     mine: async () => mineWeddingSchema.parse(await request("/weddings/mine")),
     update: async (body: UpdateWeddingBody) =>
       mineWeddingSchema.parse(await request("/weddings/mine", { method: "PATCH", body: JSON.stringify(body) })),
+    presignCover: (body: MediaPresignBody) =>
+      request<MediaPresignResponse>("/weddings/mine/cover/presign", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
     guests: async (query: { q?: string } = {}) => {
       const params = toSearchParams(query);
       const qs = params.toString();
@@ -289,8 +333,7 @@ export const api = {
           body: JSON.stringify(body),
         }),
       ),
-    inviteTemplates: async () =>
-      inviteTemplateListSchema.parse(await request("/weddings/mine/invite-templates")),
+    inviteTemplates: async () => inviteTemplateListSchema.parse(await request("/weddings/mine/invite-templates")),
     createInviteTemplate: async (body: CreateInviteTemplateBody) =>
       inviteTemplateSchema.parse(
         await request("/weddings/mine/invite-templates", { method: "POST", body: JSON.stringify(body) }),
@@ -305,9 +348,7 @@ export const api = {
     deleteInviteTemplate: async (id: string) =>
       okResultSchema.parse(await request(`/weddings/mine/invite-templates/${id}`, { method: "DELETE" })),
     resetInviteTemplates: async () =>
-      inviteTemplateListSchema.parse(
-        await request("/weddings/mine/invite-templates/reset", { method: "POST" }),
-      ),
+      inviteTemplateListSchema.parse(await request("/weddings/mine/invite-templates/reset", { method: "POST" })),
     seating: async (eventId: string) =>
       seatingResponseSchema.parse(await request(`/weddings/mine/events/${eventId}/seating`)),
     upsertSeating: async (eventId: string, body: UpsertSeatingPlanBody) =>
@@ -329,9 +370,7 @@ export const api = {
       okResultSchema.parse(await request(`/weddings/mine/members/${id}`, { method: "DELETE" })),
     family: async () => familyListSchema.parse(await request("/weddings/mine/family")),
     createFamilyPerson: async (body: CreateFamilyPersonBody) =>
-      familyPersonSchema.parse(
-        await request("/weddings/mine/family", { method: "POST", body: JSON.stringify(body) }),
-      ),
+      familyPersonSchema.parse(await request("/weddings/mine/family", { method: "POST", body: JSON.stringify(body) })),
     updateFamilyPerson: async (id: string, body: UpdateFamilyPersonBody) =>
       familyPersonSchema.parse(
         await request(`/weddings/mine/family/${id}`, { method: "PATCH", body: JSON.stringify(body) }),
@@ -346,9 +385,7 @@ export const api = {
       okResultSchema.parse(await request(`/weddings/mine/tasks/${id}`, { method: "DELETE" })),
     budget: async () => budgetListSchema.parse(await request("/weddings/mine/budget")),
     createBudgetLine: async (body: CreateBudgetLineBody) =>
-      budgetLineSchema.parse(
-        await request("/weddings/mine/budget", { method: "POST", body: JSON.stringify(body) }),
-      ),
+      budgetLineSchema.parse(await request("/weddings/mine/budget", { method: "POST", body: JSON.stringify(body) })),
     updateBudgetLine: async (id: string, body: UpdateBudgetLineBody) =>
       budgetLineSchema.parse(
         await request(`/weddings/mine/budget/${id}`, { method: "PATCH", body: JSON.stringify(body) }),
@@ -379,8 +416,7 @@ export const api = {
     musicPlans: async () => musicPlanListSchema.parse(await request("/weddings/mine/music")),
     upsertMusicPlan: async (body: UpsertMusicPlanBody) =>
       musicPlanSchema.parse(await request("/weddings/mine/music", { method: "POST", body: JSON.stringify(body) })),
-    musicPlan: async (planId: string) =>
-      musicPlanSchema.parse(await request(`/weddings/mine/music/${planId}`)),
+    musicPlan: async (planId: string) => musicPlanSchema.parse(await request(`/weddings/mine/music/${planId}`)),
     updateMusicPlan: async (planId: string, body: UpdateMusicPlanBody) =>
       musicPlanSchema.parse(
         await request(`/weddings/mine/music/${planId}`, { method: "PATCH", body: JSON.stringify(body) }),
@@ -436,14 +472,10 @@ export const api = {
       musicPlanSchema.parse(
         await request(`/weddings/mine/music/${planId}/share`, { method: "POST", body: JSON.stringify(body) }),
       ),
-    moodboards: async () =>
-      moodboardSummaryListSchema.parse(await request("/weddings/mine/moodboards")),
+    moodboards: async () => moodboardSummaryListSchema.parse(await request("/weddings/mine/moodboards")),
     createMoodboard: async (body: CreateMoodboardBody = { title: "Style" }) =>
-      moodboardSchema.parse(
-        await request("/weddings/mine/moodboards", { method: "POST", body: JSON.stringify(body) }),
-      ),
-    moodboard: async (boardId: string) =>
-      moodboardSchema.parse(await request(`/weddings/mine/moodboards/${boardId}`)),
+      moodboardSchema.parse(await request("/weddings/mine/moodboards", { method: "POST", body: JSON.stringify(body) })),
+    moodboard: async (boardId: string) => moodboardSchema.parse(await request(`/weddings/mine/moodboards/${boardId}`)),
     updateMoodboard: async (boardId: string, body: UpdateMoodboardMetaBody) =>
       moodboardSchema.parse(
         await request(`/weddings/mine/moodboards/${boardId}`, {
@@ -459,9 +491,7 @@ export const api = {
         }),
       ),
     deleteMoodboard: async (boardId: string) =>
-      okResultSchema.parse(
-        await request(`/weddings/mine/moodboards/${boardId}`, { method: "DELETE" }),
-      ),
+      okResultSchema.parse(await request(`/weddings/mine/moodboards/${boardId}`, { method: "DELETE" })),
     moodboardPresign: async (boardId: string, body: MoodboardPresignBody) =>
       moodboardPresignResponseSchema.parse(
         await request(`/weddings/mine/moodboards/${boardId}/presign`, {
@@ -478,13 +508,9 @@ export const api = {
       ),
     inquiries: async () => inquiryListSchema.parse(await request("/weddings/mine/inquiries")),
     inquire: async (body: CreateInquiryBody) =>
-      inquirySchema.parse(
-        await request("/weddings/mine/inquiries", { method: "POST", body: JSON.stringify(body) }),
-      ),
+      inquirySchema.parse(await request("/weddings/mine/inquiries", { method: "POST", body: JSON.stringify(body) })),
     shortlist: async (body: ShortlistVendorBody) =>
-      weddingVendorSchema.parse(
-        await request("/weddings/mine/team", { method: "POST", body: JSON.stringify(body) }),
-      ),
+      weddingVendorSchema.parse(await request("/weddings/mine/team", { method: "POST", body: JSON.stringify(body) })),
     updateTeamVendor: async (vendorId: string, body: UpdateTeamVendorBody) =>
       weddingVendorSchema.parse(
         await request(`/weddings/mine/team/${vendorId}`, { method: "PATCH", body: JSON.stringify(body) }),
@@ -513,6 +539,11 @@ export const api = {
       request<(Inquiry & { wedding: { partnerOneName: string; partnerTwoName: string; slug: string } })[]>(
         "/vendors/me/leads",
       ),
+    /** 30-day storefront performance (views, WhatsApp taps, inquiries) for the vendor dashboard. */
+    insights: async (): Promise<VendorInsights> => vendorInsightsSchema.parse(await request("/vendors/me/insights")),
+    /** Count a WhatsApp tap on a storefront (fire and forget). */
+    trackWhatsappTap: (id: string) =>
+      request<{ ok: true }>(`/vendors/${id}/whatsapp-tap`, { method: "POST" }).catch(() => null),
     onboarding: () => request<VendorOnboardingResponse>("/vendors/me/onboarding"),
     putAttributes: (body: UpsertVendorAttributesBody) =>
       request<Vendor>("/vendors/me/attributes", {
@@ -524,10 +555,8 @@ export const api = {
     wedding: async (slug: string) => publicWebsiteSchema.parse(await request(`/public/weddings/${slug}`)),
     rsvp: (slug: string, body: PublicRsvpBody) =>
       request(`/public/weddings/${slug}/rsvp`, { method: "POST", body: JSON.stringify(body) }),
-    musicBrief: async (token: string) =>
-      musicBriefSchema.parse(await request(`/public/music-brief/${token}`)),
-    moodboard: async (token: string) =>
-      moodboardBriefSchema.parse(await request(`/public/moodboards/${token}`)),
+    musicBrief: async (token: string) => musicBriefSchema.parse(await request(`/public/music-brief/${token}`)),
+    moodboard: async (token: string) => moodboardBriefSchema.parse(await request(`/public/moodboards/${token}`)),
     articles: (category?: string, q?: string, vendorSlug?: string) => {
       const params = new URLSearchParams();
       if (category) params.set("category", category);
@@ -540,6 +569,8 @@ export const api = {
   },
   admin: {
     stats: () => request<AdminStats>("/admin/stats"),
+    /** 30-day marketplace trends and breakdowns for the admin dashboard. */
+    insights: async (): Promise<AdminInsights> => adminInsightsSchema.parse(await request("/admin/analytics/insights")),
     vendors: (query: AdminVendorListQuery = {}) => {
       const params = toSearchParams(query);
       const qs = params.toString();
@@ -569,10 +600,10 @@ export const api = {
     revokeSessions: (id: string) =>
       request<{ ok: true; deleted: number }>(`/admin/users/${id}/sessions/revoke`, { method: "POST" }),
     impersonate: (userId: string) =>
-      request<{ ok: true; target: { id: string; email: string; name: string; role: string } }>(
-        "/admin/impersonate",
-        { method: "POST", body: JSON.stringify({ userId }) },
-      ),
+      request<{ ok: true; target: { id: string; email: string; name: string; role: string } }>("/admin/impersonate", {
+        method: "POST",
+        body: JSON.stringify({ userId }),
+      }),
     audit: (query: AdminAuditListQuery = {}) => {
       const params = toSearchParams(query);
       const qs = params.toString();
@@ -666,15 +697,11 @@ export const api = {
         body: JSON.stringify(body),
       }),
     createAttributeDefinition: (typeId: string, body: CreateAttributeDefinitionBody) =>
-      request<VendorAttributeDefinition>(
-        `/admin/vendor-types/${encodeURIComponent(typeId)}/definitions`,
-        { method: "POST", body: JSON.stringify(body) },
-      ),
-    updateAttributeDefinition: (
-      typeId: string,
-      definitionId: string,
-      body: UpdateAttributeDefinitionBody,
-    ) =>
+      request<VendorAttributeDefinition>(`/admin/vendor-types/${encodeURIComponent(typeId)}/definitions`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    updateAttributeDefinition: (typeId: string, definitionId: string, body: UpdateAttributeDefinitionBody) =>
       request<VendorAttributeDefinition>(
         `/admin/vendor-types/${encodeURIComponent(typeId)}/definitions/${encodeURIComponent(definitionId)}`,
         { method: "PATCH", body: JSON.stringify(body) },
@@ -694,12 +721,7 @@ export const api = {
         `/admin/vendor-types/${encodeURIComponent(typeId)}/definitions/${encodeURIComponent(definitionId)}/options`,
         { method: "POST", body: JSON.stringify(body) },
       ),
-    updateAttributeOption: (
-      typeId: string,
-      definitionId: string,
-      optionId: string,
-      body: UpdateAttributeOptionBody,
-    ) =>
+    updateAttributeOption: (typeId: string, definitionId: string, optionId: string, body: UpdateAttributeOptionBody) =>
       request<VendorAttributeOption>(
         `/admin/vendor-types/${encodeURIComponent(typeId)}/definitions/${encodeURIComponent(definitionId)}/options/${encodeURIComponent(optionId)}`,
         { method: "PATCH", body: JSON.stringify(body) },
@@ -731,10 +753,8 @@ export const api = {
       request<Promotion>("/admin/promotions", { method: "POST", body: JSON.stringify(body) }),
     updatePromotion: (id: string, body: UpsertPromotionBody) =>
       request<Promotion>(`/admin/promotions/${id}`, { method: "PUT", body: JSON.stringify(body) }),
-    deletePromotion: (id: string) =>
-      request<{ ok: true }>(`/admin/promotions/${id}`, { method: "DELETE" }),
-    vendorSubscription: (vendorId: string) =>
-      request<VendorSubscription>(`/admin/vendors/${vendorId}/subscription`),
+    deletePromotion: (id: string) => request<{ ok: true }>(`/admin/promotions/${id}`, { method: "DELETE" }),
+    vendorSubscription: (vendorId: string) => request<VendorSubscription>(`/admin/vendors/${vendorId}/subscription`),
     overrideTrial: (vendorId: string, body: AdminOverrideTrialBody) =>
       request<VendorSubscription>(`/admin/vendors/${vendorId}/subscription/trial`, {
         method: "PATCH",
@@ -754,13 +774,23 @@ export const api = {
       request<VendorSubscription>(`/admin/vendors/${vendorId}/subscription/suspend`, {
         method: "PATCH",
       }),
+    subscriptionPlans: () => request<SubscriptionPlan[]>("/admin/subscription-plans"),
+    upsertSubscriptionPlan: (body: UpsertSubscriptionPlanBody) =>
+      request<SubscriptionPlan>("/admin/subscription-plans", {
+        method: "PUT",
+        body: JSON.stringify(body),
+      }),
+    setSubscriptionPlanActive: (id: string, active: boolean) =>
+      request<SubscriptionPlan>(`/admin/subscription-plans/${id}/active`, {
+        method: "PATCH",
+        body: JSON.stringify({ active }),
+      }),
     consultations: (query: ConsultationListQuery = {}) => {
       const qs = toSearchParams(query as unknown as Record<string, unknown>).toString();
       return request<Consultation[]>(qs ? `/admin/consultations?${qs}` : "/admin/consultations");
     },
     consultation: (id: string) => request<Consultation>(`/admin/consultations/${id}`),
-    consultationSummary: () =>
-      request<{ pending: number; upcoming: number }>("/admin/consultations/summary"),
+    consultationSummary: () => request<{ pending: number; upcoming: number }>("/admin/consultations/summary"),
     consultationAvailability: (query: ConsultationAvailabilityQuery = {}) => {
       const qs = toSearchParams(query as unknown as Record<string, unknown>).toString();
       return request<{ timezone: string; slotMinutes: number; days: ConsultationDay[] }>(
@@ -790,10 +820,38 @@ export const api = {
       }),
   },
   subscription: {
+    pricing: () => request<PricingCatalog>("/subscription/pricing"),
     plans: () => request<SubscriptionPlan[]>("/subscription/plans"),
+    providers: () =>
+      request<{ payhere: boolean; stripe: boolean; defaultProvider: "payhere" | "stripe" }>("/subscription/providers"),
     vendor: (vendorId: string) => request<VendorSubscription>(`/subscription/vendor/${vendorId}`),
-    checkout: (body: { vendorId: string; planId: string; interval: "MONTHLY" | "ANNUAL"; returnUrl?: string; cancelUrl?: string }) =>
-      request<{ paymentIntentId: string; orderId: string; actionUrl: string; fields: Record<string, string> }>("/subscription/checkout", {
+    cancel: (vendorId: string, body: CancelSubscriptionBody) =>
+      request<VendorSubscription>(`/subscription/vendor/${vendorId}/cancel`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    reactivate: (vendorId: string) =>
+      request<VendorSubscription>(`/subscription/vendor/${vendorId}/reactivate`, { method: "POST" }),
+    changePlan: (vendorId: string, body: ChangeSubscriptionPlanBody) =>
+      request<VendorSubscription>(`/subscription/vendor/${vendorId}/change-plan`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    checkout: (body: {
+      vendorId: string;
+      planId: string;
+      interval: "MONTHLY" | "ANNUAL";
+      provider?: "payhere" | "stripe";
+      returnUrl?: string;
+      cancelUrl?: string;
+    }) =>
+      request<{
+        provider: "payhere" | "stripe";
+        paymentIntentId: string;
+        orderId: string;
+        actionUrl: string;
+        fields: Record<string, string> | null;
+      }>("/subscription/checkout", {
         method: "POST",
         body: JSON.stringify(body),
       }),
@@ -809,8 +867,7 @@ export const api = {
       const params = toSearchParams(query as unknown as Record<string, unknown>);
       return request<Promotion[]>(`/public/promotions?${params.toString()}`);
     },
-    impression: (id: string) =>
-      request<{ ok: true }>(`/public/promotions/${id}/impression`, { method: "POST" }),
+    impression: (id: string) => request<{ ok: true }>(`/public/promotions/${id}/impression`, { method: "POST" }),
     click: (id: string) => request<{ ok: true }>(`/public/promotions/${id}/click`, { method: "POST" }),
   },
   site: {
@@ -837,10 +894,10 @@ export const api = {
     byToken: (manageToken: string) =>
       request<PublicConsultation>(`/public/consultations/${encodeURIComponent(manageToken)}`),
     cancel: (manageToken: string, body: CancelConsultationBody = {}) =>
-      request<PublicConsultation>(
-        `/public/consultations/${encodeURIComponent(manageToken)}/cancel`,
-        { method: "POST", body: JSON.stringify(body) },
-      ),
+      request<PublicConsultation>(`/public/consultations/${encodeURIComponent(manageToken)}/cancel`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
     icsUrl: (manageToken: string) =>
       `${apiBase()}/public/consultations/${encodeURIComponent(manageToken)}/calendar.ics`,
   },

@@ -7,6 +7,9 @@ import {
   useReducedMotion,
   useSpring,
   useTransform,
+  useScroll,
+  useInView,
+  LayoutGroup,
   AnimatePresence,
   type HTMLMotionProps,
 } from "motion/react";
@@ -29,7 +32,6 @@ import {
   drawerVariants,
   staggerContainerVariants,
   accordionVariants,
-  hoverLiftVariants,
 } from "../motion/variants";
 
 export { MOTION_TIMINGS, SPRING_SNAPPY, SPRING_BOUNCY, SPRING_SMOOTH, SPRING_GENTLE, EASE_OUT_EXPO, DURATION };
@@ -206,13 +208,7 @@ type PressableProps = {
   hoverScale?: number;
 } & Omit<HTMLMotionProps<"div">, "children">;
 
-export function Pressable({
-  children,
-  className,
-  scale = 0.97,
-  hoverScale = 1.02,
-  ...props
-}: PressableProps) {
+export function Pressable({ children, className, scale = 0.97, hoverScale = 1.02, ...props }: PressableProps) {
   const reduce = useReducedMotion();
 
   return (
@@ -329,7 +325,12 @@ export function AnimatedTabs<T extends string>({
   const reduce = useReducedMotion();
 
   return (
-    <div className={cn("inline-flex items-center gap-1 rounded-xl bg-muted/60 p-1 text-muted-foreground", className)}>
+    <div
+      className={cn(
+        "inline-flex max-w-full items-center gap-1 overflow-x-auto rounded-full border border-border/70 bg-muted/60 p-1 text-muted-foreground",
+        className,
+      )}
+    >
       {tabs.map((tab) => {
         const isActive = tab.id === activeId;
         return (
@@ -337,15 +338,15 @@ export function AnimatedTabs<T extends string>({
             key={tab.id}
             onClick={() => onChange(tab.id)}
             className={cn(
-              "relative z-10 inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-              isActive ? "text-foreground font-semibold" : "hover:text-foreground/80",
+              "relative z-10 inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              isActive ? "font-medium text-primary-foreground" : "hover:text-foreground",
               tabClassName,
             )}
           >
             {isActive && (
               <motion.div
                 layoutId={reduce ? undefined : layoutId}
-                className={cn("absolute inset-0 -z-10 rounded-lg bg-card shadow-sm border border-border/50", activePillClassName)}
+                className={cn("absolute inset-0 -z-10 rounded-full bg-primary shadow-sm", activePillClassName)}
                 transition={SPRING_SNAPPY}
               />
             )}
@@ -369,7 +370,7 @@ type AnimatedCounterProps = {
   duration?: number;
 };
 
-export function AnimatedCounter({ value, formatter, className, duration = 1 }: AnimatedCounterProps) {
+export function AnimatedCounter({ value, formatter, className }: AnimatedCounterProps) {
   const reduce = useReducedMotion();
   const spring = useSpring(value, { mass: 0.8, stiffness: 120, damping: 20 });
   const display = useTransform(spring, (current) =>
@@ -452,12 +453,7 @@ export function PulseDot({ className, colorClass = "bg-primary" }: { className?:
   return (
     <span className={cn("relative flex h-2.5 w-2.5 items-center justify-center", className)}>
       {!reduce && (
-        <span
-          className={cn(
-            "absolute inline-flex h-full w-full animate-ping rounded-full opacity-75",
-            colorClass,
-          )}
-        />
+        <span className={cn("absolute inline-flex h-full w-full animate-ping rounded-full opacity-75", colorClass)} />
       )}
       <span className={cn("relative inline-flex h-2 w-2 rounded-full", colorClass)} />
     </span>
@@ -476,7 +472,7 @@ export function AnimatedBadge({
   return (
     <motion.span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold border transition-colors",
+        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium border transition-colors",
         pulse && "cw-pulse-subtle",
         className,
       )}
@@ -494,4 +490,4 @@ export function AnimatedBadge({
 
 export { CelebrationBurst, SaveTheDateBurst, useConfetti } from "./celebration-burst";
 
-export { motion, useReducedMotion, AnimatePresence, useSpring, useTransform };
+export { motion, useReducedMotion, AnimatePresence, useSpring, useTransform, useScroll, useInView, LayoutGroup };

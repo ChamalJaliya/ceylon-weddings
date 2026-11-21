@@ -20,6 +20,7 @@ import {
   createTextItem,
   useMoodboardStore,
 } from "./store";
+import { MOODBOARD_INK, studioCanvas } from "./palette";
 
 function shapeFill(value: string | undefined) {
   if (!value || value === "transparent") return undefined;
@@ -27,7 +28,7 @@ function shapeFill(value: string | undefined) {
 }
 
 function shapeStroke(value: string | undefined) {
-  return value && value !== "transparent" ? value : "#1f1a16";
+  return value && value !== "transparent" ? value : MOODBOARD_INK;
 }
 
 function useHtmlImage(url: string | undefined) {
@@ -94,7 +95,7 @@ function ItemNode({
         height={item.height}
         cornerRadius={item.cornerRadius}
         fill={shapeFill(item.style?.fill)}
-        stroke={selected ? "#b4532a" : shapeStroke(item.style?.stroke)}
+        stroke={selected ? studioCanvas().accent : shapeStroke(item.style?.stroke)}
         strokeWidth={item.style?.strokeWidth ?? 2}
       />
     );
@@ -110,7 +111,7 @@ function ItemNode({
         radiusX={item.width / 2}
         radiusY={item.height / 2}
         fill={shapeFill(item.style?.fill)}
-        stroke={selected ? "#b4532a" : shapeStroke(item.style?.stroke)}
+        stroke={selected ? studioCanvas().accent : shapeStroke(item.style?.stroke)}
         strokeWidth={item.style?.strokeWidth ?? 2}
         onDragEnd={(e) => {
           onDragEnd(item.id, e.target.x() - item.width / 2, e.target.y() - item.height / 2);
@@ -123,7 +124,7 @@ function ItemNode({
       <Line
         {...common}
         points={item.points}
-        stroke={selected ? "#b4532a" : shapeStroke(item.style?.stroke)}
+        stroke={selected ? studioCanvas().accent : shapeStroke(item.style?.stroke)}
         strokeWidth={item.style?.strokeWidth ?? 2}
         lineCap="round"
         lineJoin="round"
@@ -135,8 +136,8 @@ function ItemNode({
       <Arrow
         {...common}
         points={item.points}
-        stroke={selected ? "#b4532a" : shapeStroke(item.style?.stroke)}
-        fill={selected ? "#b4532a" : shapeStroke(item.style?.stroke)}
+        stroke={selected ? studioCanvas().accent : shapeStroke(item.style?.stroke)}
+        fill={selected ? studioCanvas().accent : shapeStroke(item.style?.stroke)}
         strokeWidth={item.style?.strokeWidth ?? 2}
         pointerLength={12}
         pointerWidth={12}
@@ -148,7 +149,7 @@ function ItemNode({
       <Line
         {...common}
         points={item.points}
-        stroke={selected ? "#b4532a" : item.stroke}
+        stroke={selected ? studioCanvas().accent : item.stroke}
         strokeWidth={item.strokeWidth}
         tension={0.3}
         lineCap="round"
@@ -185,7 +186,7 @@ function ItemNode({
           shadowColor="rgba(31,26,22,0.12)"
           shadowBlur={12}
           shadowOffsetY={4}
-          stroke={selected ? "#b4532a" : "transparent"}
+          stroke={selected ? studioCanvas().accent : "transparent"}
           strokeWidth={selected ? 2 : 0}
         />
         <Text
@@ -212,7 +213,7 @@ function ItemNode({
         image={image ?? undefined}
         width={item.width}
         height={item.height}
-        stroke={selected ? "#b4532a" : undefined}
+        stroke={selected ? studioCanvas().accent : undefined}
         strokeWidth={selected ? 2 : 0}
       />
     );
@@ -224,27 +225,15 @@ function ItemNode({
         <Rect
           width={item.width}
           height={item.height}
-          fill="#1f1a16"
+          fill={studioCanvas().ink}
           cornerRadius={6}
-          stroke={selected ? "#b4532a" : "#333"}
+          stroke={selected ? studioCanvas().accent : studioCanvas().inkSoft}
           strokeWidth={selected ? 2 : 1}
         />
         {image ? (
-          <KonvaImage
-            image={image}
-            width={item.width}
-            height={item.height}
-            cornerRadius={6}
-            listening={false}
-          />
+          <KonvaImage image={image} width={item.width} height={item.height} cornerRadius={6} listening={false} />
         ) : null}
-        <Rect
-          width={item.width}
-          height={item.height}
-          fill="rgba(31,26,22,0.28)"
-          cornerRadius={6}
-          listening={false}
-        />
+        <Rect width={item.width} height={item.height} fill="rgba(31,26,22,0.28)" cornerRadius={6} listening={false} />
         <Ellipse
           x={item.width / 2}
           y={item.height / 2}
@@ -258,7 +247,7 @@ function ItemNode({
           x={item.width / 2 - playR * 0.35}
           y={item.height / 2 - playR * 0.7}
           fontSize={playR}
-          fill="#1f1a16"
+          fill={studioCanvas().ink}
           listening={false}
         />
       </Group>
@@ -275,22 +264,14 @@ function ItemNode({
           dash={[8, 6]}
           fill="rgba(196,165,116,0.04)"
         />
-        {item.label ? (
-          <Text text={item.label} y={-22} fontSize={12} fill={item.stroke} listening={false} />
-        ) : null}
+        {item.label ? <Text text={item.label} y={-22} fontSize={12} fill={item.stroke} listening={false} /> : null}
       </Group>
     );
   }
   return null;
 }
 
-export function MoodboardEngine({
-  assets,
-  className,
-}: {
-  assets: MoodboardAsset[];
-  className?: string;
-}) {
+export function MoodboardEngine({ assets, className }: { assets: MoodboardAsset[]; className?: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<Konva.Stage>(null);
   const trRef = useRef<Konva.Transformer>(null);
@@ -332,10 +313,7 @@ export function MoodboardEngine({
     return map;
   }, [assets]);
 
-  const sortedItems = useMemo(
-    () => [...scene.items].sort((a, b) => (a.zIndex ?? 0) - (b.zIndex ?? 0)),
-    [scene.items],
-  );
+  const sortedItems = useMemo(() => [...scene.items].sort((a, b) => (a.zIndex ?? 0) - (b.zIndex ?? 0)), [scene.items]);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -521,11 +499,7 @@ export function MoodboardEngine({
           drawingId.current = item.id;
           addItem(item);
         } else if (tool === "line" || tool === "arrow") {
-          const item = createLineItem(
-            [world.x, world.y, world.x, world.y],
-            tool === "arrow",
-            style,
-          );
+          const item = createLineItem([world.x, world.y, world.x, world.y], tool === "arrow", style);
           drawingId.current = item.id;
           addItem(item);
         } else if (tool === "path") {
@@ -544,7 +518,7 @@ export function MoodboardEngine({
   );
 
   const onPointerMove = useCallback(
-    (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
+    (_e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
       const stage = stageRef.current;
       if (!stage) return;
       const pointer = stage.getPointerPosition();
@@ -631,7 +605,15 @@ export function MoodboardEngine({
       node.scaleY(1);
       const item = useMoodboardStore.getState().scene.items.find((i) => i.id === id);
       if (!item) continue;
-      if (item.type === "rect" || item.type === "ellipse" || item.type === "image" || item.type === "sticky" || item.type === "text" || item.type === "video" || item.type === "frame") {
+      if (
+        item.type === "rect" ||
+        item.type === "ellipse" ||
+        item.type === "image" ||
+        item.type === "sticky" ||
+        item.type === "text" ||
+        item.type === "video" ||
+        item.type === "frame"
+      ) {
         updateItem(id, {
           x: snap(node.x()),
           y: snap(node.y()),
@@ -649,7 +631,7 @@ export function MoodboardEngine({
   const editingItem = sortedItems.find((i) => i.id === editingTextId);
 
   return (
-    <div ref={containerRef} className={className ?? "relative h-full w-full overflow-hidden bg-[#fffaf5]"}>
+    <div ref={containerRef} className={className ?? "relative h-full w-full overflow-hidden bg-studio-paper"}>
       {scene.rulers ? (
         <MoodboardRulers
           width={size.width}
@@ -681,32 +663,26 @@ export function MoodboardEngine({
         }}
       >
         <Layer listening={false}>
-          <Rect
-            x={-50000}
-            y={-50000}
-            width={100000}
-            height={100000}
-            fill={scene.background}
-          />
+          <Rect x={-50000} y={-50000} width={100000} height={100000} fill={scene.background} />
           {scene.grid.enabled
             ? Array.from({ length: 80 }).flatMap((_, i) => {
                 const g = scene.grid.size;
-                const originX = Math.floor((-scene.camera.x / scene.camera.zoom) / g) * g;
-                const originY = Math.floor((-scene.camera.y / scene.camera.zoom) / g) * g;
+                const originX = Math.floor(-scene.camera.x / scene.camera.zoom / g) * g;
+                const originY = Math.floor(-scene.camera.y / scene.camera.zoom / g) * g;
                 const x = originX + i * g;
                 const y = originY + i * g;
                 return [
                   <Line
                     key={`gx-${i}`}
                     points={[x, originY - 2000, x, originY + 4000]}
-                    stroke="#1f1a16"
+                    stroke={studioCanvas().ink}
                     strokeWidth={1 / scene.camera.zoom}
                     opacity={0.06}
                   />,
                   <Line
                     key={`gy-${i}`}
                     points={[originX - 2000, y, originX + 4000, y]}
-                    stroke="#1f1a16"
+                    stroke={studioCanvas().ink}
                     strokeWidth={1 / scene.camera.zoom}
                     opacity={0.06}
                   />,
@@ -745,9 +721,9 @@ export function MoodboardEngine({
               ref={trRef}
               rotateEnabled
               enabledAnchors={["top-left", "top-right", "bottom-left", "bottom-right"]}
-              borderStroke="#b4532a"
-              anchorStroke="#b4532a"
-              anchorFill="#fffaf5"
+              borderStroke={studioCanvas().accent}
+              anchorStroke={studioCanvas().accent}
+              anchorFill={studioCanvas().paper}
               onTransformEnd={onTransformEnd}
             />
           ) : null}
@@ -785,7 +761,7 @@ export function MoodboardEngine({
               <button
                 type="button"
                 onClick={() => setPreviewVideo(null)}
-                className="absolute top-2 right-2 rounded-full bg-[#1f1a16]/85 px-2.5 py-1 text-[11px] font-medium text-[#fffaf5] shadow"
+                className="absolute top-2 right-2 rounded-full bg-studio-ink/85 px-2.5 py-1 text-label font-medium text-studio-paper shadow"
               >
                 Done
               </button>
@@ -797,7 +773,7 @@ export function MoodboardEngine({
       {editingItem && (editingItem.type === "text" || editingItem.type === "sticky") ? (
         <textarea
           autoFocus
-          className="absolute z-30 resize-none rounded border border-[#b4532a] bg-white/95 p-2 shadow-lg outline-none"
+          className="absolute z-30 resize-none rounded border border-studio-accent bg-paper/95 p-2 shadow-lg outline-none"
           style={{
             left: editingItem.x * scene.camera.zoom + scene.camera.x,
             top: editingItem.y * scene.camera.zoom + scene.camera.y,
@@ -810,7 +786,7 @@ export function MoodboardEngine({
             textDecoration: editingItem.underline ? "underline" : "none",
             textAlign: editingItem.align ?? "left",
             color: editingItem.type === "text" ? editingItem.fill : editingItem.textColor,
-            background: editingItem.type === "sticky" ? editingItem.fill : "#fff",
+            background: editingItem.type === "sticky" ? editingItem.fill : "var(--color-studio-paper)",
             padding: editingItem.type === "sticky" ? 12 * scene.camera.zoom : 8,
           }}
           value={editingItem.text}

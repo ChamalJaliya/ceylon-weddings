@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { vendorCategorySchema } from "../vendor/enums";
 import { eventSchema } from "./events";
-import { mealSchema, rsvpStatusSchema } from "./enums";
+import { mealSchema } from "./enums";
 
 export const publicWebsiteSchema = z.object({
   slug: z.string(),
@@ -12,6 +12,7 @@ export const publicWebsiteSchema = z.object({
   district: z.string().nullable().optional(),
   style: z.string().nullable().optional(),
   colors: z.array(z.string()).optional(),
+  coverImageUrl: z.string().url().nullable().optional(),
   websiteFaq: z.string().nullable(),
   travelNotes: z.string().nullable(),
   events: z.array(eventSchema),

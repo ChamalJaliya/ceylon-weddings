@@ -3,15 +3,15 @@
 import { useLocale, useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import { Settings2 } from "lucide-react";
-import { COOKIES, formatMoney, usePreferenceStore } from "@ceylonweddings/web";
-import type { Currency, Locale, ThemeName } from "@ceylonweddings/contracts";
+import { api, COOKIES, formatMoney, useAuthStore, usePreferenceStore } from "@ceylonweddings/web";
+import type { Currency, Locale, ThemeMode } from "@ceylonweddings/contracts";
 import { SimpleSelect } from "@ceylonweddings/ui/components/select";
 import { Button } from "@ceylonweddings/ui/components/button";
 import { Icon } from "@ceylonweddings/ui/components/icon";
 import { Label } from "@ceylonweddings/ui/components/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@ceylonweddings/ui/components/popover";
 import { cn } from "@ceylonweddings/ui/utils";
-import { usePathname, useRouter } from "../i18n/navigation";
+import { Link, usePathname, useRouter } from "../i18n/navigation";
 
 function setCookie(name: string, value: string) {
   document.cookie = `${name}=${value}; path=/; max-age=31536000; samesite=lax`;
@@ -31,6 +31,8 @@ export function PreferenceControls({
   const { theme, setTheme } = useTheme();
   const currency = usePreferenceStore((state) => state.currency);
   const setCurrency = usePreferenceStore((state) => state.setCurrency);
+  const user = useAuthStore((state) => state.user);
+  const setUser = useAuthStore((state) => state.setUser);
 
   return (
     <Popover>
@@ -82,19 +84,31 @@ export function PreferenceControls({
           <div className="grid gap-1.5">
             <Label>{t("prefs.theme")}</Label>
             <SimpleSelect
-              value={theme ?? "pearl"}
+              value={theme ?? "light"}
               onValueChange={(next) => {
                 setTheme(next);
-                setCookie(COOKIES.theme, next);
+                if (user)
+                  void api.account
+                    .updatePreferences({ themeMode: next as ThemeMode })
+                    .then(setUser)
+                    .catch(() => {});
               }}
               options={[
-                { value: "pearl", label: t("themes.pearl") },
-                { value: "temple", label: t("themes.temple") },
-                { value: "night", label: t("themes.night") },
+                { value: "light", label: "Light" },
+                { value: "dark", label: "Dark" },
+                { value: "system", label: "System" },
               ]}
             />
           </div>
           {showSample ? <p className="text-xs text-muted-foreground">{formatMoney(2500000, currency)}</p> : null}
+          {user ? (
+            <Link
+              href="/settings/language"
+              className="mt-1 border-t border-border pt-3 text-compact font-medium text-primary hover:text-primary-hover"
+            >
+              All settings →
+            </Link>
+          ) : null}
         </div>
       </PopoverContent>
     </Popover>

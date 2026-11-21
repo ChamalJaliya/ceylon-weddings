@@ -1,9 +1,10 @@
 import { Suspense } from "react";
-import VendorComparePage from "./compare-client";
+import VendorComparePage from "@/features/vendors/compare/compare-client";
+import { CenteredLoader } from "@ceylonweddings/ui/components/spinner";
 
 export default function VendorCompareRoute() {
   return (
-    <Suspense fallback={<p className="text-sm text-muted-foreground">Loading compare…</p>}>
+    <Suspense fallback={<CenteredLoader label="Loading compare…" />}>
       <VendorComparePage />
     </Suspense>
   );

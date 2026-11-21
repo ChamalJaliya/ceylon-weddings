@@ -1,7 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "@ceylonweddings/database";
-import type { UpsertSeatingPlanBody, User } from "@ceylonweddings/contracts";
-import { seatingSummary } from "@ceylonweddings/contracts";
+import { type UpsertSeatingPlanBody, type User, seatingSummary } from "@ceylonweddings/contracts";
 import { WeddingAccessService } from "./wedding-access.service";
 
 @Injectable()

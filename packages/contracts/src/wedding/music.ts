@@ -1,6 +1,5 @@
 import { z } from "zod";
-import type { EventKind } from "./enums";
-import { eventKindSchema } from "./enums";
+import { type EventKind, eventKindSchema } from "./enums";
 
 export const musicListKindSchema = z.enum(["MUST", "MAYBE", "DO_NOT"]);
 export type MusicListKind = z.infer<typeof musicListKindSchema>;
@@ -22,14 +21,7 @@ export const musicCueKindSchema = z.enum([
 ]);
 export type MusicCueKind = z.infer<typeof musicCueKindSchema>;
 
-export const musicLanguageSchema = z.enum([
-  "SINHALA",
-  "TAMIL",
-  "ENGLISH",
-  "HINDI",
-  "MIXED",
-  "OTHER",
-]);
+export const musicLanguageSchema = z.enum(["SINHALA", "TAMIL", "ENGLISH", "HINDI", "MIXED", "OTHER"]);
 export type MusicLanguage = z.infer<typeof musicLanguageSchema>;
 
 export const musicVibeSchema = z.enum([
@@ -64,11 +56,8 @@ export const createMusicTrackBodySchema = z.object({
   list: musicListKindSchema,
   title: z.string().min(1),
   artist: z.string().nullable().optional(),
-  url: z
-    .string()
-    .nullable()
-    .optional()
-    .transform((value) => (value === "" ? null : value)),
+  // Allow "" from forms; service coerces empty to null (no .transform — OpenAPI-safe).
+  url: z.union([z.string(), z.literal(""), z.null()]).optional(),
   language: musicLanguageSchema.nullable().optional(),
   vibe: musicVibeSchema.nullable().optional(),
   notes: z.string().nullable().optional(),
@@ -428,10 +417,7 @@ export function musicCueTemplatesForEventKind(kind: EventKind): MusicCueTemplate
   }
 }
 
-export function musicPlanReady(input: {
-  mustCount: number;
-  cueCount: number;
-}): boolean {
+export function musicPlanReady(input: { mustCount: number; cueCount: number }): boolean {
   return input.mustCount >= 1 || input.cueCount >= 3;
 }
 
@@ -475,10 +461,7 @@ export function musicTracksByList(tracks: MusicTrack[]): Record<MusicListKind, M
 type CueTimeInput = Pick<MusicCue, "startsAt" | "offsetMinutes" | "sortOrder">;
 type EventTimeInput = { startsAt?: string | null; nekathAt?: string | null };
 
-export function resolveCueStartsAt(
-  cue: CueTimeInput,
-  event: EventTimeInput,
-): string | null {
+export function resolveCueStartsAt(cue: CueTimeInput, event: EventTimeInput): string | null {
   if (cue.startsAt) return cue.startsAt;
   if (cue.offsetMinutes == null) return null;
   const anchorIso = event.nekathAt ?? event.startsAt;

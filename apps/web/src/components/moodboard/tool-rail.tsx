@@ -80,7 +80,7 @@ export function MoodboardToolRail({ children }: { children: ReactNode }) {
     <aside
       ref={railRef}
       className={cn(
-        "absolute z-40 flex w-[3.25rem] flex-col items-center gap-2 rounded-2xl border border-white/10 bg-[#17130f]/95 py-2 shadow-xl backdrop-blur-sm",
+        "absolute z-40 flex w-[3.25rem] flex-col items-center gap-2 rounded-2xl border border-paper/10 bg-studio-ink-deep/95 py-2 shadow-xl backdrop-blur-sm",
         dragging && "cursor-grabbing",
       )}
       style={{ left: pos.x, top: pos.y }}
@@ -92,7 +92,7 @@ export function MoodboardToolRail({ children }: { children: ReactNode }) {
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
-        className="flex h-5 w-8 cursor-grab items-center justify-center rounded-md text-[#fffaf5]/40 hover:bg-white/10 hover:text-[#fffaf5]/80 active:cursor-grabbing"
+        className="flex h-5 w-8 cursor-grab items-center justify-center rounded-md text-studio-paper/40 hover:bg-paper/10 hover:text-studio-paper/80 active:cursor-grabbing"
       >
         <GripHorizontal className="size-3.5" />
       </button>

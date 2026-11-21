@@ -66,13 +66,13 @@ export function ChoiceCard({
         ) : null}
         <div className="grid min-w-0 flex-1 gap-1">
           <div className="flex items-start justify-between gap-2">
-            <span className="font-serif text-lg font-semibold leading-tight tracking-tight">
+            <span className="font-serif text-lg font-medium leading-tight tracking-tight">
               {title}
             </span>
             <div className="flex shrink-0 items-center gap-1">
               <AttributeHelp text={helpText} />
               {typeof count === "number" ? (
-                <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] tabular-nums text-muted-foreground">
+                <span className="rounded-full bg-secondary px-2 py-0.5 text-label tabular-nums text-muted-foreground">
                   {count}
                 </span>
               ) : null}

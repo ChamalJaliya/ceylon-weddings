@@ -1,0 +1,240 @@
+/* Shared motion utilities. Every animation here stops under reduced motion. */
+@keyframes cw-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes cw-pulse-subtle {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.04);
+  }
+}
+
+@keyframes cw-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes cw-border-glow {
+  0%,
+  100% {
+    border-color: var(--color-border);
+  }
+  50% {
+    border-color: var(--color-primary);
+  }
+}
+
+/* Soft continuous pulse — line-art GIF feel (heartbeat / float) */
+@keyframes cw-icon-gif {
+  0%,
+  100% {
+    transform: scale(1) translateY(0);
+  }
+  30% {
+    transform: scale(1.14) translateY(-1px);
+  }
+  50% {
+    transform: scale(0.94) translateY(0);
+  }
+  70% {
+    transform: scale(1.08) translateY(-0.5px);
+  }
+}
+
+@keyframes cw-hero-progress {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes cw-hero-progress-x {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@layer utilities {
+  .cw-page-enter {
+    @apply motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-300;
+  }
+
+  .cw-row-lift {
+    transition:
+      transform var(--motion-base) var(--motion-ease-out),
+      box-shadow var(--motion-base) var(--motion-ease-out);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .cw-row-lift:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-raised);
+    }
+  }
+
+  .cw-shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cw-shimmer::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(
+      to right,
+      transparent,
+      color-mix(in srgb, var(--color-text-heading) 5%, transparent),
+      transparent
+    );
+    animation: cw-shimmer 2s infinite;
+  }
+
+  .cw-pulse-subtle {
+    animation: cw-pulse-subtle 3s ease-in-out infinite;
+  }
+
+  .cw-float {
+    animation: cw-float 4s ease-in-out infinite;
+  }
+
+  .cw-border-glow {
+    animation: cw-border-glow 3s ease-in-out infinite;
+  }
+
+  .cw-icon-gif {
+    transform-origin: center;
+    animation: cw-icon-gif 1.6s ease-in-out infinite;
+    animation-play-state: paused;
+  }
+
+  .cw-icon-gif:hover,
+  .group:hover .cw-icon-gif,
+  .group:focus-visible .cw-icon-gif {
+    animation-play-state: running;
+  }
+
+  /* Monochrome Lottie — ink on light themes, inverted on night */
+  .cw-lottie-mono {
+    filter: brightness(0) saturate(100%);
+  }
+
+  .night .cw-lottie-mono,
+  .text-primary-foreground .cw-lottie-mono {
+    filter: brightness(0) saturate(100%) invert(1);
+  }
+
+  .night .text-primary-foreground .cw-lottie-mono {
+    filter: brightness(0) saturate(100%);
+  }
+
+  .cw-hero-progress {
+    height: 100%;
+    transform-origin: top;
+    animation: cw-hero-progress 7s linear forwards;
+  }
+
+  .cw-hero-progress-x {
+    width: 100%;
+    transform-origin: left;
+    animation: cw-hero-progress-x 7s linear forwards;
+  }
+
+  .cw-hero-progress.is-paused,
+  .cw-hero-progress-x.is-paused {
+    animation-play-state: paused;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [class*="animate-in"],
+  [class*="animate-out"],
+  .cw-shimmer::before,
+  .cw-pulse-subtle,
+  .cw-float,
+  .cw-border-glow,
+  .cw-icon-gif,
+  .cw-hero-progress,
+  .cw-hero-progress-x {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* Home page: infinite marquee + drifting petals. */
+@keyframes cw-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes cw-petal-drift {
+  0% {
+    transform: translate3d(0, -10%, 0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate3d(40px, 110vh, 0) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+@keyframes cw-gradient-pan {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@layer utilities {
+  @media (prefers-reduced-motion: no-preference) {
+    .cw-marquee {
+      animation: cw-marquee 40s linear infinite;
+    }
+    .cw-marquee-reverse {
+      animation: cw-marquee 46s linear infinite reverse;
+    }
+    .cw-marquee-host:hover .cw-marquee,
+    .cw-marquee-host:hover .cw-marquee-reverse {
+      animation-play-state: paused;
+    }
+    .cw-petal {
+      animation: cw-petal-drift linear infinite;
+    }
+    .cw-gradient-pan {
+      background-size: 200% 200%;
+      animation: cw-gradient-pan 12s ease-in-out infinite;
+    }
+  }
+}

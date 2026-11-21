@@ -1,0 +1,83 @@
+/* One block: .cw-toast — Sonner runs unstyled; this file owns the look. */
+@layer components {
+  .cw-toast {
+    position: relative;
+    display: flex;
+    width: var(--width, 356px);
+    align-items: flex-start;
+    gap: var(--space-3);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-card);
+    padding: var(--space-3) var(--space-4);
+    color: var(--color-text-heading);
+    box-shadow: var(--shadow-overlay);
+    font-family: var(--font-family-sans);
+    font-size: var(--text-body-size);
+    line-height: 1.45;
+  }
+
+  .cw-toast [data-icon] {
+    display: flex;
+    flex-shrink: 0;
+    margin-top: 2px;
+    color: var(--color-text-muted);
+  }
+
+  .cw-toast [data-content] {
+    display: grid;
+    min-width: 0;
+    flex: 1;
+    gap: 2px;
+  }
+
+  .cw-toast__title {
+    font-weight: var(--font-weight-medium);
+  }
+
+  .cw-toast__description {
+    color: var(--color-text-muted);
+    font-size: var(--text-compact-size);
+  }
+
+  .cw-toast__close {
+    position: absolute;
+    top: -6px;
+    left: -6px;
+    display: grid;
+    width: 20px;
+    height: 20px;
+    place-items: center;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-full);
+    background: var(--color-bg-card);
+    color: var(--color-text-muted);
+    opacity: 0;
+    transition: opacity var(--motion-fast) var(--motion-ease-out);
+  }
+
+  .cw-toast:hover .cw-toast__close,
+  .cw-toast__close:focus-visible {
+    opacity: 1;
+  }
+
+  .cw-toast--success [data-icon] {
+    color: var(--color-success);
+  }
+
+  .cw-toast--error {
+    border-color: var(--status-danger-border);
+  }
+
+  .cw-toast--error [data-icon] {
+    color: var(--color-danger);
+  }
+
+  .cw-toast--warning [data-icon] {
+    color: var(--color-warning);
+  }
+
+  .cw-toast--info [data-icon] {
+    color: var(--color-info);
+  }
+}

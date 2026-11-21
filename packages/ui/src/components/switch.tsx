@@ -12,9 +12,9 @@ export const Switch = React.forwardRef<
     ref={ref}
     data-slot="switch"
     className={cn(
-      "peer inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border border-transparent bg-muted p-0.5 shadow-[inset_0_1px_2px_color-mix(in_oklch,var(--foreground)_8%,transparent)] transition-colors duration-200",
+      "peer inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border border-transparent bg-muted p-0.5 shadow-field transition-colors duration-200",
       "hover:bg-muted/80",
-      "focus-visible:outline-none focus-visible:shadow-[0_0_0_4px_color-mix(in_oklch,var(--ring)_18%,transparent)]",
+      "focus-visible:outline-none focus-visible:shadow-focus",
       "disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=checked]:shadow-none",
       className,
     )}

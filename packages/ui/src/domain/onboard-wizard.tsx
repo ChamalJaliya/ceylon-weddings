@@ -128,9 +128,9 @@ export function OnboardWizard({
     <div className="grid gap-6 rounded-[1.5rem] border border-border/70 bg-card/70 p-5 shadow-sm md:p-7">
       <header className="grid gap-1.5">
         {display.stepLabel ? (
-          <p className="text-[11px] font-medium tracking-[0.2em] text-primary/80 uppercase">{display.stepLabel}</p>
+          <p className="text-label font-medium tracking-eyebrow text-primary/80 uppercase">{display.stepLabel}</p>
         ) : null}
-        <h1 className="font-serif text-3xl font-semibold tracking-tight sm:text-[2rem] sm:leading-tight">
+        <h1 className="font-serif text-3xl font-medium tracking-tight sm:text-h1 sm:leading-tight">
           {display.title}
         </h1>
         {display.description ? (
@@ -184,9 +184,9 @@ export function OnboardWizard({
                 className="pointer-events-none absolute -right-16 -bottom-20 size-52 rounded-full border border-primary-foreground/10"
               />
               <div className="flex h-full min-h-[12rem] flex-col items-center justify-center gap-2 px-6 text-center">
-                <p className="font-serif text-3xl font-semibold tracking-tight">Ceylon</p>
+                <p className="font-serif text-3xl font-medium tracking-tight">Ceylon</p>
                 {incoming.stepLabel ? (
-                  <p className="text-[11px] font-medium tracking-[0.22em] uppercase opacity-80">
+                  <p className="text-label font-medium tracking-eyebrow uppercase opacity-80">
                     {incoming.stepLabel}
                   </p>
                 ) : null}

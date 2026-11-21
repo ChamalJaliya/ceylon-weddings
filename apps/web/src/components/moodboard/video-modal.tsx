@@ -63,15 +63,15 @@ export function MoodboardVideoModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[min(34rem,calc(100vw-1.5rem))] gap-5 border-[#e8ddd0] bg-[#fffaf5] text-[#1f1a16] sm:max-w-lg">
+      <DialogContent className="w-[min(34rem,calc(100vw-1.5rem))] gap-5 border-studio-line bg-studio-paper text-studio-ink sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 font-display text-2xl tracking-tight">
-            <span className="inline-flex size-9 items-center justify-center rounded-full bg-[#b4532a]/12 text-[#b4532a]">
+            <span className="inline-flex size-9 items-center justify-center rounded-full bg-studio-accent/12 text-studio-accent">
               <Film className="size-4" />
             </span>
             Add video
           </DialogTitle>
-          <DialogDescription className="text-[15px] leading-relaxed">
+          <DialogDescription className="text-h4 leading-relaxed">
             Paste a YouTube or Vimeo link. Preview it here, then place it on the board.
           </DialogDescription>
         </DialogHeader>
@@ -79,12 +79,12 @@ export function MoodboardVideoModal({
         <div className="space-y-2">
           <Label htmlFor="moodboard-video-url">Video URL</Label>
           <div className="relative">
-            <Link2 className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-[#5c4a3a]/55" />
+            <Link2 className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-studio-text/55" />
             <Input
               id="moodboard-video-url"
               value={url}
               placeholder="https://www.youtube.com/watch?v=…"
-              className="h-11 border-[#e8ddd0] bg-white pl-10 pr-24"
+              className="h-11 border-studio-line bg-paper pl-10 pr-24"
               autoFocus
               onChange={(e) => {
                 setUrl(e.target.value);
@@ -101,10 +101,10 @@ export function MoodboardVideoModal({
             {provider ? (
               <span
                 className={cn(
-                  "pointer-events-none absolute top-1/2 right-2 inline-flex -translate-y-1/2 items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium",
+                  "pointer-events-none absolute top-1/2 right-2 inline-flex -translate-y-1/2 items-center gap-1 rounded-full px-2 py-0.5 text-label font-medium",
                   provider === "YouTube"
-                    ? "bg-red-100 text-red-700"
-                    : "bg-sky-100 text-sky-800",
+                    ? "bg-danger-subtle text-danger-fg"
+                    : "bg-info-subtle text-info-fg",
                 )}
               >
                 <Film className="size-3" />
@@ -115,13 +115,13 @@ export function MoodboardVideoModal({
           {invalid ? (
             <p className="text-xs text-destructive">Use a YouTube or Vimeo URL.</p>
           ) : (
-            <p className="text-xs text-[#5c4a3a]/70">
+            <p className="text-xs text-studio-text/70">
               Supports youtube.com, youtu.be, and vimeo.com
             </p>
           )}
         </div>
 
-        <div className="overflow-hidden rounded-xl border border-[#e8ddd0] bg-[#1f1a16] shadow-[inset_0_1px_0_rgba(255,250,245,0.06)]">
+        <div className="overflow-hidden rounded-xl border border-studio-line bg-studio-ink shadow-inset-highlight">
           {embed ? (
             <div className="aspect-video w-full">
               <iframe
@@ -134,12 +134,12 @@ export function MoodboardVideoModal({
             </div>
           ) : (
             <div className="flex aspect-video flex-col items-center justify-center gap-3 px-6 text-center">
-              <div className="flex size-14 items-center justify-center rounded-full bg-white/8">
-                <Film className="size-6 text-[#fffaf5]/45" />
+              <div className="flex size-14 items-center justify-center rounded-full bg-paper/8">
+                <Film className="size-6 text-studio-paper/45" />
               </div>
               <div className="space-y-1">
-                <p className="text-sm font-medium text-[#fffaf5]/80">Preview</p>
-                <p className="max-w-[16rem] text-xs leading-relaxed text-[#fffaf5]/45">
+                <p className="text-sm font-medium text-studio-paper/80">Preview</p>
+                <p className="max-w-[16rem] text-xs leading-relaxed text-studio-paper/45">
                   Drop in a link and the embed will appear before you add it to the board.
                 </p>
               </div>

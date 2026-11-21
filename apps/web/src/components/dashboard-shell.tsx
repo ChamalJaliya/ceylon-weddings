@@ -2,9 +2,10 @@
 
 import { useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
-import { usePreferenceStore } from "@ceylonweddings/web";
+import { useMessagingStore, usePreferenceStore } from "@ceylonweddings/web";
+import { useMediaQuery } from "@ceylonweddings/ui/hooks/use-media-query";
+import { DENSITY_MEDIA_QUERIES } from "@ceylonweddings/ui/responsive-tiers";
 import {
-  Award,
   Briefcase,
   CalendarClock,
   CalendarDays,
@@ -155,7 +156,6 @@ const adminGroups: NavGroup[] = [
 
 function DashboardShellInner({
   groups,
-  kicker,
   couple,
   crumb,
   messages = false,
@@ -163,7 +163,6 @@ function DashboardShellInner({
   children,
 }: {
   groups: NavGroup[];
-  kicker: string;
   couple: { names: string; meta: string; initials: [string, string] };
   crumb?: string;
   messages?: boolean;
@@ -172,8 +171,13 @@ function DashboardShellInner({
 }) {
   const t = useTranslations();
   const pathname = usePathname();
-  const collapsed = usePreferenceStore((s) => s.sidebarCollapsed);
+  const storedCollapsed = usePreferenceStore((s) => s.sidebarCollapsed);
+  const collapsedChosen = usePreferenceStore((s) => s.sidebarCollapsedChosen);
   const setSidebarCollapsed = usePreferenceStore((s) => s.setSidebarCollapsed);
+  const unreadMessages = useMessagingStore((s) => s.unreadTotal);
+  // Kloqra: compact laptops start collapsed until the user picks a width themselves.
+  const compact = useMediaQuery(DENSITY_MEDIA_QUERIES.compact);
+  const collapsed = collapsedChosen ? storedCollapsed : compact;
   const [mobileOpen, setMobileOpen] = useState(false);
   const { toggle } = useCommandPalette();
 
@@ -185,12 +189,10 @@ function DashboardShellInner({
       mobileOpen={mobileOpen}
       onMobileOpenChange={setMobileOpen}
       mobileTitle={t("app.name")}
-      brand={(mode) => (
-        <AppShellBrand monogram="CW" name={t("app.name")} kicker={kicker} collapsed={mode} />
-      )}
+      brand={(mode) => <AppShellBrand name={t("app.name")} collapsed={mode} />}
       nav={(mode) =>
-        groups.map((group) => (
-          <AppShellNavGroup key={group.labelKey} label={t(group.labelKey)} collapsed={mode}>
+        groups.map((group, groupIndex) => (
+          <AppShellNavGroup key={group.labelKey} label={t(group.labelKey)} collapsed={mode} first={groupIndex === 0}>
             {group.items.map((item) => {
               const label = t(`nav.${item.key}`);
               const isActive = isNavActive(pathname, item.href);
@@ -201,6 +203,7 @@ function DashboardShellInner({
                   active={isActive}
                   collapsed={mode}
                   label={label}
+                  badge={item.key === "messages" ? unreadMessages : undefined}
                 >
                   <Link href={item.href} onClick={() => setMobileOpen(false)}>
                     <Icon icon={item.icon} size="sm" />
@@ -213,24 +216,14 @@ function DashboardShellInner({
         ))
       }
       railFooter={(mode) => (
-        <AppShellCouple
-          names={couple.names}
-          meta={couple.meta}
-          initials={couple.initials}
-          collapsed={mode}
-        />
+        <AppShellCouple names={couple.names} meta={couple.meta} initials={couple.initials} collapsed={mode} />
       )}
       header={
         <AppHeader
           tone="glass"
           crumb={crumb}
           leading={
-            <IconButton
-              type="button"
-              className="lg:hidden"
-              aria-label="Open menu"
-              onClick={() => setMobileOpen(true)}
-            >
+            <IconButton type="button" className="lg:hidden" aria-label="Open menu" onClick={() => setMobileOpen(true)}>
               <Icon icon={Menu} size="sm" />
             </IconButton>
           }
@@ -272,7 +265,6 @@ function DashboardShellInner({
 
 function DashboardShell(props: {
   groups: NavGroup[];
-  kicker: string;
   couple: { names: string; meta: string; initials: [string, string] };
   crumb?: string;
   messages?: boolean;
@@ -308,7 +300,6 @@ export function PlanningShell({ children }: { children: ReactNode }) {
       audience="planning"
       searchPlaceholder={t("prefs.searchPlanning")}
       groups={groups}
-      kicker="Ceylon"
       messages
       crumb={data?.city ? `${data.city}` : t("hub.kicker")}
       couple={{
@@ -329,7 +320,6 @@ export function ProShell({ children }: { children: ReactNode }) {
       audience="pro"
       searchPlaceholder={t("prefs.searchPro")}
       groups={proGroups}
-      kicker="Vendor"
       messages
       crumb={t("nav.storefront")}
       couple={{ names: t("app.name"), meta: "Pro", initials: ["C", "W"] }}
@@ -346,7 +336,6 @@ export function AdminShell({ children }: { children: ReactNode }) {
       audience="admin"
       searchPlaceholder={t("prefs.searchAdmin")}
       groups={adminGroups}
-      kicker="Admin"
       messages
       crumb={t("nav.dashboard")}
       couple={{ names: "Ceylon Ops", meta: t("chrome.footerMeta"), initials: ["C", "W"] }}
@@ -355,4 +344,3 @@ export function AdminShell({ children }: { children: ReactNode }) {
     </DashboardShell>
   );
 }
-

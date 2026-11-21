@@ -5,12 +5,26 @@ import {
   ServiceUnavailableException,
   UnauthorizedException,
 } from "@nestjs/common";
+import { NotificationsService } from "../notifications/notifications.service";
 import { JwtService } from "@nestjs/jwt";
 import { compare, hash } from "bcrypt";
 import { OAuth2Client } from "google-auth-library";
 import { createHash, randomBytes } from "node:crypto";
 import type { Request, Response } from "express";
-import { COOKIES, type GoogleAuthBody, type LoginBody, type RegisterBody, type User } from "@ceylonweddings/contracts";
+import {
+  AUTH_TOTP_INVALID,
+  AUTH_TOTP_REQUIRED,
+  COOKIES,
+  parseUserPreferences,
+  type AccountSecurity,
+  type ChangePasswordBody,
+  type GoogleAuthBody,
+  type LoginBody,
+  type RegisterBody,
+  type UpdatePreferencesBody,
+  type UpdateProfileBody,
+  type User,
+} from "@ceylonweddings/contracts";
 import { PrismaService } from "@ceylonweddings/database";
 import { loadApiEnv } from "@ceylonweddings/env";
 import { authCookieOptions } from "../../common/cookies";
@@ -24,6 +38,7 @@ export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   async register(body: RegisterBody, response: Response) {
@@ -84,9 +99,30 @@ export class AuthService {
     if (user.status === "SUSPENDED") {
       throw new UnauthorizedException("Account suspended");
     }
+    this.assertSecondFactor(user, body.totp);
 
     await this.issueCookies(user.id, response);
     return { user: this.toUser(user) };
+  }
+
+  /**
+   * Once 2FA is on, every sign-in path (password and Google) needs the code.
+   * The form reads `reason` to show the code step instead of a generic error.
+   */
+  private assertSecondFactor(user: { totpEnabled: boolean; totpSecret: string | null }, code: string | undefined) {
+    if (!user.totpEnabled || !user.totpSecret) return;
+    if (!code) {
+      throw new UnauthorizedException({
+        message: "Enter the 6-digit code from your authenticator app.",
+        reason: AUTH_TOTP_REQUIRED,
+      });
+    }
+    if (!verifyTotpCode(user.totpSecret, code)) {
+      throw new UnauthorizedException({
+        message: "That code didn't match. Try the newest one.",
+        reason: AUTH_TOTP_INVALID,
+      });
+    }
   }
 
   async google(body: GoogleAuthBody, response: Response) {
@@ -148,8 +184,32 @@ export class AuthService {
     if (user.status === "SUSPENDED") {
       throw new UnauthorizedException("Account suspended");
     }
+    this.assertSecondFactor(user, body.totp);
 
     await this.issueCookies(user.id, response);
+    return { user: this.toUser(user) };
+  }
+
+  /**
+   * Rotate the refresh session: the presented refresh token is single-use.
+   * Deleting by hash first makes concurrent reuse lose (count 0 → 401), so a
+   * stolen-and-replayed token can't mint a second session.
+   */
+  async refresh(request: Request, response: Response) {
+    const refresh = request.cookies?.[COOKIES.refresh] as string | undefined;
+    if (!refresh) {
+      throw new UnauthorizedException("Missing refresh cookie");
+    }
+    const refreshHash = createHash("sha256").update(refresh).digest("hex");
+    const session = await this.prisma.session.findFirst({ where: { refreshTokenHash: refreshHash } });
+    const { count } = await this.prisma.session.deleteMany({ where: { refreshTokenHash: refreshHash } });
+    if (!session || count === 0 || session.expiresAt.getTime() <= Date.now()) {
+      this.clearCookies(response);
+      throw new UnauthorizedException("Session expired");
+    }
+
+    await this.issueCookies(session.userId, response);
+    const user = await this.prisma.user.findUniqueOrThrow({ where: { id: session.userId } });
     return { user: this.toUser(user) };
   }
 
@@ -172,6 +232,7 @@ export class AuthService {
     locale: string;
     currency: string;
     createdAt: Date;
+    preferences: unknown;
   }): User {
     return {
       id: user.id,
@@ -182,6 +243,7 @@ export class AuthService {
       locale: user.locale as User["locale"],
       currency: user.currency as User["currency"],
       createdAt: user.createdAt.toISOString(),
+      preferences: parseUserPreferences(user.preferences),
     };
   }
 
@@ -210,15 +272,120 @@ export class AuthService {
     response.cookie(COOKIES.refresh, refresh, authCookieOptions(env, 1000 * 60 * 60 * 24 * 30));
   }
 
+  // ── Account settings ────────────────────────────────────────────────────
+
+  async updateProfile(user: User, body: UpdateProfileBody) {
+    const updated = await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        ...(body.name !== undefined ? { name: body.name } : {}),
+        ...(body.phone !== undefined ? { phone: body.phone || null } : {}),
+        ...(body.locale !== undefined ? { locale: body.locale } : {}),
+        ...(body.currency !== undefined ? { currency: body.currency } : {}),
+      },
+    });
+    return this.toUser(updated);
+  }
+
+  /** Merge appearance / notification choices into User.preferences (deep for notifications). */
+  async updatePreferences(user: User, body: UpdatePreferencesBody) {
+    const dbUser = await this.prisma.user.findUniqueOrThrow({ where: { id: user.id } });
+    const current = parseUserPreferences(dbUser.preferences);
+    const notifications = { ...(current.notifications ?? {}) };
+    for (const [key, channels] of Object.entries(body.notifications ?? {})) {
+      const k = key as keyof typeof notifications;
+      notifications[k] = { ...(notifications[k] ?? {}), ...channels };
+    }
+    const next = {
+      ...current,
+      ...(body.themeMode ? { themeMode: body.themeMode } : {}),
+      ...(body.palette ? { palette: body.palette } : {}),
+      ...(body.notifications ? { notifications } : {}),
+      // Each dashboard kind is replaced whole; kinds not in the body keep their layout.
+      ...(body.dashboardLayouts
+        ? { dashboardLayouts: { ...(current.dashboardLayouts ?? {}), ...body.dashboardLayouts } }
+        : {}),
+    };
+    const updated = await this.prisma.user.update({ where: { id: user.id }, data: { preferences: next } });
+    return this.toUser(updated);
+  }
+
+  /** Changing the password signs out every other device. */
+  async changePassword(user: User, body: ChangePasswordBody, request: Request) {
+    const dbUser = await this.prisma.user.findUniqueOrThrow({ where: { id: user.id } });
+    const hasPassword = dbUser.passwordHash.startsWith("$2");
+    if (!hasPassword || !(await compare(body.currentPassword, dbUser.passwordHash))) {
+      throw new BadRequestException("Current password is incorrect");
+    }
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { passwordHash: await hash(body.newPassword, 12) },
+    });
+    const { count } = await this.revokeOtherSessions(user, request);
+    await this.notifications.notify({
+      userId: user.id,
+      templateId: "account.passwordChanged",
+      context: { signedOut: count },
+    });
+    return { ok: true, signedOut: count };
+  }
+
+  async security(user: User, request: Request): Promise<AccountSecurity> {
+    const dbUser = await this.prisma.user.findUniqueOrThrow({ where: { id: user.id } });
+    const currentHash = this.currentRefreshHash(request);
+    const sessions = await this.prisma.session.findMany({
+      where: { userId: user.id, expiresAt: { gt: new Date() } },
+      orderBy: { createdAt: "desc" },
+    });
+    return {
+      twoFactorEnabled: dbUser.totpEnabled,
+      hasPassword: dbUser.passwordHash.startsWith("$2"),
+      sessions: sessions.map((row) => ({
+        id: row.id,
+        createdAt: row.createdAt.toISOString(),
+        expiresAt: row.expiresAt.toISOString(),
+        current: row.refreshTokenHash === currentHash,
+      })),
+    };
+  }
+
+  async revokeSession(user: User, sessionId: string, request: Request) {
+    const currentHash = this.currentRefreshHash(request);
+    const { count } = await this.prisma.session.deleteMany({
+      where: { id: sessionId, userId: user.id, ...(currentHash ? { NOT: { refreshTokenHash: currentHash } } : {}) },
+    });
+    if (count === 0) {
+      throw new BadRequestException("That session is already signed out, or it is this device.");
+    }
+    return { ok: true };
+  }
+
+  async revokeOtherSessions(user: User, request: Request) {
+    const currentHash = this.currentRefreshHash(request);
+    const { count } = await this.prisma.session.deleteMany({
+      where: { userId: user.id, ...(currentHash ? { NOT: { refreshTokenHash: currentHash } } : {}) },
+    });
+    return { ok: true, count };
+  }
+
+  private currentRefreshHash(request: Request) {
+    const refresh = request.cookies?.[COOKIES.refresh] as string | undefined;
+    return refresh ? createHash("sha256").update(refresh).digest("hex") : null;
+  }
+
   async generate2Fa(user: User) {
     const dbUser = await this.prisma.user.findUniqueOrThrow({ where: { id: user.id } });
+    // Regenerating would silently replace a working secret and lock the user out.
+    if (dbUser.totpEnabled) {
+      throw new BadRequestException("Two-factor authentication is already on. Turn it off first to reset it.");
+    }
     const secret = generateTotpSecret(20);
     await this.prisma.user.update({
       where: { id: user.id },
       data: { totpSecret: secret },
     });
     const otpauthUri = getTotpUri(dbUser.email, secret);
-    return { secret, otpauthUri, enabled: dbUser.totpEnabled };
+    return { secret, otpauthUri };
   }
 
   async enable2Fa(user: User, token: string) {
@@ -234,6 +401,7 @@ export class AuthService {
       where: { id: user.id },
       data: { totpEnabled: true },
     });
+    await this.notifications.notify({ userId: user.id, templateId: "account.twoFactorEnabled", context: {} });
     return { ok: true, message: "Two-factor authentication enabled successfully" };
   }
 
@@ -250,6 +418,7 @@ export class AuthService {
       where: { id: user.id },
       data: { totpEnabled: false, totpSecret: null },
     });
+    await this.notifications.notify({ userId: user.id, templateId: "account.twoFactorDisabled", context: {} });
     return { ok: true, message: "Two-factor authentication disabled successfully" };
   }
 
@@ -258,4 +427,3 @@ export class AuthService {
     response.clearCookie(COOKIES.refresh, { path: "/" });
   }
 }
-

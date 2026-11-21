@@ -1,11 +1,11 @@
-import { HowItWorksContent } from "./how-it-works-content";
+import { HowItWorksContent } from "@/features/how-it-works/how-it-works-content";
 
 export const metadata = {
   title: "How It Works | Ceylon Weddings",
-  description:
-    "Everything you need to plan a Sri Lankan wedding — or grow your wedding business — in one place.",
+  description: "Everything you need to plan a Sri Lankan wedding — or grow your wedding business — in one place.",
 };
 
-export default function HowItWorksPage() {
-  return <HowItWorksContent />;
+export default async function HowItWorksPage({ searchParams }: { searchParams: Promise<{ for?: string }> }) {
+  const params = await searchParams;
+  return <HowItWorksContent initialAudience={params.for === "vendors" ? "vendors" : "couples"} />;
 }

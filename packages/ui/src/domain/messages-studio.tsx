@@ -305,7 +305,7 @@ export function MessagesStudio({
             mobileThread ? "hidden md:block" : "block",
           )}
         >
-          <div className="border-b border-border/50 px-4 py-3 text-xs font-medium tracking-[0.16em] text-muted-foreground uppercase">
+          <div className="border-b border-border/50 px-4 py-3 text-xs font-medium tracking-spaced text-muted-foreground uppercase">
             Inbox
           </div>
           <div className="max-h-[68vh] overflow-auto">
@@ -329,12 +329,12 @@ export function MessagesStudio({
                     <div className="flex items-center justify-between gap-2">
                       <p className="truncate text-sm font-medium">{peerLabel(item, labels.support)}</p>
                       {item.unreadCount > 0 ? (
-                        <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">
+                        <span className="rounded-full bg-primary px-2 py-0.5 text-label font-medium text-primary-foreground">
                           {item.unreadCount}
                         </span>
                       ) : null}
                     </div>
-                    <p className="text-[11px] text-muted-foreground">{typeLabel(item.type)}</p>
+                    <p className="text-label text-muted-foreground">{typeLabel(item.type)}</p>
                     <p className="line-clamp-2 text-xs text-muted-foreground">
                       {item.lastMessagePreview ?? "—"}
                     </p>
@@ -400,7 +400,7 @@ export function MessagesStudio({
                               ))}
                             </>
                           )}
-                          <p className={cn("mt-1 text-[10px]", mine ? "text-primary-foreground/70" : "text-muted-foreground")}>
+                          <p className={cn("mt-1 text-label", mine ? "text-primary-foreground/70" : "text-muted-foreground")}>
                             {new Date(message.createdAt).toLocaleString()}
                           </p>
                         </div>

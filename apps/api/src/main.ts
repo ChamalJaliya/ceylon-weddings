@@ -11,7 +11,8 @@ import { RedisIoAdapter } from "./realtime.adapter";
 
 async function bootstrap() {
   const env = loadApiEnv();
-  const app = await NestFactory.create(AppModule);
+  // rawBody required for Stripe webhook signature verification
+  const app = await NestFactory.create(AppModule, { rawBody: true });
 
   app.use(
     helmet({
@@ -35,7 +36,7 @@ async function bootstrap() {
         },
       },
       crossOriginEmbedderPolicy: false,
-    })
+    }),
   );
   app.use(cookieParser());
   app.enableCors({

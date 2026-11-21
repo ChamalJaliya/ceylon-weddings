@@ -4,21 +4,21 @@ import {
   adminActivatePaidBodySchema,
   adminGrantCompedBodySchema,
   adminOverrideTrialBodySchema,
+  cancelSubscriptionBodySchema,
+  changeSubscriptionPlanBodySchema,
+  createCheckoutBodySchema,
+  upsertSubscriptionPlanBodySchema,
 } from "@ceylonweddings/contracts";
 
 export class AdminOverrideTrialDto extends createZodDto(adminOverrideTrialBodySchema) {}
 export class AdminGrantCompedDto extends createZodDto(adminGrantCompedBodySchema) {}
 export class AdminActivatePaidDto extends createZodDto(adminActivatePaidBodySchema) {}
 
-export class CreateCheckoutDto extends createZodDto(
-  z.object({
-    vendorId: z.string(),
-    planId: z.string(),
-    interval: z.enum(["MONTHLY", "ANNUAL"]),
-    returnUrl: z.string().optional(),
-    cancelUrl: z.string().optional(),
-  })
-) {}
+export class CreateCheckoutDto extends createZodDto(createCheckoutBodySchema) {}
+
+export class CancelSubscriptionDto extends createZodDto(cancelSubscriptionBodySchema) {}
+export class ChangeSubscriptionPlanDto extends createZodDto(changeSubscriptionPlanBodySchema) {}
+export class UpsertSubscriptionPlanDto extends createZodDto(upsertSubscriptionPlanBodySchema) {}
 
 export class PayHereWebhookDto extends createZodDto(
   z.object({
@@ -33,6 +33,5 @@ export class PayHereWebhookDto extends createZodDto(
     custom_2: z.string().optional(),
     method: z.string().optional(),
     status_message: z.string().optional(),
-  })
+  }),
 ) {}
-

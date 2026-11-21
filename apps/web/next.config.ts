@@ -16,6 +16,7 @@ if (!s3Hostname && s3Base) {
 
 const remotePatterns: Array<{ protocol: "https"; hostname: string }> = [
   { protocol: "https", hostname: "images.unsplash.com" },
+  { protocol: "https", hostname: "plus.unsplash.com" },
   { protocol: "https", hostname: "i.ytimg.com" },
 ];
 if (s3Hostname) {
@@ -23,12 +24,7 @@ if (s3Hostname) {
 }
 
 const config: NextConfig = {
-  transpilePackages: [
-    "@ceylonweddings/ui",
-    "@ceylonweddings/web",
-    "@ceylonweddings/contracts",
-    "@ceylonweddings/i18n",
-  ],
+  transpilePackages: ["@ceylonweddings/ui", "@ceylonweddings/web", "@ceylonweddings/contracts", "@ceylonweddings/i18n"],
   compress: true,
   poweredByHeader: false,
   reactStrictMode: true,
@@ -40,4 +36,3 @@ const config: NextConfig = {
 };
 
 export default withNextIntl(config);
-

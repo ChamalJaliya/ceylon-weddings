@@ -1,11 +1,5 @@
 import { z } from "zod";
-import {
-  eventKindSchema,
-  guestSideSchema,
-  inviteChannelSchema,
-  mealSchema,
-  rsvpStatusSchema,
-} from "./enums";
+import { eventKindSchema, guestSideSchema, inviteChannelSchema, mealSchema, rsvpStatusSchema } from "./enums";
 
 export const eventInviteSchema = z.object({
   eventId: z.string(),
@@ -72,13 +66,8 @@ export const guestImportRowSchema = z.object({
   meal: mealSchema.nullable().optional(),
   channel: inviteChannelSchema.default("WHATSAPP"),
   phone: z.string().nullable().optional(),
-  email: z
-    .string()
-    .email()
-    .optional()
-    .nullable()
-    .or(z.literal(""))
-    .transform((v) => (v === "" ? null : v)),
+  // Allow "" from CSV imports; API coerces empty to null/undefined (no .transform — OpenAPI-safe).
+  email: z.union([z.string().email(), z.literal(""), z.null()]).optional(),
   notes: z.string().nullable().optional(),
   eventNames: z.array(z.string()).optional(),
   eventKinds: z.array(eventKindSchema).optional(),

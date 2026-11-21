@@ -2,7 +2,6 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { cn } from "../lib/utils";
 import { motion, useReducedMotion, Stagger, StaggerItem, AnimatePresence } from "./motion";
 
 const SLIDE_MS = 7000;
@@ -174,7 +173,7 @@ function HeroControls({
             <ChevronRight className="size-4" strokeWidth={1.5} />
           </button>
         </div>
-        <p className="font-serif text-[11px] tracking-[0.2em] text-hero-foreground/80">
+        <p className="font-serif text-label tracking-eyebrow text-hero-foreground/80">
           {String(index + 1).padStart(2, "0")}
           <span className="mx-1 opacity-50">/</span>
           {String(count).padStart(2, "0")}
@@ -202,6 +201,11 @@ function HeroControls({
   );
 }
 
+/**
+ * Couple identity header.
+ * - `editorial`: full-bleed guest / marketing hero
+ * - `hub`: calm planning dashboard intro — names first, cover as a media panel (not text-on-photo)
+ */
 export function CoupleHero({
   imageSrc,
   images,
@@ -215,6 +219,7 @@ export function CoupleHero({
   chips,
   portraits,
   actions,
+  imageAction,
   footer,
   children,
   density = "editorial",
@@ -231,6 +236,8 @@ export function CoupleHero({
   chips?: string[];
   portraits?: { src: string; alt: string }[];
   actions?: ReactNode;
+  /** Hub-only affordance over the cover (e.g. “Change cover”). */
+  imageAction?: ReactNode;
   footer?: ReactNode;
   children?: ReactNode;
   density?: "editorial" | "hub";
@@ -241,14 +248,91 @@ export function CoupleHero({
   const stageImages = hub ? [imageSrc] : slides;
   const carousel = useHeroCarousel(stageImages, reduce);
 
+  if (hub) {
+    const metaBits = [date, place, days ? `${days} ${daysLabel ?? "days"}`.trim() : null, ...(chips ?? [])].filter(
+      Boolean,
+    ) as string[];
+
+    return (
+      <section
+        data-slot="couple-hero"
+        data-density="hub"
+        className="relative overflow-hidden rounded-[1.75rem] bg-[linear-gradient(135deg,color-mix(in_oklab,var(--card)_92%,var(--primary)_8%),var(--card)_42%,color-mix(in_oklab,var(--muted)_55%,var(--card)_45%))]"
+      >
+        <div className="grid lg:grid-cols-[minmax(0,1.05fr)_minmax(15rem,0.95fr)]">
+          <div className="relative z-10 flex flex-col justify-between gap-10 px-7 py-9 sm:px-9 sm:py-11">
+            <Stagger className="max-w-xl" stagger={0.05}>
+              {kicker ? (
+                <StaggerItem>
+                  <p className="text-label tracking-ornate text-muted-foreground uppercase">{kicker}</p>
+                </StaggerItem>
+              ) : null}
+              <StaggerItem>
+                <h1 className="mt-3 font-serif text-h1 leading-none font-medium tracking-tight text-foreground sm:text-display lg:text-display">
+                  {names}
+                </h1>
+              </StaggerItem>
+              <StaggerItem>
+                <div className="mt-5 h-px w-14 bg-primary/80" />
+              </StaggerItem>
+              {metaBits.length ? (
+                <StaggerItem>
+                  <p
+                    className="mt-5 max-w-md text-sm leading-relaxed text-muted-foreground"
+                    aria-live={days ? "polite" : undefined}
+                  >
+                    {metaBits.map((bit, index) => (
+                      <span key={`${bit}-${index}`}>
+                        {index > 0 ? <span className="mx-2 text-primary/70">·</span> : null}
+                        {bit}
+                      </span>
+                    ))}
+                  </p>
+                </StaggerItem>
+              ) : null}
+            </Stagger>
+
+            {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
+          </div>
+
+          <div className="relative min-h-52 overflow-hidden sm:min-h-64 lg:min-h-[22rem]">
+            <motion.img
+              src={imageSrc}
+              alt={imageAlt}
+              className="absolute inset-0 size-full object-cover"
+              initial={reduce ? false : { scale: 1.06, opacity: 0.85 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-ink/35 via-transparent to-transparent lg:bg-gradient-to-l lg:from-transparent lg:via-ink/5 lg:to-[color-mix(in_oklab,var(--card)_55%,transparent)]" />
+            {imageAction ? <div className="absolute top-4 right-4 z-10">{imageAction}</div> : null}
+            {portraits?.length ? (
+              <div className="absolute right-4 bottom-4 flex">
+                {portraits.map((portrait, index) => (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    key={portrait.src}
+                    src={portrait.src}
+                    alt={portrait.alt}
+                    className="size-11 rounded-full border-2 border-background object-cover shadow-sm"
+                    style={{ marginLeft: index === 0 ? 0 : -10 }}
+                  />
+                ))}
+              </div>
+            ) : null}
+          </div>
+        </div>
+        {footer ? <div className="border-t border-border/40 px-7 py-4 sm:px-9">{footer}</div> : null}
+        {children ? <div className="border-t border-border/40 px-7 py-4 sm:px-9">{children}</div> : null}
+      </section>
+    );
+  }
+
   return (
     <section
       data-slot="couple-hero"
       data-density={density}
-      className={cn(
-        "relative isolate overflow-hidden",
-        hub ? "rounded-3xl" : "min-h-[calc(100dvh-var(--cw-frame-bottom,0px))]",
-      )}
+      className="relative isolate min-h-[calc(100dvh-var(--cw-frame-bottom,0px))] overflow-hidden"
     >
       <HeroImages
         images={stageImages}
@@ -258,42 +342,19 @@ export function CoupleHero({
         direction={carousel.direction}
         current={carousel.current}
       />
-      {hub ? (
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-black/40" />
-      ) : (
-        <>
-          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/35 to-black/15" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-black/35" />
-        </>
-      )}
-      <div
-        className={
-          hub
-            ? "relative flex min-h-72 flex-col justify-end px-6 py-10 sm:min-h-80 sm:px-8"
-            : "relative flex min-h-[calc(100dvh-var(--cw-frame-bottom,0px))] flex-col"
-        }
-      >
-        <div
-          className={
-            hub
-              ? "flex flex-wrap items-end justify-between gap-8"
-              : "flex flex-1 flex-col justify-center px-8 pt-28 pb-10 sm:px-12 lg:px-16 lg:pr-28"
-          }
-        >
-          <div className={cn("flex flex-wrap items-end justify-between gap-8", !hub && "w-full")}>
-            <Stagger className={hub ? "max-w-2xl" : "max-w-3xl"} stagger={0.08}>
+      <div className="absolute inset-0 bg-gradient-to-r from-ink/70 via-ink/35 to-ink/15" />
+      <div className="absolute inset-0 bg-gradient-to-t from-ink/75 via-ink/10 to-ink/35" />
+      <div className="relative flex min-h-[calc(100dvh-var(--cw-frame-bottom,0px))] flex-col">
+        <div className="flex flex-1 flex-col justify-center px-8 pt-28 pb-10 sm:px-12 lg:px-16 lg:pr-28">
+          <div className="flex w-full flex-wrap items-end justify-between gap-8">
+            <Stagger className="max-w-3xl" stagger={0.08}>
               {kicker ? (
                 <StaggerItem>
-                  <p className="text-[11px] tracking-[0.28em] text-hero-muted uppercase">{kicker}</p>
+                  <p className="text-label tracking-ornate text-hero-muted uppercase">{kicker}</p>
                 </StaggerItem>
               ) : null}
               <StaggerItem>
-                <h1
-                  className={cn(
-                    "mt-2 font-serif leading-[0.95] font-semibold text-hero-foreground",
-                    hub ? "text-4xl sm:text-5xl lg:text-6xl" : "text-5xl sm:text-6xl lg:text-7xl",
-                  )}
-                >
+                <h1 className="mt-2 font-serif text-5xl leading-[0.95] font-medium text-hero-foreground sm:text-6xl lg:text-7xl">
                   {names}
                 </h1>
               </StaggerItem>
@@ -302,7 +363,7 @@ export function CoupleHero({
               </StaggerItem>
               {date || place ? (
                 <StaggerItem>
-                  <p className={cn("mt-4 text-hero-muted", hub ? "text-sm" : "max-w-lg text-[15px] leading-relaxed")}>
+                  <p className="mt-4 max-w-lg text-h4 leading-relaxed text-hero-muted">
                     {date}
                     {date && place ? <span className="mx-2 text-primary">·</span> : null}
                     {place}
@@ -315,7 +376,7 @@ export function CoupleHero({
                     {chips.map((chip) => (
                       <li
                         key={chip}
-                        className="rounded-full border border-hero-foreground/20 px-3 py-1 text-[11px] tracking-wide text-hero-foreground"
+                        className="rounded-full border border-hero-foreground/20 px-3 py-1 text-label tracking-wide text-hero-foreground"
                       >
                         {chip}
                       </li>
@@ -361,7 +422,7 @@ export function CoupleHero({
                     </span>
                   </p>
                   {daysLabel ? (
-                    <p className="mt-1 text-[10px] tracking-[0.28em] text-hero-muted uppercase">{daysLabel}</p>
+                    <p className="mt-1 text-label tracking-ornate text-hero-muted uppercase">{daysLabel}</p>
                   ) : null}
                 </motion.div>
               ) : null}
@@ -382,16 +443,10 @@ export function CoupleHero({
             </div>
           </div>
         </div>
-        {footer ? (
-          <div className={hub ? "relative mt-8" : "relative z-10 px-8 pb-10 sm:px-12 sm:pb-8 lg:px-16"}>{footer}</div>
-        ) : null}
+        {footer ? <div className="relative z-10 px-8 pb-10 sm:px-12 sm:pb-8 lg:px-16">{footer}</div> : null}
       </div>
-      {hub ? null : (
-        <HeroControls images={stageImages} index={carousel.index} go={carousel.go} goTo={carousel.goTo} />
-      )}
-      {children ? (
-        <div className={hub ? "relative px-6 pb-6 sm:px-8" : "relative z-10 -mt-10 px-8"}>{children}</div>
-      ) : null}
+      <HeroControls images={stageImages} index={carousel.index} go={carousel.go} goTo={carousel.goTo} />
+      {children ? <div className="relative z-10 -mt-10 px-8">{children}</div> : null}
     </section>
   );
 }
