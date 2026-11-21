@@ -3,7 +3,6 @@
 import * as React from "react";
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { Button } from "../components/button";
-import { Card } from "../components/card";
 import { Icon } from "../components/icon";
 import { Input } from "../components/input";
 import { SimpleSelect } from "../components/select";
@@ -196,15 +195,21 @@ export function PaginationBar({
 
 export function VendorCardSkeleton() {
   return (
-    <Card elevation="raised" className="overflow-hidden rounded-[1.75rem]">
-      <div className="aspect-[4/3] animate-pulse bg-secondary" />
-      <div className="grid gap-2.5 px-4 py-4">
-        <div className="h-3 w-20 animate-pulse rounded-full bg-secondary" />
-        <div className="h-5 w-3/4 animate-pulse rounded-full bg-secondary" />
-        <div className="h-3 w-40 animate-pulse rounded-full bg-secondary" />
-        <div className="h-4 w-28 animate-pulse rounded-full bg-secondary" />
+    <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-card">
+      <div className="cw-shimmer m-2 mb-0 aspect-[4/3] rounded-2xl bg-muted" />
+      <div className="grid gap-3 px-5 pt-4 pb-5">
+        <div className="flex justify-between">
+          <div className="cw-shimmer h-3 w-24 rounded-full bg-muted" />
+          <div className="cw-shimmer h-4 w-12 rounded-full bg-muted" />
+        </div>
+        <div className="cw-shimmer h-5 w-3/4 rounded-full bg-muted" />
+        <div className="cw-shimmer h-3 w-32 rounded-full bg-muted" />
+        <div className="mt-1 flex items-center justify-between border-t border-border pt-3">
+          <div className="cw-shimmer h-4 w-28 rounded-full bg-muted" />
+          <div className="cw-shimmer size-8 rounded-full bg-muted" />
+        </div>
       </div>
-    </Card>
+    </div>
   );
 }
 
@@ -226,7 +231,7 @@ export function AsyncListGrid({
 
   if (loading) {
     return (
-      <div className="grid gap-5 sm:grid-cols-2 sm:gap-6 xl:grid-cols-3" aria-busy>
+      <div className="grid gap-4 sm:grid-cols-2 sm:gap-6 xl:grid-cols-3" aria-busy>
         {Array.from({ length: skeletonCount }, (_, index) => (
           <VendorCardSkeleton key={index} />
         ))}
@@ -242,8 +247,8 @@ export function AsyncListGrid({
     <Stagger
       key={resetKey}
       trigger="immediate"
-      className="grid gap-5 sm:grid-cols-2 sm:gap-6 xl:grid-cols-3"
-      stagger={0.05}
+      className="grid gap-4 sm:grid-cols-2 sm:gap-6 xl:grid-cols-3"
+      stagger={0.06}
     >
       {items.map((child, index) => (
         <StaggerItem key={React.isValidElement(child) && child.key != null ? child.key : index}>{child}</StaggerItem>

@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Play, X } from "lucide-react";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { ChevronLeft, ChevronRight, Images, Play, X } from "lucide-react";
+import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from "motion/react";
 import { cn } from "../lib/utils";
 import { Icon } from "../components/icon";
 
@@ -61,6 +61,34 @@ function youtubeThumb(raw: string): string | null {
   return id ? `https://i.ytimg.com/vi/${id}/hqdefault.jpg` : null;
 }
 
+const COLLAGE_GRID: Record<number, string> = {
+  1: "grid-cols-1",
+  2: "grid-cols-2",
+  3: "grid-cols-3 grid-rows-2",
+  4: "grid-cols-4 grid-rows-2",
+  5: "grid-cols-4 grid-rows-2",
+};
+
+const COLLAGE_TILE: Record<number, string[]> = {
+  1: [""],
+  2: ["", ""],
+  3: ["col-span-2 row-span-2", "", ""],
+  4: ["col-span-2 row-span-2", "col-span-2", "", ""],
+  5: ["col-span-2 row-span-2", "", "", "", ""],
+};
+
+/** Round only the outer corners so the collage reads as one framed piece. */
+function tileRadius(count: number, index: number) {
+  if (count === 1) return "rounded-3xl";
+  if (count === 2) return index === 0 ? "rounded-l-3xl rounded-r-md" : "rounded-r-3xl rounded-l-md";
+  if (index === 0) return "rounded-l-3xl rounded-r-md";
+  const topRight = count === 3 ? 1 : count === 4 ? 1 : 2;
+  const bottomRight = count - 1;
+  if (index === topRight) return "rounded-md rounded-tr-3xl";
+  if (index === bottomRight) return "rounded-md rounded-br-3xl";
+  return "rounded-md";
+}
+
 export function VendorGallery({
   photos,
   coverUrl,
@@ -70,6 +98,7 @@ export function VendorGallery({
   projects = [],
   introVideoUrl,
   videos = [],
+  album,
 }: {
   photos: string[];
   coverUrl?: string | null;
@@ -79,6 +108,8 @@ export function VendorGallery({
   projects?: VendorGalleryProject[];
   introVideoUrl?: string | null;
   videos?: VendorGalleryVideo[];
+  /** Optional controlled album (e.g. a project picked from story cards elsewhere on the page). */
+  album?: string;
 }) {
   const albums = useMemo(() => {
     const gallery = photos.filter(Boolean);
@@ -97,7 +128,10 @@ export function VendorGallery({
     return list.filter((album) => album.photos.length > 0 || album.key === "gallery");
   }, [photos, projects]);
 
-  const [albumKey, setAlbumKey] = useState("gallery");
+  const [albumKey, setAlbumKey] = useState(album ?? "gallery");
+  useEffect(() => {
+    if (album) setAlbumKey(album);
+  }, [album]);
   const activeAlbum = albums.find((album) => album.key === albumKey) ?? albums[0];
   const list = activeAlbum?.photos ?? [];
   const hero = coverUrl || photos[0] || projects.find((project) => project.coverUrl)?.coverUrl || list[0] || null;
@@ -106,14 +140,13 @@ export function VendorGallery({
   const [open, setOpen] = useState(false);
   const [videoOpen, setVideoOpen] = useState<string | null>(null);
   const introEmbed = introVideoUrl ? parseEmbed(introVideoUrl) : null;
-  const aspect =
+  // Category feel: venues read wide and low, portrait-led categories (bridal, makeup) stand taller.
+  const collageHeight =
     cinematic === "venue"
-      ? "aspect-[21/9]"
+      ? "h-64 sm:h-80 md:h-96"
       : cinematic === "portrait"
-        ? "aspect-[4/5] md:aspect-[16/10]"
-        : cinematic === "detail"
-          ? "aspect-square md:aspect-[16/10]"
-          : "aspect-[16/10]";
+        ? "h-96 sm:h-[30rem] md:h-[32rem]"
+        : "h-72 sm:h-96 md:h-[28rem]";
 
   useEffect(() => {
     setActive(0);
@@ -132,6 +165,7 @@ export function VendorGallery({
   }, [open, list.length]);
 
   const displayHero = list[Math.min(active, Math.max(list.length - 1, 0))] || hero;
+  const collage = (list.length ? list : hero ? [hero] : []).slice(0, 5);
   const showAlbumTabs = projects.some((project) => project.items.length > 0 || project.coverUrl);
   const reduce = useReducedMotion();
   // Stable per-instance ID so layoutId doesn't clash across multiple galleries on the page
@@ -143,66 +177,93 @@ export function VendorGallery({
 
   return (
     <div className={cn("grid content-start gap-3", className)}>
-      {displayHero ? (
-        <button
-          type="button"
-          className="relative block w-full self-start text-left"
-          onClick={() => list.length && setOpen(true)}
-        >
-          {/* motion.img with layoutId so it expands seamlessly into the lightbox */}
-          {}
-          <motion.img
-            src={displayHero}
-            alt={name}
-            layoutId={reduce ? undefined : `${galleryId}-hero`}
-            className={cn("w-full rounded-3xl object-cover", aspect)}
-            style={{ display: "block" }}
-          />
-          {list.length ? (
-            <span className="pointer-events-none absolute right-3 bottom-3 rounded-full bg-background/90 px-3 py-1 text-xs backdrop-blur">
-              View gallery
-            </span>
-          ) : null}
-        </button>
-      ) : null}
-
       {showAlbumTabs && albums.length > 1 ? (
-        <div className="flex items-center gap-2 overflow-x-auto pb-1">
-          {albums.map((album) => (
-            <button
-              key={album.key}
-              type="button"
-              className={cn(
-                "h-8 shrink-0 rounded-full px-3 text-xs whitespace-nowrap transition",
-                album.key === (activeAlbum?.key ?? albumKey)
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-secondary text-muted-foreground hover:text-foreground",
-              )}
-              onClick={() => setAlbumKey(album.key)}
-            >
-              {album.label}
-            </button>
-          ))}
-        </div>
+        <LayoutGroup id={`${galleryId}-albums`}>
+          <div className="flex w-fit max-w-full items-center gap-1 overflow-x-auto rounded-full bg-card p-1 ring-1 ring-border [scrollbar-width:none]">
+            {albums.map((album) => {
+              const isActive = album.key === (activeAlbum?.key ?? albumKey);
+              return (
+                <button
+                  key={album.key}
+                  type="button"
+                  className={cn(
+                    "relative isolate h-9 shrink-0 rounded-full px-4 text-sm whitespace-nowrap transition-colors",
+                    isActive ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground",
+                  )}
+                  onClick={() => setAlbumKey(album.key)}
+                >
+                  {isActive ? (
+                    <motion.span
+                      layoutId={`${galleryId}-album-pill`}
+                      className="absolute inset-0 -z-10 rounded-full bg-primary shadow-md"
+                      transition={{ type: "spring", stiffness: 420, damping: 34 }}
+                    />
+                  ) : null}
+                  {album.label}
+                  <span className="ml-1.5 text-xs opacity-70">{album.photos.length}</span>
+                </button>
+              );
+            })}
+          </div>
+        </LayoutGroup>
       ) : null}
 
-      {list.length > 1 ? (
-        <div className="flex gap-2 overflow-x-auto">
-          {list.slice(0, 8).map((src, index) => (
-            <button
-              key={`${src}-${index}`}
-              type="button"
-              className={cn(
-                "h-16 w-20 shrink-0 overflow-hidden rounded-xl ring-offset-background transition",
-                index === active ? "ring-2 ring-primary" : "opacity-80 hover:opacity-100",
-              )}
-              onClick={() => setActive(index)}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={src} alt="" className="h-full w-full object-cover" />
-            </button>
-          ))}
-        </div>
+      {collage.length ? (
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={activeAlbum?.key ?? "gallery"}
+            initial={reduce ? false : { opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={reduce ? undefined : { opacity: 0, y: -8 }}
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            className={cn("grid gap-2", collageHeight, COLLAGE_GRID[collage.length])}
+          >
+            {collage.map((src, index) => {
+              const remaining = list.length - collage.length;
+              const isLast = index === collage.length - 1 && remaining > 0;
+              return (
+                <motion.button
+                  key={`${src}-${index}`}
+                  type="button"
+                  initial={reduce ? false : { opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.5, delay: index * 0.06, ease: [0.16, 1, 0.3, 1] }}
+                  className={cn(
+                    "group relative overflow-hidden bg-muted text-left",
+                    COLLAGE_TILE[collage.length]?.[index],
+                    tileRadius(collage.length, index),
+                  )}
+                  onClick={() => {
+                    setActive(index);
+                    setOpen(true);
+                  }}
+                  aria-label={`Open photo ${index + 1}`}
+                >
+                  <motion.img
+                    src={src}
+                    alt={index === 0 ? name : ""}
+                    layoutId={reduce ? undefined : `${galleryId}-${activeAlbum?.key}-${index}`}
+                    className="absolute inset-0 size-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                  />
+                  <span className="pointer-events-none absolute inset-0 bg-ink/0 transition-colors duration-300 group-hover:bg-ink/15" />
+                  {isLast ? (
+                    <span className="absolute inset-0 grid place-items-center bg-ink/55 text-paper backdrop-blur-[2px] transition group-hover:bg-ink/45">
+                      <span className="text-center">
+                        <span className="block font-serif text-3xl">+{remaining}</span>
+                        <span className="text-xs text-paper/80">more photos</span>
+                      </span>
+                    </span>
+                  ) : null}
+                  {index === 0 ? (
+                    <span className="pointer-events-none absolute bottom-3 left-3 inline-flex items-center gap-1.5 rounded-full bg-paper/90 px-3 py-1.5 text-xs font-medium text-ink shadow-md backdrop-blur">
+                      <Icon icon={Images} size="xs" lottie={false} /> {list.length} photos
+                    </span>
+                  ) : null}
+                </motion.button>
+              );
+            })}
+          </motion.div>
+        </AnimatePresence>
       ) : null}
 
       {introEmbed ? (
@@ -300,7 +361,7 @@ export function VendorGallery({
             <motion.img
               src={list[Math.min(active, list.length - 1)]!}
               alt={name}
-              layoutId={reduce ? undefined : `${galleryId}-hero`}
+              layoutId={reduce || active > 4 ? undefined : `${galleryId}-${activeAlbum?.key}-${active}`}
               className="max-h-[85vh] max-w-5xl rounded-2xl object-contain"
               onClick={(event) => event.stopPropagation()}
             />

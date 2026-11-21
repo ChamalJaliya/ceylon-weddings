@@ -43,7 +43,6 @@ export function PublicHeader() {
     { href: "/how-it-works", label: "How it works" },
     ...(flags["awards.public"] !== false ? [{ href: "/awards", label: "Awards" }] : []),
     ...(flags["consultations.public"] !== false ? [{ href: "/consultation", label: t("nav.consultation") }] : []),
-    { href: "/for-vendors", label: t("nav.forVendors") },
   ];
 
   return (
@@ -155,7 +154,7 @@ export function PublicChrome({ children }: { children: ReactNode }) {
           {
             title: "For Vendors",
             links: [
-              { href: "/for-vendors", label: "Vendor Overview" },
+              { href: "/how-it-works?for=vendors", label: "Vendor Overview" },
               { href: "/register?role=VENDOR", label: "List Your Business", badge: "Join" },
               { href: "/login", label: "Vendor Portal Login" },
             ],

@@ -12,7 +12,7 @@ import {
   type Vendor,
   type VendorProfileAttributeChip,
 } from "@ceylonweddings/contracts";
-import { type FormEvent, useEffect, useMemo, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import {
@@ -23,22 +23,43 @@ import {
   useCompareStore,
   usePreferenceStore,
 } from "@ceylonweddings/web";
-import { Badge } from "@ceylonweddings/ui/components/badge";
 import { Button } from "@ceylonweddings/ui/components/button";
-import { DatePicker } from "@ceylonweddings/ui/components/date-picker";
-import { FormStatus } from "@ceylonweddings/ui/components/form-status";
 import { Textarea } from "@ceylonweddings/ui/components/textarea";
-import { HorizontalTabs } from "@ceylonweddings/ui/components/horizontal-tabs";
-import { SimpleSelect } from "@ceylonweddings/ui/components/select";
-import { FieldBlock } from "@ceylonweddings/ui/domain/creator-form";
-import { InquirePanel, VendorStatStrip } from "@ceylonweddings/ui/domain/offer-studio";
-import { PackageCompare } from "@ceylonweddings/ui/domain/package-compare";
 import { ShortlistControl } from "@ceylonweddings/ui/domain/shortlist-control";
 import { VendorGallery } from "@ceylonweddings/ui/domain/vendor-gallery";
-import { VendorIdentity } from "@ceylonweddings/ui/domain/vendor-identity";
 import { Link, useRouter } from "@/i18n/navigation";
 import { CATEGORY_LABELS, formatAttributeDisplay, localizedText } from "@/lib/labels";
-import { ArrowLeft, ChevronDown, MessageCircle, Scale } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  BadgeCheck,
+  CalendarX,
+  Car,
+  Check,
+  Clock,
+  MapPin,
+  MessageCircle,
+  Receipt,
+  Scale,
+  Sparkles,
+  Star,
+  Wallet,
+} from "lucide-react";
+import { Reveal, Stagger, StaggerItem, motion, useReducedMotion } from "@ceylonweddings/ui/domain/motion";
+import { SafeImg } from "@/components/safe-img";
+import {
+  FaqList,
+  InquiryStepper,
+  ProjectStories,
+  InfoTabs,
+  ReviewCarousel,
+  SectionNav,
+  SimilarVendors,
+  StorySection,
+  TrustBadges,
+  VendorStickyBar,
+} from "./vendor-story";
+import { cn } from "@ceylonweddings/ui/utils";
 
 function attributeCatalogHref(category: string, chip: VendorProfileAttributeChip, optionKey?: string) {
   const attrs: Record<string, string | { min?: number; max?: number }> = {};
@@ -58,12 +79,11 @@ function attributeCatalogHref(category: string, chip: VendorProfileAttributeChip
   return qs ? `/vendors?${qs}` : `/vendors?category=${category}`;
 }
 
-type Tab = "about" | "faqs" | "reviews" | "pricing" | "location";
-
 const DIMS = ["quality", "professionalism", "flexibility", "responseTime", "value", "communication"] as const;
 
 export default function VendorStorefrontPage() {
   const t = useTranslations();
+  const reduce = useReducedMotion();
   const locale = useLocale();
   const router = useRouter();
   const params = useParams<{ slug: string }>();
@@ -71,7 +91,6 @@ export default function VendorStorefrontPage() {
   const user = useAuthStore((state) => state.user);
   const [vendor, setVendor] = useState<Vendor | null>(null);
   const [typeMeta, setTypeMeta] = useState<PublicVendorTypeListItem | null>(null);
-  const [tab, setTab] = useState<Tab>("about");
   const [catalogHref, setCatalogHref] = useState("/vendors");
   const [selectedPackageId, setSelectedPackageId] = useState<string | null>(null);
   const [message, setMessage] = useState("We would like a quote for our wedding. Poruwa + reception, ~300 guests.");
@@ -84,6 +103,8 @@ export default function VendorStorefrontPage() {
   const [compareHint, setCompareHint] = useState<string | null>(null);
   const [features, setFeatures] = useState<Article[]>([]);
   const [reviewsEnabled, setReviewsEnabled] = useState(true);
+  const [album, setAlbum] = useState<string | undefined>(undefined);
+  const heroRef = useRef<HTMLDivElement>(null);
   const toggleCompare = useCompareStore((state) => state.toggle);
   const hasCompare = useCompareStore((state) => state.has);
   const compareItems = useCompareStore((state) => state.items);
@@ -165,25 +186,6 @@ export default function VendorStorefrontPage() {
     }));
   }, [vendor, currency, selectedPackageId, t]);
 
-  async function inquire(event: FormEvent) {
-    event.preventDefault();
-    if (!vendor) return;
-    try {
-      const selected = vendor.packages?.find((pkg) => pkg.id === selectedPackageId);
-      const inquiry = await api.wedding.inquire({
-        vendorId: vendor.id,
-        message,
-        preferredDate: preferredDate || undefined,
-        packageId: selected?.id,
-        packageName: selected?.name,
-      });
-      setStatus(t("marketing.inquirySent"));
-      setWhatsappUrl(inquiry.whatsappUrl);
-    } catch (err) {
-      setStatus(err instanceof Error ? err.message : "Could not send inquiry");
-    }
-  }
-
   async function submitReview(event: FormEvent) {
     event.preventDefault();
     if (!vendor) return;
@@ -238,6 +240,8 @@ export default function VendorStorefrontPage() {
     return (
       <div className="grid gap-8">
         <div className="h-4 w-40 animate-pulse rounded-full bg-secondary" />
+        <div className="cw-shimmer min-h-80 rounded-3xl bg-muted sm:min-h-96" />
+
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1.4fr)_minmax(18rem,0.8fr)]">
           <div className="aspect-[4/3] animate-pulse rounded-3xl bg-secondary" />
           <div className="grid gap-4">
@@ -256,13 +260,6 @@ export default function VendorStorefrontPage() {
   // Feeds the vendor's "WhatsApp taps" dashboard widget (fire and forget).
   const trackWhatsapp = () => void api.vendors.trackWhatsappTap(vendor.id);
   const canCouple = user && (user.role === "COUPLE" || user.role === "FAMILY");
-  const tabs: { id: Tab; label: string }[] = [
-    { id: "about", label: t("knotly.about") },
-    { id: "faqs", label: t("knotly.faqs") },
-    ...(reviewsEnabled ? [{ id: "reviews" as const, label: t("nav.reviews") }] : []),
-    { id: "pricing", label: t("knotly.pricing") },
-    { id: "location", label: t("knotly.location") },
-  ];
   const startingLabel = formatVendorStartingPriceLabel(
     vendor,
     (value) => formatMoney(value, currency),
@@ -278,8 +275,56 @@ export default function VendorStorefrontPage() {
   const profileAttributes = vendor.attributes ?? [];
   const hasStyleAttribute = profileAttributes.some((chip) => chip.key === "style");
 
+  const sections = [
+    { id: "packages", label: "Packages" },
+    { id: "about", label: t("knotly.about") },
+    { id: "work", label: "Work" },
+    ...(reviewsEnabled ? [{ id: "reviews", label: t("nav.reviews") }] : []),
+    { id: "info", label: "Info" },
+  ];
+  const mosaic = [vendor.photoUrl, ...photos]
+    .filter((src, i, arr): src is string => Boolean(src) && arr.indexOf(src) === i)
+    .slice(0, 5);
+  const projects = (vendor.mediaProjects ?? []).map((project) => ({
+    id: project.id,
+    title: project.title,
+    coverUrl: project.coverUrl,
+    items: project.items ?? [],
+  }));
+  const avatar = vendor.photoUrl ?? photos[0] ?? null;
+  const detailRows = [
+    (vendor.serviceAreas ?? []).length
+      ? { icon: MapPin, label: "Service areas", value: (vendor.serviceAreas ?? []).join(", ") }
+      : null,
+    vendor.travelNote ? { icon: Car, label: "Travel", value: vendor.travelNote } : null,
+    vendor.overtimeNote ? { icon: Clock, label: "Overtime", value: vendor.overtimeNote } : null,
+    vendor.depositNote ? { icon: Wallet, label: "Deposit", value: vendor.depositNote } : null,
+    vendor.taxNote ? { icon: Receipt, label: "Tax", value: vendor.taxNote } : null,
+    vendor.cancellationNote ? { icon: CalendarX, label: "Cancellation", value: vendor.cancellationNote } : null,
+  ].filter((row): row is { icon: typeof MapPin; label: string; value: string } => Boolean(row));
+
+  async function sendInquiry(guests: string) {
+    if (!vendor) return false;
+    try {
+      const selected = vendor.packages?.find((pkg) => pkg.id === selectedPackageId);
+      const inquiry = await api.wedding.inquire({
+        vendorId: vendor.id,
+        message: guests ? `${message}\n\nGuest count: ~${guests}` : message,
+        preferredDate: preferredDate || undefined,
+        packageId: selected?.id,
+        packageName: selected?.name,
+      });
+      setStatus(t("marketing.inquirySent"));
+      setWhatsappUrl(inquiry.whatsappUrl);
+      return true;
+    } catch (err) {
+      setStatus(err instanceof Error ? err.message : "Could not send inquiry");
+      return false;
+    }
+  }
+
   return (
-    <div className="grid gap-8 pb-24 lg:pb-0">
+    <div className="grid grid-cols-1 gap-6 pb-28 sm:gap-8 lg:pb-10">
       <nav className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
         <Link
           href={catalogHref}
@@ -301,86 +346,515 @@ export default function VendorStorefrontPage() {
           <p className="mt-0.5 text-muted-foreground">{t("knotly.unlistedBody")}</p>
         </div>
       ) : null}
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1.4fr)_minmax(18rem,0.8fr)]">
-        <VendorGallery
-          className="self-start"
-          photos={photos}
-          coverUrl={vendor.photoUrl}
-          name={vendor.name}
-          cinematic={cinematic}
-          projects={(vendor.mediaProjects ?? []).map((project) => ({
-            id: project.id,
-            title: project.title,
-            coverUrl: project.coverUrl,
-            items: project.items ?? [],
-          }))}
-          introVideoUrl={vendor.introVideoUrl}
-          videos={(vendor.videos ?? []).map((video) => ({
-            id: video.id,
-            url: video.url,
-            title: video.title,
-          }))}
-        />
-        <div className="grid gap-4 self-start lg:sticky lg:top-24">
-          <VendorIdentity
-            name={vendor.name}
-            category={categoryLabel}
-            location={`${vendor.city}, ${vendor.district}`}
-            verified={vendor.verified}
-            featured={vendor.featured}
-            destination={vendor.destinationExperienced}
+
+      <VendorStickyBar
+        watch={heroRef}
+        name={vendor.name}
+        photo={avatar}
+        rating={vendor.ratingAvg}
+        price={startingLabel}
+        saved={shortlisted}
+        onSave={canCouple ? () => void saveToTeam() : undefined}
+      />
+
+      {/* 1 · Bold editorial hero */}
+      <div ref={heroRef}>
+        <motion.section
+          initial={reduce ? false : { opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          className="relative isolate grid overflow-hidden rounded-3xl bg-ink text-paper shadow-raised lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]"
+        >
+          <span
+            aria-hidden
+            className="pointer-events-none absolute -top-32 -left-24 -z-10 size-96 rounded-full bg-primary/40 blur-3xl"
           />
-          {profileAttributes.length ? (
-            <div className="grid gap-3 rounded-2xl border border-border/70 bg-card/50 p-4">
-              {profileAttributes.map((group) => (
-                <div key={group.key} className="grid gap-2">
-                  <p className="text-label font-medium tracking-spaced text-muted-foreground uppercase">
-                    {localizedText(group.label, locale)}
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {group.options?.length ? (
-                      group.options.map((option) => (
-                        <Link
-                          key={option.key}
-                          href={attributeCatalogHref(vendor.category, group, option.key)}
-                          className="rounded-full border border-border/80 bg-background px-2.5 py-1 text-xs transition hover:border-primary hover:text-primary"
-                        >
-                          {localizedText(option.label, locale)}
-                        </Link>
-                      ))
-                    ) : formatAttributeDisplay(group, locale) ? (
-                      <Link
-                        href={attributeCatalogHref(vendor.category, group)}
-                        className="rounded-full border border-border/80 bg-background px-2.5 py-1 text-xs transition hover:border-primary hover:text-primary"
+          <span
+            aria-hidden
+            className="pointer-events-none absolute -bottom-40 left-1/3 -z-10 size-80 rounded-full bg-love/25 blur-3xl"
+          />
+          <div className="order-2 grid content-center gap-5 p-6 sm:p-10 lg:order-1">
+            <div className="flex items-center gap-3">
+              {avatar ? (
+                <SafeImg src={avatar} className="size-12 rounded-2xl object-cover ring-2 ring-paper/20" />
+              ) : null}
+              <div>
+                <p className="text-label tracking-eyebrow text-paper/60 uppercase">{categoryLabel}</p>
+                <p className="flex items-center gap-1.5 text-sm text-paper/80">
+                  <MapPin className="size-3.5" /> {vendor.city}, {vendor.district}
+                </p>
+              </div>
+            </div>
+            <h1 className="font-serif text-4xl leading-none font-medium tracking-tight text-balance sm:text-6xl">
+              {vendor.name}
+              {vendor.verified ? (
+                <BadgeCheck
+                  className="ml-2 inline size-7 align-baseline text-primary sm:size-9"
+                  aria-label="Verified"
+                />
+              ) : null}
+            </h1>
+            {(vendor.offerHeadline ?? vendor.description) ? (
+              <p className="max-w-lg text-base leading-relaxed text-paper/75">
+                {vendor.offerHeadline ?? vendor.description?.split(". ")[0]}
+              </p>
+            ) : null}
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              {vendor.ratingAvg ? (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-paper/10 px-3 py-1.5">
+                  <Star className="size-3.5 fill-paper text-paper" /> {vendor.ratingAvg.toFixed(1)}
+                  <span className="text-paper/60">· {vendor.ratingCount ?? 0} reviews</span>
+                </span>
+              ) : null}
+              {vendor.featured ? (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-love px-3 py-1.5 text-love-foreground">
+                  <Sparkles className="size-3.5" /> Featured
+                </span>
+              ) : null}
+            </div>
+            <div className="flex flex-wrap items-end gap-x-6 gap-y-4 border-t border-paper/10 pt-5">
+              <div>
+                <p className="text-xs text-paper/60">Starting at</p>
+                <p className="font-serif text-3xl sm:text-4xl">{startingLabel}</p>
+              </div>
+              <div className="flex flex-1 flex-wrap justify-end gap-2">
+                <Button
+                  type="button"
+                  shape="pill"
+                  size="lg"
+                  className="group"
+                  onClick={() => document.getElementById("packages")?.scrollIntoView({ behavior: "smooth" })}
+                >
+                  <span className="inline-flex items-center gap-2">
+                    View packages <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
+                  </span>
+                </Button>
+                {wa ? (
+                  <Button
+                    asChild
+                    shape="pill"
+                    size="lg"
+                    variant="outline"
+                    className="border-paper/30 bg-transparent text-paper hover:bg-paper/10 hover:text-paper"
+                  >
+                    <a href={wa} target="_blank" rel="noreferrer" onClick={trackWhatsapp}>
+                      <MessageCircle className="size-4" /> WhatsApp
+                    </a>
+                  </Button>
+                ) : null}
+              </div>
+            </div>
+          </div>
+
+          {/* Photo mosaic */}
+          <div className="order-1 grid h-56 grid-cols-3 grid-rows-2 gap-1.5 p-1.5 sm:h-72 lg:order-2 lg:h-auto lg:min-h-[26rem]">
+            {mosaic.map((src, index) => (
+              <motion.button
+                key={`${src}-${index}`}
+                type="button"
+                onClick={() => document.getElementById("work")?.scrollIntoView({ behavior: "smooth" })}
+                initial={reduce ? false : { opacity: 0, scale: 0.94 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.15 + index * 0.08, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                className={cn(
+                  "group relative overflow-hidden rounded-2xl bg-paper/5",
+                  index === 0 ? "col-span-2 row-span-2" : "",
+                )}
+                aria-label="View portfolio"
+              >
+                <SafeImg
+                  src={src}
+                  fallbackIndex={index}
+                  className="absolute inset-0 size-full object-cover transition-transform duration-700 group-hover:scale-110"
+                />
+                {index === mosaic.length - 1 && photos.length > mosaic.length ? (
+                  <span className="absolute inset-0 grid place-items-center bg-ink/55 text-sm text-paper backdrop-blur-[2px]">
+                    +{photos.length - mosaic.length} photos
+                  </span>
+                ) : null}
+              </motion.button>
+            ))}
+          </div>
+        </motion.section>
+      </div>
+
+      {/* 3 · Trust */}
+      <TrustBadges vendor={vendor} />
+
+      {/* 2 · Story */}
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-12">
+        <div className="grid min-w-0 grid-cols-1 content-start gap-12 sm:gap-14">
+          <SectionNav sections={sections} />
+
+          <StorySection id="packages" eyebrow={t("knotly.pricing")} title="Packages">
+            {vendor.showPricing === false ? (
+              <p className="mb-4 text-sm text-muted-foreground">{t("knotly.pricingHiddenBody")}</p>
+            ) : null}
+            {packageCards.length ? (
+              <Stagger className="grid gap-4 sm:grid-cols-2" stagger={0.07}>
+                {packageCards.map((pack, index) => {
+                  const bold =
+                    pack.badge === "POPULAR" || (index === 1 && !packageCards.some((p) => p.badge === "POPULAR"));
+                  return (
+                    <StaggerItem key={pack.id} className="h-full">
+                      <motion.div
+                        whileHover={reduce ? undefined : { y: -6 }}
+                        transition={{ type: "spring", stiffness: 380, damping: 26 }}
+                        className={cn(
+                          "relative flex h-full flex-col gap-4 overflow-hidden rounded-3xl p-6 shadow-card",
+                          bold ? "bg-ink text-paper shadow-raised" : "border border-border bg-card",
+                          pack.selected && !bold && "ring-2 ring-primary",
+                        )}
                       >
-                        {formatAttributeDisplay(group, locale)}
-                      </Link>
-                    ) : null}
-                  </div>
+                        {bold ? (
+                          <span
+                            aria-hidden
+                            className="pointer-events-none absolute -top-16 -right-16 size-48 rounded-full bg-primary/40 blur-3xl"
+                          />
+                        ) : null}
+                        <div className="relative flex items-start justify-between gap-3">
+                          <div>
+                            <p
+                              className={cn(
+                                "text-label tracking-eyebrow uppercase",
+                                bold ? "text-paper/60" : "text-muted-foreground",
+                              )}
+                            >
+                              {pack.bestFor ?? "Package"}
+                            </p>
+                            <h3 className="mt-1 font-serif text-2xl">{pack.name}</h3>
+                          </div>
+                          {pack.badge ? (
+                            <span className="shrink-0 rounded-full bg-love px-2.5 py-1 text-xs text-love-foreground capitalize">
+                              {pack.badge.replaceAll("_", " ").toLowerCase()}
+                            </span>
+                          ) : null}
+                        </div>
+                        <p className={cn("relative font-serif text-3xl", bold ? "text-paper" : "text-primary")}>
+                          {pack.priceLabel}
+                        </p>
+                        {pack.inclusions?.length ? (
+                          <ul className="relative grid gap-2 text-sm">
+                            {pack.inclusions.slice(0, 4).map((item) => (
+                              <li key={item} className="flex items-start gap-2">
+                                <Check
+                                  className={cn("mt-0.5 size-4 shrink-0", bold ? "text-primary" : "text-primary")}
+                                />
+                                <span className={bold ? "text-paper/85" : undefined}>{item}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : pack.description ? (
+                          <p className={cn("relative text-sm", bold ? "text-paper/75" : "text-muted-foreground")}>
+                            {pack.description}
+                          </p>
+                        ) : null}
+                        <Button
+                          type="button"
+                          shape="pill"
+                          variant={bold ? "default" : "outline"}
+                          className="group relative mt-auto w-full"
+                          onClick={() => {
+                            setSelectedPackageId(pack.id);
+                            document.getElementById("inquire")?.scrollIntoView({ behavior: "smooth", block: "center" });
+                          }}
+                        >
+                          <span className="inline-flex items-center gap-2">
+                            Choose & inquire
+                            <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
+                          </span>
+                        </Button>
+                      </motion.div>
+                    </StaggerItem>
+                  );
+                })}
+              </Stagger>
+            ) : (
+              <p className="rounded-3xl border border-dashed border-border p-6 text-sm text-muted-foreground">
+                Packages coming soon. Send an inquiry for a tailored quote.
+              </p>
+            )}
+            {vendor.pricingDisclaimer ? (
+              <p className="mt-3 text-xs text-muted-foreground">{vendor.pricingDisclaimer}</p>
+            ) : null}
+          </StorySection>
+
+          <StorySection id="about" eyebrow={t("knotly.about")} title={`About ${vendor.name}`}>
+            <div className="grid gap-5 rounded-3xl border border-border bg-card p-6 shadow-card">
+              <p className="text-base leading-relaxed">{vendor.description}</p>
+              {profileAttributes.length ? (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {profileAttributes.map((group) => (
+                    <div key={group.key} className="grid content-start gap-2">
+                      <p className="text-label tracking-eyebrow text-muted-foreground uppercase">
+                        {localizedText(group.label, locale)}
+                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {group.options?.length ? (
+                          group.options.map((option) => (
+                            <Link
+                              key={option.key}
+                              href={attributeCatalogHref(vendor.category, group, option.key)}
+                              className="rounded-full bg-primary/10 px-3 py-1 text-xs text-primary transition hover:bg-primary hover:text-primary-foreground"
+                            >
+                              {localizedText(option.label, locale)}
+                            </Link>
+                          ))
+                        ) : formatAttributeDisplay(group, locale) ? (
+                          <Link
+                            href={attributeCatalogHref(vendor.category, group)}
+                            className="rounded-full bg-primary/10 px-3 py-1 text-xs text-primary transition hover:bg-primary hover:text-primary-foreground"
+                          >
+                            {formatAttributeDisplay(group, locale)}
+                          </Link>
+                        ) : null}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              ) : !hasStyleAttribute && vendor.styles?.length ? (
+                <div className="flex flex-wrap gap-2">
+                  {vendor.styles.map((style) => (
+                    <span key={style} className="rounded-full bg-primary/10 px-3 py-1 text-xs text-primary capitalize">
+                      {style}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+              {(vendor.includedInPrice ?? []).length ? (
+                <div className="flex flex-wrap gap-2 border-t border-border pt-4">
+                  <span className="mr-1 self-center text-label tracking-eyebrow text-muted-foreground uppercase">
+                    {t("knotly.included")}
+                  </span>
+                  {(vendor.includedInPrice ?? []).map((item) => (
+                    <span
+                      key={item}
+                      className="inline-flex items-center gap-1.5 rounded-full bg-background px-3 py-1 text-xs ring-1 ring-border"
+                    >
+                      <Check className="size-3 text-primary" /> {item}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
             </div>
+          </StorySection>
+
+          <StorySection id="work" eyebrow="Portfolio" title="Signature work">
+            <VendorGallery
+              photos={photos}
+              coverUrl={vendor.photoUrl}
+              name={vendor.name}
+              cinematic={cinematic}
+              album={album}
+              projects={projects}
+              introVideoUrl={vendor.introVideoUrl}
+              videos={(vendor.videos ?? []).map((video) => ({ id: video.id, url: video.url, title: video.title }))}
+            />
+            <ProjectStories
+              projects={projects}
+              onOpen={(id) => {
+                setAlbum(id);
+                document.getElementById("work")?.scrollIntoView({ behavior: "smooth", block: "start" });
+              }}
+            />
+          </StorySection>
+
+          {reviewsEnabled ? (
+            <StorySection id="reviews" eyebrow={t("nav.reviews")} title="What couples say">
+              <div className="grid gap-5 md:grid-cols-[16rem_minmax(0,1fr)]">
+                <Reveal className="grid content-start gap-4 rounded-3xl border border-border bg-card p-6 shadow-card">
+                  <div>
+                    <p className="font-serif text-6xl leading-none">{(vendor.ratingAvg ?? 0).toFixed(1)}</p>
+                    <div className="mt-2 flex gap-0.5">
+                      {Array.from({ length: 5 }, (_, i) => (
+                        <Star
+                          key={i}
+                          className={cn(
+                            "size-4",
+                            i < Math.round(vendor.ratingAvg ?? 0) ? "fill-primary text-primary" : "text-border",
+                          )}
+                        />
+                      ))}
+                    </div>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {vendor.ratingCount ?? 0} {t("knotly.recommended")}
+                    </p>
+                  </div>
+                  {averages
+                    ? DIMS.map((key) => (
+                        <div key={key} className="grid gap-1 text-xs">
+                          <div className="flex justify-between">
+                            <span>{t(`knotly.${key}`)}</span>
+                            <span className="text-muted-foreground">{averages[key].toFixed(1)}</span>
+                          </div>
+                          <div className="h-1.5 overflow-hidden rounded-full bg-secondary">
+                            <motion.div
+                              initial={{ width: 0 }}
+                              whileInView={{ width: `${(averages[key] / 5) * 100}%` }}
+                              viewport={{ once: true }}
+                              transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+                              className="h-full rounded-full bg-gradient-to-r from-primary to-love"
+                            />
+                          </div>
+                        </div>
+                      ))
+                    : null}
+                </Reveal>
+                <div className="grid content-start gap-4">
+                  <ReviewCarousel reviews={vendor.reviews ?? []} />
+                  {(vendor.reviews ?? []).length === 0 ? (
+                    <p className="rounded-3xl border border-dashed border-border p-6 text-sm text-muted-foreground">
+                      No reviews yet. Be the first couple to share your experience.
+                    </p>
+                  ) : null}
+                  {canCouple ? (
+                    <form
+                      className="grid gap-3 rounded-3xl border border-border bg-card p-5 shadow-card"
+                      onSubmit={submitReview}
+                    >
+                      <p className="font-medium">{t("knotly.writeReview")}</p>
+                      <div className="flex gap-1">
+                        {[1, 2, 3, 4, 5].map((value) => (
+                          <motion.button
+                            key={value}
+                            type="button"
+                            whileTap={{ scale: 0.8 }}
+                            whileHover={{ scale: 1.15 }}
+                            aria-label={`${value} stars`}
+                            onClick={() => setRating(value)}
+                          >
+                            <Star
+                              className={cn("size-6", value <= rating ? "fill-primary text-primary" : "text-border")}
+                            />
+                          </motion.button>
+                        ))}
+                      </div>
+                      <Textarea
+                        value={reviewBody}
+                        onChange={(e) => setReviewBody(e.target.value)}
+                        required
+                        minLength={8}
+                        placeholder="How was your experience?"
+                      />
+                      <Button type="submit" shape="pill" className="w-fit">
+                        {t("planning.save")}
+                      </Button>
+                    </form>
+                  ) : null}
+                </div>
+              </div>
+            </StorySection>
           ) : null}
-          <VendorStatStrip
-            rating={(vendor.ratingAvg ?? 4.8).toFixed(1)}
-            couplesServed={vendor.couplesServed ?? 0}
-            yearsExperience={vendor.yearsExperience ?? 0}
-            couplesLabel={t("knotly.couplesServed")}
-            yearsLabel={t("knotly.years")}
-          />
-          {vendor.offerHeadline ? (
-            <p className="font-serif text-xl leading-snug tracking-tight text-foreground md:text-2xl">
-              {vendor.offerHeadline}
-            </p>
-          ) : null}
-          {vendor.showPricing === false ? (
-            <div className="grid gap-1">
-              <p className="text-lg font-medium text-primary">{startingLabel}</p>
-              <p className="text-sm text-muted-foreground">{t("knotly.pricingHiddenBody")}</p>
+
+          <StorySection id="info" eyebrow="Good to know" title="Details, FAQs & location">
+            <InfoTabs
+              tabs={[
+                ...(detailRows.length
+                  ? [
+                      {
+                        id: "details",
+                        label: "Details",
+                        content: (
+                          <div className="grid gap-3 sm:grid-cols-2">
+                            {detailRows.map((row) => (
+                              <div
+                                key={row.label}
+                                className="flex items-start gap-3 rounded-2xl bg-background p-3 ring-1 ring-border"
+                              >
+                                <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+                                  <row.icon className="size-4" />
+                                </span>
+                                <div className="min-w-0">
+                                  <p className="text-label tracking-eyebrow text-muted-foreground uppercase">
+                                    {row.label}
+                                  </p>
+                                  <p className="mt-0.5 text-sm">{row.value}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ),
+                      },
+                    ]
+                  : []),
+                { id: "faqs", label: t("knotly.faqs"), content: <FaqList faqs={vendor.faqs ?? []} /> },
+                {
+                  id: "location",
+                  label: t("knotly.location"),
+                  content: (
+                    <div className="grid gap-3">
+                      <iframe
+                        title={`${vendor.city} map`}
+                        src={`https://www.google.com/maps?q=${encodeURIComponent(`${vendor.city}, ${vendor.district}, Sri Lanka`)}&output=embed`}
+                        className="h-64 w-full rounded-2xl"
+                        loading="lazy"
+                      />
+                      <Button asChild variant="outline" shape="pill" className="w-fit">
+                        <a href={maps} target="_blank" rel="noreferrer">
+                          {t("knotly.seeMap")}
+                        </a>
+                      </Button>
+                    </div>
+                  ),
+                },
+              ]}
+            />
+          </StorySection>
+        </div>
+
+        {/* Booking card */}
+        <motion.aside
+          initial={reduce ? false : { opacity: 0, x: 24 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.7, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+          className="grid content-start gap-4 self-start lg:sticky lg:top-40"
+        >
+          <div
+            id="inquire"
+            className="scroll-mt-32 overflow-hidden rounded-3xl border border-border bg-card shadow-raised"
+          >
+            <div className="border-b border-border bg-primary/5 p-5">
+              <p className="text-xs text-muted-foreground">Starting at</p>
+              <p className="font-serif text-3xl text-primary">{startingLabel}</p>
+              {vendor.showPricing === false ? (
+                <p className="mt-1 text-xs text-muted-foreground">{t("knotly.pricingHiddenBody")}</p>
+              ) : null}
             </div>
-          ) : (
-            <p className="text-lg font-medium text-primary">{startingLabel}</p>
-          )}
+            <div className="grid gap-4 p-5">
+              <p className="font-serif text-xl">{t("knotly.requestPricing")}</p>
+              {canCouple ? (
+                <InquiryStepper
+                  packages={packageCards.map((pack) => ({ id: pack.id, name: pack.name, priceLabel: pack.priceLabel }))}
+                  selectedPackageId={selectedPackageId}
+                  onSelectPackage={setSelectedPackageId}
+                  preferredDate={preferredDate}
+                  setPreferredDate={setPreferredDate}
+                  message={message}
+                  setMessage={setMessage}
+                  onSubmit={sendInquiry}
+                  status={status}
+                  whatsappUrl={whatsappUrl}
+                  fallbackWhatsapp={wa}
+                  onWhatsapp={trackWhatsapp}
+                />
+              ) : (
+                <div className="grid gap-3 text-sm">
+                  <p className="text-muted-foreground">{t("marketing.loginToInquire")}</p>
+                  <Button asChild shape="pill" className="w-full">
+                    <Link href="/login">{t("nav.signIn")}</Link>
+                  </Button>
+                </div>
+              )}
+              {wa ? (
+                <Button asChild variant="outline" shape="pill" className="w-full">
+                  <a href={wa} target="_blank" rel="noreferrer" onClick={trackWhatsapp}>
+                    <MessageCircle className="size-4" /> {t("knotly.whatsapp")}
+                  </a>
+                </Button>
+              ) : null}
+            </div>
+          </div>
+
           <div className="flex flex-wrap gap-2">
             {canCouple ? <ShortlistControl saved={shortlisted} onToggle={saveToTeam} /> : null}
             {canCouple || user?.role === "VENDOR" ? (
@@ -388,6 +862,7 @@ export default function VendorStorefrontPage() {
                 type="button"
                 size="sm"
                 variant="outline"
+                shape="pill"
                 className="gap-2"
                 onClick={() => void openInAppMessage()}
               >
@@ -399,6 +874,7 @@ export default function VendorStorefrontPage() {
               type="button"
               variant={hasCompare(vendor.slug) ? "default" : "outline"}
               size="sm"
+              shape="pill"
               className="gap-2"
               onClick={() => {
                 const result = toggleCompare({
@@ -415,275 +891,86 @@ export default function VendorStorefrontPage() {
               {hasCompare(vendor.slug) ? "In compare" : "Compare"}
             </Button>
             {compareHref ? (
-              <Button asChild size="sm" variant="secondary">
+              <Button asChild size="sm" variant="secondary" shape="pill">
                 <Link href={compareHref}>Open compare ({compareCount})</Link>
               </Button>
             ) : null}
-            {vendor.instagram ? (
-              <a
-                className="rounded-full border border-border/70 px-3 py-1.5 text-sm text-primary transition hover:border-primary/40"
-                href={`https://instagram.com/${vendor.instagram.replace("@", "")}`}
-                target="_blank"
-                rel="noreferrer"
-              >
-                Instagram
-              </a>
-            ) : null}
-            {vendor.facebook ? (
-              <a
-                className="rounded-full border border-border/70 px-3 py-1.5 text-sm text-primary transition hover:border-primary/40"
-                href={
-                  vendor.facebook.startsWith("http")
-                    ? vendor.facebook
-                    : `https://facebook.com/${vendor.facebook.replace(/^@/, "")}`
-                }
-                target="_blank"
-                rel="noreferrer"
-              >
-                Facebook
-              </a>
-            ) : null}
-            {websiteHref ? (
-              <a
-                className="rounded-full border border-border/70 px-3 py-1.5 text-sm text-primary transition hover:border-primary/40"
-                href={websiteHref}
-                target="_blank"
-                rel="noreferrer"
-              >
-                {websiteLabel}
-              </a>
-            ) : null}
+            {[
+              vendor.instagram
+                ? { label: "Instagram", href: `https://instagram.com/${vendor.instagram.replace("@", "")}` }
+                : null,
+              vendor.facebook
+                ? {
+                    label: "Facebook",
+                    href: vendor.facebook.startsWith("http")
+                      ? vendor.facebook
+                      : `https://facebook.com/${vendor.facebook.replace(/^@/, "")}`,
+                  }
+                : null,
+              websiteHref ? { label: websiteLabel, href: websiteHref } : null,
+            ]
+              .filter((link): link is { label: string; href: string } => Boolean(link))
+              .map((link) => (
+                <a
+                  key={link.label}
+                  className="inline-flex h-8 items-center rounded-full border border-border px-3 text-sm text-primary transition hover:border-primary/40"
+                  href={link.href}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {link.label}
+                </a>
+              ))}
           </div>
           {compareHint ? <p className="text-xs text-destructive">{compareHint}</p> : null}
+
           {features.length ? (
-            <div className="grid gap-2 rounded-2xl border border-border/70 bg-card/50 p-4">
-              <p className="text-xs uppercase tracking-eyebrow text-muted-foreground">{t("knotly.asSeenIn")}</p>
-              {features.slice(0, 3).map((article) => (
+            <div className="grid gap-2 rounded-3xl border border-border bg-card p-4 shadow-card">
+              <p className="text-label tracking-eyebrow text-muted-foreground uppercase">{t("knotly.asSeenIn")}</p>
+              {features.slice(0, 3).map((article, index) => (
                 <Link
                   key={article.id}
                   href={`/ideas/${article.slug}`}
-                  className="text-sm text-primary underline-offset-2 hover:underline"
+                  className="group flex items-center gap-3 rounded-2xl p-1.5 transition hover:bg-secondary/60"
                 >
-                  {article.title}
+                  <SafeImg
+                    src={article.coverUrl}
+                    fallbackIndex={index}
+                    className="size-12 shrink-0 rounded-xl object-cover"
+                  />
+                  <span className="line-clamp-2 text-sm group-hover:text-primary">{article.title}</span>
                 </Link>
               ))}
             </div>
           ) : null}
-          <InquirePanel title={t("knotly.requestPricing")}>
-            {canCouple ? (
-              <form className="grid gap-3" onSubmit={inquire}>
-                <FieldBlock label={t("knotly.preferredDate")} htmlFor="preferred" compact>
-                  <DatePicker
-                    value={preferredDate}
-                    onChange={setPreferredDate}
-                    placeholder={t("knotly.preferredDate")}
-                  />
-                </FieldBlock>
-                <FieldBlock label={t("marketing.message")} htmlFor="message" compact>
-                  <Textarea id="message" value={message} onChange={(e) => setMessage(e.target.value)} />
-                </FieldBlock>
-                {selectedPackageId ? (
-                  <p className="text-xs text-muted-foreground">
-                    Package: {vendor.packages?.find((pkg) => pkg.id === selectedPackageId)?.name}
-                  </p>
-                ) : null}
-                <Button type="submit" className="w-full">
-                  {t("hub.inquire")}
-                </Button>
-                {wa ? (
-                  <Button asChild variant="outline" className="w-full">
-                    <a href={wa} target="_blank" rel="noreferrer" onClick={trackWhatsapp}>
-                      {t("knotly.whatsapp")}
-                    </a>
-                  </Button>
-                ) : null}
-                {status ? (
-                  <FormStatus tone={status.includes("sent") || status.includes("Sent") ? "success" : "muted"}>
-                    {status}
-                  </FormStatus>
-                ) : null}
-                {whatsappUrl ? (
-                  <Button asChild className="w-full">
-                    <a href={whatsappUrl} target="_blank" rel="noreferrer">
-                      {t("knotly.openWhatsapp")}
-                    </a>
-                  </Button>
-                ) : null}
-              </form>
-            ) : (
-              <div className="grid gap-3 text-sm">
-                <p className="text-muted-foreground">{t("marketing.loginToInquire")}</p>
-                <Button asChild className="w-full">
-                  <Link href="/login">{t("nav.signIn")}</Link>
-                </Button>
-                {wa ? (
-                  <Button asChild variant="outline" className="w-full">
-                    <a href={wa} target="_blank" rel="noreferrer" onClick={trackWhatsapp}>
-                      {t("knotly.whatsapp")}
-                    </a>
-                  </Button>
-                ) : null}
-              </div>
-            )}
-          </InquirePanel>
-        </div>
+        </motion.aside>
       </div>
 
-      <div className="grid gap-4">
-        <HorizontalTabs ariaLabel="Vendor details" activeId={tab} onChange={setTab} items={tabs} />
+      {/* 5 · Similar vendors */}
+      <SimilarVendors vendor={vendor} currency={currency} inquireLabel={t("knotly.inquirePricing")} />
 
-        {tab === "about" ? (
-          <div className="grid gap-5 rounded-3xl border border-border/70 bg-card/60 p-6 text-sm shadow-sm md:p-8">
-            <p className="max-w-3xl text-base leading-relaxed">{vendor.description}</p>
-            {!hasStyleAttribute && vendor.styles?.length ? (
-              <p className="text-muted-foreground">{vendor.styles.join(", ")}</p>
-            ) : null}
-            {vendor.destinationExperienced ? <Badge intent="info">Destination experienced</Badge> : null}
-            {(vendor.serviceAreas ?? []).length ? (
-              <p className="text-muted-foreground">Service areas: {(vendor.serviceAreas ?? []).join(", ")}</p>
-            ) : null}
-            {vendor.travelNote ? <p className="text-muted-foreground">{vendor.travelNote}</p> : null}
-            {vendor.overtimeNote ? <p className="text-muted-foreground">Overtime: {vendor.overtimeNote}</p> : null}
-            {(vendor.includedInPrice ?? []).length ? (
-              <div>
-                <p className="mb-2 font-medium">{t("knotly.included")}</p>
-                <ul className="grid gap-1 sm:grid-cols-2">
-                  {(vendor.includedInPrice ?? []).map((item) => (
-                    <li key={item}>✓ {item}</li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-            {vendor.taxNote || vendor.depositNote || vendor.cancellationNote ? (
-              <div className="grid gap-2 rounded-2xl border border-border/60 bg-background/40 p-4 text-xs text-muted-foreground">
-                {vendor.taxNote ? <p>Tax: {vendor.taxNote}</p> : null}
-                {vendor.depositNote ? <p>Deposit: {vendor.depositNote}</p> : null}
-                {vendor.cancellationNote ? <p>Cancellation: {vendor.cancellationNote}</p> : null}
-              </div>
-            ) : null}
-          </div>
-        ) : null}
-
-        {tab === "faqs" ? (
-          <div className="grid gap-1 rounded-3xl border border-border/70 bg-card/60 p-4 text-sm shadow-sm md:p-6">
-            {(vendor.faqs ?? []).map((faq, index) => (
-              <details key={`${faq.question}-${index}`} className="group border-b border-border/50 py-3 last:border-0">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 font-medium marker:content-none [&::-webkit-details-marker]:hidden">
-                  <span>{faq.question}</span>
-                  <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform duration-200 group-open:rotate-180" />
-                </summary>
-                <p className="mt-2 leading-relaxed text-muted-foreground">{faq.answer}</p>
-              </details>
-            ))}
-            {(vendor.faqs ?? []).length === 0 ? <p className="p-2 text-muted-foreground">—</p> : null}
-          </div>
-        ) : null}
-
-        {tab === "reviews" ? (
-          <div className="grid gap-6 rounded-3xl border border-border/70 bg-card/60 p-6 shadow-sm md:p-8">
-            <div>
-              <p className="font-serif text-4xl font-medium tracking-tight">★ {(vendor.ratingAvg ?? 0).toFixed(1)}</p>
-              <p className="text-sm text-muted-foreground">
-                {vendor.ratingCount ?? 0} {t("knotly.recommended")}
-              </p>
-            </div>
-            {averages
-              ? DIMS.map((key) => (
-                  <div key={key} className="grid grid-cols-[8rem_1fr_2rem] items-center gap-2 text-xs">
-                    <span>{t(`knotly.${key}`)}</span>
-                    <div className="h-2 overflow-hidden rounded-full bg-secondary">
-                      <div
-                        className="h-full bg-primary transition-all duration-500"
-                        style={{ width: `${(averages[key] / 5) * 100}%` }}
-                      />
-                    </div>
-                    <span>{averages[key].toFixed(1)}</span>
-                  </div>
-                ))
-              : null}
-            {(vendor.reviews ?? []).map((review) => (
-              <div key={review.id} className="rounded-2xl border border-border/70 bg-background/40 p-4 text-sm">
-                <p className="font-medium">
-                  {review.authorName} · ★ {review.rating}
-                </p>
-                <p className="mt-1 text-muted-foreground">{review.body}</p>
-              </div>
-            ))}
-            {canCouple ? (
-              <form className="grid gap-3" onSubmit={submitReview}>
-                <p className="font-medium">{t("knotly.writeReview")}</p>
-                <FieldBlock label="Rating" compact>
-                  <SimpleSelect
-                    value={String(rating)}
-                    onValueChange={(value) => setRating(Number(value))}
-                    options={[1, 2, 3, 4, 5].map((value) => ({ value: String(value), label: `★ ${value}` }))}
-                  />
-                </FieldBlock>
-                <FieldBlock label="Review" compact>
-                  <Textarea value={reviewBody} onChange={(e) => setReviewBody(e.target.value)} required minLength={8} />
-                </FieldBlock>
-                <Button type="submit">{t("planning.save")}</Button>
-              </form>
-            ) : null}
-          </div>
-        ) : null}
-
-        {tab === "pricing" ? (
-          <div className="grid gap-5">
-            {vendor.showPricing === false ? (
-              <div className="rounded-3xl border border-border/70 bg-card/60 p-5 md:p-6">
-                <p className="font-serif text-2xl tracking-tight">{t("knotly.pricingHiddenTitle")}</p>
-                <p className="mt-1 text-sm text-muted-foreground">{t("knotly.pricingHiddenBody")}</p>
-              </div>
-            ) : vendor.offerHeadline ? (
-              <p className="font-serif text-2xl tracking-tight md:text-3xl">{vendor.offerHeadline}</p>
-            ) : null}
-            <PackageCompare packages={packageCards} onSelect={setSelectedPackageId} />
-            {(vendor.packages ?? []).length === 0 ? (
-              <p className="text-sm text-muted-foreground">{startingLabel}</p>
-            ) : null}
-            {vendor.pricingDisclaimer ? (
-              <p className="text-xs text-muted-foreground">{vendor.pricingDisclaimer}</p>
-            ) : null}
-          </div>
-        ) : null}
-
-        {tab === "location" ? (
-          <div className="grid gap-3 rounded-3xl border border-border/70 bg-card/60 p-6 text-sm shadow-sm md:p-8">
-            <p className="font-serif text-xl tracking-tight">
-              {vendor.city}, {vendor.district}
-            </p>
-            <Button asChild variant="outline" className="w-fit">
-              <a href={maps} target="_blank" rel="noreferrer">
-                {t("knotly.seeMap")}
-              </a>
-            </Button>
-          </div>
-        ) : null}
-      </div>
-
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/95 p-3 backdrop-blur lg:hidden">
+      <motion.div
+        initial={reduce ? false : { y: 100 }}
+        animate={{ y: 0 }}
+        transition={{ delay: 0.5, type: "spring", stiffness: 260, damping: 28 }}
+        className="fixed inset-x-3 bottom-3 z-30 rounded-3xl border border-border bg-background/85 p-2.5 shadow-raised backdrop-blur-xl lg:hidden"
+      >
         <div className="mx-auto flex max-w-6xl items-center gap-2">
+          <div className="min-w-0 flex-1 pl-2">
+            <p className="text-xs text-muted-foreground">Starting at</p>
+            <p className="truncate font-serif text-lg text-primary">{startingLabel}</p>
+          </div>
           {canCouple ? <ShortlistControl saved={shortlisted} onToggle={saveToTeam} className="shrink-0" /> : null}
-          {wa ? (
-            <Button asChild className="flex-1">
-              <a href={wa} target="_blank" rel="noreferrer" onClick={trackWhatsapp}>
-                {t("knotly.whatsapp")}
-              </a>
-            </Button>
-          ) : (
-            <Button
-              type="button"
-              className="flex-1"
-              onClick={() =>
-                document.getElementById("preferred")?.scrollIntoView({ behavior: "smooth", block: "center" })
-              }
-            >
-              {t("hub.inquire")}
-            </Button>
-          )}
+          <Button
+            type="button"
+            shape="pill"
+            className="shrink-0"
+            onClick={() => document.getElementById("inquire")?.scrollIntoView({ behavior: "smooth", block: "center" })}
+          >
+            {t("hub.inquire")}
+          </Button>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

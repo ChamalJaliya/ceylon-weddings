@@ -16,6 +16,17 @@ const prisma = new PrismaClient({
   adapter: new PrismaPg({ connectionString }),
 });
 
+/** Curated Sri Lankan wedding shots, shared with the home page. */
+const WEDDING = [
+  "https://plus.unsplash.com/premium_photo-1663076211121-36754a46de8d?w=1200&auto=format&fit=crop&q=80",
+  "https://images.unsplash.com/photo-1595407753234-0882f1e77954?w=1200&auto=format&fit=crop&q=80",
+  "https://plus.unsplash.com/premium_photo-1670430623154-24626c42fb33?w=1200&auto=format&fit=crop&q=80",
+  "https://images.unsplash.com/photo-1621621667797-e06afc217fb0?w=1200&auto=format&fit=crop&q=80",
+  "https://plus.unsplash.com/premium_photo-1663100824732-883a1b063bc8?w=1200&auto=format&fit=crop&q=80",
+  "https://images.unsplash.com/photo-1670529776180-60e4132ab90c?w=1200&auto=format&fit=crop&q=80",
+  "https://images.unsplash.com/photo-1696271026740-4c0c1a367f03?w=1200&auto=format&fit=crop&q=80",
+];
+
 const PHOTO = {
   venue: "https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=1200&q=80",
   garden: "https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=1200&q=80",
@@ -210,6 +221,48 @@ async function upsertUser(
         : {}),
     },
   });
+}
+
+/** Category-themed photo pools; every vendor ends up with a cover + 5-photo gallery. */
+const CATEGORY_POOLS: Record<string, string[]> = {
+  VENUE: [PHOTO.venue, PHOTO.garden, PHOTO.beach, WEDDING[3], WEDDING[6]],
+  PHOTO_VIDEO: [PHOTO.photo, WEDDING[0], WEDDING[2], WEDDING[5], PHOTO.beach],
+  FLORIST_DECOR: [PHOTO.florist, PHOTO.garden, PHOTO.venue, WEDDING[4], WEDDING[1]],
+  CATERER: [PHOTO.food, PHOTO.venue, PHOTO.garden, PHOTO.cake, WEDDING[3]],
+  CAKE: [PHOTO.cake, PHOTO.food, PHOTO.florist, WEDDING[4], PHOTO.venue],
+  PORUWA: [WEDDING[0], WEDDING[1], WEDDING[2], PHOTO.florist, WEDDING[5]],
+  HAIR_MAKEUP: [PHOTO.makeup, PHOTO.bridal, WEDDING[1], WEDDING[2], PHOTO.jewellery],
+  BRIDAL_WEAR: [PHOTO.bridal, WEDDING[1], WEDDING[0], PHOTO.jewellery, WEDDING[5]],
+  GROOM_WEAR: [WEDDING[5], WEDDING[0], PHOTO.bridal, WEDDING[6], PHOTO.photo],
+  BRIDAL_DRESSER: [WEDDING[1], PHOTO.bridal, PHOTO.makeup, PHOTO.jewellery, WEDDING[2]],
+  JEWELLERY: [PHOTO.jewellery, PHOTO.bridal, WEDDING[1], PHOTO.makeup, WEDDING[2]],
+  ENTERTAINMENT: [PHOTO.dance, PHOTO.venue, WEDDING[3], PHOTO.garden, WEDDING[6]],
+  WEDDING_CARS: [PHOTO.car, WEDDING[6], WEDDING[3], PHOTO.venue, PHOTO.photo],
+  TRANSPORT: [PHOTO.car, PHOTO.beach, WEDDING[6], PHOTO.venue, WEDDING[3]],
+  INVITATIONS: [PHOTO.invite, PHOTO.florist, WEDDING[4], PHOTO.cake, WEDDING[2]],
+  MEHNDI: [PHOTO.mehndi, PHOTO.bridal, WEDDING[1], PHOTO.jewellery, WEDDING[2]],
+  ASTROLOGY: [WEDDING[0], WEDDING[2], PHOTO.florist, WEDDING[5], PHOTO.garden],
+  REGISTRAR: [WEDDING[3], WEDDING[6], PHOTO.garden, WEDDING[0], PHOTO.venue],
+  PLANNER: [WEDDING[4], PHOTO.venue, PHOTO.florist, WEDDING[3], PHOTO.garden],
+  ACCOMMODATION: [PHOTO.beach, PHOTO.venue, PHOTO.garden, WEDDING[6], WEDDING[3]],
+};
+
+async function fillVendorGalleries() {
+  const vendors = await prisma.vendor.findMany({
+    select: { id: true, categoryId: true, photoUrl: true, photos: true },
+  });
+  for (const [index, vendor] of vendors.entries()) {
+    const key = (vendor.categoryId ?? "").replace(/^vt_/, "");
+    const pool = CATEGORY_POOLS[key] ?? WEDDING;
+    // Rotate the pool so vendors in the same category don't look identical.
+    const rotated = pool.map((_, i) => pool[(i + index) % pool.length]);
+    const photos = [...new Set([...(vendor.photos ?? []), ...rotated])].slice(0, 6);
+    if (vendor.photoUrl && (vendor.photos?.length ?? 0) >= 4) continue;
+    await prisma.vendor.update({
+      where: { id: vendor.id },
+      data: { photoUrl: vendor.photoUrl ?? photos[0], photos },
+    });
+  }
 }
 
 async function main() {
@@ -731,6 +784,7 @@ async function main() {
     passwordHash,
   });
   Object.assign(bySlug, rich.bySlug);
+  await fillVendorGalleries();
 
   const nimaliWedding = await prisma.wedding.create({
     data: {

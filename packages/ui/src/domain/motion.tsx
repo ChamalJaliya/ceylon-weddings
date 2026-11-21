@@ -7,6 +7,9 @@ import {
   useReducedMotion,
   useSpring,
   useTransform,
+  useScroll,
+  useInView,
+  LayoutGroup,
   AnimatePresence,
   type HTMLMotionProps,
 } from "motion/react";
@@ -487,4 +490,4 @@ export function AnimatedBadge({
 
 export { CelebrationBurst, SaveTheDateBurst, useConfetti } from "./celebration-burst";
 
-export { motion, useReducedMotion, AnimatePresence, useSpring, useTransform };
+export { motion, useReducedMotion, AnimatePresence, useSpring, useTransform, useScroll, useInView, LayoutGroup };

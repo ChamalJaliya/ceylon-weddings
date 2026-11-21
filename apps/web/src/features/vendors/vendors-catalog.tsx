@@ -8,6 +8,10 @@ import {
   ChevronRight,
   Heart,
   LayoutGrid,
+  Sparkles,
+  Eye,
+  MapPin,
+  Star,
   Map as MapIcon,
   Search,
   SlidersHorizontal,
@@ -55,6 +59,19 @@ import { Input } from "@ceylonweddings/ui/components/input";
 import { Label } from "@ceylonweddings/ui/components/label";
 import { SimpleSelect } from "@ceylonweddings/ui/components/select";
 import { VendorCard } from "@ceylonweddings/ui/domain/vendor-card";
+import { VendorQuickView } from "@ceylonweddings/ui/domain/vendor-quick-view";
+import { toQuickView } from "@/lib/vendor-quick-view";
+import { CATEGORY_ICONS, CATEGORY_PHOTOS } from "@/lib/category-media";
+import { WEDDING_IMAGES } from "@/lib/wedding-images";
+import {
+  AnimatePresence,
+  LayoutGroup,
+  Stagger,
+  StaggerItem,
+  motion,
+  useReducedMotion,
+} from "@ceylonweddings/ui/domain/motion";
+import { cn } from "@ceylonweddings/ui/utils";
 import { VendorCompareDock } from "@ceylonweddings/ui/domain/vendor-compare-dock";
 import { EmptyState } from "@ceylonweddings/ui/domain/empty-state";
 import { AttributeHelp } from "@ceylonweddings/ui/domain/attribute-help";
@@ -64,7 +81,6 @@ import {
   AsyncListToolbar,
   AsyncSearchField,
   AsyncSortSelect,
-  CategoryPills,
   FilterChip,
   PaginationBar,
   VendorCardSkeleton,
@@ -128,6 +144,27 @@ export function CatalogFallback() {
   );
 }
 
+function VendorThumb({ src, name }: { src?: string | null; name: string }) {
+  const [failed, setFailed] = useState(false);
+  if (!src || failed) {
+    return (
+      <span className="grid size-14 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-primary/15 to-love/10 font-serif text-xl text-primary">
+        {name.slice(0, 1)}
+      </span>
+    );
+  }
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={src}
+      alt=""
+      loading="lazy"
+      onError={() => setFailed(true)}
+      className="size-14 shrink-0 rounded-xl object-cover"
+    />
+  );
+}
+
 export function VendorsCatalog() {
   const t = useTranslations();
   const locale = useLocale();
@@ -142,6 +179,7 @@ export function VendorsCatalog() {
   const [more, setMore] = useState(false);
   const compareItems = useCompareStore((state) => state.items);
   const toggleCompare = useCompareStore((state) => state.toggle);
+  const [quickId, setQuickId] = useState<string | null>(null);
   const removeCompare = useCompareStore((state) => state.remove);
   const clearCompare = useCompareStore((state) => state.clear);
   const hasCompare = useCompareStore((state) => state.has);
@@ -261,6 +299,29 @@ export function VendorsCatalog() {
   );
 
   const items = data?.items ?? [];
+  const reduceMotion = useReducedMotion();
+  const bannerPhoto =
+    (query.category && CATEGORY_PHOTOS[query.category]?.replace(/w=\d+/, "w=1800")) ||
+    WEDDING_IMAGES[3] ||
+    WEDDING_IMAGES[0];
+
+  function compareVendor(vendor: (typeof items)[number]) {
+    const result = toggleCompare({
+      id: vendor.id,
+      slug: vendor.slug,
+      name: vendor.name,
+      category: vendor.category,
+      photoUrl: vendor.photoUrl ?? vendor.photos?.[0],
+    });
+    setCompareMessage(result.ok ? null : (result.reason ?? null));
+  }
+
+  function shortlistVendor(vendor: (typeof items)[number]) {
+    api.wedding
+      .shortlist({ vendorId: vendor.id })
+      .then(() => setSavedIds((current) => new Set(current).add(vendor.id)))
+      .catch(() => undefined);
+  }
   const total = data?.total ?? 0;
   const pageSize = data?.pageSize ?? query.pageSize;
   const from = total === 0 ? 0 : (query.page - 1) * pageSize + 1;
@@ -507,70 +568,114 @@ export function VendorsCatalog() {
 
   return (
     <div className={compareItems.length ? "cw-stack pb-28" : "cw-stack"}>
-      <PromotionSlotRail slot="CATALOG_TOP" category={query.category} limit={1} />
-
-      <header className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-        <div className="max-w-xl space-y-2">
-          <p className="text-label font-medium tracking-eyebrow text-muted-foreground uppercase">
-            {t("catalog.kicker")}
-          </p>
-          <h1 className="font-serif text-4xl font-medium tracking-tight sm:text-5xl">{t("nav.catalog")}</h1>
-          <p className="text-sm leading-relaxed text-muted-foreground sm:text-h4">
-            {selectedType
-              ? `${total} ${typeLabel(selectedType, selectedType.slug, locale).toLowerCase()}`
-              : t("catalog.subtitle")}
-          </p>
+      <header className="relative isolate overflow-hidden rounded-3xl bg-ink">
+        <AnimatePresence initial={false}>
+          <motion.img
+            key={bannerPhoto}
+            src={bannerPhoto}
+            alt=""
+            aria-hidden
+            initial={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 1.08 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+            className="absolute inset-0 -z-10 size-full object-cover"
+          />
+        </AnimatePresence>
+        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-ink/85 via-ink/55 to-ink/20" />
+        <div className="flex flex-col gap-6 px-6 py-10 sm:px-10 sm:py-14 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-xl space-y-2 text-paper">
+            <p className="text-label font-medium tracking-eyebrow text-paper/70 uppercase">{t("catalog.kicker")}</p>
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.h1
+                key={selectedType?.slug ?? "all"}
+                initial={reduceMotion ? false : { opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={reduceMotion ? undefined : { opacity: 0, y: -10 }}
+                transition={{ duration: 0.35 }}
+                className="font-serif text-4xl font-medium tracking-tight sm:text-6xl"
+              >
+                {selectedType ? typeLabel(selectedType, selectedType.slug, locale) : t("nav.catalog")}
+              </motion.h1>
+            </AnimatePresence>
+            <p className="text-sm leading-relaxed text-paper/80 sm:text-h4">
+              {selectedType
+                ? `${total} ${typeLabel(selectedType, selectedType.slug, locale).toLowerCase()} across Sri Lanka`
+                : t("catalog.subtitle")}
+            </p>
+          </div>
+          <AsyncSearchField
+            className="w-full rounded-full bg-card shadow-raised lg:max-w-md"
+            placeholder={t("knotly.searchCatalog")}
+            value={draftQ}
+            onChange={(value) => {
+              searchDirty.current = true;
+              setDraftQ(value);
+            }}
+          />
         </div>
-        <AsyncSearchField
-          className="w-full lg:max-w-md"
-          placeholder={t("knotly.searchCatalog")}
-          value={draftQ}
-          onChange={(value) => {
-            searchDirty.current = true;
-            setDraftQ(value);
-          }}
-        />
       </header>
 
-      <CategoryPills>
-        <FilterChip active={!query.category} onClick={() => setQuery({ category: undefined, attrs: undefined })}>
-          {t("knotly.viewAll")}
-        </FilterChip>
-        {chipTypes.map((type) => (
-          <FilterChip
-            key={type.slug}
-            active={query.category === type.slug}
-            onClick={() =>
-              setQuery({
-                category: query.category === type.slug ? undefined : type.slug,
-                attrs: undefined,
-              })
-            }
-          >
-            {typeLabel(type, type.slug, locale)}
-          </FilterChip>
-        ))}
-        {otherTypes.length && featuredTypes.length ? (
-          <FilterChip active={more} onClick={() => setMore((value) => !value)}>
-            {t("knotly.more")}
-          </FilterChip>
-        ) : null}
-        {canShortlist ? (
-          <FilterChip active={false} onClick={() => void matchMyWedding()}>
-            <Icon icon={Heart} size="xs" />
-            Match my wedding
-          </FilterChip>
-        ) : null}
-      </CategoryPills>
-
-      {!query.category ? (
-        <div className="rounded-2xl border border-dashed border-border/80 bg-card/40 px-4 py-3 text-sm text-muted-foreground">
-          {t("catalog.pickTypeForAttrs")}
+      <LayoutGroup id="catalog-categories">
+        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {[
+            { slug: undefined as string | undefined, label: t("knotly.viewAll") },
+            ...chipTypes.map((type) => ({
+              slug: type.slug as string | undefined,
+              label: typeLabel(type, type.slug, locale),
+            })),
+          ].map(({ slug, label }) => {
+            const active = slug ? query.category === slug : !query.category;
+            const ChipIcon = slug ? (CATEGORY_ICONS[slug] ?? Sparkles) : LayoutGrid;
+            return (
+              <motion.button
+                key={slug ?? "all"}
+                type="button"
+                whileTap={reduceMotion ? undefined : { scale: 0.95 }}
+                onClick={() =>
+                  setQuery({ category: slug && query.category !== slug ? slug : undefined, attrs: undefined })
+                }
+                className={cn(
+                  "relative inline-flex h-10 shrink-0 items-center gap-2 rounded-full border px-4 text-sm whitespace-nowrap transition-colors",
+                  active
+                    ? "border-transparent text-primary-foreground"
+                    : "border-border bg-card text-foreground hover:border-primary/40 hover:text-primary",
+                )}
+              >
+                {active ? (
+                  <motion.span
+                    layoutId="catalog-chip-active"
+                    className="absolute inset-0 -z-0 rounded-full bg-primary shadow-md"
+                    transition={{ type: "spring", stiffness: 420, damping: 34 }}
+                  />
+                ) : null}
+                <ChipIcon className="relative size-4" />
+                <span className="relative">{label}</span>
+              </motion.button>
+            );
+          })}
+          {otherTypes.length && featuredTypes.length ? (
+            <FilterChip active={more} onClick={() => setMore((value) => !value)}>
+              {t("knotly.more")}
+            </FilterChip>
+          ) : null}
+          {canShortlist ? (
+            <FilterChip active={false} onClick={() => void matchMyWedding()}>
+              <Icon icon={Heart} size="xs" />
+              Match my wedding
+            </FilterChip>
+          ) : null}
         </div>
-      ) : null}
+      </LayoutGroup>
+
+      <PromotionSlotRail slot="CATALOG_TOP" category={query.category} limit={1} layout="STRIP" />
 
       {query.category && highlightAttrs.length ? (
-        <div className="sticky top-16 z-20 -mx-1 border-b border-border/60 bg-background/90 px-1 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/75">
+        <motion.div
+          initial={reduceMotion ? false : { opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-3xl border border-border bg-card/70 p-4 shadow-card sm:p-5"
+        >
           <div className="grid gap-4">
             {highlightAttrs.map((attr) => {
               const label = attr.filterLabel ? localizedText(attr.filterLabel, locale) : attr.key;
@@ -606,11 +711,14 @@ export function VendorsCatalog() {
               );
             })}
           </div>
-        </div>
+        </motion.div>
       ) : null}
 
-      <div ref={resultsRef} className="scroll-mt-24">
-        <AsyncListToolbar summary={loading || !data ? t("catalog.loading") : t("catalog.results", { from, to, total })}>
+      <div ref={resultsRef} className="sticky top-20 z-30 scroll-mt-24">
+        <AsyncListToolbar
+          className="border-border bg-background/80 shadow-card backdrop-blur-xl"
+          summary={loading || !data ? t("catalog.loading") : t("catalog.results", { from, to, total })}
+        >
           <FloatingPanel open={filtersOpen} onOpenChange={setFiltersOpen}>
             <FloatingPanelTrigger asChild>
               <Button type="button" shape="pill" size="sm" variant={activeFilters ? "default" : "outline"}>
@@ -808,7 +916,10 @@ export function VendorsCatalog() {
       </div>
 
       {activeFilters || query.q || query.attrs ? (
-        <div className="flex flex-wrap gap-2">
+        <motion.div
+          layout
+          className="flex flex-wrap items-center gap-2 [&>*]:motion-safe:animate-in [&>*]:motion-safe:fade-in-0 [&>*]:motion-safe:zoom-in-95"
+        >
           {query.q ? (
             <Button
               type="button"
@@ -938,7 +1049,7 @@ export function VendorsCatalog() {
               Clear attribute filters
             </Button>
           ) : null}
-        </div>
+        </motion.div>
       ) : null}
 
       {error ? (
@@ -951,52 +1062,105 @@ export function VendorsCatalog() {
       ) : null}
 
       {view === "map" ? (
-        <div className="grid gap-4">
-          {(facets?.districts ?? []).map((district) => {
+        <Stagger key={`map-${query.page}-${query.category ?? ""}`} className="grid gap-5 lg:grid-cols-2" stagger={0.06}>
+          {(facets?.districts ?? []).map((district, districtIndex) => {
             const inDistrict = items.filter((vendor) => vendor.district === district.value);
-            if (!inDistrict.length && query.district && query.district !== district.value) return null;
+            if (!inDistrict.length) return null;
             const maps = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${district.value}, Sri Lanka wedding venues`)}`;
+            const cover =
+              inDistrict[0]?.photoUrl ??
+              inDistrict[0]?.photos?.[0] ??
+              WEDDING_IMAGES[districtIndex % WEDDING_IMAGES.length];
             return (
-              <div key={district.value} className="grid gap-3 rounded-3xl border border-border bg-card p-4">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div>
-                    <p className="font-serif text-xl">{district.value}</p>
-                    <p className="text-xs text-muted-foreground">{district.count} listings in catalog</p>
-                  </div>
-                  <Button asChild size="sm" variant="outline">
-                    <a href={maps} target="_blank" rel="noreferrer">
-                      {t("knotly.openAreaMap")}
-                    </a>
-                  </Button>
-                </div>
-                <div className="grid gap-2">
-                  {(inDistrict.length ? inDistrict : items.filter((v) => v.district === district.value)).map(
-                    (vendor) => (
-                      <Link
-                        key={vendor.id}
-                        href={`/vendors/${vendor.slug}`}
-                        onClick={() => markLeavingCatalog()}
-                        className="flex items-center justify-between gap-3 rounded-2xl bg-secondary/40 px-3 py-2 text-sm transition hover:bg-secondary"
+              <StaggerItem key={district.value} className="h-full">
+                <div className="flex h-full flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-card">
+                  <div className="group relative h-36 overflow-hidden">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={cover}
+                      alt=""
+                      loading="lazy"
+                      className="absolute inset-0 size-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-ink/80 via-ink/30 to-transparent" />
+                    <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-4 text-paper">
+                      <div>
+                        <p className="flex items-center gap-1.5 font-serif text-2xl">
+                          <MapPin className="size-5" /> {district.value}
+                        </p>
+                        <p className="text-xs text-paper/80">{district.count} listings in catalog</p>
+                      </div>
+                      <a
+                        href={maps}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1.5 rounded-full bg-paper/90 px-3 py-1.5 text-xs font-medium text-ink backdrop-blur transition hover:bg-paper"
                       >
-                        <span className="truncate font-medium">{vendor.name}</span>
-                        <span className="shrink-0 text-xs text-muted-foreground">
-                          {vendor.city} ·{" "}
-                          {priceLabel(
-                            vendor.startingPriceLkr,
-                            currency,
-                            vendor.priceDisplayMode,
-                            vendor.showPricing,
-                            t("knotly.inquirePricing"),
-                          )}
-                        </span>
-                      </Link>
-                    ),
-                  )}
+                        <MapIcon className="size-3.5" /> {t("knotly.openAreaMap")}
+                      </a>
+                    </div>
+                  </div>
+                  <div className="grid gap-1 p-2">
+                    {inDistrict.length ? (
+                      inDistrict.map((vendor) => {
+                        const thumb = vendor.photoUrl ?? vendor.photos?.[0];
+                        return (
+                          <div
+                            key={vendor.id}
+                            className="group flex items-center gap-3 rounded-2xl p-2 transition-colors hover:bg-secondary/60"
+                          >
+                            <Link
+                              href={`/vendors/${vendor.slug}`}
+                              onClick={() => markLeavingCatalog()}
+                              className="flex min-w-0 flex-1 items-center gap-3"
+                            >
+                              <VendorThumb src={thumb} name={vendor.name} />
+                              <span className="min-w-0 flex-1">
+                                <span className="block truncate font-medium group-hover:text-primary">
+                                  {vendor.name}
+                                </span>
+                                <span className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
+                                  <span>{vendor.city}</span>
+                                  {vendor.ratingAvg ? (
+                                    <span className="inline-flex items-center gap-0.5">
+                                      <Star className="size-3 fill-primary text-primary" />{" "}
+                                      {vendor.ratingAvg.toFixed(1)}
+                                    </span>
+                                  ) : null}
+                                  <span className="text-foreground">
+                                    {priceLabel(
+                                      vendor.startingPriceLkr,
+                                      currency,
+                                      vendor.priceDisplayMode,
+                                      vendor.showPricing,
+                                      t("knotly.inquirePricing"),
+                                    )}
+                                  </span>
+                                </span>
+                              </span>
+                            </Link>
+                            <button
+                              type="button"
+                              aria-label={`Quick view ${vendor.name}`}
+                              onClick={() => setQuickId(vendor.id)}
+                              className="grid size-9 shrink-0 place-items-center rounded-full border border-border bg-card text-muted-foreground transition hover:border-primary/50 hover:text-primary"
+                            >
+                              <Eye className="size-4" />
+                            </button>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <p className="px-3 py-4 text-sm text-muted-foreground">
+                        No vendors from {district.value} on this page.
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </div>
+              </StaggerItem>
             );
           })}
-        </div>
+        </Stagger>
       ) : (
         <AsyncListGrid
           loading={loading}
@@ -1053,30 +1217,68 @@ export function VendorsCatalog() {
               matchChips={matchChipsForVendor(vendor, query.attrs, locale)}
               shortlisted={savedIds.has(vendor.id)}
               compared={hasCompare(vendor.slug)}
-              onCompare={() => {
-                const result = toggleCompare({
-                  id: vendor.id,
-                  slug: vendor.slug,
-                  name: vendor.name,
-                  category: vendor.category,
-                  photoUrl: vendor.photoUrl ?? vendor.photos?.[0],
-                });
-                setCompareMessage(result.ok ? null : (result.reason ?? null));
-              }}
-              onShortlist={
-                canShortlist
-                  ? () => {
-                      api.wedding
-                        .shortlist({ vendorId: vendor.id })
-                        .then(() => setSavedIds((current) => new Set(current).add(vendor.id)))
-                        .catch(() => undefined);
-                    }
-                  : undefined
-              }
+              onQuickView={() => setQuickId(vendor.id)}
+              onCompare={() => compareVendor(vendor)}
+              onShortlist={canShortlist ? () => shortlistVendor(vendor) : undefined}
             />
           ))}
         </AsyncListGrid>
       )}
+
+      <motion.button
+        type="button"
+        onClick={() => setFiltersOpen(true)}
+        initial={reduceMotion ? false : { y: 80, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.4, type: "spring", stiffness: 300, damping: 26 }}
+        className={cn(
+          "fixed left-1/2 z-40 inline-flex -translate-x-1/2 items-center gap-2 rounded-full bg-ink px-5 py-3 text-sm font-medium text-paper shadow-raised md:hidden",
+          compareItems.length ? "bottom-24" : "bottom-5",
+        )}
+      >
+        <SlidersHorizontal className="size-4" />
+        {t("catalog.filters")}
+        {activeFilters ? (
+          <span className="grid size-5 place-items-center rounded-full bg-primary text-xs text-primary-foreground">
+            {activeFilters}
+          </span>
+        ) : null}
+      </motion.button>
+
+      {(() => {
+        const quick = items.find((vendor) => vendor.id === quickId) ?? null;
+        return (
+          <VendorQuickView
+            open={Boolean(quick)}
+            onOpenChange={(open) => !open && setQuickId(null)}
+            linkAs={Link}
+            onNavigate={markLeavingCatalog}
+            vendor={
+              quick
+                ? toQuickView(
+                    quick,
+                    typeLabel(
+                      types.find((type) => type.slug === quick.category),
+                      quick.category,
+                      locale,
+                    ),
+                    priceLabel(
+                      quick.startingPriceLkr,
+                      currency,
+                      quick.priceDisplayMode,
+                      quick.showPricing,
+                      t("knotly.inquirePricing"),
+                    ),
+                  )
+                : null
+            }
+            shortlisted={quick ? savedIds.has(quick.id) : false}
+            onShortlist={quick && canShortlist ? () => shortlistVendor(quick) : undefined}
+            compared={quick ? hasCompare(quick.slug) : false}
+            onCompare={quick ? () => compareVendor(quick) : undefined}
+          />
+        );
+      })()}
 
       {data && data.pageCount > 1 ? (
         <PaginationBar

@@ -1,40 +1,78 @@
 /* Shared motion utilities. Every animation here stops under reduced motion. */
 @keyframes cw-shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 @keyframes cw-pulse-subtle {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.7; transform: scale(1.04); }
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.04);
+  }
 }
 
 @keyframes cw-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
 }
 
 @keyframes cw-border-glow {
-  0%, 100% { border-color: var(--color-border); }
-  50% { border-color: var(--color-primary); }
+  0%,
+  100% {
+    border-color: var(--color-border);
+  }
+  50% {
+    border-color: var(--color-primary);
+  }
 }
 
 /* Soft continuous pulse — line-art GIF feel (heartbeat / float) */
 @keyframes cw-icon-gif {
-  0%, 100% { transform: scale(1) translateY(0); }
-  30% { transform: scale(1.14) translateY(-1px); }
-  50% { transform: scale(0.94) translateY(0); }
-  70% { transform: scale(1.08) translateY(-0.5px); }
+  0%,
+  100% {
+    transform: scale(1) translateY(0);
+  }
+  30% {
+    transform: scale(1.14) translateY(-1px);
+  }
+  50% {
+    transform: scale(0.94) translateY(0);
+  }
+  70% {
+    transform: scale(1.08) translateY(-0.5px);
+  }
 }
 
 @keyframes cw-hero-progress {
-  from { transform: scaleY(0); }
-  to { transform: scaleY(1); }
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
 }
 
 @keyframes cw-hero-progress-x {
-  from { transform: scaleX(0); }
-  to { transform: scaleX(1); }
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
 }
 
 @layer utilities {
@@ -142,5 +180,61 @@
   .cw-hero-progress-x {
     animation: none;
     transition: none;
+  }
+}
+
+/* Home page: infinite marquee + drifting petals. */
+@keyframes cw-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes cw-petal-drift {
+  0% {
+    transform: translate3d(0, -10%, 0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate3d(40px, 110vh, 0) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+@keyframes cw-gradient-pan {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@layer utilities {
+  @media (prefers-reduced-motion: no-preference) {
+    .cw-marquee {
+      animation: cw-marquee 40s linear infinite;
+    }
+    .cw-marquee-reverse {
+      animation: cw-marquee 46s linear infinite reverse;
+    }
+    .cw-marquee-host:hover .cw-marquee,
+    .cw-marquee-host:hover .cw-marquee-reverse {
+      animation-play-state: paused;
+    }
+    .cw-petal {
+      animation: cw-petal-drift linear infinite;
+    }
+    .cw-gradient-pan {
+      background-size: 200% 200%;
+      animation: cw-gradient-pan 12s ease-in-out infinite;
+    }
   }
 }

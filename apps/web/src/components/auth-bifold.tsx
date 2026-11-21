@@ -7,21 +7,14 @@ import { Input } from "@ceylonweddings/ui/components/input";
 import { cn } from "@ceylonweddings/ui/utils";
 import { BrandLockup } from "@ceylonweddings/ui/domain/brand-mark";
 import { Link } from "../i18n/navigation";
+import { WEDDING_IMAGES } from "../lib/wedding-images";
 
-const SLIDES = [
-  {
-    src: "https://images.unsplash.com/photo-1606216794074-735e91aa2c92?w=1600&q=80",
-    quoteKey: "auth.quote1" as const,
-  },
-  {
-    src: "https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=1600&q=80",
-    quoteKey: "auth.quote2" as const,
-  },
-  {
-    src: "https://images.unsplash.com/photo-1591604466107-ec97de577aff?w=1600&q=80",
-    quoteKey: "auth.quote3" as const,
-  },
-];
+const QUOTE_KEYS = ["auth.quote1", "auth.quote2", "auth.quote3"] as const;
+
+const SLIDES = WEDDING_IMAGES.map((src, index) => ({
+  src: src.replace("w=2000", "w=1600"),
+  quoteKey: QUOTE_KEYS[index % QUOTE_KEYS.length],
+}));
 
 /** Google brand mark — official fills. design-system: brand-mark-colors */
 export function GoogleMark() {
