@@ -5,6 +5,7 @@ import {
   ServiceUnavailableException,
   UnauthorizedException,
 } from "@nestjs/common";
+import { NotificationsService } from "../notifications/notifications.service";
 import { JwtService } from "@nestjs/jwt";
 import { compare, hash } from "bcrypt";
 import { OAuth2Client } from "google-auth-library";
@@ -14,11 +15,13 @@ import {
   AUTH_TOTP_INVALID,
   AUTH_TOTP_REQUIRED,
   COOKIES,
+  parseUserPreferences,
   type AccountSecurity,
   type ChangePasswordBody,
   type GoogleAuthBody,
   type LoginBody,
   type RegisterBody,
+  type UpdatePreferencesBody,
   type UpdateProfileBody,
   type User,
 } from "@ceylonweddings/contracts";
@@ -35,6 +38,7 @@ export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   async register(body: RegisterBody, response: Response) {
@@ -228,6 +232,7 @@ export class AuthService {
     locale: string;
     currency: string;
     createdAt: Date;
+    preferences: unknown;
   }): User {
     return {
       id: user.id,
@@ -238,6 +243,7 @@ export class AuthService {
       locale: user.locale as User["locale"],
       currency: user.currency as User["currency"],
       createdAt: user.createdAt.toISOString(),
+      preferences: parseUserPreferences(user.preferences),
     };
   }
 
@@ -281,6 +287,25 @@ export class AuthService {
     return this.toUser(updated);
   }
 
+  /** Merge appearance / notification choices into User.preferences (deep for notifications). */
+  async updatePreferences(user: User, body: UpdatePreferencesBody) {
+    const dbUser = await this.prisma.user.findUniqueOrThrow({ where: { id: user.id } });
+    const current = parseUserPreferences(dbUser.preferences);
+    const notifications = { ...(current.notifications ?? {}) };
+    for (const [key, channels] of Object.entries(body.notifications ?? {})) {
+      const k = key as keyof typeof notifications;
+      notifications[k] = { ...(notifications[k] ?? {}), ...channels };
+    }
+    const next = {
+      ...current,
+      ...(body.themeMode ? { themeMode: body.themeMode } : {}),
+      ...(body.palette ? { palette: body.palette } : {}),
+      ...(body.notifications ? { notifications } : {}),
+    };
+    const updated = await this.prisma.user.update({ where: { id: user.id }, data: { preferences: next } });
+    return this.toUser(updated);
+  }
+
   /** Changing the password signs out every other device. */
   async changePassword(user: User, body: ChangePasswordBody, request: Request) {
     const dbUser = await this.prisma.user.findUniqueOrThrow({ where: { id: user.id } });
@@ -293,6 +318,11 @@ export class AuthService {
       data: { passwordHash: await hash(body.newPassword, 12) },
     });
     const { count } = await this.revokeOtherSessions(user, request);
+    await this.notifications.notify({
+      userId: user.id,
+      templateId: "account.passwordChanged",
+      context: { signedOut: count },
+    });
     return { ok: true, signedOut: count };
   }
 
@@ -367,6 +397,7 @@ export class AuthService {
       where: { id: user.id },
       data: { totpEnabled: true },
     });
+    await this.notifications.notify({ userId: user.id, templateId: "account.twoFactorEnabled", context: {} });
     return { ok: true, message: "Two-factor authentication enabled successfully" };
   }
 
@@ -383,6 +414,7 @@ export class AuthService {
       where: { id: user.id },
       data: { totpEnabled: false, totpSecret: null },
     });
+    await this.notifications.notify({ userId: user.id, templateId: "account.twoFactorDisabled", context: {} });
     return { ok: true, message: "Two-factor authentication disabled successfully" };
   }
 

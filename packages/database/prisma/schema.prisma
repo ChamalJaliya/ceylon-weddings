@@ -379,6 +379,8 @@ model User {
   capabilities    AdminCapability[]
   totpSecret      String?
   totpEnabled     Boolean           @default(false)
+  /// Theme mode, palette and per-type notification channels (contracts: userPreferencesSchema).
+  preferences     Json              @default("{}")
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
   sessions        Session[]
@@ -1321,10 +1323,6 @@ enum ConversationType {
   VENDOR_ADMIN
 }
 
-enum NotificationType {
-  MESSAGE
-}
-
 model Conversation {
   id              String             @id @default(cuid())
   type            ConversationType
@@ -1394,10 +1392,13 @@ model Notification {
   id             String           @id @default(cuid())
   userId         String
   user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type           NotificationType @default(MESSAGE)
+  /// Template id from contracts NOTIFICATION_TEMPLATES ("message.received", "inquiry.received", …).
+  type           String           @default("message.received")
   title          String
   body           String
   href           String?
+  /// Variant, category, CTA label, detail rows (contracts: notificationMetadataSchema).
+  metadata       Json             @default("{}")
   conversationId String?
   conversation   Conversation?    @relation(fields: [conversationId], references: [id], onDelete: SetNull)
   messageId      String?

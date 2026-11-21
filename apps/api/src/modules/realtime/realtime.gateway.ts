@@ -11,7 +11,7 @@ import {
 } from "@nestjs/websockets";
 import { JwtService } from "@nestjs/jwt";
 import { PrismaService } from "@ceylonweddings/database";
-import { COOKIES, type SendMessageBody, type User } from "@ceylonweddings/contracts";
+import { COOKIES, type SendMessageBody, type User, parseUserPreferences } from "@ceylonweddings/contracts";
 import type { Server, Socket } from "socket.io";
 import { MessagingService } from "../messaging/messaging.service";
 import { RealtimeEmitter } from "./realtime.emitter";
@@ -76,6 +76,7 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection {
         locale: user.locale as User["locale"],
         currency: user.currency as User["currency"],
         createdAt: user.createdAt.toISOString(),
+        preferences: parseUserPreferences(user.preferences),
       };
       client.data.user = mapped;
       await client.join(`user:${user.id}`);

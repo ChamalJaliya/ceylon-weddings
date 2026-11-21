@@ -12,7 +12,6 @@ import { extname } from "node:path";
 import { PrismaService } from "@ceylonweddings/database";
 import { loadApiEnv } from "@ceylonweddings/env";
 import {
-  type AppNotification,
   type Conversation,
   type ConversationListResponse,
   type ConversationType,
@@ -30,6 +29,7 @@ import {
   type User,
   MESSAGE_ATTACHMENT_CONTENT_TYPES,
 } from "@ceylonweddings/contracts";
+import { NotificationsService } from "../notifications/notifications.service";
 import { RealtimeEmitter } from "../realtime/realtime.emitter";
 
 const EXT_BY_TYPE: Record<(typeof MESSAGE_ATTACHMENT_CONTENT_TYPES)[number], string> = {
@@ -76,6 +76,7 @@ export class MessagingService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly realtime: RealtimeEmitter,
+    private readonly notifications: NotificationsService,
   ) {}
 
   async listConversations(user: User): Promise<ConversationListResponse> {
@@ -230,21 +231,6 @@ export class MessagingService {
     const recipients = await this.recipientUsers(conversationId, user.id, conversation.type);
     const preview = text ?? (attachments[0]?.filename ? `Attachment: ${attachments[0].filename}` : "New message");
 
-    const notifications = await Promise.all(
-      recipients.map((recipient) =>
-        this.prisma.notification.create({
-          data: {
-            userId: recipient.id,
-            type: "MESSAGE",
-            title: user.name,
-            body: preview.slice(0, 240),
-            href: `${this.hrefForRole(recipient.role)}?c=${conversationId}`,
-            conversationId,
-            messageId: created.id,
-          },
-        }),
-      ),
-    );
     const recipientIds = recipients.map((item) => item.id);
 
     this.realtime.toConversation(conversationId, "message.new", mapped);
@@ -255,10 +241,22 @@ export class MessagingService {
       lastMessagePreview: preview,
     });
 
-    for (const notification of notifications) {
-      const payload = this.mapNotification(notification);
-      this.realtime.toUser(notification.userId, "notification.new", payload);
-    }
+    // In-app row + socket push + email, per each recipient's notification settings.
+    await Promise.all(
+      recipients.map((recipient) =>
+        this.notifications.notify({
+          userId: recipient.id,
+          templateId: "message.received",
+          context: {
+            senderName: user.name,
+            preview,
+            href: `${this.hrefForRole(recipient.role)}?c=${conversationId}`,
+          },
+          conversationId,
+          messageId: created.id,
+        }),
+      ),
+    );
 
     return mapped;
   }
@@ -319,7 +317,7 @@ export class MessagingService {
     const unreadCount = await this.prisma.notification.count({
       where: { userId: user.id, readAt: null },
     });
-    return { items: items.map((item) => this.mapNotification(item)), unreadCount };
+    return { items: items.map((item) => this.notifications.map(item)), unreadCount };
   }
 
   async markNotificationsRead(user: User, body: MarkNotificationsReadBody) {
@@ -591,30 +589,6 @@ export class MessagingService {
       name: user.name,
       role: user.role,
       photoUrl: user.vendor?.photoUrl ?? null,
-    };
-  }
-
-  private mapNotification(row: {
-    id: string;
-    type: "MESSAGE";
-    title: string;
-    body: string;
-    href: string | null;
-    conversationId: string | null;
-    messageId: string | null;
-    readAt: Date | null;
-    createdAt: Date;
-  }): AppNotification {
-    return {
-      id: row.id,
-      type: row.type,
-      title: row.title,
-      body: row.body,
-      href: row.href,
-      conversationId: row.conversationId,
-      messageId: row.messageId,
-      readAt: row.readAt?.toISOString() ?? null,
-      createdAt: row.createdAt.toISOString(),
     };
   }
 

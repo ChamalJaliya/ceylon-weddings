@@ -10,6 +10,7 @@ import {
   UserDto,
   Verify2FaDto,
   UpdateProfileDto,
+  UpdatePreferencesDto,
   ChangePasswordDto,
   AccountSecurityDto,
   TwoFactorSetupDto,
@@ -78,6 +79,13 @@ export class AuthController {
   @ZodResponse({ type: UserDto })
   updateProfile(@CurrentUser() user: User, @Body() body: UpdateProfileDto) {
     return this.auth.updateProfile(user, body);
+  }
+
+  @Patch("preferences")
+  @UseGuards(JwtCookieGuard)
+  @ZodResponse({ type: UserDto })
+  updatePreferences(@CurrentUser() user: User, @Body() body: UpdatePreferencesDto) {
+    return this.auth.updatePreferences(user, body);
   }
 
   @Post("password")

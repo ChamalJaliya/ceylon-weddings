@@ -8,6 +8,9 @@ export type EmailJob = {
   subject?: string;
   template: EmailTemplate;
   data?: Record<string, any>;
+  /** Pre-rendered branded email (notifications); skips the legacy templates. */
+  html?: string;
+  text?: string;
 };
 
 @Processor("email")
@@ -26,6 +29,8 @@ export class EmailProcessor extends WorkerHost {
       subject,
       template: job.data.template,
       data: job.data.data,
+      html: job.data.html,
+      text: job.data.text,
     });
     return result;
   }
@@ -49,4 +54,3 @@ export class EmailProcessor extends WorkerHost {
     }
   }
 }
-

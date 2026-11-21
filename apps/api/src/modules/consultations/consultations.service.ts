@@ -1,12 +1,7 @@
 import { randomBytes, randomInt } from "node:crypto";
+import { NotificationsService } from "../notifications/notifications.service";
 import { InjectQueue } from "@nestjs/bullmq";
-import {
-  BadRequestException,
-  ConflictException,
-  Injectable,
-  Logger,
-  NotFoundException,
-} from "@nestjs/common";
+import { BadRequestException, ConflictException, Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import type { Queue } from "bullmq";
 import type { Request } from "express";
@@ -61,6 +56,7 @@ export class ConsultationsService {
     private readonly siteConfig: SiteConfigService,
     private readonly jwt: JwtService,
     @InjectQueue("email") private readonly emailQueue: Queue,
+    private readonly notifications: NotificationsService,
   ) {}
 
   // ---------------------------------------------------------------- public
@@ -139,6 +135,20 @@ export class ConsultationsService {
     });
 
     await this.notifyBooked(row, settings);
+    await this.notifications.notifyAdmins({
+      templateId: "consultation.booked",
+      context: {
+        name: row.name,
+        when: this.whenLabel(row),
+        topic:
+          row.message ??
+          row.topic
+            .replace(/_/g, " ")
+            .toLowerCase()
+            .replace(/^./, (c) => c.toUpperCase()),
+        consultationId: row.id,
+      },
+    });
     return this.serializePublic(row);
   }
 
@@ -163,6 +173,10 @@ export class ConsultationsService {
       },
     });
     await this.notifyCancelled(updated, "guest");
+    await this.notifications.notifyAdmins({
+      templateId: "consultation.cancelled",
+      context: { name: updated.name, when: this.whenLabel(updated), consultationId: updated.id },
+    });
     return this.serializePublic(updated);
   }
 
@@ -239,11 +253,7 @@ export class ConsultationsService {
     return this.serialize(row);
   }
 
-  async adminCreate(
-    user: User,
-    body: AdminCreateConsultationBody,
-    ip?: string,
-  ): Promise<Consultation> {
+  async adminCreate(user: User, body: AdminCreateConsultationBody, ip?: string): Promise<Consultation> {
     this.access.assertAdmin(user);
     const settings = await this.siteConfig.consultationSettings();
     const startsAt = new Date(body.startsAt);
@@ -297,12 +307,7 @@ export class ConsultationsService {
     return this.adminGet(user, row.id);
   }
 
-  async adminUpdate(
-    user: User,
-    id: string,
-    body: UpdateConsultationBody,
-    ip?: string,
-  ): Promise<Consultation> {
+  async adminUpdate(user: User, id: string, body: UpdateConsultationBody, ip?: string): Promise<Consultation> {
     this.access.assertAdmin(user);
     const existing = await this.prisma.consultation.findUnique({ where: { id } });
     if (!existing) throw new NotFoundException("Consultation not found");
@@ -339,9 +344,7 @@ export class ConsultationsService {
     if (body.meetingUrl !== undefined) data.meetingUrl = body.meetingUrl || null;
     if (body.adminNotes !== undefined) data.adminNotes = body.adminNotes || null;
     if (body.assignedAdminId !== undefined) {
-      data.assignedAdmin = body.assignedAdminId
-        ? { connect: { id: body.assignedAdminId } }
-        : { disconnect: true };
+      data.assignedAdmin = body.assignedAdminId ? { connect: { id: body.assignedAdminId } } : { disconnect: true };
     }
     if (body.name !== undefined) data.name = body.name;
     if (body.email !== undefined) data.email = body.email || null;
@@ -702,6 +705,17 @@ export class ConsultationsService {
         },
       });
     }
+  }
+
+  private whenLabel(row: { startsAt: Date; timezone: string }) {
+    return row.startsAt.toLocaleString("en-LK", {
+      timeZone: row.timezone || "Asia/Colombo",
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+      hour: "numeric",
+      minute: "2-digit",
+    });
   }
 
   private async internalInbox(): Promise<string | null> {

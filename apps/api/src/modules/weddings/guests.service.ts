@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import { NotificationsService } from "../notifications/notifications.service";
 import { hash } from "bcrypt";
 import { PrismaService } from "@ceylonweddings/database";
 import type {
@@ -37,6 +38,7 @@ export class GuestsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly access: WeddingAccessService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   async list(user: User, query: GuestListQuery = {}) {
@@ -198,7 +200,8 @@ export class GuestsService {
                 deleteMany: {},
                 create: eventIds.map((eventId) => ({
                   eventId,
-                  status: (body.status ?? existing.status) === "CONSIDERING" ? "INVITED" : (body.status ?? existing.status),
+                  status:
+                    (body.status ?? existing.status) === "CONSIDERING" ? "INVITED" : (body.status ?? existing.status),
                 })),
               },
             }
@@ -395,9 +398,18 @@ export class GuestsService {
       return null;
     }
 
-    const perEvent = this.resolveEventStatuses(body, wedding.events.map((event) => event.id));
-    await this.assertEventIds(wedding.id, perEvent.map((item) => item.eventId));
-    const householdStatus = this.aggregateStatus(perEvent.map((item) => item.status), body.status);
+    const perEvent = this.resolveEventStatuses(
+      body,
+      wedding.events.map((event) => event.id),
+    );
+    await this.assertEventIds(
+      wedding.id,
+      perEvent.map((item) => item.eventId),
+    );
+    const householdStatus = this.aggregateStatus(
+      perEvent.map((item) => item.status),
+      body.status,
+    );
 
     const household = await this.prisma.guestHousehold.create({
       data: {
@@ -419,6 +431,14 @@ export class GuestsService {
       },
       include: { invites: { include: { event: true } } },
     });
+    await this.notifications.notifyWedding(
+      wedding.id,
+      {
+        templateId: "rsvp.received",
+        context: { guestName: body.headName, status: householdStatus, plusCount: body.plusCount ?? 0 },
+      },
+      { canEditGuests: true },
+    );
     return this.serialize(household);
   }
 

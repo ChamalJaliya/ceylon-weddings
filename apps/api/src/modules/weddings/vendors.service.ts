@@ -1,4 +1,5 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
+import { NotificationsService } from "../notifications/notifications.service";
 import { Prisma, PrismaService } from "@ceylonweddings/database";
 import {
   type CatalogAttrValue,
@@ -65,6 +66,7 @@ export class VendorsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly access: WeddingAccessService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   list(category?: string, q?: string): Promise<Vendor[]> {
@@ -410,6 +412,16 @@ export class VendorsService {
       create: { weddingId: wedding.id, vendorId: vendor.id, status: "INQUIRED" },
     });
 
+    await this.notifications.notifyVendor(vendor.id, {
+      templateId: "inquiry.received",
+      context: {
+        coupleName: user.name,
+        message: body.message,
+        preferredDate: inquiry.preferredDate?.toLocaleDateString("en-LK", { dateStyle: "medium" }) ?? null,
+        packageName: packageName ?? null,
+      },
+    });
+
     return {
       id: inquiry.id,
       weddingId: inquiry.weddingId,
@@ -460,6 +472,11 @@ export class VendorsService {
         body: body.body,
         recommended: body.recommended,
       },
+    });
+
+    await this.notifications.notifyVendor(vendorId, {
+      templateId: "review.received",
+      context: { authorName: user.name, rating, excerpt: body.body ?? "", vendorSlug: vendor.slug },
     });
 
     const agg = await this.prisma.review.aggregate({

@@ -1,8 +1,5 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import { NotificationsService } from "../notifications/notifications.service";
 import { InjectQueue } from "@nestjs/bullmq";
 import type { Queue } from "bullmq";
 import { Prisma, PrismaService } from "@ceylonweddings/database";
@@ -51,6 +48,7 @@ export class AdminService {
     private readonly subscription: SubscriptionService,
     private readonly siteConfig: SiteConfigService,
     @InjectQueue("email") private readonly emailQueue: Queue,
+    private readonly notifications: NotificationsService,
   ) {}
 
   async stats(user: User): Promise<AdminStats> {
@@ -124,12 +122,8 @@ export class AdminService {
       ...(query.verified != null ? { verified: query.verified } : {}),
       ...(query.featured != null ? { featured: query.featured } : {}),
       ...(query.moderationStatus ? { moderationStatus: query.moderationStatus } : {}),
-      ...(query.queue === "verify"
-        ? { verified: false, moderationStatus: { in: ["PENDING", "APPROVED"] } }
-        : {}),
-      ...(query.queue === "picks"
-        ? { verified: true, featured: false, moderationStatus: { not: "HIDDEN" } }
-        : {}),
+      ...(query.queue === "verify" ? { verified: false, moderationStatus: { in: ["PENDING", "APPROVED"] } } : {}),
+      ...(query.queue === "picks" ? { verified: true, featured: false, moderationStatus: { not: "HIDDEN" } } : {}),
       ...(query.q
         ? {
             OR: [
@@ -158,7 +152,10 @@ export class AdminService {
     return vendors;
   }
 
-  async getVendor(user: User, id: string): Promise<{
+  async getVendor(
+    user: User,
+    id: string,
+  ): Promise<{
     vendor: Vendor;
     gateFailures: string[];
     audit: AuditLog[];
@@ -176,6 +173,27 @@ export class AdminService {
       gateFailures: presentationGateFailures(serialized),
       audit,
     };
+  }
+
+  /** Tell the vendor when moderation changes their listing (approved / rejected / featured). */
+  private async notifyListingChange(
+    before: { id: string; name: string; slug: string; moderationStatus: string; featured: boolean },
+    after: { moderationStatus: string; featured: boolean; moderationNote: string | null },
+  ) {
+    const base = { vendorName: before.name, vendorSlug: before.slug };
+    if (after.moderationStatus !== before.moderationStatus) {
+      if (after.moderationStatus === "APPROVED") {
+        await this.notifications.notifyVendor(before.id, { templateId: "listing.approved", context: base });
+      } else if (after.moderationStatus === "REJECTED") {
+        await this.notifications.notifyVendor(before.id, {
+          templateId: "listing.rejected",
+          context: { vendorName: before.name, note: after.moderationNote },
+        });
+      }
+    }
+    if (after.featured && !before.featured) {
+      await this.notifications.notifyVendor(before.id, { templateId: "listing.featured", context: base });
+    }
   }
 
   async patchVendor(user: User, id: string, body: AdminPatchVendorBody, ip?: string) {
@@ -230,6 +248,7 @@ export class AdminService {
       include: this.vendors.adminInclude(),
     });
     const after = this.vendors.serializePublic(updated);
+    await this.notifyListingChange(existing, updated);
     await this.access.append({
       actorUserId: user.id,
       action: "vendor.patch",
@@ -256,14 +275,7 @@ export class AdminService {
     this.access.assertAdmin(user);
     const results: Vendor[] = [];
     for (const id of body.ids) {
-      results.push(
-        await this.patchVendor(
-          user,
-          id,
-          { verified: body.verified, featured: body.featured },
-          ip,
-        ),
-      );
+      results.push(await this.patchVendor(user, id, { verified: body.verified, featured: body.featured }, ip));
     }
     return results;
   }
@@ -292,7 +304,10 @@ export class AdminService {
     return rows.map((row) => this.serializeUser(row));
   }
 
-  async getUser(user: User, id: string): Promise<{
+  async getUser(
+    user: User,
+    id: string,
+  ): Promise<{
     user: AdminUser;
     vendor: { id: string; name: string; slug: string } | null;
     weddings: Array<{ id: string; slug: string; partnerOneName: string; partnerTwoName: string }>;
@@ -579,7 +594,7 @@ export class AdminService {
       body.status === "PUBLISHED"
         ? body.publishedAt
           ? new Date(body.publishedAt)
-          : existing.publishedAt ?? new Date()
+          : (existing.publishedAt ?? new Date())
         : body.publishedAt
           ? new Date(body.publishedAt)
           : null;
@@ -1031,8 +1046,7 @@ export class AdminService {
       const users = await this.listUsers(user, {});
       const header = "id,email,name,role,status,createdAt";
       const lines = users.map(
-        (row) =>
-          `${row.id},${csv(row.email)},${csv(row.name)},${row.role},${row.status},${row.createdAt}`,
+        (row) => `${row.id},${csv(row.email)},${csv(row.name)},${row.role},${row.status},${row.createdAt}`,
       );
       return [header, ...lines].join("\n");
     }

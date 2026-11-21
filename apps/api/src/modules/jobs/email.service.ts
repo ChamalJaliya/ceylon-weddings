@@ -1,4 +1,5 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
+import { MailerService } from "../../common/mailer/mailer.service";
 
 export type EmailTemplate =
   | "welcome"
@@ -15,26 +16,21 @@ export interface SendEmailPayload {
   template: EmailTemplate;
   data?: Record<string, any>;
   html?: string;
+  text?: string;
 }
 
 @Injectable()
 export class EmailService {
-  private readonly logger = new Logger(EmailService.name);
+  constructor(private readonly mailer: MailerService) {}
 
-  async send(payload: SendEmailPayload): Promise<{ success: boolean; messageId?: string }> {
+  /** Delivers through MailerService (SMTP or Brevo API); logs when unconfigured. */
+  async send(payload: SendEmailPayload): Promise<{ success: boolean; messageId?: string; reason?: string }> {
     const html = payload.html || this.renderTemplate(payload.template, payload.data || {});
-
-    // In local / sandbox development without configured SMTP credentials, we log formatted delivery
-    this.logger.log(
-      `[Email Dispatch] Template: ${payload.template} | To: ${payload.to} | Subject: "${payload.subject}" | ${html.length} chars`,
-    );
-
-    // If SMTP_HOST / RESEND_API_KEY is configured in env, we can dispatch to real upstream
-    // Here we ensure reliable delivery logging and error resilience
-    return {
-      success: true,
-      messageId: `msg_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`,
-    };
+    const result = await this.mailer.send({ to: [payload.to], subject: payload.subject, html, text: payload.text });
+    if (result.sent) return { success: true };
+    // Unconfigured = dev without SMTP: not a failure worth retrying.
+    if (result.reason === "unconfigured") return { success: false, reason: "unconfigured" };
+    throw new Error(result.detail ?? "Email delivery failed");
   }
 
   private renderTemplate(template: SendEmailPayload["template"], data: Record<string, any>): string {

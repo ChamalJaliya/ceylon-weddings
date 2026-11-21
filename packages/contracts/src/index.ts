@@ -11,3 +11,5 @@ export * from "./consultation";
 export * from "./search";
 export * from "./messaging";
 export * from "./geo/sri-lanka";
+export * from "./notifications";
+export * from "./brand";

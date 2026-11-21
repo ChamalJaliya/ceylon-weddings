@@ -9,6 +9,7 @@ import {
   registerBodySchema,
   twoFactorCodeBodySchema,
   twoFactorSetupSchema,
+  updatePreferencesBodySchema,
   updateProfileBodySchema,
   userSchema,
 } from "@ceylonweddings/contracts";
@@ -25,3 +26,4 @@ export class UpdateProfileDto extends createZodDto(updateProfileBodySchema) {}
 export class ChangePasswordDto extends createZodDto(changePasswordBodySchema) {}
 export class AccountSecurityDto extends createZodDto(accountSecuritySchema) {}
 export class TwoFactorSetupDto extends createZodDto(twoFactorSetupSchema) {}
+export class UpdatePreferencesDto extends createZodDto(updatePreferencesBodySchema) {}

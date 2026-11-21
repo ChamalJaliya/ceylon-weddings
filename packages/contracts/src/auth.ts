@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { currencySchema, localeSchema, roleSchema } from "./common";
+import { userPreferencesSchema } from "./notifications/preferences";
 
 export const userSchema = z.object({
   id: z.string(),
@@ -10,6 +11,7 @@ export const userSchema = z.object({
   locale: localeSchema,
   currency: currencySchema,
   createdAt: z.string(),
+  preferences: userPreferencesSchema.default({}),
 });
 
 export type User = z.infer<typeof userSchema>;
