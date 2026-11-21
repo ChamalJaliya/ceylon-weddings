@@ -1,11 +1,11 @@
 "use client";
 
-import { FormEvent, Suspense, useEffect, useMemo, useState } from "react";
+import { type FormEvent, Suspense, useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
-import { ArrowLeft, ArrowRight, Check, Heart, Sparkles, Store, ShieldCheck } from "lucide-react";
+import { ArrowRight, Check, Heart, Sparkles, Store, ShieldCheck } from "lucide-react";
 import { api, useAuthStore, usePreferenceStore } from "@ceylonweddings/web";
-import { slugifyVendorName, type Currency, type Locale } from "@ceylonweddings/contracts";
+import { slugifyVendorName, type Currency, type Locale, weddingStyleColors } from "@ceylonweddings/contracts";
 import { Button } from "@ceylonweddings/ui/components/button";
 import { Icon, type IconComponent } from "@ceylonweddings/ui/components/icon";
 import { FormStatus } from "@ceylonweddings/ui/components/form-status";
@@ -13,13 +13,11 @@ import { Input } from "@ceylonweddings/ui/components/input";
 import { FieldBlock } from "@ceylonweddings/ui/domain/creator-form";
 import { AnimatePresence, motion, useReducedMotion } from "@ceylonweddings/ui/domain/motion";
 import { cn } from "@ceylonweddings/ui/utils";
-import { BrandMark } from "@ceylonweddings/ui/domain/brand-mark";
+import { BrandLockup } from "@ceylonweddings/ui/domain/brand-mark";
 import { Link, useRouter } from "../../../i18n/navigation";
-import { PageFrame } from "../../../components/public-chrome";
 import { AuthPasswordField, GoogleMark } from "../../../components/auth-bifold";
 import { requestGoogleAuthCode } from "../../../lib/google-identity";
 import { passwordStrength } from "../../../lib/password-strength";
-import { weddingStyleColors } from "@ceylonweddings/contracts";
 import { CoupleWizardInline, type CoupleWizardData } from "./_components/couple-wizard-inline";
 import { VendorWizardInline, type VendorWizardData } from "./_components/vendor-wizard-inline";
 
@@ -88,34 +86,14 @@ const ROLE_OPTIONS: Array<{
 
 // ─── Top Header Navigation ──────────────────────────────────────────────────
 
-function RegisterHeader({
-  step,
-  onBack,
-}: {
-  step: "pick" | "wizard" | "credentials";
-  onBack: () => void;
-}) {
+function RegisterHeader({ step }: { step: "pick" | "wizard" | "credentials" }) {
   const t = useTranslations();
 
   return (
     <div className="flex h-full min-w-0 flex-1 items-center justify-between gap-3 px-2 sm:px-3">
       <div className="flex min-w-0 items-center gap-2">
-        {step !== "pick" ? (
-          <motion.button
-            type="button"
-            onClick={onBack}
-            whileHover={{ x: -2 }}
-            whileTap={{ scale: 0.95 }}
-            className="flex items-center gap-1.5 rounded-full px-2 py-1 text-xs font-medium text-muted-foreground transition hover:text-foreground"
-          >
-            <Icon icon={ArrowLeft} size="xs" className="text-foreground" />
-            <span className="hidden sm:inline">Back</span>
-          </motion.button>
-        ) : null}
-
         <Link href="/" className="flex items-center gap-2 pl-1">
-          <BrandMark className="h-8 w-auto text-primary" />
-          <span className="hidden font-serif text-sm sm:inline">{t("app.name")}</span>
+          <BrandLockup name={t("app.name")} size="sm" />
         </Link>
       </div>
 
@@ -149,11 +127,7 @@ function RegisterHeader({
 
 // ─── Step 1: Role Picker ─────────────────────────────────────────────────────
 
-function RolePicker({
-  onSelect,
-}: {
-  onSelect: (role: "COUPLE" | "VENDOR") => void;
-}) {
+function RolePicker({ onSelect }: { onSelect: (role: "COUPLE" | "VENDOR") => void }) {
   const reduce = useReducedMotion();
 
   return (
@@ -280,7 +254,7 @@ function CredentialForm({
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const strength = useMemo(() => passwordStrength(password), [password]);
-  const listingSlug = useMemo(() => slugifyVendorName(businessName), [businessName]);
+  const listingSlug = useMemo(() => (businessName.trim() ? slugifyVendorName(businessName) : ""), [businessName]);
 
   const roleOption = ROLE_OPTIONS.find((o) => o.role === role)!;
 
@@ -421,13 +395,13 @@ function CredentialForm({
       </div>
 
       {/* Main Form Card */}
-      <div className="rounded-3xl border border-border/80 bg-card/80 p-6 shadow-xl backdrop-blur-md sm:p-8">
+      <div className="rounded-2xl border border-border/60 bg-card/60 p-5 sm:p-6">
         <header className="mb-6">
-          <h2 className="font-serif text-2xl font-medium tracking-tight sm:text-3xl">
-            Create your account
-          </h2>
+          <h2 className="font-serif text-2xl font-medium tracking-tight sm:text-3xl">Create your account</h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            Save your details and step into your personalized planning suite.
+            {role === "VENDOR"
+              ? "Last step — set up your login and we'll open your storefront."
+              : "Last step — set up your login and we'll open your planning space."}
           </p>
         </header>
 
@@ -495,12 +469,11 @@ function CredentialForm({
               minLength={8}
               maxLength={72}
             />
-            <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-muted">
-              <div
-                className={cn("h-full transition-all duration-300", meterColor)}
-                style={{ width: meterWidth }}
-              />
-            </div>
+            {password ? (
+              <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-muted">
+                <div className={cn("h-full transition-all duration-300", meterColor)} style={{ width: meterWidth }} />
+              </div>
+            ) : null}
           </FieldBlock>
 
           <FieldBlock label="Confirm Password" htmlFor="confirmPassword">
@@ -541,13 +514,7 @@ function CredentialForm({
             </div>
           </div>
 
-          <Button
-            type="button"
-            variant="outline"
-            disabled={pending}
-            className="w-full gap-2 h-11"
-            onClick={onGoogle}
-          >
+          <Button type="button" variant="outline" disabled={pending} className="w-full gap-2 h-11" onClick={onGoogle}>
             <GoogleMark />
             {t("auth.google")}
           </Button>
@@ -616,15 +583,18 @@ function RegisterPageContent() {
   }
 
   return (
-    <PageFrame lock header={<RegisterHeader step={step} onBack={handleGlobalBack} />}>
+    <div className="pearl relative grid h-svh grid-rows-[auto_minmax(0,1fr)] overflow-hidden bg-background">
       <div
         aria-hidden="true"
         className="pointer-events-none absolute -top-24 left-1/2 size-[420px] -translate-x-1/2 rounded-full bg-gradient-to-br from-primary/10 via-love/5 to-transparent blur-3xl"
       />
+      <header className="relative z-10 flex h-16 shrink-0 border-b border-border/50 bg-background/80 px-2 backdrop-blur-sm sm:px-4 lg:px-8">
+        <RegisterHeader step={step} />
+      </header>
       <main
         className={cn(
           "relative flex min-h-0 flex-1 flex-col px-4 sm:px-6 lg:px-8",
-          step === "pick" ? "overflow-hidden py-3 sm:py-4" : "overflow-y-auto py-5",
+          step === "pick" ? "overflow-hidden py-3 sm:py-4" : "overflow-y-auto py-6 [&>*]:my-auto",
         )}
       >
         <AnimatePresence mode="wait" initial={false}>
@@ -665,6 +635,6 @@ function RegisterPageContent() {
           )}
         </AnimatePresence>
       </main>
-    </PageFrame>
+    </div>
   );
 }

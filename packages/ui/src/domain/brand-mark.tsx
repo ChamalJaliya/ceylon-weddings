@@ -69,30 +69,41 @@ export function BrandMark({
 }
 
 /**
- * Horizontal lockup: mark + CEYLON / WEDDING / SRI LANKA ——.
+ * Horizontal lockup: mark + CEYLON / WEDDING.
  * Sized for the app rail; scale with the wrapper's font-size if needed.
  */
 export function BrandLockup({
   className,
   cutColor,
   name = "Ceylon Wedding",
+  size = "default",
 }: {
   className?: string;
   cutColor?: string;
+  /** "sm" fits a compact top bar (~32px tall). */
+  size?: "default" | "sm";
   /** Accessible name for the whole lockup. */
   name?: string;
 }) {
   return (
-    <div role="img" aria-label={name} className={cn("flex items-center gap-3", className)}>
-      <BrandMark cutColor={cutColor} className="h-12 w-auto text-primary" />
-      <div aria-hidden className="min-w-0 leading-none text-foreground">
-        <p className="font-serif text-xl tracking-ornate">CEYLON</p>
-        <p className="mt-1.5 font-serif text-xs tracking-ornate">WEDDING</p>
-        <p className="mt-1.5 flex items-center gap-2 text-label tracking-ornate text-muted-foreground">
-          SRI LANKA
-          <span className="h-px w-5 bg-current" />
-        </p>
-      </div>
+    <div
+      role="img"
+      aria-label={name}
+      className={cn("flex shrink-0 items-center", size === "sm" ? "gap-2" : "gap-3", className)}
+    >
+      <BrandMark cutColor={cutColor} className={cn("w-auto text-primary", size === "sm" ? "h-8" : "h-12")} />
+      {size === "sm" ? (
+        // Compact bar version: two lines, ~28px tall; mark only on phones.
+        <div aria-hidden className="hidden min-w-0 leading-none text-foreground sm:block">
+          <p className="font-serif text-sm tracking-ornate">CEYLON</p>
+          <p className="mt-1 font-serif text-label tracking-ornate text-muted-foreground">WEDDING</p>
+        </div>
+      ) : (
+        <div aria-hidden className="min-w-0 leading-none text-foreground">
+          <p className="font-serif text-xl tracking-ornate">CEYLON</p>
+          <p className="mt-1.5 font-serif text-xs tracking-ornate">WEDDING</p>
+        </div>
+      )}
     </div>
   );
 }

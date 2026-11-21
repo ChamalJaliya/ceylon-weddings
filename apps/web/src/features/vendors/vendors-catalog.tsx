@@ -14,6 +14,16 @@ import {
   X,
 } from "lucide-react";
 import {
+  FloatingPanel,
+  FloatingPanelBody,
+  FloatingPanelContent,
+  FloatingPanelFooter,
+  FloatingPanelHeader,
+  FloatingPanelSection,
+  FloatingPanelTrigger,
+} from "@ceylonweddings/ui/domain/floating-panel";
+import { Combobox } from "@ceylonweddings/ui/components/combobox";
+import {
   api,
   clearCatalogScroll,
   consumeCatalogReturning,
@@ -44,13 +54,6 @@ import { Icon } from "@ceylonweddings/ui/components/icon";
 import { Input } from "@ceylonweddings/ui/components/input";
 import { Label } from "@ceylonweddings/ui/components/label";
 import { SimpleSelect } from "@ceylonweddings/ui/components/select";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@ceylonweddings/ui/components/sheet";
 import { VendorCard } from "@ceylonweddings/ui/domain/vendor-card";
 import { VendorCompareDock } from "@ceylonweddings/ui/domain/vendor-compare-dock";
 import { EmptyState } from "@ceylonweddings/ui/domain/empty-state";
@@ -177,7 +180,10 @@ export function VendorsCatalog() {
   const debouncedQ = useDebouncedValue(draftQ, 300);
 
   useEffect(() => {
-    api.vendorTypes().then(setTypes).catch(() => setTypes([]));
+    api
+      .vendorTypes()
+      .then(setTypes)
+      .catch(() => setTypes([]));
   }, []);
 
   useEffect(() => {
@@ -293,9 +299,7 @@ export function VendorsCatalog() {
   const toggleOption = (key: string, optionKey: string, multi: boolean) => {
     const current = selectedKeys(query.attrs?.[key]);
     if (multi) {
-      const next = current.includes(optionKey)
-        ? current.filter((item) => item !== optionKey)
-        : [...current, optionKey];
+      const next = current.includes(optionKey) ? current.filter((item) => item !== optionKey) : [...current, optionKey];
       patchAttrs(key, next.length ? next : undefined);
       return;
     }
@@ -409,14 +413,12 @@ export function VendorsCatalog() {
               <div className="flex flex-wrap gap-2">
                 {["true", "false"].map((value) => {
                   const count = attrFacets[attr.key]?.find((bucket) => bucket.value === value)?.count ?? 0;
-                  const active = selected.includes(value) || (query.attrs?.[attr.key] === value);
+                  const active = selected.includes(value) || query.attrs?.[attr.key] === value;
                   return (
                     <FilterChip
                       key={value}
                       active={Boolean(active)}
-                      onClick={() =>
-                        patchAttrs(attr.key, active ? undefined : value)
-                      }
+                      onClick={() => patchAttrs(attr.key, active ? undefined : value)}
                     >
                       {value === "true" ? "Yes" : "No"} ({count})
                     </FilterChip>
@@ -531,10 +533,7 @@ export function VendorsCatalog() {
       </header>
 
       <CategoryPills>
-        <FilterChip
-          active={!query.category}
-          onClick={() => setQuery({ category: undefined, attrs: undefined })}
-        >
+        <FilterChip active={!query.category} onClick={() => setQuery({ category: undefined, attrs: undefined })}>
           {t("knotly.viewAll")}
         </FilterChip>
         {chipTypes.map((type) => (
@@ -581,15 +580,12 @@ export function VendorsCatalog() {
               return (
                 <div key={attr.key} className="grid gap-2">
                   <div className="flex items-center gap-1.5">
-                    <p className="text-label font-medium tracking-spaced text-muted-foreground uppercase">
-                      {label}
-                    </p>
+                    <p className="text-label font-medium tracking-spaced text-muted-foreground uppercase">{label}</p>
                     <AttributeHelp text={help} />
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {(attr.options ?? []).map((option) => {
-                      const count =
-                        attrFacets[attr.key]?.find((bucket) => bucket.value === option.key)?.count ?? 0;
+                      const count = attrFacets[attr.key]?.find((bucket) => bucket.value === option.key)?.count ?? 0;
                       const active = selected.includes(option.key);
                       return (
                         <FilterChip
@@ -614,11 +610,9 @@ export function VendorsCatalog() {
       ) : null}
 
       <div ref={resultsRef} className="scroll-mt-24">
-        <AsyncListToolbar
-          summary={loading || !data ? t("catalog.loading") : t("catalog.results", { from, to, total })}
-        >
-          <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
-            <SheetTrigger asChild>
+        <AsyncListToolbar summary={loading || !data ? t("catalog.loading") : t("catalog.results", { from, to, total })}>
+          <FloatingPanel open={filtersOpen} onOpenChange={setFiltersOpen}>
+            <FloatingPanelTrigger asChild>
               <Button type="button" shape="pill" size="sm" variant={activeFilters ? "default" : "outline"}>
                 <Icon icon={SlidersHorizontal} size="sm" />
                 {t("catalog.filters")}
@@ -628,19 +622,29 @@ export function VendorsCatalog() {
                   </span>
                 ) : null}
               </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-[min(24rem,92vw)] overflow-y-auto">
-              <SheetHeader>
-                <SheetTitle>{t("catalog.filters")}</SheetTitle>
-              </SheetHeader>
-              <div className="grid gap-8 p-5 pt-2">
-                <div className="grid gap-4">
-                  <p className="text-label font-medium tracking-spaced text-muted-foreground uppercase">
-                    {t("catalog.filterLocation")}
-                  </p>
+            </FloatingPanelTrigger>
+            <FloatingPanelContent side="right" width="26rem">
+              <FloatingPanelHeader
+                icon={SlidersHorizontal}
+                title={t("catalog.filters")}
+                actions={
+                  activeFilters ? (
+                    <button
+                      type="button"
+                      onClick={clearFilters}
+                      className="rounded-lg px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                    >
+                      {t("catalog.clear")}
+                    </button>
+                  ) : null
+                }
+              />
+              <FloatingPanelBody className="gap-7">
+                <FloatingPanelSection title={t("catalog.filterLocation")}>
                   <div className="grid gap-2">
                     <Label>{t("catalog.city")}</Label>
-                    <SimpleSelect
+                    <Combobox
+                      aria-label={t("catalog.city")}
                       value={query.city ?? "any"}
                       onValueChange={(value) => setQuery({ city: value === "any" ? undefined : value })}
                       options={[{ value: "any", label: t("catalog.anyCity") }, ...cityOptions]}
@@ -648,7 +652,8 @@ export function VendorsCatalog() {
                   </div>
                   <div className="grid gap-2">
                     <Label>{t("catalog.district")}</Label>
-                    <SimpleSelect
+                    <Combobox
+                      aria-label={t("catalog.district")}
                       value={query.district ?? "any"}
                       onValueChange={(value) => setQuery({ district: value === "any" ? undefined : value })}
                       options={[{ value: "any", label: t("catalog.anyDistrict") }, ...districtOptions]}
@@ -658,9 +663,7 @@ export function VendorsCatalog() {
                     <Label>{t("catalog.minRating")}</Label>
                     <SimpleSelect
                       value={query.minRating?.toString() ?? "any"}
-                      onValueChange={(value) =>
-                        setQuery({ minRating: value === "any" ? undefined : Number(value) })
-                      }
+                      onValueChange={(value) => setQuery({ minRating: value === "any" ? undefined : Number(value) })}
                       options={[
                         { value: "any", label: t("catalog.anyRating") },
                         { value: "4", label: t("catalog.rating4") },
@@ -716,39 +719,27 @@ export function VendorsCatalog() {
                       {t("catalog.destination")}
                     </FilterChip>
                   </div>
-                </div>
+                </FloatingPanelSection>
 
-                <div className="grid gap-4">
-                  <p className="text-label font-medium tracking-spaced text-muted-foreground uppercase">
-                    {t("catalog.filterAttributes")}
-                  </p>
+                <FloatingPanelSection title={t("catalog.filterAttributes")}>
                   {query.category && studioAttrs.length ? (
                     attrFilterStudio
                   ) : (
                     <p className="text-sm text-muted-foreground">{t("catalog.pickTypeForAttrs")}</p>
                   )}
-                </div>
-
-                <div className="grid gap-2">
-                  <Button type="button" onClick={() => setFiltersOpen(false)}>
-                    {t("catalog.showResults", { total })}
-                  </Button>
-                  {activeFilters ? (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      onClick={() => {
-                        clearFilters();
-                        setFiltersOpen(false);
-                      }}
-                    >
-                      {t("catalog.clear")}
-                    </Button>
-                  ) : null}
-                </div>
-              </div>
-            </SheetContent>
-          </Sheet>
+                </FloatingPanelSection>
+              </FloatingPanelBody>
+              <FloatingPanelFooter>
+                <Button
+                  type="button"
+                  className="h-11 w-full rounded-xl text-base"
+                  onClick={() => setFiltersOpen(false)}
+                >
+                  {t("catalog.showResults", { total })}
+                </Button>
+              </FloatingPanelFooter>
+            </FloatingPanelContent>
+          </FloatingPanel>
           <AsyncSortSelect
             label={t("catalog.sort")}
             value={query.sort}
@@ -847,7 +838,13 @@ export function VendorsCatalog() {
             </Button>
           ) : null}
           {query.city ? (
-            <Button type="button" shape="pill" size="sm" variant="secondary" onClick={() => setQuery({ city: undefined })}>
+            <Button
+              type="button"
+              shape="pill"
+              size="sm"
+              variant="secondary"
+              onClick={() => setQuery({ city: undefined })}
+            >
               {query.city}
               <Icon icon={X} size="xs" />
             </Button>
@@ -865,13 +862,25 @@ export function VendorsCatalog() {
             </Button>
           ) : null}
           {query.featured ? (
-            <Button type="button" shape="pill" size="sm" variant="secondary" onClick={() => setQuery({ featured: undefined })}>
+            <Button
+              type="button"
+              shape="pill"
+              size="sm"
+              variant="secondary"
+              onClick={() => setQuery({ featured: undefined })}
+            >
               {t("catalog.featuredOnly")}
               <Icon icon={X} size="xs" />
             </Button>
           ) : null}
           {query.verified ? (
-            <Button type="button" shape="pill" size="sm" variant="secondary" onClick={() => setQuery({ verified: undefined })}>
+            <Button
+              type="button"
+              shape="pill"
+              size="sm"
+              variant="secondary"
+              onClick={() => setQuery({ verified: undefined })}
+            >
               {t("catalog.verifiedOnly")}
               <Icon icon={X} size="xs" />
             </Button>
@@ -879,12 +888,7 @@ export function VendorsCatalog() {
           {Object.entries(query.attrs ?? {}).flatMap(([key, value]) => {
             const def = studioAttrs.find((attr) => attr.key === key);
             const keys = selectedKeys(value);
-            if (
-              value &&
-              typeof value === "object" &&
-              !Array.isArray(value) &&
-              ("min" in value || "max" in value)
-            ) {
+            if (value && typeof value === "object" && !Array.isArray(value) && ("min" in value || "max" in value)) {
               const range = value as { min?: number; max?: number };
               const label = [
                 def?.filterLabel ? localizedText(def.filterLabel, locale) : key,
@@ -976,7 +980,14 @@ export function VendorsCatalog() {
                       >
                         <span className="truncate font-medium">{vendor.name}</span>
                         <span className="shrink-0 text-xs text-muted-foreground">
-                          {vendor.city} · {priceLabel(vendor.startingPriceLkr, currency, vendor.priceDisplayMode, vendor.showPricing, t("knotly.inquirePricing"))}
+                          {vendor.city} ·{" "}
+                          {priceLabel(
+                            vendor.startingPriceLkr,
+                            currency,
+                            vendor.priceDisplayMode,
+                            vendor.showPricing,
+                            t("knotly.inquirePricing"),
+                          )}
                         </span>
                       </Link>
                     ),
@@ -1020,15 +1031,19 @@ export function VendorsCatalog() {
               linkAs={Link}
               onNavigate={markLeavingCatalog}
               name={vendor.name}
-              category={
-                typeLabel(
-                  types.find((type) => type.slug === vendor.category),
-                  vendor.category,
-                  locale,
-                )
-              }
+              category={typeLabel(
+                types.find((type) => type.slug === vendor.category),
+                vendor.category,
+                locale,
+              )}
               location={`${vendor.city}, ${vendor.district}`}
-              priceBand={priceLabel(vendor.startingPriceLkr, currency, vendor.priceDisplayMode, vendor.showPricing, t("knotly.inquirePricing"))}
+              priceBand={priceLabel(
+                vendor.startingPriceLkr,
+                currency,
+                vendor.priceDisplayMode,
+                vendor.showPricing,
+                t("knotly.inquirePricing"),
+              )}
               rating={vendor.ratingAvg}
               ratingCount={vendor.ratingCount}
               imageSrc={vendor.photoUrl}

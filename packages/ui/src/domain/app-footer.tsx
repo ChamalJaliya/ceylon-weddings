@@ -1,5 +1,6 @@
 import type { ElementType, ReactNode } from "react";
 import { cn } from "../lib/utils";
+import { BrandLockup } from "./brand-mark";
 
 export type FooterLinkSection = {
   title: string;
@@ -42,28 +43,12 @@ export function AppFooter({
             {/* Brand column */}
             <div className="flex flex-col justify-between space-y-4 sm:col-span-2 lg:col-span-2">
               <div className="space-y-3">
-                <div className="flex items-center gap-2.5">
-                  <span className="flex size-9 items-center justify-center rounded-full border border-primary/40 bg-primary/10 font-serif text-xs font-medium text-primary">
-                    CW
-                  </span>
-                  <div>
-                    {kicker ? (
-                      <p className="text-label font-medium tracking-eyebrow text-muted-foreground uppercase">
-                        {kicker}
-                      </p>
-                    ) : null}
-                    <h3 className="font-serif text-xl font-medium tracking-tight text-foreground">{wordmark}</h3>
-                  </div>
-                </div>
+                <BrandLockup name={typeof wordmark === "string" ? wordmark : undefined} />
 
-                {tagline ? (
-                  <p className="font-serif text-sm italic text-foreground/80">{tagline}</p>
-                ) : null}
+                {tagline ? <p className="font-serif text-sm italic text-foreground/80">{tagline}</p> : null}
 
                 {description ? (
-                  <p className="max-w-sm text-xs leading-relaxed text-muted-foreground">
-                    {description}
-                  </p>
+                  <p className="max-w-sm text-xs leading-relaxed text-muted-foreground">{description}</p>
                 ) : null}
               </div>
 
@@ -102,7 +87,13 @@ export function AppFooter({
 
           {/* Bottom Bar */}
           <div className="mt-12 flex flex-wrap items-center justify-between gap-4 border-t border-border/60 pt-6 text-xs text-muted-foreground">
-            <div>{meta ?? <p>© {new Date().getFullYear()} {wordmark}. All rights reserved.</p>}</div>
+            <div>
+              {meta ?? (
+                <p>
+                  © {new Date().getFullYear()} {wordmark}. All rights reserved.
+                </p>
+              )}
+            </div>
             {links ? <nav className="flex flex-wrap items-center gap-4 text-xs">{links}</nav> : null}
           </div>
         </div>
@@ -110,16 +101,15 @@ export function AppFooter({
         /* Legacy / Simple footer view */
         <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-4 px-8 py-6">
           <div>
-            {kicker ? (
-              <p className="text-label tracking-eyebrow text-muted-foreground uppercase">{kicker}</p>
-            ) : null}
+            {kicker ? <p className="text-label tracking-eyebrow text-muted-foreground uppercase">{kicker}</p> : null}
             <p className="font-serif text-lg leading-tight text-foreground">{wordmark}</p>
           </div>
-          {links ? <nav className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">{links}</nav> : null}
+          {links ? (
+            <nav className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">{links}</nav>
+          ) : null}
           {meta ? <p className="text-xs text-muted-foreground">{meta}</p> : null}
         </div>
       )}
     </footer>
   );
 }
-

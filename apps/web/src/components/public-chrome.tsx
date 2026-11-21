@@ -1,17 +1,12 @@
 "use client";
 
-import type { ReactNode } from "react";
-import { useEffect, useState } from "react";
+import { type ReactNode , useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { api } from "@ceylonweddings/web";
-import {
-  DEFAULT_SITE_BRANDING,
-  type PublicFlags,
-  type SiteBranding,
-} from "@ceylonweddings/contracts";
+import { DEFAULT_SITE_BRANDING, type PublicFlags, type SiteBranding } from "@ceylonweddings/contracts";
 import { AppFooter } from "@ceylonweddings/ui/domain/app-footer";
 import { cn } from "@ceylonweddings/ui/utils";
-import { BrandMark } from "@ceylonweddings/ui/domain/brand-mark";
+import { BrandLockup } from "@ceylonweddings/ui/domain/brand-mark";
 import { Link, usePathname } from "../i18n/navigation";
 import { AuthNav } from "./auth-nav";
 import { PreferenceControls } from "./preference-controls";
@@ -47,22 +42,20 @@ export function PublicHeader() {
     ...(flags["ideas.public"] !== false ? [{ href: "/ideas", label: t("nav.ideas") }] : []),
     { href: "/how-it-works", label: "How it works" },
     ...(flags["awards.public"] !== false ? [{ href: "/awards", label: "Awards" }] : []),
-    ...(flags["consultations.public"] !== false
-      ? [{ href: "/consultation", label: t("nav.consultation") }]
-      : []),
+    ...(flags["consultations.public"] !== false ? [{ href: "/consultation", label: t("nav.consultation") }] : []),
     { href: "/for-vendors", label: t("nav.forVendors") },
   ];
 
   return (
     <div className="flex h-full min-w-0 flex-1 items-center gap-3 px-2 sm:px-3">
-      <Link href="/" className="flex shrink-0 items-center gap-2 pl-1">
+      <Link href="/" className="flex shrink-0 items-center gap-2 pl-3">
         {branding.logoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={branding.logoUrl} alt="" className="size-8 rounded-full object-cover" />
         ) : (
-          <BrandMark className="h-8 w-auto text-primary" />
+          <BrandLockup name={t("app.name")} size="sm" />
         )}
-        <span className="hidden font-serif text-sm sm:inline">{t("app.name")}</span>
+        {branding.logoUrl ? <span className="hidden font-serif text-sm sm:inline">{t("app.name")}</span> : null}
       </Link>
       <nav className="hidden min-w-0 flex-1 items-center justify-center gap-1 md:flex">
         {links.map((link) => (
@@ -76,7 +69,6 @@ export function PublicHeader() {
                 : "text-muted-foreground hover:text-foreground",
             )}
           >
-
             {link.label}
           </Link>
         ))}
@@ -94,16 +86,13 @@ export function PublicChrome({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const isHome = pathname === "/";
   const { branding, flags } = usePublicSiteChrome();
-  const showMaintenance =
-    flags["site.maintenance"] === true || branding.maintenanceBanner.enabled;
+  const showMaintenance = flags["site.maintenance"] === true || branding.maintenanceBanner.enabled;
   const companyLinks = [
     { href: "/about", label: t("nav.about") },
     { href: "/how-it-works", label: "How It Works" },
     ...(flags["ideas.public"] !== false ? [{ href: "/ideas", label: "Ideas & Inspiration" }] : []),
     ...(flags["awards.public"] !== false ? [{ href: "/awards", label: "Awards" }] : []),
-    ...(flags["consultations.public"] !== false
-      ? [{ href: "/consultation", label: t("nav.consultation") }]
-      : []),
+    ...(flags["consultations.public"] !== false ? [{ href: "/consultation", label: t("nav.consultation") }] : []),
     { href: "/faq", label: t("nav.faq") },
     { href: "/contact", label: t("nav.contact") },
     { href: "/privacy", label: t("nav.privacy") },

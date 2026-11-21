@@ -11,7 +11,7 @@
     }
   },
   "scripts": {
-    "generate": "prisma generate",
+    "generate": "node ./scripts/generate.cjs",
     "migrate": "prisma migrate dev",
     "migrate:deploy": "prisma migrate deploy",
     "seed": "tsx prisma/seed.ts",

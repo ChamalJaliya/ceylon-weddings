@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useEnterToContinue } from "./use-enter-to-continue";
 import { ArrowLeft, ArrowRight, Calendar, Heart, MapPin, Palette, Sparkles, Users } from "lucide-react";
 import {
   weddingStyleSchema,
@@ -260,11 +261,6 @@ export function CoupleWizardInline({
   } else if (step === "date") {
     body = (
       <div className="grid gap-6">
-        <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 text-xs leading-relaxed text-muted-foreground">
-          💡 <span className="font-medium text-foreground">Tip:</span> If you haven&apos;t finalized your auspicious
-          wedding nekath date, you can click <span className="font-medium text-foreground">Skip for now</span> below and
-          update it anytime in your dashboard.
-        </div>
         <FieldBlock label="Wedding Date" hint="Choose your scheduled wedding date">
           <div className="max-w-md">
             <DatePicker value={date || null} onChange={setDate} placeholder="Select date" />
@@ -379,6 +375,10 @@ export function CoupleWizardInline({
       </div>
     );
   }
+
+  useEnterToContinue(!((step === "names" && !namesReady) || (step === "types" && !typesReady)), () =>
+    continueFrom(step),
+  );
 
   return (
     <div className="mx-auto w-full max-w-3xl">

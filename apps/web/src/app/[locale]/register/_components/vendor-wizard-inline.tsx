@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEnterToContinue } from "./use-enter-to-continue";
 import { useLocale } from "next-intl";
 import { ArrowLeft, ArrowRight, Check, Search, Sparkles, Store } from "lucide-react";
 import { api } from "@ceylonweddings/web";
@@ -294,14 +295,11 @@ export function VendorWizardInline({
           value={values[currentDef.key] as AttributeFieldValue | undefined}
           onChange={(next) => handleSaveAttribute(currentDef.key, next)}
         />
-        {!isCurrentAnswered && (
-          <p className="text-xs text-muted-foreground italic">
-            * This question is required before creating your storefront.
-          </p>
-        )}
       </div>
     );
   }
+
+  useEnterToContinue(!pickingCategory && !continueDisabled, () => handleContinueRequired());
 
   return (
     <OnboardingStage presentation={stage} className="mx-auto w-full max-w-7xl">

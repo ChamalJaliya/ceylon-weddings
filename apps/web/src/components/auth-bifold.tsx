@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { Eye, EyeOff } from "lucide-react";
 import { Input } from "@ceylonweddings/ui/components/input";
 import { cn } from "@ceylonweddings/ui/utils";
-import { BrandMark } from "@ceylonweddings/ui/domain/brand-mark";
+import { BrandLockup } from "@ceylonweddings/ui/domain/brand-mark";
 import { Link } from "../i18n/navigation";
 
 const SLIDES = [
@@ -133,18 +133,17 @@ export function AuthPasswordField({
   );
 }
 
-export function AuthBifold({
-  children,
-  size = "default",
-}: {
-  children: ReactNode;
-  size?: "default" | "wide";
-}) {
+export function AuthBifold({ children, size = "default" }: { children: ReactNode; size?: "default" | "wide" }) {
   const t = useTranslations();
 
   return (
-    <div className="grid h-svh overflow-hidden lg:grid-cols-2">
-      <section className="pearl relative flex h-full flex-col overflow-y-auto bg-background text-foreground">
+    <AuthFrame
+      className={cn(
+        "lg:grid-cols-2 lg:grid-rows-[minmax(0,1fr)]",
+        size === "wide" ? "lg:max-w-[68rem]" : "lg:max-w-[61.25rem]",
+      )}
+    >
+      <section className="pearl relative flex h-full min-h-0 flex-col overflow-y-auto bg-background text-foreground">
         <div
           aria-hidden="true"
           className="pointer-events-none absolute -top-28 -left-28 size-72 rounded-full border border-primary/15"
@@ -154,24 +153,43 @@ export function AuthBifold({
           className="pointer-events-none absolute -top-16 -left-16 size-48 rounded-full border border-primary/10"
         />
         {/* Sticky logo */}
-        <div className="sticky top-0 z-10 flex justify-center bg-background/80 pb-3 pt-6 backdrop-blur-sm">
-          <Link href="/" className="flex items-center gap-2">
-            <BrandMark className="h-10 w-auto text-primary" />
-            <span className="font-serif text-lg">{t("app.name")}</span>
+        <div className="sticky top-0 z-10 flex justify-center bg-background/80 pb-2 pt-5 backdrop-blur-sm">
+          <Link href="/" aria-label={t("app.name")}>
+            <BrandLockup name={t("app.name")} />
           </Link>
         </div>
         {/* Scrollable content */}
         <div
           className={cn(
-            "mx-auto flex w-full flex-1 flex-col justify-center px-6 pb-10 pt-4 sm:px-10",
-            size === "wide" ? "max-w-2xl" : "max-w-md",
+            "mx-auto flex w-full flex-1 flex-col justify-center px-6 pb-8 pt-2 sm:px-8",
+            size === "wide" ? "max-w-xl" : "max-w-sm",
           )}
         >
           {children}
         </div>
       </section>
       <AuthVisualPanel />
-    </div>
+    </AuthFrame>
   );
 }
 
+/**
+ * Kloqra-style auth enclosure: a rounded, shadowed card centred on a soft
+ * warm backdrop (instead of a full-bleed page). Shared by login and register.
+ * Desktop height is capped at min(42rem, viewport − 4rem); phones scroll.
+ */
+export function AuthFrame({ children, className }: { children: ReactNode; className?: string }) {
+  return (
+    <div className="flex min-h-svh items-center justify-center overflow-y-auto bg-muted bg-[radial-gradient(ellipse_at_15%_0%,color-mix(in_srgb,var(--primary)_14%,transparent),transparent_55%),radial-gradient(ellipse_at_90%_100%,color-mix(in_srgb,var(--primary)_10%,transparent),transparent_50%)] p-3 sm:p-4 lg:h-svh lg:overflow-hidden">
+      <div
+        className={cn(
+          "grid w-full max-w-md overflow-hidden rounded-2xl border border-border/70 bg-background shadow-raised",
+          "lg:h-[min(42rem,calc(100svh-4rem))]",
+          className,
+        )}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
