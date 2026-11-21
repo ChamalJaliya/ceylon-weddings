@@ -53,7 +53,7 @@ const ROLE_OPTIONS: Array<{
     badge: "For Couples",
     headline: "We're getting married",
     tagline: "Plan your Sri Lankan wedding with all-in-one tools, budgets, checklists & invites.",
-    image: "https://images.unsplash.com/photo-1519741497674-611481863552?w=900&q=80",
+    image: "https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?w=900&q=80",
     icon: Heart,
     accentClass: "border-love/30 hover:border-love/70",
     glowClass: "from-love/15 via-warning/10 to-transparent",
@@ -583,7 +583,7 @@ function RegisterPageContent() {
   }
 
   return (
-    <div className="pearl relative grid h-svh grid-rows-[auto_minmax(0,1fr)] overflow-hidden bg-background">
+    <div className="relative grid h-svh grid-rows-[auto_minmax(0,1fr)] overflow-hidden bg-background">
       <div
         aria-hidden="true"
         className="pointer-events-none absolute -top-24 left-1/2 size-[420px] -translate-x-1/2 rounded-full bg-gradient-to-br from-primary/10 via-love/5 to-transparent blur-3xl"

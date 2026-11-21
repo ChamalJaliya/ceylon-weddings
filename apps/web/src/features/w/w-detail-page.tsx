@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { api } from "@ceylonweddings/web";
-import { formatWeddingDateLabel, type PublicWebsite } from "@ceylonweddings/contracts";
+import { formatWeddingDateLabel, resolveWeddingCoverUrl, type PublicWebsite } from "@ceylonweddings/contracts";
 import { Button } from "@ceylonweddings/ui/components/button";
 import {
   CeremonySchedule,
@@ -17,16 +17,16 @@ import { Link } from "@/i18n/navigation";
 import { CATEGORY_LABELS } from "@/lib/labels";
 import { CenteredLoader } from "@ceylonweddings/ui/components/spinner";
 
-const HERO =
-  "https://images.unsplash.com/photo-1519741497674-611481863552?w=1600&q=80";
-
 export default function GuestWebsitePage() {
   const params = useParams<{ slug: string }>();
   const [site, setSite] = useState<PublicWebsite | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    api.public.wedding(params.slug).then(setSite).catch((err: Error) => setError(err.message));
+    api.public
+      .wedding(params.slug)
+      .then(setSite)
+      .catch((err: Error) => setError(err.message));
   }, [params.slug]);
 
   if (error) {
@@ -71,7 +71,7 @@ export default function GuestWebsitePage() {
   return (
     <PageTransition className="mx-auto cw-stack max-w-4xl px-4 py-10 sm:px-6">
       <GuestSiteHero
-        imageSrc={HERO}
+        imageSrc={resolveWeddingCoverUrl(site.coverImageUrl)}
         names={names}
         date={formatWeddingDateLabel(site.date)}
         place={place}
@@ -125,4 +125,3 @@ export default function GuestWebsitePage() {
     </PageTransition>
   );
 }
-

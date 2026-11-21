@@ -16,13 +16,13 @@ import {
   type SetMoodboardShareBody,
   type UpdateMoodboardMetaBody,
   type User,
-
   MOODBOARD_IMAGE_CONTENT_TYPES,
   emptyMoodboardScene,
   migrateMoodboardScene,
   moodboardElementCount,
   moodboardReady,
-  sanitizeMoodboardScene} from "@ceylonweddings/contracts";
+  sanitizeMoodboardScene,
+} from "@ceylonweddings/contracts";
 import { loadApiEnv } from "@ceylonweddings/env";
 import { WeddingAccessService } from "./wedding-access.service";
 
@@ -187,7 +187,7 @@ export class MoodboardsService {
     const s3 = this.tryGetS3();
 
     if (!s3) {
-      const mockUrl = `https://images.unsplash.com/photo-1519741497674-611481863552?w=1200&q=80`;
+      const mockUrl = `https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=1200&q=80`;
       return {
         uploadUrl: `http://localhost:${this.env.PORT}/mock-upload`,
         key,

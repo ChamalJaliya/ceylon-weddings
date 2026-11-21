@@ -152,6 +152,7 @@ export class WeddingsService {
       styleNotes: full.styleNotes,
       settingNotes: full.settingNotes,
       colors: full.colors,
+      coverImageUrl: full.coverImageUrl,
       onboardingCompletedAt: iso(full.onboardingCompletedAt),
       events,
       tasks,

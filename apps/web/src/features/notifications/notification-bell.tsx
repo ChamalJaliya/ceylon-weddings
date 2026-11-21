@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Bell, BellOff, CheckCheck, Settings } from "lucide-react";
+import { Bell, BellDot, BellOff, CheckCheck, Settings } from "lucide-react";
+import { HorizontalTabs } from "@ceylonweddings/ui/components/horizontal-tabs";
 import { api, useMessagingStore } from "@ceylonweddings/web";
 import { Icon } from "@ceylonweddings/ui/components/icon";
 import { Popover, PopoverContent, PopoverTrigger } from "@ceylonweddings/ui/components/popover";
@@ -103,22 +104,18 @@ export function NotificationBell({ overlay = false }: { overlay?: boolean }) {
           </button>
         </div>
 
-        <div role="tablist" aria-label="Filter notifications" className="flex gap-1 px-3 pt-2">
-          {(["all", "unread"] as const).map((value) => (
-            <button
-              key={value}
-              type="button"
-              role="tab"
-              aria-selected={filter === value}
-              onClick={() => setFilter(value)}
-              className={cn(
-                "rounded-full px-3 py-1 text-caption font-medium transition-colors",
-                filter === value ? "bg-foreground text-background" : "text-muted-foreground hover:bg-accent",
-              )}
-            >
-              {value === "all" ? "All" : `Unread${unread ? ` (${unread})` : ""}`}
-            </button>
-          ))}
+        <div className="px-3 pt-2">
+          <HorizontalTabs
+            ariaLabel="Filter notifications"
+            variant="fill"
+            size="sm"
+            activeId={filter}
+            onChange={setFilter}
+            items={[
+              { id: "all", label: "All", icon: Bell },
+              { id: "unread", label: "Unread", icon: BellDot, badge: unread || undefined },
+            ]}
+          />
         </div>
 
         <div className="max-h-[min(26rem,60dvh)] overflow-y-auto px-2 py-2">

@@ -56,6 +56,16 @@ html:has(.cw-page-locked) body {
   border-bottom-right-radius: var(--cw-notch-radius);
 }
 
+/*
+ * The frame strip above the bar is the same colour as the bar, so the eye reads
+ * them as one band (frame-top + notch-height). Nudge the bar's contents up by
+ * half the frame strip so the space above and below them looks equal.
+ */
+.cw-notch-bar > * {
+  position: relative;
+  top: calc(var(--cw-frame-top) / -2);
+}
+
 .cw-notch-bar::before,
 .cw-notch-bar::after {
   content: "";

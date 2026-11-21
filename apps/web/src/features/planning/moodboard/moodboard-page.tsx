@@ -6,6 +6,7 @@ import { Check, Copy, Link2, Palette, Plus, Share2, Trash2 } from "lucide-react"
 import { api } from "@ceylonweddings/web";
 import type { Moodboard, MoodboardSummary } from "@ceylonweddings/contracts";
 import { Button } from "@ceylonweddings/ui/components/button";
+import { HorizontalTabs } from "@ceylonweddings/ui/components/horizontal-tabs";
 import { Input } from "@ceylonweddings/ui/components/input";
 import { SimpleSelect } from "@ceylonweddings/ui/components/select";
 import { EmptyState } from "@ceylonweddings/ui/domain/empty-state";
@@ -188,9 +189,7 @@ export default function MoodboardPage() {
     <div className="flex h-[calc(100vh-5.5rem)] min-h-[42rem] flex-col gap-3">
       <header className="flex flex-wrap items-end justify-between gap-2">
         <div>
-          <h1 className="font-display text-2xl tracking-tight text-studio-ink sm:text-3xl">
-            {t("nav.moodboard")}
-          </h1>
+          <h1 className="font-display text-2xl tracking-tight text-studio-ink sm:text-3xl">{t("nav.moodboard")}</h1>
           <p className="text-sm text-muted-foreground">
             Pin photos, notes, and video — fullscreen when you need room to work.
           </p>
@@ -206,11 +205,7 @@ export default function MoodboardPage() {
       </header>
 
       {!board ? (
-        <EmptyState
-          icon={Palette}
-          title="No moodboard yet"
-          description="Create a board to start designing."
-        />
+        <EmptyState icon={Palette} title="No moodboard yet" description="Create a board to start designing." />
       ) : (
         <div className="min-h-0 flex-1">
           <MoodboardStudio
@@ -225,37 +220,28 @@ export default function MoodboardPage() {
             }}
             headerExtra={
               <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-                <div
-                  role="tablist"
-                  className="flex max-w-full items-center gap-1 overflow-x-auto"
-                >
-                  {summaries.map((item) => (
+                <HorizontalTabs
+                  size="sm"
+                  ariaLabel="Moodboards"
+                  activeId={selectedId}
+                  onChange={setSelectedId}
+                  className="border-paper/15 bg-paper/10"
+                  items={summaries.map((item) => ({
+                    id: item.id,
+                    label: item.title,
+                  }))}
+                  actions={
                     <button
-                      key={item.id}
                       type="button"
-                      role="tab"
-                      aria-selected={item.id === selectedId}
-                      onClick={() => setSelectedId(item.id)}
-                      className={cn(
-                        "shrink-0 rounded-full px-3 py-1 text-xs transition",
-                        item.id === selectedId
-                          ? "bg-studio-paper text-studio-ink"
-                          : "text-studio-paper/70 hover:bg-paper/10",
-                      )}
+                      disabled={busy}
+                      onClick={() => void createBoard()}
+                      className="inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-xs text-studio-paper/70 hover:bg-paper/10"
                     >
-                      {item.title}
+                      <Plus className="size-3.5" />
+                      New
                     </button>
-                  ))}
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => void createBoard()}
-                    className="inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-xs text-studio-paper/70 hover:bg-paper/10"
-                  >
-                    <Plus className="size-3.5" />
-                    New
-                  </button>
-                </div>
+                  }
+                />
                 <Input
                   aria-label="Board title"
                   defaultValue={board.title}
@@ -285,7 +271,13 @@ export default function MoodboardPage() {
                   {board.shareEnabled ? "Shared" : "Share"}
                 </Button>
                 {shareUrl ? (
-                  <Button type="button" size="sm" variant="ghost" className="h-8 text-studio-paper" onClick={() => void copyShareLink()}>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 text-studio-paper"
+                    onClick={() => void copyShareLink()}
+                  >
                     {copied ? <Check className="mr-1 size-3.5" /> : <Copy className="mr-1 size-3.5" />}
                     {copied ? "Copied" : "Copy"}
                   </Button>

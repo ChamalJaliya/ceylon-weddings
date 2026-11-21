@@ -277,6 +277,11 @@ export class AdminController {
     return this.admin.analyticsSummary(user);
   }
 
+  @Get("analytics/insights")
+  insights(@CurrentUser() user: User) {
+    return this.admin.insights(user);
+  }
+
   @Get("export/:kind")
   @Header("Content-Type", "text/csv; charset=utf-8")
   exportCsv(@CurrentUser() user: User, @Param("kind") kind: "vendors" | "users") {

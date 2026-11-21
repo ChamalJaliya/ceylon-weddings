@@ -42,7 +42,7 @@ import { PromotionSlotRail } from "@/components/promotion-slot-rail";
 const HERO_GALLERY = [
   "https://images.unsplash.com/photo-1606216794074-735e91aa2c92?w=2000&q=80",
   "https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?w=2000&q=80",
-  "https://images.unsplash.com/photo-1511285560929-80b456fe3c6f?w=2000&q=80",
+  "https://images.unsplash.com/photo-1591604466107-ec97de577aff?w=2000&q=80",
   "https://images.unsplash.com/photo-1583939003579-730e3918a45a?w=2000&q=80",
   "https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=2000&q=80",
 ];
@@ -220,9 +220,7 @@ export function HomeContent({
                 <p className="mb-1 text-label font-medium tracking-eyebrow text-muted-foreground uppercase">
                   {copy.ceylonPicks}
                 </p>
-                <h2 className="font-serif text-3xl font-medium tracking-tight sm:text-4xl">
-                  {copy.suggestedVendors}
-                </h2>
+                <h2 className="font-serif text-3xl font-medium tracking-tight sm:text-4xl">{copy.suggestedVendors}</h2>
               </div>
               <Button asChild variant="ghost" shape="pill">
                 <Link href="/vendors" className="inline-flex items-center gap-1.5">
@@ -241,11 +239,7 @@ export function HomeContent({
                   <Link href={`/vendors/${vendor.slug}`} className="block h-full">
                     <VendorCard
                       name={vendor.name}
-                      category={
-                        typeLabelBySlug[vendor.category] ??
-                        CATEGORY_LABELS[vendor.category] ??
-                        vendor.category
-                      }
+                      category={typeLabelBySlug[vendor.category] ?? CATEGORY_LABELS[vendor.category] ?? vendor.category}
                       location={`${vendor.city}, ${vendor.district}`}
                       priceBand={priceLabel(
                         vendor.startingPriceLkr,
@@ -270,9 +264,7 @@ export function HomeContent({
 
         <section>
           <Reveal className="mb-10 text-center">
-            <p className="mb-2 text-label font-medium tracking-eyebrow text-muted-foreground uppercase">
-              How it works
-            </p>
+            <p className="mb-2 text-label font-medium tracking-eyebrow text-muted-foreground uppercase">How it works</p>
             <h2 className="font-serif text-3xl font-medium tracking-tight sm:text-4xl">
               Plan your wedding in three steps
             </h2>
@@ -307,15 +299,13 @@ export function HomeContent({
         <Reveal className="overflow-hidden rounded-3xl bg-primary/5 ring-1 ring-primary/15">
           <div className="grid items-center gap-0 md:grid-cols-2">
             <div className="px-8 py-12 md:px-12">
-              <p className="mb-2 text-label font-medium tracking-eyebrow text-primary uppercase">
-                Free planning tools
-              </p>
+              <p className="mb-2 text-label font-medium tracking-eyebrow text-primary uppercase">Free planning tools</p>
               <h2 className="mb-3 font-serif text-3xl font-medium tracking-tight sm:text-4xl">
                 Checklist, budget & guests — ready for Sri Lankan weddings
               </h2>
               <p className="mb-6 text-sm leading-relaxed text-muted-foreground">
-                Create your wedding profile, invite family, and keep every poruwa, church, and homecoming
-                detail in one place.
+                Create your wedding profile, invite family, and keep every poruwa, church, and homecoming detail in one
+                place.
               </p>
               <Button asChild shape="pill">
                 <Link href="/register">{homepage.hero.ctaSecondaryLabel}</Link>

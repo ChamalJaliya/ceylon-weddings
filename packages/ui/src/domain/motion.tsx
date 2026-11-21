@@ -322,7 +322,12 @@ export function AnimatedTabs<T extends string>({
   const reduce = useReducedMotion();
 
   return (
-    <div className={cn("inline-flex items-center gap-1 rounded-xl bg-muted/60 p-1 text-muted-foreground", className)}>
+    <div
+      className={cn(
+        "inline-flex max-w-full items-center gap-1 overflow-x-auto rounded-full border border-border/70 bg-muted/60 p-1 text-muted-foreground",
+        className,
+      )}
+    >
       {tabs.map((tab) => {
         const isActive = tab.id === activeId;
         return (
@@ -330,18 +335,15 @@ export function AnimatedTabs<T extends string>({
             key={tab.id}
             onClick={() => onChange(tab.id)}
             className={cn(
-              "relative z-10 inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-              isActive ? "text-foreground font-medium" : "hover:text-foreground/80",
+              "relative z-10 inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              isActive ? "font-medium text-primary-foreground" : "hover:text-foreground",
               tabClassName,
             )}
           >
             {isActive && (
               <motion.div
                 layoutId={reduce ? undefined : layoutId}
-                className={cn(
-                  "absolute inset-0 -z-10 rounded-lg bg-card shadow-sm border border-border/50",
-                  activePillClassName,
-                )}
+                className={cn("absolute inset-0 -z-10 rounded-full bg-primary shadow-sm", activePillClassName)}
                 transition={SPRING_SNAPPY}
               />
             )}

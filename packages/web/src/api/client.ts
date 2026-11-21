@@ -1,5 +1,9 @@
 import { z } from "zod";
 import {
+  adminInsightsSchema,
+  vendorInsightsSchema,
+  type AdminInsights,
+  type VendorInsights,
   accountSecuritySchema,
   notificationSchema,
   type NotificationCategory,
@@ -298,6 +302,11 @@ export const api = {
     mine: async () => mineWeddingSchema.parse(await request("/weddings/mine")),
     update: async (body: UpdateWeddingBody) =>
       mineWeddingSchema.parse(await request("/weddings/mine", { method: "PATCH", body: JSON.stringify(body) })),
+    presignCover: (body: MediaPresignBody) =>
+      request<MediaPresignResponse>("/weddings/mine/cover/presign", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
     guests: async (query: { q?: string } = {}) => {
       const params = toSearchParams(query);
       const qs = params.toString();
@@ -530,6 +539,11 @@ export const api = {
       request<(Inquiry & { wedding: { partnerOneName: string; partnerTwoName: string; slug: string } })[]>(
         "/vendors/me/leads",
       ),
+    /** 30-day storefront performance (views, WhatsApp taps, inquiries) for the vendor dashboard. */
+    insights: async (): Promise<VendorInsights> => vendorInsightsSchema.parse(await request("/vendors/me/insights")),
+    /** Count a WhatsApp tap on a storefront (fire and forget). */
+    trackWhatsappTap: (id: string) =>
+      request<{ ok: true }>(`/vendors/${id}/whatsapp-tap`, { method: "POST" }).catch(() => null),
     onboarding: () => request<VendorOnboardingResponse>("/vendors/me/onboarding"),
     putAttributes: (body: UpsertVendorAttributesBody) =>
       request<Vendor>("/vendors/me/attributes", {
@@ -555,6 +569,8 @@ export const api = {
   },
   admin: {
     stats: () => request<AdminStats>("/admin/stats"),
+    /** 30-day marketplace trends and breakdowns for the admin dashboard. */
+    insights: async (): Promise<AdminInsights> => adminInsightsSchema.parse(await request("/admin/analytics/insights")),
     vendors: (query: AdminVendorListQuery = {}) => {
       const params = toSearchParams(query);
       const qs = params.toString();

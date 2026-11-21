@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode , useEffect, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { api } from "@ceylonweddings/web";
 import { DEFAULT_SITE_BRANDING, type PublicFlags, type SiteBranding } from "@ceylonweddings/contracts";
@@ -47,8 +47,8 @@ export function PublicHeader() {
   ];
 
   return (
-    <div className="flex h-full min-w-0 flex-1 items-center gap-3 px-2 sm:px-3">
-      <Link href="/" className="flex shrink-0 items-center gap-2 pl-3">
+    <div className="flex h-full min-w-0 flex-1 items-center gap-3 px-2 sm:px-3 md:grid md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
+      <Link href="/" className="flex shrink-0 items-center gap-2 justify-self-start pl-3">
         {branding.logoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={branding.logoUrl} alt="" className="size-8 rounded-full object-cover" />
@@ -57,7 +57,7 @@ export function PublicHeader() {
         )}
         {branding.logoUrl ? <span className="hidden font-serif text-sm sm:inline">{t("app.name")}</span> : null}
       </Link>
-      <nav className="hidden min-w-0 flex-1 items-center justify-center gap-1 md:flex">
+      <nav className="hidden min-w-0 items-center justify-center gap-1 md:flex">
         {links.map((link) => (
           <Link
             key={link.href}
@@ -73,7 +73,7 @@ export function PublicHeader() {
           </Link>
         ))}
       </nav>
-      <div className="ml-auto flex shrink-0 items-center gap-1">
+      <div className="ml-auto flex shrink-0 items-center gap-1 justify-self-end">
         <PreferenceControls />
         <AuthNav />
       </div>

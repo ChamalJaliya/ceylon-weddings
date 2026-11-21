@@ -1,0 +1,222 @@
+import {
+  CalendarClock,
+  CalendarDays,
+  CheckSquare,
+  Hourglass,
+  Images,
+  ListChecks,
+  MessageCircle,
+  Music2,
+  Palette,
+  PieChart,
+  Store,
+  Users,
+  Utensils,
+  Wallet,
+} from "lucide-react";
+import type { WidgetLayoutItem } from "@ceylonweddings/contracts";
+import { createDashboardLayoutStore } from "@ceylonweddings/web";
+import type { WidgetCategory, WidgetDefinition } from "@ceylonweddings/ui/domain/dashboard";
+
+export type CoupleWidgetCategory = "kpi" | "planning" | "guests" | "money" | "team" | "inspiration";
+
+export const COUPLE_WIDGET_CATEGORIES: WidgetCategory<CoupleWidgetCategory>[] = [
+  { value: "kpi", label: "Key numbers" },
+  { value: "planning", label: "Planning" },
+  { value: "guests", label: "Guests" },
+  { value: "money", label: "Budget" },
+  { value: "team", label: "Vendors" },
+  { value: "inspiration", label: "Inspiration" },
+];
+
+/** Widgets that show money; hidden for family members without budget access. */
+export const BUDGET_WIDGET_IDS = new Set(["kpi_budget", "budget_categories"]);
+
+const kpi = (
+  id: string,
+  label: string,
+  description: string,
+  icon: WidgetDefinition["icon"],
+  defaultVisible: boolean,
+): WidgetDefinition<CoupleWidgetCategory> => ({
+  id,
+  label,
+  description,
+  icon,
+  category: "kpi",
+  preview: "stat",
+  kpi: true,
+  defaultVisible,
+  defaultSize: { w: 3, h: 3 },
+  minSize: { w: 2, h: 3 },
+  maxSize: { w: 6, h: 5 },
+});
+
+const widget = (
+  def: Omit<WidgetDefinition<CoupleWidgetCategory>, "minSize"> & { minSize?: WidgetDefinition["minSize"] },
+): WidgetDefinition<CoupleWidgetCategory> => ({ minSize: { w: 3, h: 6 }, ...def });
+
+export const COUPLE_WIDGETS: WidgetDefinition<CoupleWidgetCategory>[] = [
+  kpi("kpi_budget", "Budget used", "How much of your planned budget is spent so far.", Wallet, true),
+  kpi("kpi_team", "Vendors booked", "Vendors you've booked out of everyone on your team.", Store, true),
+  kpi("kpi_rsvp", "RSVPs", "Guests who confirmed, out of everyone invited.", Users, true),
+  kpi("kpi_tasks", "Checklist", "Tasks done on your planning checklist.", CheckSquare, true),
+  kpi("kpi_countdown", "Countdown", "Days until your next ceremony.", Hourglass, false),
+  kpi("kpi_plates", "Plates confirmed", "Confirmed heads against your catering estimate.", Utensils, false),
+  kpi("kpi_music", "Music plans", "Music plans that are ready for the DJ or band.", Music2, false),
+  widget({
+    id: "ceremonies",
+    label: "Ceremonies",
+    description: "Every ceremony with its date, nekath time and venue.",
+    icon: CalendarDays,
+    category: "planning",
+    preview: "calendar",
+    defaultVisible: true,
+    defaultSize: { w: 7, h: 10 },
+    minSize: { w: 4, h: 6 },
+  }),
+  widget({
+    id: "progress",
+    label: "Planning progress",
+    description: "How complete your wedding plan is and what to set up next.",
+    icon: ListChecks,
+    category: "planning",
+    preview: "ring",
+    defaultVisible: true,
+    defaultSize: { w: 5, h: 10 },
+    minSize: { w: 4, h: 7 },
+  }),
+  widget({
+    id: "budget_categories",
+    label: "Spending by category",
+    description: "Spent against planned for each budget line.",
+    icon: Wallet,
+    category: "money",
+    preview: "progress",
+    defaultVisible: true,
+    defaultSize: { w: 6, h: 10 },
+  }),
+  widget({
+    id: "tasks_board",
+    label: "Checklist",
+    description: "Tasks by status and what's next.",
+    icon: CheckSquare,
+    category: "planning",
+    preview: "donut",
+    defaultVisible: true,
+    defaultSize: { w: 6, h: 10 },
+    minSize: { w: 4, h: 7 },
+  }),
+  widget({
+    id: "rsvp_breakdown",
+    label: "Guest replies",
+    description: "Guests (heads) by RSVP status.",
+    icon: PieChart,
+    category: "guests",
+    preview: "donut",
+    defaultVisible: true,
+    defaultSize: { w: 6, h: 9 },
+    minSize: { w: 4, h: 7 },
+  }),
+  widget({
+    id: "plates",
+    label: "Plates & meals",
+    description: "Confirmed and possible plates, and meal choices, for catering.",
+    icon: Utensils,
+    category: "guests",
+    preview: "progress",
+    defaultVisible: true,
+    defaultSize: { w: 6, h: 9 },
+  }),
+  widget({
+    id: "guest_sides",
+    label: "Guests by side",
+    description: "How your guest list splits between families.",
+    icon: Users,
+    category: "guests",
+    preview: "bars",
+    defaultVisible: false,
+    defaultSize: { w: 6, h: 8 },
+  }),
+  widget({
+    id: "team",
+    label: "Your vendors",
+    description: "The vendors on your team, shortlisted and booked.",
+    icon: Store,
+    category: "team",
+    preview: "media",
+    defaultVisible: true,
+    defaultSize: { w: 6, h: 8 },
+  }),
+  widget({
+    id: "agenda",
+    label: "Coming up",
+    description: "Your next appointments and vendor meetings.",
+    icon: CalendarClock,
+    category: "planning",
+    preview: "calendar",
+    defaultVisible: true,
+    defaultSize: { w: 3, h: 8 },
+  }),
+  widget({
+    id: "messages",
+    label: "Messages",
+    description: "Your latest inquiries to vendors.",
+    icon: MessageCircle,
+    category: "team",
+    preview: "list",
+    defaultVisible: true,
+    defaultSize: { w: 3, h: 8 },
+  }),
+  widget({
+    id: "style",
+    label: "Wedding style",
+    description: "Your style and colour story.",
+    icon: Palette,
+    category: "inspiration",
+    preview: "list",
+    defaultVisible: true,
+    defaultSize: { w: 4, h: 8 },
+  }),
+  widget({
+    id: "inspiration",
+    label: "Find your vendors",
+    description: "Browse vendors by category for ideas.",
+    icon: Images,
+    category: "inspiration",
+    preview: "media",
+    defaultVisible: true,
+    defaultSize: { w: 8, h: 8 },
+    minSize: { w: 4, h: 6 },
+  }),
+];
+
+const AT_A_GLANCE = { groupId: "glance", groupName: "At a glance", groupHideLabel: true } as const;
+
+export const COUPLE_DEFAULT_LAYOUT: WidgetLayoutItem[] = [
+  { i: "kpi_budget", x: 0, y: 0, w: 3, h: 3, visible: true, ...AT_A_GLANCE, groupOrder: 1 },
+  { i: "kpi_team", x: 3, y: 0, w: 3, h: 3, visible: true, ...AT_A_GLANCE, groupOrder: 2 },
+  { i: "kpi_rsvp", x: 6, y: 0, w: 3, h: 3, visible: true, ...AT_A_GLANCE, groupOrder: 3 },
+  { i: "kpi_tasks", x: 9, y: 0, w: 3, h: 3, visible: true, ...AT_A_GLANCE, groupOrder: 4 },
+  { i: "ceremonies", x: 0, y: 3, w: 7, h: 10, visible: true },
+  { i: "progress", x: 7, y: 3, w: 5, h: 10, visible: true },
+  { i: "budget_categories", x: 0, y: 13, w: 6, h: 10, visible: true },
+  { i: "tasks_board", x: 6, y: 13, w: 6, h: 10, visible: true },
+  { i: "rsvp_breakdown", x: 0, y: 23, w: 6, h: 9, visible: true },
+  { i: "plates", x: 6, y: 23, w: 6, h: 9, visible: true },
+  { i: "team", x: 0, y: 32, w: 6, h: 8, visible: true },
+  { i: "agenda", x: 6, y: 32, w: 3, h: 8, visible: true },
+  { i: "messages", x: 9, y: 32, w: 3, h: 8, visible: true },
+  { i: "style", x: 0, y: 40, w: 4, h: 8, visible: true },
+  { i: "inspiration", x: 4, y: 40, w: 8, h: 8, visible: true },
+  { i: "kpi_countdown", x: 0, y: 48, w: 3, h: 3, visible: false },
+  { i: "kpi_plates", x: 3, y: 48, w: 3, h: 3, visible: false },
+  { i: "kpi_music", x: 6, y: 48, w: 3, h: 3, visible: false },
+  { i: "guest_sides", x: 0, y: 51, w: 6, h: 8, visible: false },
+];
+
+export const useCoupleDashboardLayout = createDashboardLayoutStore({
+  kind: "couple",
+  registry: COUPLE_WIDGETS,
+  defaultLayout: COUPLE_DEFAULT_LAYOUT,
+});

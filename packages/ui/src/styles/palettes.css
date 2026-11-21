@@ -133,6 +133,188 @@
   --pal-temple-dark-body: #c9b3a3;
   --pal-temple-dark-page: #1a100c;
   --pal-temple-dark-card: #251812;
+
+  /* Festive wedding palettes */
+  --pal-sage-ivory-accent: #7a8f71;
+  --pal-sage-ivory-accent-hover: #667860;
+  --pal-sage-ivory-accent-active: #55634f;
+  --pal-sage-ivory-subtle: #e9eee4;
+  --pal-sage-ivory-heading: #2f352c;
+  --pal-sage-ivory-body: #5c6358;
+  --pal-sage-ivory-page: #f7f4ee;
+  --pal-sage-ivory-card: #fffefa;
+  --pal-sage-ivory-border: #d8ddd0;
+  --pal-sage-ivory-dark-accent: #a8b89e;
+  --pal-sage-ivory-dark-heading: #f4f6f1;
+  --pal-sage-ivory-dark-body: #a3afa0;
+  --pal-sage-ivory-dark-page: #171c16;
+  --pal-sage-ivory-dark-card: #222821;
+
+  --pal-champagne-gold-accent: #c4a35a;
+  --pal-champagne-gold-accent-hover: #a88b45;
+  --pal-champagne-gold-accent-active: #8a7038;
+  --pal-champagne-gold-subtle: #f5eedf;
+  --pal-champagne-gold-heading: #3d3420;
+  --pal-champagne-gold-body: #6b5e45;
+  --pal-champagne-gold-page: #fbf7f0;
+  --pal-champagne-gold-card: #fffefb;
+  --pal-champagne-gold-border: #e6dfcb;
+  --pal-champagne-gold-dark-accent: #d4b86a;
+  --pal-champagne-gold-dark-heading: #fbf6ec;
+  --pal-champagne-gold-dark-body: #c2b18a;
+  --pal-champagne-gold-dark-page: #1a160e;
+  --pal-champagne-gold-dark-card: #2a2416;
+
+  --pal-dusty-blue-ivory-accent: #7a8fa3;
+  --pal-dusty-blue-ivory-accent-hover: #647a8f;
+  --pal-dusty-blue-ivory-accent-active: #516575;
+  --pal-dusty-blue-ivory-subtle: #e8eef2;
+  --pal-dusty-blue-ivory-heading: #2a3540;
+  --pal-dusty-blue-ivory-body: #5a6570;
+  --pal-dusty-blue-ivory-page: #f7f5f1;
+  --pal-dusty-blue-ivory-card: #fffefc;
+  --pal-dusty-blue-ivory-border: #d4dbe2;
+  --pal-dusty-blue-ivory-dark-accent: #9bb0c2;
+  --pal-dusty-blue-ivory-dark-heading: #f4f7fa;
+  --pal-dusty-blue-ivory-dark-body: #a3b2c0;
+  --pal-dusty-blue-ivory-dark-page: #121820;
+  --pal-dusty-blue-ivory-dark-card: #1c2530;
+
+  --pal-blush-cream-accent: #c49191;
+  --pal-blush-cream-accent-hover: #b07878;
+  --pal-blush-cream-accent-active: #956464;
+  --pal-blush-cream-subtle: #f7eded;
+  --pal-blush-cream-heading: #3d2e2e;
+  --pal-blush-cream-body: #6b5858;
+  --pal-blush-cream-page: #fbf6f4;
+  --pal-blush-cream-card: #fffefd;
+  --pal-blush-cream-border: #e6d8d8;
+  --pal-blush-cream-dark-accent: #e0a8a8;
+  --pal-blush-cream-dark-heading: #faf3f3;
+  --pal-blush-cream-dark-body: #c9a8a8;
+  --pal-blush-cream-dark-page: #1a1212;
+  --pal-blush-cream-dark-card: #2a1c1c;
+
+  --pal-emerald-gold-accent: #1b4d3e;
+  --pal-emerald-gold-accent-hover: #153d32;
+  --pal-emerald-gold-accent-active: #0f2e26;
+  --pal-emerald-gold-subtle: #e6efea;
+  --pal-emerald-gold-heading: #142820;
+  --pal-emerald-gold-body: #4a5c54;
+  --pal-emerald-gold-page: #f6f3ec;
+  --pal-emerald-gold-card: #fffefb;
+  --pal-emerald-gold-border: #d2dbd4;
+  --pal-emerald-gold-dark-accent: #c9a84c;
+  --pal-emerald-gold-dark-heading: #f6f3ec;
+  --pal-emerald-gold-dark-body: #b8c4b4;
+  --pal-emerald-gold-dark-page: #0c1814;
+  --pal-emerald-gold-dark-card: #15241e;
+
+  --pal-terracotta-sand-accent: #c45c3a;
+  --pal-terracotta-sand-accent-hover: #a84c30;
+  --pal-terracotta-sand-accent-active: #8a3e28;
+  --pal-terracotta-sand-subtle: #f5e8e0;
+  --pal-terracotta-sand-heading: #3a241c;
+  --pal-terracotta-sand-body: #6b4e42;
+  --pal-terracotta-sand-page: #faf5f0;
+  --pal-terracotta-sand-card: #fffefc;
+  --pal-terracotta-sand-border: #e4d4c6;
+  --pal-terracotta-sand-dark-accent: #e07a5a;
+  --pal-terracotta-sand-dark-heading: #faf3ee;
+  --pal-terracotta-sand-dark-body: #c4a898;
+  --pal-terracotta-sand-dark-page: #1a120e;
+  --pal-terracotta-sand-dark-card: #2a1c16;
+
+  --pal-lavender-taupe-accent: #9b8aa8;
+  --pal-lavender-taupe-accent-hover: #857492;
+  --pal-lavender-taupe-accent-active: #6e5f7a;
+  --pal-lavender-taupe-subtle: #efeaf2;
+  --pal-lavender-taupe-heading: #322a38;
+  --pal-lavender-taupe-body: #5e5566;
+  --pal-lavender-taupe-page: #f7f4f2;
+  --pal-lavender-taupe-card: #fffefd;
+  --pal-lavender-taupe-border: #dcd5df;
+  --pal-lavender-taupe-dark-accent: #c4b0d4;
+  --pal-lavender-taupe-dark-heading: #f7f2f8;
+  --pal-lavender-taupe-dark-body: #b8a8c4;
+  --pal-lavender-taupe-dark-page: #161218;
+  --pal-lavender-taupe-dark-card: #221c26;
+
+  --pal-navy-gold-accent: #1a2b4a;
+  --pal-navy-gold-accent-hover: #142238;
+  --pal-navy-gold-accent-active: #0e1828;
+  --pal-navy-gold-subtle: #e8ecf2;
+  --pal-navy-gold-heading: #121c2e;
+  --pal-navy-gold-body: #4a5568;
+  --pal-navy-gold-page: #faf7f0;
+  --pal-navy-gold-card: #fffefb;
+  --pal-navy-gold-border: #d8d4c6;
+  --pal-navy-gold-dark-accent: #d4b86a;
+  --pal-navy-gold-dark-heading: #f8f6f0;
+  --pal-navy-gold-dark-body: #a8b4c4;
+  --pal-navy-gold-dark-page: #0a1018;
+  --pal-navy-gold-dark-card: #121c2a;
+
+  --pal-mocha-ivory-accent: #6b4e3d;
+  --pal-mocha-ivory-accent-hover: #5a4133;
+  --pal-mocha-ivory-accent-active: #483428;
+  --pal-mocha-ivory-subtle: #f0e8e0;
+  --pal-mocha-ivory-heading: #2e241c;
+  --pal-mocha-ivory-body: #5c4e42;
+  --pal-mocha-ivory-page: #f8f4ee;
+  --pal-mocha-ivory-card: #fffefb;
+  --pal-mocha-ivory-border: #dcd4c8;
+  --pal-mocha-ivory-dark-accent: #c4a484;
+  --pal-mocha-ivory-dark-heading: #f6f1ea;
+  --pal-mocha-ivory-dark-body: #b8a898;
+  --pal-mocha-ivory-dark-page: #14100c;
+  --pal-mocha-ivory-dark-card: #221c16;
+
+  --pal-black-white-accent: #111111;
+  --pal-black-white-accent-hover: #000000;
+  --pal-black-white-accent-active: #000000;
+  --pal-black-white-subtle: #f0f0f0;
+  --pal-black-white-heading: #111111;
+  --pal-black-white-body: #4a4a4a;
+  --pal-black-white-page: #fafafa;
+  --pal-black-white-card: #ffffff;
+  --pal-black-white-border: #e0e0e0;
+  --pal-black-white-dark-accent: #e8e8e8;
+  --pal-black-white-dark-heading: #f7f7f7;
+  --pal-black-white-dark-body: #a0a0a0;
+  --pal-black-white-dark-page: #0a0a0a;
+  --pal-black-white-dark-card: #161616;
+  --pal-black-white-dark-fg: #0a0a0a;
+
+  --pal-peach-coral-accent: #e07a5f;
+  --pal-peach-coral-accent-hover: #c9654a;
+  --pal-peach-coral-accent-active: #a8523c;
+  --pal-peach-coral-subtle: #fcede8;
+  --pal-peach-coral-heading: #3a241c;
+  --pal-peach-coral-body: #6b5248;
+  --pal-peach-coral-page: #fbf7f3;
+  --pal-peach-coral-card: #fffefc;
+  --pal-peach-coral-border: #e6d6ce;
+  --pal-peach-coral-dark-accent: #f0a08a;
+  --pal-peach-coral-dark-heading: #faf3ef;
+  --pal-peach-coral-dark-body: #c8a898;
+  --pal-peach-coral-dark-page: #1a1210;
+  --pal-peach-coral-dark-card: #2a1c18;
+
+  --pal-greenery-white-accent: #4f7a3e;
+  --pal-greenery-white-accent-hover: #426834;
+  --pal-greenery-white-accent-active: #345528;
+  --pal-greenery-white-subtle: #eaf0e6;
+  --pal-greenery-white-heading: #24301e;
+  --pal-greenery-white-body: #55634a;
+  --pal-greenery-white-page: #f7f9f5;
+  --pal-greenery-white-card: #ffffff;
+  --pal-greenery-white-border: #d2dbc8;
+  --pal-greenery-white-dark-accent: #8fbf7a;
+  --pal-greenery-white-dark-heading: #f4f8f1;
+  --pal-greenery-white-dark-body: #a8bca0;
+  --pal-greenery-white-dark-page: #10180e;
+  --pal-greenery-white-dark-card: #1a2416;
 }
 
 /* ── Modern ── */
@@ -644,4 +826,742 @@
   --color-secondary-fg: var(--pal-temple-dark-heading);
   --color-frame: color-mix(in srgb, var(--pal-temple-dark-page) 70%, var(--cw-black));
   --color-chart-1: var(--pal-temple-dark-accent);
+}
+
+/* ── Festive wedding palettes (moodboard) ── */
+
+/* ── Sage & Ivory ── */
+[data-palette="sage-ivory"] {
+  --color-primary: var(--pal-sage-ivory-accent);
+  --color-primary-hover: var(--pal-sage-ivory-accent-hover);
+  --color-primary-active: var(--pal-sage-ivory-accent-active);
+  --color-primary-subtle: var(--pal-sage-ivory-subtle);
+  --color-primary-fg: var(--cw-white);
+  --color-primary-text: var(--pal-sage-ivory-accent-hover);
+  --color-text-heading: var(--pal-sage-ivory-heading);
+  --color-text-body: var(--pal-sage-ivory-body);
+  --color-text-muted: color-mix(in srgb, var(--pal-sage-ivory-body) 88%, var(--pal-sage-ivory-page));
+  --color-text-inverse: var(--pal-sage-ivory-card);
+  --color-bg-page: var(--pal-sage-ivory-page);
+  --color-bg-card: var(--pal-sage-ivory-card);
+  --color-bg-muted: color-mix(in srgb, var(--pal-sage-ivory-subtle) 45%, var(--pal-sage-ivory-page));
+  --color-bg-accent: var(--pal-sage-ivory-subtle);
+  --color-bg-sidebar: color-mix(in srgb, var(--pal-sage-ivory-subtle) 40%, var(--pal-sage-ivory-card));
+  --color-bg-inset: color-mix(in srgb, var(--pal-sage-ivory-page) 70%, var(--pal-sage-ivory-subtle));
+  --color-border: var(--pal-sage-ivory-border);
+  --color-border-strong: color-mix(in srgb, var(--pal-sage-ivory-border) 70%, var(--pal-sage-ivory-body));
+  --color-focus-ring: var(--pal-sage-ivory-accent);
+  --color-secondary: color-mix(in srgb, var(--pal-sage-ivory-subtle) 70%, var(--pal-sage-ivory-card));
+  --color-secondary-fg: var(--pal-sage-ivory-accent-active);
+  --color-frame: color-mix(in srgb, var(--pal-sage-ivory-subtle) 65%, var(--pal-sage-ivory-page));
+  --color-chart-1: var(--pal-sage-ivory-accent);
+}
+
+.night[data-palette="sage-ivory"],
+[data-palette="sage-ivory"] .night:not([data-palette]),
+.night [data-palette="sage-ivory"]:not(.pearl) {
+  --color-primary: var(--pal-sage-ivory-dark-accent);
+  --color-primary-hover: color-mix(in srgb, var(--pal-sage-ivory-dark-accent) 85%, var(--cw-white));
+  --color-primary-active: var(--pal-sage-ivory-dark-accent);
+  --color-primary-subtle: color-mix(in srgb, var(--pal-sage-ivory-dark-accent) 16%, transparent);
+  --color-primary-fg: var(--pal-sage-ivory-dark-page);
+  --color-primary-text: var(--pal-sage-ivory-dark-accent);
+  --color-text-heading: var(--pal-sage-ivory-dark-heading);
+  --color-text-body: color-mix(in srgb, var(--pal-sage-ivory-dark-heading) 86%, var(--pal-sage-ivory-dark-body));
+  --color-text-muted: color-mix(in srgb, var(--pal-sage-ivory-dark-heading) 62%, var(--pal-sage-ivory-dark-body));
+  --color-text-inverse: var(--pal-sage-ivory-dark-page);
+  --color-bg-page: var(--pal-sage-ivory-dark-page);
+  --color-bg-card: var(--pal-sage-ivory-dark-card);
+  --color-bg-muted: color-mix(in srgb, var(--pal-sage-ivory-dark-card) 88%, var(--pal-sage-ivory-dark-heading));
+  --color-bg-accent: color-mix(in srgb, var(--pal-sage-ivory-dark-accent) 14%, var(--pal-sage-ivory-dark-card));
+  --color-bg-sidebar: color-mix(in srgb, var(--pal-sage-ivory-dark-accent) 6%, var(--pal-sage-ivory-dark-page));
+  --color-bg-inset: color-mix(in srgb, var(--pal-sage-ivory-dark-page) 70%, var(--pal-sage-ivory-dark-card));
+  --color-border: color-mix(in srgb, var(--pal-sage-ivory-dark-heading) 14%, transparent);
+  --color-border-strong: color-mix(in srgb, var(--pal-sage-ivory-dark-heading) 24%, transparent);
+  --color-focus-ring: var(--pal-sage-ivory-dark-accent);
+  --color-secondary: color-mix(in srgb, var(--pal-sage-ivory-dark-accent) 14%, var(--pal-sage-ivory-dark-card));
+  --color-secondary-fg: var(--pal-sage-ivory-dark-heading);
+  --color-frame: color-mix(in srgb, var(--pal-sage-ivory-dark-page) 70%, var(--cw-black));
+  --color-chart-1: var(--pal-sage-ivory-dark-accent);
+}
+
+/* ── Champagne & Gold ── */
+[data-palette="champagne-gold"] {
+  --color-primary: var(--pal-champagne-gold-accent);
+  --color-primary-hover: var(--pal-champagne-gold-accent-hover);
+  --color-primary-active: var(--pal-champagne-gold-accent-active);
+  --color-primary-subtle: var(--pal-champagne-gold-subtle);
+  --color-primary-fg: var(--cw-white);
+  --color-primary-text: var(--pal-champagne-gold-accent-hover);
+  --color-text-heading: var(--pal-champagne-gold-heading);
+  --color-text-body: var(--pal-champagne-gold-body);
+  --color-text-muted: color-mix(in srgb, var(--pal-champagne-gold-body) 88%, var(--pal-champagne-gold-page));
+  --color-text-inverse: var(--pal-champagne-gold-card);
+  --color-bg-page: var(--pal-champagne-gold-page);
+  --color-bg-card: var(--pal-champagne-gold-card);
+  --color-bg-muted: color-mix(in srgb, var(--pal-champagne-gold-subtle) 45%, var(--pal-champagne-gold-page));
+  --color-bg-accent: var(--pal-champagne-gold-subtle);
+  --color-bg-sidebar: color-mix(in srgb, var(--pal-champagne-gold-subtle) 40%, var(--pal-champagne-gold-card));
+  --color-bg-inset: color-mix(in srgb, var(--pal-champagne-gold-page) 70%, var(--pal-champagne-gold-subtle));
+  --color-border: var(--pal-champagne-gold-border);
+  --color-border-strong: color-mix(in srgb, var(--pal-champagne-gold-border) 70%, var(--pal-champagne-gold-body));
+  --color-focus-ring: var(--pal-champagne-gold-accent);
+  --color-secondary: color-mix(in srgb, var(--pal-champagne-gold-subtle) 70%, var(--pal-champagne-gold-card));
+  --color-secondary-fg: var(--pal-champagne-gold-accent-active);
+  --color-frame: color-mix(in srgb, var(--pal-champagne-gold-subtle) 65%, var(--pal-champagne-gold-page));
+  --color-chart-1: var(--pal-champagne-gold-accent);
+}
+
+.night[data-palette="champagne-gold"],
+[data-palette="champagne-gold"] .night:not([data-palette]),
+.night [data-palette="champagne-gold"]:not(.pearl) {
+  --color-primary: var(--pal-champagne-gold-dark-accent);
+  --color-primary-hover: color-mix(in srgb, var(--pal-champagne-gold-dark-accent) 85%, var(--cw-white));
+  --color-primary-active: var(--pal-champagne-gold-dark-accent);
+  --color-primary-subtle: color-mix(in srgb, var(--pal-champagne-gold-dark-accent) 16%, transparent);
+  --color-primary-fg: var(--pal-champagne-gold-dark-page);
+  --color-primary-text: var(--pal-champagne-gold-dark-accent);
+  --color-text-heading: var(--pal-champagne-gold-dark-heading);
+  --color-text-body: color-mix(
+    in srgb,
+    var(--pal-champagne-gold-dark-heading) 86%,
+    var(--pal-champagne-gold-dark-body)
+  );
+  --color-text-muted: color-mix(
+    in srgb,
+    var(--pal-champagne-gold-dark-heading) 62%,
+    var(--pal-champagne-gold-dark-body)
+  );
+  --color-text-inverse: var(--pal-champagne-gold-dark-page);
+  --color-bg-page: var(--pal-champagne-gold-dark-page);
+  --color-bg-card: var(--pal-champagne-gold-dark-card);
+  --color-bg-muted: color-mix(in srgb, var(--pal-champagne-gold-dark-card) 88%, var(--pal-champagne-gold-dark-heading));
+  --color-bg-accent: color-mix(in srgb, var(--pal-champagne-gold-dark-accent) 14%, var(--pal-champagne-gold-dark-card));
+  --color-bg-sidebar: color-mix(in srgb, var(--pal-champagne-gold-dark-accent) 6%, var(--pal-champagne-gold-dark-page));
+  --color-bg-inset: color-mix(in srgb, var(--pal-champagne-gold-dark-page) 70%, var(--pal-champagne-gold-dark-card));
+  --color-border: color-mix(in srgb, var(--pal-champagne-gold-dark-heading) 14%, transparent);
+  --color-border-strong: color-mix(in srgb, var(--pal-champagne-gold-dark-heading) 24%, transparent);
+  --color-focus-ring: var(--pal-champagne-gold-dark-accent);
+  --color-secondary: color-mix(in srgb, var(--pal-champagne-gold-dark-accent) 14%, var(--pal-champagne-gold-dark-card));
+  --color-secondary-fg: var(--pal-champagne-gold-dark-heading);
+  --color-frame: color-mix(in srgb, var(--pal-champagne-gold-dark-page) 70%, var(--cw-black));
+  --color-chart-1: var(--pal-champagne-gold-dark-accent);
+}
+
+/* ── Dusty Blue & Ivory ── */
+[data-palette="dusty-blue-ivory"] {
+  --color-primary: var(--pal-dusty-blue-ivory-accent);
+  --color-primary-hover: var(--pal-dusty-blue-ivory-accent-hover);
+  --color-primary-active: var(--pal-dusty-blue-ivory-accent-active);
+  --color-primary-subtle: var(--pal-dusty-blue-ivory-subtle);
+  --color-primary-fg: var(--cw-white);
+  --color-primary-text: var(--pal-dusty-blue-ivory-accent-hover);
+  --color-text-heading: var(--pal-dusty-blue-ivory-heading);
+  --color-text-body: var(--pal-dusty-blue-ivory-body);
+  --color-text-muted: color-mix(in srgb, var(--pal-dusty-blue-ivory-body) 88%, var(--pal-dusty-blue-ivory-page));
+  --color-text-inverse: var(--pal-dusty-blue-ivory-card);
+  --color-bg-page: var(--pal-dusty-blue-ivory-page);
+  --color-bg-card: var(--pal-dusty-blue-ivory-card);
+  --color-bg-muted: color-mix(in srgb, var(--pal-dusty-blue-ivory-subtle) 45%, var(--pal-dusty-blue-ivory-page));
+  --color-bg-accent: var(--pal-dusty-blue-ivory-subtle);
+  --color-bg-sidebar: color-mix(in srgb, var(--pal-dusty-blue-ivory-subtle) 40%, var(--pal-dusty-blue-ivory-card));
+  --color-bg-inset: color-mix(in srgb, var(--pal-dusty-blue-ivory-page) 70%, var(--pal-dusty-blue-ivory-subtle));
+  --color-border: var(--pal-dusty-blue-ivory-border);
+  --color-border-strong: color-mix(in srgb, var(--pal-dusty-blue-ivory-border) 70%, var(--pal-dusty-blue-ivory-body));
+  --color-focus-ring: var(--pal-dusty-blue-ivory-accent);
+  --color-secondary: color-mix(in srgb, var(--pal-dusty-blue-ivory-subtle) 70%, var(--pal-dusty-blue-ivory-card));
+  --color-secondary-fg: var(--pal-dusty-blue-ivory-accent-active);
+  --color-frame: color-mix(in srgb, var(--pal-dusty-blue-ivory-subtle) 65%, var(--pal-dusty-blue-ivory-page));
+  --color-chart-1: var(--pal-dusty-blue-ivory-accent);
+}
+
+.night[data-palette="dusty-blue-ivory"],
+[data-palette="dusty-blue-ivory"] .night:not([data-palette]),
+.night [data-palette="dusty-blue-ivory"]:not(.pearl) {
+  --color-primary: var(--pal-dusty-blue-ivory-dark-accent);
+  --color-primary-hover: color-mix(in srgb, var(--pal-dusty-blue-ivory-dark-accent) 85%, var(--cw-white));
+  --color-primary-active: var(--pal-dusty-blue-ivory-dark-accent);
+  --color-primary-subtle: color-mix(in srgb, var(--pal-dusty-blue-ivory-dark-accent) 16%, transparent);
+  --color-primary-fg: var(--pal-dusty-blue-ivory-dark-page);
+  --color-primary-text: var(--pal-dusty-blue-ivory-dark-accent);
+  --color-text-heading: var(--pal-dusty-blue-ivory-dark-heading);
+  --color-text-body: color-mix(
+    in srgb,
+    var(--pal-dusty-blue-ivory-dark-heading) 86%,
+    var(--pal-dusty-blue-ivory-dark-body)
+  );
+  --color-text-muted: color-mix(
+    in srgb,
+    var(--pal-dusty-blue-ivory-dark-heading) 62%,
+    var(--pal-dusty-blue-ivory-dark-body)
+  );
+  --color-text-inverse: var(--pal-dusty-blue-ivory-dark-page);
+  --color-bg-page: var(--pal-dusty-blue-ivory-dark-page);
+  --color-bg-card: var(--pal-dusty-blue-ivory-dark-card);
+  --color-bg-muted: color-mix(
+    in srgb,
+    var(--pal-dusty-blue-ivory-dark-card) 88%,
+    var(--pal-dusty-blue-ivory-dark-heading)
+  );
+  --color-bg-accent: color-mix(
+    in srgb,
+    var(--pal-dusty-blue-ivory-dark-accent) 14%,
+    var(--pal-dusty-blue-ivory-dark-card)
+  );
+  --color-bg-sidebar: color-mix(
+    in srgb,
+    var(--pal-dusty-blue-ivory-dark-accent) 6%,
+    var(--pal-dusty-blue-ivory-dark-page)
+  );
+  --color-bg-inset: color-mix(
+    in srgb,
+    var(--pal-dusty-blue-ivory-dark-page) 70%,
+    var(--pal-dusty-blue-ivory-dark-card)
+  );
+  --color-border: color-mix(in srgb, var(--pal-dusty-blue-ivory-dark-heading) 14%, transparent);
+  --color-border-strong: color-mix(in srgb, var(--pal-dusty-blue-ivory-dark-heading) 24%, transparent);
+  --color-focus-ring: var(--pal-dusty-blue-ivory-dark-accent);
+  --color-secondary: color-mix(
+    in srgb,
+    var(--pal-dusty-blue-ivory-dark-accent) 14%,
+    var(--pal-dusty-blue-ivory-dark-card)
+  );
+  --color-secondary-fg: var(--pal-dusty-blue-ivory-dark-heading);
+  --color-frame: color-mix(in srgb, var(--pal-dusty-blue-ivory-dark-page) 70%, var(--cw-black));
+  --color-chart-1: var(--pal-dusty-blue-ivory-dark-accent);
+}
+
+/* ── Blush & Cream ── */
+[data-palette="blush-cream"] {
+  --color-primary: var(--pal-blush-cream-accent);
+  --color-primary-hover: var(--pal-blush-cream-accent-hover);
+  --color-primary-active: var(--pal-blush-cream-accent-active);
+  --color-primary-subtle: var(--pal-blush-cream-subtle);
+  --color-primary-fg: var(--cw-white);
+  --color-primary-text: var(--pal-blush-cream-accent-hover);
+  --color-text-heading: var(--pal-blush-cream-heading);
+  --color-text-body: var(--pal-blush-cream-body);
+  --color-text-muted: color-mix(in srgb, var(--pal-blush-cream-body) 88%, var(--pal-blush-cream-page));
+  --color-text-inverse: var(--pal-blush-cream-card);
+  --color-bg-page: var(--pal-blush-cream-page);
+  --color-bg-card: var(--pal-blush-cream-card);
+  --color-bg-muted: color-mix(in srgb, var(--pal-blush-cream-subtle) 45%, var(--pal-blush-cream-page));
+  --color-bg-accent: var(--pal-blush-cream-subtle);
+  --color-bg-sidebar: color-mix(in srgb, var(--pal-blush-cream-subtle) 40%, var(--pal-blush-cream-card));
+  --color-bg-inset: color-mix(in srgb, var(--pal-blush-cream-page) 70%, var(--pal-blush-cream-subtle));
+  --color-border: var(--pal-blush-cream-border);
+  --color-border-strong: color-mix(in srgb, var(--pal-blush-cream-border) 70%, var(--pal-blush-cream-body));
+  --color-focus-ring: var(--pal-blush-cream-accent);
+  --color-secondary: color-mix(in srgb, var(--pal-blush-cream-subtle) 70%, var(--pal-blush-cream-card));
+  --color-secondary-fg: var(--pal-blush-cream-accent-active);
+  --color-frame: color-mix(in srgb, var(--pal-blush-cream-subtle) 65%, var(--pal-blush-cream-page));
+  --color-chart-1: var(--pal-blush-cream-accent);
+}
+
+.night[data-palette="blush-cream"],
+[data-palette="blush-cream"] .night:not([data-palette]),
+.night [data-palette="blush-cream"]:not(.pearl) {
+  --color-primary: var(--pal-blush-cream-dark-accent);
+  --color-primary-hover: color-mix(in srgb, var(--pal-blush-cream-dark-accent) 85%, var(--cw-white));
+  --color-primary-active: var(--pal-blush-cream-dark-accent);
+  --color-primary-subtle: color-mix(in srgb, var(--pal-blush-cream-dark-accent) 16%, transparent);
+  --color-primary-fg: var(--pal-blush-cream-dark-page);
+  --color-primary-text: var(--pal-blush-cream-dark-accent);
+  --color-text-heading: var(--pal-blush-cream-dark-heading);
+  --color-text-body: color-mix(in srgb, var(--pal-blush-cream-dark-heading) 86%, var(--pal-blush-cream-dark-body));
+  --color-text-muted: color-mix(in srgb, var(--pal-blush-cream-dark-heading) 62%, var(--pal-blush-cream-dark-body));
+  --color-text-inverse: var(--pal-blush-cream-dark-page);
+  --color-bg-page: var(--pal-blush-cream-dark-page);
+  --color-bg-card: var(--pal-blush-cream-dark-card);
+  --color-bg-muted: color-mix(in srgb, var(--pal-blush-cream-dark-card) 88%, var(--pal-blush-cream-dark-heading));
+  --color-bg-accent: color-mix(in srgb, var(--pal-blush-cream-dark-accent) 14%, var(--pal-blush-cream-dark-card));
+  --color-bg-sidebar: color-mix(in srgb, var(--pal-blush-cream-dark-accent) 6%, var(--pal-blush-cream-dark-page));
+  --color-bg-inset: color-mix(in srgb, var(--pal-blush-cream-dark-page) 70%, var(--pal-blush-cream-dark-card));
+  --color-border: color-mix(in srgb, var(--pal-blush-cream-dark-heading) 14%, transparent);
+  --color-border-strong: color-mix(in srgb, var(--pal-blush-cream-dark-heading) 24%, transparent);
+  --color-focus-ring: var(--pal-blush-cream-dark-accent);
+  --color-secondary: color-mix(in srgb, var(--pal-blush-cream-dark-accent) 14%, var(--pal-blush-cream-dark-card));
+  --color-secondary-fg: var(--pal-blush-cream-dark-heading);
+  --color-frame: color-mix(in srgb, var(--pal-blush-cream-dark-page) 70%, var(--cw-black));
+  --color-chart-1: var(--pal-blush-cream-dark-accent);
+}
+
+/* ── Emerald & Gold ── */
+[data-palette="emerald-gold"] {
+  --color-primary: var(--pal-emerald-gold-accent);
+  --color-primary-hover: var(--pal-emerald-gold-accent-hover);
+  --color-primary-active: var(--pal-emerald-gold-accent-active);
+  --color-primary-subtle: var(--pal-emerald-gold-subtle);
+  --color-primary-fg: var(--cw-white);
+  --color-primary-text: var(--pal-emerald-gold-accent-hover);
+  --color-text-heading: var(--pal-emerald-gold-heading);
+  --color-text-body: var(--pal-emerald-gold-body);
+  --color-text-muted: color-mix(in srgb, var(--pal-emerald-gold-body) 88%, var(--pal-emerald-gold-page));
+  --color-text-inverse: var(--pal-emerald-gold-card);
+  --color-bg-page: var(--pal-emerald-gold-page);
+  --color-bg-card: var(--pal-emerald-gold-card);
+  --color-bg-muted: color-mix(in srgb, var(--pal-emerald-gold-subtle) 45%, var(--pal-emerald-gold-page));
+  --color-bg-accent: var(--pal-emerald-gold-subtle);
+  --color-bg-sidebar: color-mix(in srgb, var(--pal-emerald-gold-subtle) 40%, var(--pal-emerald-gold-card));
+  --color-bg-inset: color-mix(in srgb, var(--pal-emerald-gold-page) 70%, var(--pal-emerald-gold-subtle));
+  --color-border: var(--pal-emerald-gold-border);
+  --color-border-strong: color-mix(in srgb, var(--pal-emerald-gold-border) 70%, var(--pal-emerald-gold-body));
+  --color-focus-ring: var(--pal-emerald-gold-accent);
+  --color-secondary: color-mix(in srgb, var(--pal-emerald-gold-subtle) 70%, var(--pal-emerald-gold-card));
+  --color-secondary-fg: var(--pal-emerald-gold-accent-active);
+  --color-frame: color-mix(in srgb, var(--pal-emerald-gold-subtle) 65%, var(--pal-emerald-gold-page));
+  --color-chart-1: var(--pal-emerald-gold-accent);
+}
+
+.night[data-palette="emerald-gold"],
+[data-palette="emerald-gold"] .night:not([data-palette]),
+.night [data-palette="emerald-gold"]:not(.pearl) {
+  --color-primary: var(--pal-emerald-gold-dark-accent);
+  --color-primary-hover: color-mix(in srgb, var(--pal-emerald-gold-dark-accent) 85%, var(--cw-white));
+  --color-primary-active: var(--pal-emerald-gold-dark-accent);
+  --color-primary-subtle: color-mix(in srgb, var(--pal-emerald-gold-dark-accent) 16%, transparent);
+  --color-primary-fg: var(--pal-emerald-gold-dark-page);
+  --color-primary-text: var(--pal-emerald-gold-dark-accent);
+  --color-text-heading: var(--pal-emerald-gold-dark-heading);
+  --color-text-body: color-mix(in srgb, var(--pal-emerald-gold-dark-heading) 86%, var(--pal-emerald-gold-dark-body));
+  --color-text-muted: color-mix(in srgb, var(--pal-emerald-gold-dark-heading) 62%, var(--pal-emerald-gold-dark-body));
+  --color-text-inverse: var(--pal-emerald-gold-dark-page);
+  --color-bg-page: var(--pal-emerald-gold-dark-page);
+  --color-bg-card: var(--pal-emerald-gold-dark-card);
+  --color-bg-muted: color-mix(in srgb, var(--pal-emerald-gold-dark-card) 88%, var(--pal-emerald-gold-dark-heading));
+  --color-bg-accent: color-mix(in srgb, var(--pal-emerald-gold-dark-accent) 14%, var(--pal-emerald-gold-dark-card));
+  --color-bg-sidebar: color-mix(in srgb, var(--pal-emerald-gold-dark-accent) 6%, var(--pal-emerald-gold-dark-page));
+  --color-bg-inset: color-mix(in srgb, var(--pal-emerald-gold-dark-page) 70%, var(--pal-emerald-gold-dark-card));
+  --color-border: color-mix(in srgb, var(--pal-emerald-gold-dark-heading) 14%, transparent);
+  --color-border-strong: color-mix(in srgb, var(--pal-emerald-gold-dark-heading) 24%, transparent);
+  --color-focus-ring: var(--pal-emerald-gold-dark-accent);
+  --color-secondary: color-mix(in srgb, var(--pal-emerald-gold-dark-accent) 14%, var(--pal-emerald-gold-dark-card));
+  --color-secondary-fg: var(--pal-emerald-gold-dark-heading);
+  --color-frame: color-mix(in srgb, var(--pal-emerald-gold-dark-page) 70%, var(--cw-black));
+  --color-chart-1: var(--pal-emerald-gold-dark-accent);
+}
+
+/* ── Terracotta & Sand ── */
+[data-palette="terracotta-sand"] {
+  --color-primary: var(--pal-terracotta-sand-accent);
+  --color-primary-hover: var(--pal-terracotta-sand-accent-hover);
+  --color-primary-active: var(--pal-terracotta-sand-accent-active);
+  --color-primary-subtle: var(--pal-terracotta-sand-subtle);
+  --color-primary-fg: var(--cw-white);
+  --color-primary-text: var(--pal-terracotta-sand-accent-hover);
+  --color-text-heading: var(--pal-terracotta-sand-heading);
+  --color-text-body: var(--pal-terracotta-sand-body);
+  --color-text-muted: color-mix(in srgb, var(--pal-terracotta-sand-body) 88%, var(--pal-terracotta-sand-page));
+  --color-text-inverse: var(--pal-terracotta-sand-card);
+  --color-bg-page: var(--pal-terracotta-sand-page);
+  --color-bg-card: var(--pal-terracotta-sand-card);
+  --color-bg-muted: color-mix(in srgb, var(--pal-terracotta-sand-subtle) 45%, var(--pal-terracotta-sand-page));
+  --color-bg-accent: var(--pal-terracotta-sand-subtle);
+  --color-bg-sidebar: color-mix(in srgb, var(--pal-terracotta-sand-subtle) 40%, var(--pal-terracotta-sand-card));
+  --color-bg-inset: color-mix(in srgb, var(--pal-terracotta-sand-page) 70%, var(--pal-terracotta-sand-subtle));
+  --color-border: var(--pal-terracotta-sand-border);
+  --color-border-strong: color-mix(in srgb, var(--pal-terracotta-sand-border) 70%, var(--pal-terracotta-sand-body));
+  --color-focus-ring: var(--pal-terracotta-sand-accent);
+  --color-secondary: color-mix(in srgb, var(--pal-terracotta-sand-subtle) 70%, var(--pal-terracotta-sand-card));
+  --color-secondary-fg: var(--pal-terracotta-sand-accent-active);
+  --color-frame: color-mix(in srgb, var(--pal-terracotta-sand-subtle) 65%, var(--pal-terracotta-sand-page));
+  --color-chart-1: var(--pal-terracotta-sand-accent);
+}
+
+.night[data-palette="terracotta-sand"],
+[data-palette="terracotta-sand"] .night:not([data-palette]),
+.night [data-palette="terracotta-sand"]:not(.pearl) {
+  --color-primary: var(--pal-terracotta-sand-dark-accent);
+  --color-primary-hover: color-mix(in srgb, var(--pal-terracotta-sand-dark-accent) 85%, var(--cw-white));
+  --color-primary-active: var(--pal-terracotta-sand-dark-accent);
+  --color-primary-subtle: color-mix(in srgb, var(--pal-terracotta-sand-dark-accent) 16%, transparent);
+  --color-primary-fg: var(--pal-terracotta-sand-dark-page);
+  --color-primary-text: var(--pal-terracotta-sand-dark-accent);
+  --color-text-heading: var(--pal-terracotta-sand-dark-heading);
+  --color-text-body: color-mix(
+    in srgb,
+    var(--pal-terracotta-sand-dark-heading) 86%,
+    var(--pal-terracotta-sand-dark-body)
+  );
+  --color-text-muted: color-mix(
+    in srgb,
+    var(--pal-terracotta-sand-dark-heading) 62%,
+    var(--pal-terracotta-sand-dark-body)
+  );
+  --color-text-inverse: var(--pal-terracotta-sand-dark-page);
+  --color-bg-page: var(--pal-terracotta-sand-dark-page);
+  --color-bg-card: var(--pal-terracotta-sand-dark-card);
+  --color-bg-muted: color-mix(
+    in srgb,
+    var(--pal-terracotta-sand-dark-card) 88%,
+    var(--pal-terracotta-sand-dark-heading)
+  );
+  --color-bg-accent: color-mix(
+    in srgb,
+    var(--pal-terracotta-sand-dark-accent) 14%,
+    var(--pal-terracotta-sand-dark-card)
+  );
+  --color-bg-sidebar: color-mix(
+    in srgb,
+    var(--pal-terracotta-sand-dark-accent) 6%,
+    var(--pal-terracotta-sand-dark-page)
+  );
+  --color-bg-inset: color-mix(in srgb, var(--pal-terracotta-sand-dark-page) 70%, var(--pal-terracotta-sand-dark-card));
+  --color-border: color-mix(in srgb, var(--pal-terracotta-sand-dark-heading) 14%, transparent);
+  --color-border-strong: color-mix(in srgb, var(--pal-terracotta-sand-dark-heading) 24%, transparent);
+  --color-focus-ring: var(--pal-terracotta-sand-dark-accent);
+  --color-secondary: color-mix(
+    in srgb,
+    var(--pal-terracotta-sand-dark-accent) 14%,
+    var(--pal-terracotta-sand-dark-card)
+  );
+  --color-secondary-fg: var(--pal-terracotta-sand-dark-heading);
+  --color-frame: color-mix(in srgb, var(--pal-terracotta-sand-dark-page) 70%, var(--cw-black));
+  --color-chart-1: var(--pal-terracotta-sand-dark-accent);
+}
+
+/* ── Lavender & Taupe ── */
+[data-palette="lavender-taupe"] {
+  --color-primary: var(--pal-lavender-taupe-accent);
+  --color-primary-hover: var(--pal-lavender-taupe-accent-hover);
+  --color-primary-active: var(--pal-lavender-taupe-accent-active);
+  --color-primary-subtle: var(--pal-lavender-taupe-subtle);
+  --color-primary-fg: var(--cw-white);
+  --color-primary-text: var(--pal-lavender-taupe-accent-hover);
+  --color-text-heading: var(--pal-lavender-taupe-heading);
+  --color-text-body: var(--pal-lavender-taupe-body);
+  --color-text-muted: color-mix(in srgb, var(--pal-lavender-taupe-body) 88%, var(--pal-lavender-taupe-page));
+  --color-text-inverse: var(--pal-lavender-taupe-card);
+  --color-bg-page: var(--pal-lavender-taupe-page);
+  --color-bg-card: var(--pal-lavender-taupe-card);
+  --color-bg-muted: color-mix(in srgb, var(--pal-lavender-taupe-subtle) 45%, var(--pal-lavender-taupe-page));
+  --color-bg-accent: var(--pal-lavender-taupe-subtle);
+  --color-bg-sidebar: color-mix(in srgb, var(--pal-lavender-taupe-subtle) 40%, var(--pal-lavender-taupe-card));
+  --color-bg-inset: color-mix(in srgb, var(--pal-lavender-taupe-page) 70%, var(--pal-lavender-taupe-subtle));
+  --color-border: var(--pal-lavender-taupe-border);
+  --color-border-strong: color-mix(in srgb, var(--pal-lavender-taupe-border) 70%, var(--pal-lavender-taupe-body));
+  --color-focus-ring: var(--pal-lavender-taupe-accent);
+  --color-secondary: color-mix(in srgb, var(--pal-lavender-taupe-subtle) 70%, var(--pal-lavender-taupe-card));
+  --color-secondary-fg: var(--pal-lavender-taupe-accent-active);
+  --color-frame: color-mix(in srgb, var(--pal-lavender-taupe-subtle) 65%, var(--pal-lavender-taupe-page));
+  --color-chart-1: var(--pal-lavender-taupe-accent);
+}
+
+.night[data-palette="lavender-taupe"],
+[data-palette="lavender-taupe"] .night:not([data-palette]),
+.night [data-palette="lavender-taupe"]:not(.pearl) {
+  --color-primary: var(--pal-lavender-taupe-dark-accent);
+  --color-primary-hover: color-mix(in srgb, var(--pal-lavender-taupe-dark-accent) 85%, var(--cw-white));
+  --color-primary-active: var(--pal-lavender-taupe-dark-accent);
+  --color-primary-subtle: color-mix(in srgb, var(--pal-lavender-taupe-dark-accent) 16%, transparent);
+  --color-primary-fg: var(--pal-lavender-taupe-dark-page);
+  --color-primary-text: var(--pal-lavender-taupe-dark-accent);
+  --color-text-heading: var(--pal-lavender-taupe-dark-heading);
+  --color-text-body: color-mix(
+    in srgb,
+    var(--pal-lavender-taupe-dark-heading) 86%,
+    var(--pal-lavender-taupe-dark-body)
+  );
+  --color-text-muted: color-mix(
+    in srgb,
+    var(--pal-lavender-taupe-dark-heading) 62%,
+    var(--pal-lavender-taupe-dark-body)
+  );
+  --color-text-inverse: var(--pal-lavender-taupe-dark-page);
+  --color-bg-page: var(--pal-lavender-taupe-dark-page);
+  --color-bg-card: var(--pal-lavender-taupe-dark-card);
+  --color-bg-muted: color-mix(in srgb, var(--pal-lavender-taupe-dark-card) 88%, var(--pal-lavender-taupe-dark-heading));
+  --color-bg-accent: color-mix(in srgb, var(--pal-lavender-taupe-dark-accent) 14%, var(--pal-lavender-taupe-dark-card));
+  --color-bg-sidebar: color-mix(in srgb, var(--pal-lavender-taupe-dark-accent) 6%, var(--pal-lavender-taupe-dark-page));
+  --color-bg-inset: color-mix(in srgb, var(--pal-lavender-taupe-dark-page) 70%, var(--pal-lavender-taupe-dark-card));
+  --color-border: color-mix(in srgb, var(--pal-lavender-taupe-dark-heading) 14%, transparent);
+  --color-border-strong: color-mix(in srgb, var(--pal-lavender-taupe-dark-heading) 24%, transparent);
+  --color-focus-ring: var(--pal-lavender-taupe-dark-accent);
+  --color-secondary: color-mix(in srgb, var(--pal-lavender-taupe-dark-accent) 14%, var(--pal-lavender-taupe-dark-card));
+  --color-secondary-fg: var(--pal-lavender-taupe-dark-heading);
+  --color-frame: color-mix(in srgb, var(--pal-lavender-taupe-dark-page) 70%, var(--cw-black));
+  --color-chart-1: var(--pal-lavender-taupe-dark-accent);
+}
+
+/* ── Navy & Gold ── */
+[data-palette="navy-gold"] {
+  --color-primary: var(--pal-navy-gold-accent);
+  --color-primary-hover: var(--pal-navy-gold-accent-hover);
+  --color-primary-active: var(--pal-navy-gold-accent-active);
+  --color-primary-subtle: var(--pal-navy-gold-subtle);
+  --color-primary-fg: var(--cw-white);
+  --color-primary-text: var(--pal-navy-gold-accent-hover);
+  --color-text-heading: var(--pal-navy-gold-heading);
+  --color-text-body: var(--pal-navy-gold-body);
+  --color-text-muted: color-mix(in srgb, var(--pal-navy-gold-body) 88%, var(--pal-navy-gold-page));
+  --color-text-inverse: var(--pal-navy-gold-card);
+  --color-bg-page: var(--pal-navy-gold-page);
+  --color-bg-card: var(--pal-navy-gold-card);
+  --color-bg-muted: color-mix(in srgb, var(--pal-navy-gold-subtle) 45%, var(--pal-navy-gold-page));
+  --color-bg-accent: var(--pal-navy-gold-subtle);
+  --color-bg-sidebar: color-mix(in srgb, var(--pal-navy-gold-subtle) 40%, var(--pal-navy-gold-card));
+  --color-bg-inset: color-mix(in srgb, var(--pal-navy-gold-page) 70%, var(--pal-navy-gold-subtle));
+  --color-border: var(--pal-navy-gold-border);
+  --color-border-strong: color-mix(in srgb, var(--pal-navy-gold-border) 70%, var(--pal-navy-gold-body));
+  --color-focus-ring: var(--pal-navy-gold-accent);
+  --color-secondary: color-mix(in srgb, var(--pal-navy-gold-subtle) 70%, var(--pal-navy-gold-card));
+  --color-secondary-fg: var(--pal-navy-gold-accent-active);
+  --color-frame: color-mix(in srgb, var(--pal-navy-gold-subtle) 65%, var(--pal-navy-gold-page));
+  --color-chart-1: var(--pal-navy-gold-accent);
+}
+
+.night[data-palette="navy-gold"],
+[data-palette="navy-gold"] .night:not([data-palette]),
+.night [data-palette="navy-gold"]:not(.pearl) {
+  --color-primary: var(--pal-navy-gold-dark-accent);
+  --color-primary-hover: color-mix(in srgb, var(--pal-navy-gold-dark-accent) 85%, var(--cw-white));
+  --color-primary-active: var(--pal-navy-gold-dark-accent);
+  --color-primary-subtle: color-mix(in srgb, var(--pal-navy-gold-dark-accent) 16%, transparent);
+  --color-primary-fg: var(--pal-navy-gold-dark-page);
+  --color-primary-text: var(--pal-navy-gold-dark-accent);
+  --color-text-heading: var(--pal-navy-gold-dark-heading);
+  --color-text-body: color-mix(in srgb, var(--pal-navy-gold-dark-heading) 86%, var(--pal-navy-gold-dark-body));
+  --color-text-muted: color-mix(in srgb, var(--pal-navy-gold-dark-heading) 62%, var(--pal-navy-gold-dark-body));
+  --color-text-inverse: var(--pal-navy-gold-dark-page);
+  --color-bg-page: var(--pal-navy-gold-dark-page);
+  --color-bg-card: var(--pal-navy-gold-dark-card);
+  --color-bg-muted: color-mix(in srgb, var(--pal-navy-gold-dark-card) 88%, var(--pal-navy-gold-dark-heading));
+  --color-bg-accent: color-mix(in srgb, var(--pal-navy-gold-dark-accent) 14%, var(--pal-navy-gold-dark-card));
+  --color-bg-sidebar: color-mix(in srgb, var(--pal-navy-gold-dark-accent) 6%, var(--pal-navy-gold-dark-page));
+  --color-bg-inset: color-mix(in srgb, var(--pal-navy-gold-dark-page) 70%, var(--pal-navy-gold-dark-card));
+  --color-border: color-mix(in srgb, var(--pal-navy-gold-dark-heading) 14%, transparent);
+  --color-border-strong: color-mix(in srgb, var(--pal-navy-gold-dark-heading) 24%, transparent);
+  --color-focus-ring: var(--pal-navy-gold-dark-accent);
+  --color-secondary: color-mix(in srgb, var(--pal-navy-gold-dark-accent) 14%, var(--pal-navy-gold-dark-card));
+  --color-secondary-fg: var(--pal-navy-gold-dark-heading);
+  --color-frame: color-mix(in srgb, var(--pal-navy-gold-dark-page) 70%, var(--cw-black));
+  --color-chart-1: var(--pal-navy-gold-dark-accent);
+}
+
+/* ── Mocha & Ivory ── */
+[data-palette="mocha-ivory"] {
+  --color-primary: var(--pal-mocha-ivory-accent);
+  --color-primary-hover: var(--pal-mocha-ivory-accent-hover);
+  --color-primary-active: var(--pal-mocha-ivory-accent-active);
+  --color-primary-subtle: var(--pal-mocha-ivory-subtle);
+  --color-primary-fg: var(--cw-white);
+  --color-primary-text: var(--pal-mocha-ivory-accent-hover);
+  --color-text-heading: var(--pal-mocha-ivory-heading);
+  --color-text-body: var(--pal-mocha-ivory-body);
+  --color-text-muted: color-mix(in srgb, var(--pal-mocha-ivory-body) 88%, var(--pal-mocha-ivory-page));
+  --color-text-inverse: var(--pal-mocha-ivory-card);
+  --color-bg-page: var(--pal-mocha-ivory-page);
+  --color-bg-card: var(--pal-mocha-ivory-card);
+  --color-bg-muted: color-mix(in srgb, var(--pal-mocha-ivory-subtle) 45%, var(--pal-mocha-ivory-page));
+  --color-bg-accent: var(--pal-mocha-ivory-subtle);
+  --color-bg-sidebar: color-mix(in srgb, var(--pal-mocha-ivory-subtle) 40%, var(--pal-mocha-ivory-card));
+  --color-bg-inset: color-mix(in srgb, var(--pal-mocha-ivory-page) 70%, var(--pal-mocha-ivory-subtle));
+  --color-border: var(--pal-mocha-ivory-border);
+  --color-border-strong: color-mix(in srgb, var(--pal-mocha-ivory-border) 70%, var(--pal-mocha-ivory-body));
+  --color-focus-ring: var(--pal-mocha-ivory-accent);
+  --color-secondary: color-mix(in srgb, var(--pal-mocha-ivory-subtle) 70%, var(--pal-mocha-ivory-card));
+  --color-secondary-fg: var(--pal-mocha-ivory-accent-active);
+  --color-frame: color-mix(in srgb, var(--pal-mocha-ivory-subtle) 65%, var(--pal-mocha-ivory-page));
+  --color-chart-1: var(--pal-mocha-ivory-accent);
+}
+
+.night[data-palette="mocha-ivory"],
+[data-palette="mocha-ivory"] .night:not([data-palette]),
+.night [data-palette="mocha-ivory"]:not(.pearl) {
+  --color-primary: var(--pal-mocha-ivory-dark-accent);
+  --color-primary-hover: color-mix(in srgb, var(--pal-mocha-ivory-dark-accent) 85%, var(--cw-white));
+  --color-primary-active: var(--pal-mocha-ivory-dark-accent);
+  --color-primary-subtle: color-mix(in srgb, var(--pal-mocha-ivory-dark-accent) 16%, transparent);
+  --color-primary-fg: var(--pal-mocha-ivory-dark-page);
+  --color-primary-text: var(--pal-mocha-ivory-dark-accent);
+  --color-text-heading: var(--pal-mocha-ivory-dark-heading);
+  --color-text-body: color-mix(in srgb, var(--pal-mocha-ivory-dark-heading) 86%, var(--pal-mocha-ivory-dark-body));
+  --color-text-muted: color-mix(in srgb, var(--pal-mocha-ivory-dark-heading) 62%, var(--pal-mocha-ivory-dark-body));
+  --color-text-inverse: var(--pal-mocha-ivory-dark-page);
+  --color-bg-page: var(--pal-mocha-ivory-dark-page);
+  --color-bg-card: var(--pal-mocha-ivory-dark-card);
+  --color-bg-muted: color-mix(in srgb, var(--pal-mocha-ivory-dark-card) 88%, var(--pal-mocha-ivory-dark-heading));
+  --color-bg-accent: color-mix(in srgb, var(--pal-mocha-ivory-dark-accent) 14%, var(--pal-mocha-ivory-dark-card));
+  --color-bg-sidebar: color-mix(in srgb, var(--pal-mocha-ivory-dark-accent) 6%, var(--pal-mocha-ivory-dark-page));
+  --color-bg-inset: color-mix(in srgb, var(--pal-mocha-ivory-dark-page) 70%, var(--pal-mocha-ivory-dark-card));
+  --color-border: color-mix(in srgb, var(--pal-mocha-ivory-dark-heading) 14%, transparent);
+  --color-border-strong: color-mix(in srgb, var(--pal-mocha-ivory-dark-heading) 24%, transparent);
+  --color-focus-ring: var(--pal-mocha-ivory-dark-accent);
+  --color-secondary: color-mix(in srgb, var(--pal-mocha-ivory-dark-accent) 14%, var(--pal-mocha-ivory-dark-card));
+  --color-secondary-fg: var(--pal-mocha-ivory-dark-heading);
+  --color-frame: color-mix(in srgb, var(--pal-mocha-ivory-dark-page) 70%, var(--cw-black));
+  --color-chart-1: var(--pal-mocha-ivory-dark-accent);
+}
+
+/* ── Black & White ── */
+[data-palette="black-white"] {
+  --color-primary: var(--pal-black-white-accent);
+  --color-primary-hover: var(--pal-black-white-accent-hover);
+  --color-primary-active: var(--pal-black-white-accent-active);
+  --color-primary-subtle: var(--pal-black-white-subtle);
+  --color-primary-fg: var(--cw-white);
+  --color-primary-text: var(--pal-black-white-accent-hover);
+  --color-text-heading: var(--pal-black-white-heading);
+  --color-text-body: var(--pal-black-white-body);
+  --color-text-muted: color-mix(in srgb, var(--pal-black-white-body) 88%, var(--pal-black-white-page));
+  --color-text-inverse: var(--pal-black-white-card);
+  --color-bg-page: var(--pal-black-white-page);
+  --color-bg-card: var(--pal-black-white-card);
+  --color-bg-muted: color-mix(in srgb, var(--pal-black-white-subtle) 45%, var(--pal-black-white-page));
+  --color-bg-accent: var(--pal-black-white-subtle);
+  --color-bg-sidebar: color-mix(in srgb, var(--pal-black-white-subtle) 40%, var(--pal-black-white-card));
+  --color-bg-inset: color-mix(in srgb, var(--pal-black-white-page) 70%, var(--pal-black-white-subtle));
+  --color-border: var(--pal-black-white-border);
+  --color-border-strong: color-mix(in srgb, var(--pal-black-white-border) 70%, var(--pal-black-white-body));
+  --color-focus-ring: var(--pal-black-white-accent);
+  --color-secondary: color-mix(in srgb, var(--pal-black-white-subtle) 70%, var(--pal-black-white-card));
+  --color-secondary-fg: var(--pal-black-white-accent-active);
+  --color-frame: color-mix(in srgb, var(--pal-black-white-subtle) 65%, var(--pal-black-white-page));
+  --color-chart-1: var(--pal-black-white-accent);
+}
+
+.night[data-palette="black-white"],
+[data-palette="black-white"] .night:not([data-palette]),
+.night [data-palette="black-white"]:not(.pearl) {
+  --color-primary: var(--pal-black-white-dark-accent);
+  --color-primary-hover: color-mix(in srgb, var(--pal-black-white-dark-accent) 85%, var(--cw-white));
+  --color-primary-active: var(--pal-black-white-dark-accent);
+  --color-primary-subtle: color-mix(in srgb, var(--pal-black-white-dark-accent) 16%, transparent);
+  --color-primary-fg: var(--pal-black-white-dark-fg);
+  --color-primary-text: var(--pal-black-white-dark-accent);
+  --color-text-heading: var(--pal-black-white-dark-heading);
+  --color-text-body: color-mix(in srgb, var(--pal-black-white-dark-heading) 86%, var(--pal-black-white-dark-body));
+  --color-text-muted: color-mix(in srgb, var(--pal-black-white-dark-heading) 62%, var(--pal-black-white-dark-body));
+  --color-text-inverse: var(--pal-black-white-dark-page);
+  --color-bg-page: var(--pal-black-white-dark-page);
+  --color-bg-card: var(--pal-black-white-dark-card);
+  --color-bg-muted: color-mix(in srgb, var(--pal-black-white-dark-card) 88%, var(--pal-black-white-dark-heading));
+  --color-bg-accent: color-mix(in srgb, var(--pal-black-white-dark-accent) 14%, var(--pal-black-white-dark-card));
+  --color-bg-sidebar: color-mix(in srgb, var(--pal-black-white-dark-accent) 6%, var(--pal-black-white-dark-page));
+  --color-bg-inset: color-mix(in srgb, var(--pal-black-white-dark-page) 70%, var(--pal-black-white-dark-card));
+  --color-border: color-mix(in srgb, var(--pal-black-white-dark-heading) 14%, transparent);
+  --color-border-strong: color-mix(in srgb, var(--pal-black-white-dark-heading) 24%, transparent);
+  --color-focus-ring: var(--pal-black-white-dark-accent);
+  --color-secondary: color-mix(in srgb, var(--pal-black-white-dark-accent) 14%, var(--pal-black-white-dark-card));
+  --color-secondary-fg: var(--pal-black-white-dark-heading);
+  --color-frame: color-mix(in srgb, var(--pal-black-white-dark-page) 70%, var(--cw-black));
+  --color-chart-1: var(--pal-black-white-dark-accent);
+}
+
+/* ── Peach & Coral ── */
+[data-palette="peach-coral"] {
+  --color-primary: var(--pal-peach-coral-accent);
+  --color-primary-hover: var(--pal-peach-coral-accent-hover);
+  --color-primary-active: var(--pal-peach-coral-accent-active);
+  --color-primary-subtle: var(--pal-peach-coral-subtle);
+  --color-primary-fg: var(--cw-white);
+  --color-primary-text: var(--pal-peach-coral-accent-hover);
+  --color-text-heading: var(--pal-peach-coral-heading);
+  --color-text-body: var(--pal-peach-coral-body);
+  --color-text-muted: color-mix(in srgb, var(--pal-peach-coral-body) 88%, var(--pal-peach-coral-page));
+  --color-text-inverse: var(--pal-peach-coral-card);
+  --color-bg-page: var(--pal-peach-coral-page);
+  --color-bg-card: var(--pal-peach-coral-card);
+  --color-bg-muted: color-mix(in srgb, var(--pal-peach-coral-subtle) 45%, var(--pal-peach-coral-page));
+  --color-bg-accent: var(--pal-peach-coral-subtle);
+  --color-bg-sidebar: color-mix(in srgb, var(--pal-peach-coral-subtle) 40%, var(--pal-peach-coral-card));
+  --color-bg-inset: color-mix(in srgb, var(--pal-peach-coral-page) 70%, var(--pal-peach-coral-subtle));
+  --color-border: var(--pal-peach-coral-border);
+  --color-border-strong: color-mix(in srgb, var(--pal-peach-coral-border) 70%, var(--pal-peach-coral-body));
+  --color-focus-ring: var(--pal-peach-coral-accent);
+  --color-secondary: color-mix(in srgb, var(--pal-peach-coral-subtle) 70%, var(--pal-peach-coral-card));
+  --color-secondary-fg: var(--pal-peach-coral-accent-active);
+  --color-frame: color-mix(in srgb, var(--pal-peach-coral-subtle) 65%, var(--pal-peach-coral-page));
+  --color-chart-1: var(--pal-peach-coral-accent);
+}
+
+.night[data-palette="peach-coral"],
+[data-palette="peach-coral"] .night:not([data-palette]),
+.night [data-palette="peach-coral"]:not(.pearl) {
+  --color-primary: var(--pal-peach-coral-dark-accent);
+  --color-primary-hover: color-mix(in srgb, var(--pal-peach-coral-dark-accent) 85%, var(--cw-white));
+  --color-primary-active: var(--pal-peach-coral-dark-accent);
+  --color-primary-subtle: color-mix(in srgb, var(--pal-peach-coral-dark-accent) 16%, transparent);
+  --color-primary-fg: var(--pal-peach-coral-dark-page);
+  --color-primary-text: var(--pal-peach-coral-dark-accent);
+  --color-text-heading: var(--pal-peach-coral-dark-heading);
+  --color-text-body: color-mix(in srgb, var(--pal-peach-coral-dark-heading) 86%, var(--pal-peach-coral-dark-body));
+  --color-text-muted: color-mix(in srgb, var(--pal-peach-coral-dark-heading) 62%, var(--pal-peach-coral-dark-body));
+  --color-text-inverse: var(--pal-peach-coral-dark-page);
+  --color-bg-page: var(--pal-peach-coral-dark-page);
+  --color-bg-card: var(--pal-peach-coral-dark-card);
+  --color-bg-muted: color-mix(in srgb, var(--pal-peach-coral-dark-card) 88%, var(--pal-peach-coral-dark-heading));
+  --color-bg-accent: color-mix(in srgb, var(--pal-peach-coral-dark-accent) 14%, var(--pal-peach-coral-dark-card));
+  --color-bg-sidebar: color-mix(in srgb, var(--pal-peach-coral-dark-accent) 6%, var(--pal-peach-coral-dark-page));
+  --color-bg-inset: color-mix(in srgb, var(--pal-peach-coral-dark-page) 70%, var(--pal-peach-coral-dark-card));
+  --color-border: color-mix(in srgb, var(--pal-peach-coral-dark-heading) 14%, transparent);
+  --color-border-strong: color-mix(in srgb, var(--pal-peach-coral-dark-heading) 24%, transparent);
+  --color-focus-ring: var(--pal-peach-coral-dark-accent);
+  --color-secondary: color-mix(in srgb, var(--pal-peach-coral-dark-accent) 14%, var(--pal-peach-coral-dark-card));
+  --color-secondary-fg: var(--pal-peach-coral-dark-heading);
+  --color-frame: color-mix(in srgb, var(--pal-peach-coral-dark-page) 70%, var(--cw-black));
+  --color-chart-1: var(--pal-peach-coral-dark-accent);
+}
+
+/* ── Greenery & White ── */
+[data-palette="greenery-white"] {
+  --color-primary: var(--pal-greenery-white-accent);
+  --color-primary-hover: var(--pal-greenery-white-accent-hover);
+  --color-primary-active: var(--pal-greenery-white-accent-active);
+  --color-primary-subtle: var(--pal-greenery-white-subtle);
+  --color-primary-fg: var(--cw-white);
+  --color-primary-text: var(--pal-greenery-white-accent-hover);
+  --color-text-heading: var(--pal-greenery-white-heading);
+  --color-text-body: var(--pal-greenery-white-body);
+  --color-text-muted: color-mix(in srgb, var(--pal-greenery-white-body) 88%, var(--pal-greenery-white-page));
+  --color-text-inverse: var(--pal-greenery-white-card);
+  --color-bg-page: var(--pal-greenery-white-page);
+  --color-bg-card: var(--pal-greenery-white-card);
+  --color-bg-muted: color-mix(in srgb, var(--pal-greenery-white-subtle) 45%, var(--pal-greenery-white-page));
+  --color-bg-accent: var(--pal-greenery-white-subtle);
+  --color-bg-sidebar: color-mix(in srgb, var(--pal-greenery-white-subtle) 40%, var(--pal-greenery-white-card));
+  --color-bg-inset: color-mix(in srgb, var(--pal-greenery-white-page) 70%, var(--pal-greenery-white-subtle));
+  --color-border: var(--pal-greenery-white-border);
+  --color-border-strong: color-mix(in srgb, var(--pal-greenery-white-border) 70%, var(--pal-greenery-white-body));
+  --color-focus-ring: var(--pal-greenery-white-accent);
+  --color-secondary: color-mix(in srgb, var(--pal-greenery-white-subtle) 70%, var(--pal-greenery-white-card));
+  --color-secondary-fg: var(--pal-greenery-white-accent-active);
+  --color-frame: color-mix(in srgb, var(--pal-greenery-white-subtle) 65%, var(--pal-greenery-white-page));
+  --color-chart-1: var(--pal-greenery-white-accent);
+}
+
+.night[data-palette="greenery-white"],
+[data-palette="greenery-white"] .night:not([data-palette]),
+.night [data-palette="greenery-white"]:not(.pearl) {
+  --color-primary: var(--pal-greenery-white-dark-accent);
+  --color-primary-hover: color-mix(in srgb, var(--pal-greenery-white-dark-accent) 85%, var(--cw-white));
+  --color-primary-active: var(--pal-greenery-white-dark-accent);
+  --color-primary-subtle: color-mix(in srgb, var(--pal-greenery-white-dark-accent) 16%, transparent);
+  --color-primary-fg: var(--pal-greenery-white-dark-page);
+  --color-primary-text: var(--pal-greenery-white-dark-accent);
+  --color-text-heading: var(--pal-greenery-white-dark-heading);
+  --color-text-body: color-mix(
+    in srgb,
+    var(--pal-greenery-white-dark-heading) 86%,
+    var(--pal-greenery-white-dark-body)
+  );
+  --color-text-muted: color-mix(
+    in srgb,
+    var(--pal-greenery-white-dark-heading) 62%,
+    var(--pal-greenery-white-dark-body)
+  );
+  --color-text-inverse: var(--pal-greenery-white-dark-page);
+  --color-bg-page: var(--pal-greenery-white-dark-page);
+  --color-bg-card: var(--pal-greenery-white-dark-card);
+  --color-bg-muted: color-mix(in srgb, var(--pal-greenery-white-dark-card) 88%, var(--pal-greenery-white-dark-heading));
+  --color-bg-accent: color-mix(in srgb, var(--pal-greenery-white-dark-accent) 14%, var(--pal-greenery-white-dark-card));
+  --color-bg-sidebar: color-mix(in srgb, var(--pal-greenery-white-dark-accent) 6%, var(--pal-greenery-white-dark-page));
+  --color-bg-inset: color-mix(in srgb, var(--pal-greenery-white-dark-page) 70%, var(--pal-greenery-white-dark-card));
+  --color-border: color-mix(in srgb, var(--pal-greenery-white-dark-heading) 14%, transparent);
+  --color-border-strong: color-mix(in srgb, var(--pal-greenery-white-dark-heading) 24%, transparent);
+  --color-focus-ring: var(--pal-greenery-white-dark-accent);
+  --color-secondary: color-mix(in srgb, var(--pal-greenery-white-dark-accent) 14%, var(--pal-greenery-white-dark-card));
+  --color-secondary-fg: var(--pal-greenery-white-dark-heading);
+  --color-frame: color-mix(in srgb, var(--pal-greenery-white-dark-page) 70%, var(--cw-black));
+  --color-chart-1: var(--pal-greenery-white-dark-accent);
 }

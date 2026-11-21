@@ -1,66 +1,128 @@
 "use client";
 
 import {
+  resolveWeddingCoverUrl,
   weddingStyleColors,
   weddingStyleSchema,
   type Appointment,
   type Inquiry,
   type WeddingStyle,
 } from "@ceylonweddings/contracts";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
-import { CalendarDays, Heart, Music2, Store, Wallet } from "lucide-react";
+import {
+  CalendarClock,
+  CalendarDays,
+  CheckSquare,
+  Hourglass,
+  MessageCircle,
+  Music2,
+  Store,
+  Users,
+  Utensils,
+  Wallet,
+} from "lucide-react";
 import { api, formatMoney, usePreferenceStore } from "@ceylonweddings/web";
 import { Button } from "@ceylonweddings/ui/components/button";
 import { CoupleHero } from "@ceylonweddings/ui/domain/couple-hero";
-import {
-  DashboardMain,
-  DashboardPrimary,
-  DashboardSecondary,
-  DashboardStack,
-  DashboardStats,
-} from "@ceylonweddings/ui/domain/dashboard-layout";
-import { SectionCard } from "@ceylonweddings/ui/domain/section-card";
-import { StatCard } from "@ceylonweddings/ui/domain/stat-card";
-import { BudgetMeter } from "@ceylonweddings/ui/domain/budget-meter";
-import { TimelineRail } from "@ceylonweddings/ui/domain/timeline-rail";
+import { DashboardStack } from "@ceylonweddings/ui/domain/dashboard-layout";
 import { SupplierStrip } from "@ceylonweddings/ui/domain/team-vendor";
+import { CeremonySchedule, TeamGapBanner } from "@ceylonweddings/ui/domain/wedding-presentation";
 import {
-  CeremonySchedule,
-  PlanningProgress,
-  PlateSummaryCard,
-  TeamGapBanner,
-} from "@ceylonweddings/ui/domain/wedding-presentation";
-import { Stagger, StaggerItem } from "@ceylonweddings/ui/domain/motion";
-import { EmptyState } from "@ceylonweddings/ui/domain/empty-state";
-import { PreviewRow } from "@ceylonweddings/ui/domain/preview-row";
+  ColumnChart,
+  DonutChart,
+  KpiCard,
+  ProgressRing,
+  RankedBars,
+  WidgetEmpty,
+  type ChartTone,
+} from "@ceylonweddings/ui/domain/dashboard";
 import { Link } from "@/i18n/navigation";
 import { SignInPrompt, useWedding } from "@/components/use-wedding";
 import { AiStub } from "@/components/ai-stub";
 import { CATEGORY_LABELS } from "@/lib/labels";
+import { WidgetDashboard, type WidgetRenderContext } from "@/features/dashboard/widget-dashboard";
+import { count, WidgetHeaderLink } from "@/features/dashboard/dashboard-format";
+import {
+  BUDGET_WIDGET_IDS,
+  COUPLE_WIDGETS,
+  COUPLE_WIDGET_CATEGORIES,
+  useCoupleDashboardLayout,
+} from "./couple-widgets";
 
 const INSPIRATION = [
   { key: "FLORIST_DECOR", src: "https://images.unsplash.com/photo-1520854221256-17451cc331bf?w=600&q=80" },
-  { key: "PHOTO_VIDEO", src: "https://images.unsplash.com/photo-1519741497674-611481863552?w=600&q=80" },
+  { key: "PHOTO_VIDEO", src: "https://images.unsplash.com/photo-1606216794074-735e91aa2c92?w=600&q=80" },
   { key: "CAKE", src: "https://images.unsplash.com/photo-1535254973040-607b474d7f5a?w=600&q=80" },
   { key: "ENTERTAINMENT", src: "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=600&q=80" },
   { key: "VENUE", src: "https://images.unsplash.com/photo-1519167758481-83f29da8c12f?w=600&q=80" },
   { key: "BRIDAL_WEAR", src: "https://images.unsplash.com/photo-1591604466107-ec97de577aff?w=600&q=80" },
   { key: "HAIR_MAKEUP", src: "https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=600&q=80" },
   { key: "PORUWA", src: "https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=600&q=80" },
-  { key: "WEDDING_CARS", src: "https://images.unsplash.com/photo-1485291571150-772bcfc10da5?w=600&q=80" },
-  { key: "JEWELLERY", src: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=600&q=80" },
 ];
+
+const PROGRESS_LABELS: Record<string, string> = {
+  partners: "Add both partners",
+  date: "Set the wedding date",
+  city: "Choose a city",
+  events: "Add your ceremonies",
+  guests: "Start the guest list",
+  budget: "Set a budget",
+  website: "Publish your website",
+  family: "Invite family",
+  inviteTemplate: "Pick an invite template",
+  seating: "Plan seating",
+  music: "Plan the music",
+  moodboard: "Start a moodboard",
+};
+
+const PROGRESS_HREF: Record<string, string> = {
+  partners: "/planning/profile",
+  date: "/planning/profile",
+  city: "/planning/profile",
+  events: "/planning/studio",
+  guests: "/planning/guests",
+  budget: "/planning/budget",
+  website: "/planning/website",
+  family: "/planning/family",
+  inviteTemplate: "/planning/guests",
+  seating: "/planning/seating",
+  music: "/planning/music",
+  moodboard: "/planning/moodboard",
+};
+
+const RSVP: Record<string, { label: string; tone: ChartTone }> = {
+  CONFIRMED: { label: "Confirmed", tone: "success" },
+  INVITED: { label: "Invited", tone: "info" },
+  MAYBE: { label: "Maybe", tone: "warning" },
+  CONSIDERING: { label: "Considering", tone: "4" },
+  WALK_IN: { label: "Walk-in", tone: "1" },
+  DECLINED: { label: "Declined", tone: "danger" },
+};
+
+const SIDE_LABEL: Record<string, string> = { BRIDE: "Bride's side", GROOM: "Groom's side", BOTH: "Both families" };
+const MEAL_LABEL: Record<string, string> = {
+  VEG: "Vegetarian",
+  FISH: "Fish",
+  CHICKEN: "Chicken",
+  BEEF: "Beef",
+  HALAL: "Halal",
+  OTHER: "Other",
+};
+
+const COLOMBO = "Asia/Colombo";
+const longDate = (iso: string) =>
+  new Date(iso).toLocaleDateString("en-LK", { day: "numeric", month: "long", year: "numeric", timeZone: COLOMBO });
 
 export default function PlanningHubPage() {
   const t = useTranslations();
   const currency = usePreferenceStore((state) => state.currency);
   const { data, error, reload } = useWedding();
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [inquiries, setInquiries] = useState<(Inquiry & { vendorName?: string })[]>([]);
+  const [appointments, setAppointments] = useState<Appointment[] | null>(null);
+  const [inquiries, setInquiries] = useState<(Inquiry & { vendorName?: string })[] | null>(null);
   const [now, setNow] = useState(() => Date.now());
 
-  useEffect(() => {
+  const loadSide = useCallback(() => {
     api.wedding
       .appointments()
       .then(setAppointments)
@@ -69,65 +131,525 @@ export default function PlanningHubPage() {
       .inquiries()
       .then(setInquiries)
       .catch(() => setInquiries([]));
-    const timer = window.setInterval(() => setNow(Date.now()), 1000);
-    return () => window.clearInterval(timer);
   }, []);
 
-  const remaining = (data?.tasks ?? []).filter((task) => task.status !== "DONE").length;
-  const spent = data?.budgetLines?.reduce((sum, line) => sum + line.spentLkr, 0) ?? 0;
-  const hired = data?.hubStats?.teamBooked ?? data?.team.filter((item) => item.status === "BOOKED").length ?? 0;
-  const todayAppts = useMemo(() => {
-    const day = new Date(now).toLocaleDateString("en-CA", { timeZone: "Asia/Colombo" });
-    return appointments.filter((item) => item.startsAt.slice(0, 10) === day);
-  }, [appointments, now]);
+  useEffect(() => {
+    loadSide();
+    // The countdown only changes by the minute.
+    const timer = window.setInterval(() => setNow(Date.now()), 60_000);
+    return () => window.clearInterval(timer);
+  }, [loadSide]);
 
   const daysLeft = useMemo(() => {
-    if (data?.hubStats?.daysToNextEvent != null) return String(data.hubStats.daysToNextEvent);
+    if (data?.hubStats?.daysToNextEvent != null) return data.hubStats.daysToNextEvent;
     if (!data?.date) return null;
-    const diff = new Date(data.date).getTime() - now;
-    if (diff <= 0) return "0";
-    return String(Math.floor(diff / 86400000));
+    return Math.max(0, Math.floor((new Date(data.date).getTime() - now) / 86_400_000));
   }, [data?.date, data?.hubStats?.daysToNextEvent, now]);
 
+  const canViewBudget = data?.myAccess.canViewBudget ?? false;
+  const widgets = useMemo(
+    () => (canViewBudget ? COUPLE_WIDGETS : COUPLE_WIDGETS.filter((w) => !BUDGET_WIDGET_IDS.has(w.id))),
+    [canViewBudget],
+  );
+
   if (!data) return <SignInPrompt error={error} />;
+  const wedding = data;
 
   async function setStyle(style: WeddingStyle) {
     await api.wedding.update({ style, colors: weddingStyleColors(style) });
     await reload();
   }
 
-  const dateLabel = data.hubStats?.nextEventAt
-    ? new Date(data.hubStats.nextEventAt).toLocaleDateString("en-LK", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-        timeZone: "Asia/Colombo",
-      })
-    : data.date
-      ? new Date(data.date).toLocaleDateString("en-LK", {
-          day: "numeric",
-          month: "long",
-          year: "numeric",
-          timeZone: "Asia/Colombo",
-        })
+  const tasks = wedding.tasks ?? [];
+  const openTasks = tasks.filter((task) => task.status !== "DONE");
+  const doneTasks = tasks.length - openTasks.length;
+  const budgetLines = wedding.budgetLines ?? [];
+  const spent = budgetLines.reduce((sum, line) => sum + line.spentLkr, 0);
+  const booked = wedding.hubStats?.teamBooked ?? wedding.team.filter((item) => item.status === "BOOKED").length;
+  const teamTotal = Math.max(wedding.team.length, 1);
+  const plates = wedding.plateSummary;
+  const completeness = wedding.completeness ?? { score: 0, total: 8, ready: false, missing: [] };
+  const dateLabel = wedding.hubStats?.nextEventAt
+    ? longDate(wedding.hubStats.nextEventAt)
+    : wedding.date
+      ? longDate(wedding.date)
       : t("knotly.dateTbd");
-  const budgetPercent = data.budgetLkr ? Math.round((spent / data.budgetLkr) * 100) : 0;
-  const completeness = data.completeness ?? { score: 0, total: 8, ready: false, missing: [] };
-  const plates = data.plateSummary;
+  const upcoming = (appointments ?? [])
+    .filter((item) => new Date(item.endsAt).getTime() >= now)
+    .sort((a, b) => a.startsAt.localeCompare(b.startsAt))
+    .slice(0, 4);
+
+  function renderWidget(id: string, { variant }: WidgetRenderContext): ReactNode {
+    switch (id) {
+      case "kpi_budget": {
+        const pct = wedding.budgetLkr ? (spent / wedding.budgetLkr) * 100 : 0;
+        return (
+          <KpiCard
+            variant={variant}
+            icon={Wallet}
+            label="Budget used"
+            value={`${Math.round(pct)}%`}
+            hint={`${formatMoney(spent, currency)} of ${formatMoney(wedding.budgetLkr, currency)}`}
+            tone={pct > 100 ? "danger" : pct > 85 ? "warning" : "primary"}
+            progress={pct}
+            status={pct > 100 ? { label: "Over", tone: "danger" } : undefined}
+          />
+        );
+      }
+      case "kpi_team":
+        return (
+          <KpiCard
+            variant={variant}
+            icon={Store}
+            label="Vendors booked"
+            value={`${booked}/${wedding.team.length}`}
+            hint={
+              wedding.hubStats?.missingCategories.length
+                ? `${wedding.hubStats.missingCategories.length} categories still open`
+                : "Your core team"
+            }
+            tone="info"
+            ring={(booked / teamTotal) * 100}
+            visualLabel="Booked"
+          />
+        );
+      case "kpi_rsvp":
+        return (
+          <KpiCard
+            variant={variant}
+            icon={Users}
+            label="RSVPs"
+            value={`${wedding.rsvpConfirmed}/${wedding.rsvpTotal}`}
+            hint={plates ? `${count(plates.confirmedHeads)} plates confirmed` : "Confirmed guests"}
+            tone="love"
+            ring={wedding.rsvpTotal ? (wedding.rsvpConfirmed / wedding.rsvpTotal) * 100 : 0}
+            visualLabel="Replied"
+          />
+        );
+      case "kpi_tasks":
+        return (
+          <KpiCard
+            variant={variant}
+            icon={CheckSquare}
+            label="Checklist"
+            value={`${doneTasks}/${tasks.length}`}
+            hint={`${openTasks.length} tasks to go`}
+            tone="success"
+            progress={tasks.length ? (doneTasks / tasks.length) * 100 : 0}
+          />
+        );
+      case "kpi_countdown":
+        return (
+          <KpiCard
+            variant={variant}
+            icon={Hourglass}
+            label="Countdown"
+            value={daysLeft == null ? "—" : `${daysLeft} days`}
+            hint={wedding.hubStats?.nextEventName ?? dateLabel}
+            tone="love"
+          />
+        );
+      case "kpi_plates":
+        return plates ? (
+          <KpiCard
+            variant={variant}
+            icon={Utensils}
+            label="Plates confirmed"
+            value={`${count(plates.confirmedHeads)}/${count(plates.estimate)}`}
+            hint={plates.bufferGap > 0 ? `${count(plates.bufferGap)} below estimate` : "On estimate"}
+            tone="premium"
+            progress={plates.estimate ? (plates.confirmedHeads / plates.estimate) * 100 : 0}
+          />
+        ) : (
+          <WidgetEmpty icon={Utensils} title="No guests yet" />
+        );
+      case "kpi_music":
+        return (
+          <KpiCard
+            variant={variant}
+            icon={Music2}
+            label="Music plans"
+            value={`${wedding.hubStats?.musicReadyPlans ?? 0}/${wedding.hubStats?.musicPlanCount ?? 0}`}
+            hint="Ready for the DJ or band"
+            tone="info"
+          />
+        );
+      case "ceremonies":
+        return wedding.events?.length ? (
+          <CeremonySchedule
+            events={wedding.events}
+            formatWhen={(iso) =>
+              iso
+                ? new Date(iso).toLocaleString("en-LK", { dateStyle: "medium", timeStyle: "short", timeZone: COLOMBO })
+                : ""
+            }
+          />
+        ) : (
+          <WidgetEmpty
+            icon={CalendarDays}
+            title="No ceremonies yet"
+            description="Add your Poruwa, church service or homecoming to build your schedule."
+            action={
+              <Button asChild size="sm">
+                <Link href="/planning/studio">Add a ceremony</Link>
+              </Button>
+            }
+          />
+        );
+      case "progress": {
+        const pct = completeness.total ? (completeness.score / completeness.total) * 100 : 0;
+        return (
+          <div className="flex h-full flex-wrap items-center gap-5">
+            <ProgressRing
+              value={pct}
+              tone={completeness.ready ? "success" : "love"}
+              label={`${completeness.score} of ${completeness.total} done`}
+            />
+            <ul className="grid min-w-40 flex-1 gap-1.5">
+              {completeness.missing.length === 0 ? (
+                <li className="text-compact text-muted-foreground">Everything is set up. Enjoy the planning.</li>
+              ) : (
+                completeness.missing.slice(0, 5).map((key) => (
+                  <li key={key}>
+                    <Link
+                      href={PROGRESS_HREF[key] ?? "/planning"}
+                      className="widget-no-drag flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-compact transition-colors hover:bg-muted focus-visible:bg-muted focus-visible:outline-none"
+                    >
+                      {PROGRESS_LABELS[key] ?? key}
+                      <span className="text-caption text-primary">Start</span>
+                    </Link>
+                  </li>
+                ))
+              )}
+            </ul>
+          </div>
+        );
+      }
+      case "budget_categories": {
+        if (!budgetLines.length) {
+          return (
+            <WidgetEmpty
+              icon={Wallet}
+              title="No budget lines yet"
+              action={
+                <Button asChild size="sm">
+                  <Link href="/planning/budget">Plan your budget</Link>
+                </Button>
+              }
+            />
+          );
+        }
+        const rows = [...budgetLines].sort((a, b) => b.spentLkr - a.spentLkr).slice(0, 6);
+        return (
+          <RankedBars
+            formatValue={(value) => formatMoney(value, currency)}
+            rows={rows.map((line) => ({
+              key: line.id,
+              label: line.label,
+              value: line.spentLkr,
+              hint: line.plannedLkr ? `of ${formatMoney(line.plannedLkr, currency)}` : undefined,
+              tone: line.plannedLkr && line.spentLkr > line.plannedLkr ? "danger" : "1",
+            }))}
+            max={Math.max(...rows.map((line) => Math.max(line.plannedLkr, line.spentLkr)), 1)}
+          />
+        );
+      }
+      case "tasks_board": {
+        if (!tasks.length) return <WidgetEmpty icon={CheckSquare} title="No tasks yet" />;
+        const doing = tasks.filter((task) => task.status === "DOING").length;
+        return (
+          <div className="grid h-full grid-rows-[minmax(0,1fr)_auto] gap-3">
+            <DonutChart
+              ariaLabel="Checklist by status"
+              centerLabel="tasks"
+              slices={[
+                { key: "DONE", label: "Done", value: doneTasks, tone: "success" },
+                { key: "DOING", label: "In progress", value: doing, tone: "warning" },
+                { key: "TODO", label: "To do", value: openTasks.length - doing, tone: "muted" },
+              ]}
+            />
+            {openTasks.length ? (
+              <ul className="grid gap-1 border-t border-border/60 pt-2">
+                {openTasks.slice(0, 3).map((task) => (
+                  <li key={task.id} className="flex items-center gap-2 text-caption">
+                    <span className="size-1.5 shrink-0 rounded-full bg-primary" aria-hidden />
+                    <span className="truncate">{task.title}</span>
+                    {task.dueAt ? (
+                      <span className="ml-auto shrink-0 text-muted-foreground">
+                        {new Date(task.dueAt).toLocaleDateString("en-LK", {
+                          day: "numeric",
+                          month: "short",
+                          timeZone: COLOMBO,
+                        })}
+                      </span>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+        );
+      }
+      case "rsvp_breakdown": {
+        const buckets = (wedding.guestSummary?.byStatus ?? []).filter((b) => b.heads > 0);
+        if (!buckets.length) {
+          return (
+            <WidgetEmpty
+              icon={Users}
+              title="No guests yet"
+              action={
+                <Button asChild size="sm">
+                  <Link href="/planning/guests">Add guests</Link>
+                </Button>
+              }
+            />
+          );
+        }
+        return (
+          <DonutChart
+            ariaLabel="Guests by RSVP"
+            centerLabel="guests"
+            slices={buckets.map((b) => ({
+              key: b.status,
+              label: RSVP[b.status]?.label ?? b.status,
+              value: b.heads,
+              tone: RSVP[b.status]?.tone ?? "muted",
+            }))}
+          />
+        );
+      }
+      case "plates": {
+        if (!plates || plates.estimate === 0)
+          return (
+            <WidgetEmpty icon={Utensils} title="No guests yet" description="Plates appear once guests are invited." />
+          );
+        return (
+          <div className="grid gap-4">
+            <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+              <span className="font-serif text-h2 leading-none tabular-nums">{count(plates.confirmedHeads)}</span>
+              <span className="text-caption text-muted-foreground">
+                confirmed of {count(plates.estimate)} estimated · {count(plates.consideringHeads)} possible
+              </span>
+            </div>
+            <RankedBars
+              tone="premium"
+              max={Math.max(plates.estimate, 1)}
+              rows={plates.byMeal
+                .filter((m) => m.heads > 0)
+                .map((m) => ({
+                  key: m.meal ?? "none",
+                  label: m.meal ? (MEAL_LABEL[m.meal] ?? m.meal) : "No choice yet",
+                  value: m.heads,
+                }))}
+            />
+          </div>
+        );
+      }
+      case "guest_sides": {
+        const sides = wedding.guestSummary?.bySide ?? [];
+        return sides.length ? (
+          <ColumnChart
+            ariaLabel="Guests by side"
+            tone="love"
+            data={sides.map((s) => ({ label: SIDE_LABEL[s.side] ?? s.side, value: s.heads }))}
+          />
+        ) : (
+          <WidgetEmpty icon={Users} title="No guests yet" />
+        );
+      }
+      case "team":
+        return wedding.team.length ? (
+          <div>
+            <SupplierStrip
+              items={wedding.team.map((item) => ({
+                id: item.vendorId,
+                name: item.name,
+                category: CATEGORY_LABELS[item.category] ?? item.category,
+                photoUrl: item.photoUrl ?? item.photos?.[0],
+                status: item.status,
+                href: `/vendors/${item.slug}`,
+              }))}
+            />
+          </div>
+        ) : (
+          <WidgetEmpty
+            icon={Store}
+            title="Build your team"
+            description="Shortlist vendors you love and track who's booked."
+            action={
+              <Button asChild size="sm">
+                <Link href="/vendors">Browse vendors</Link>
+              </Button>
+            }
+          />
+        );
+      case "agenda":
+        if (!appointments) return null;
+        return upcoming.length ? (
+          <ul className="grid gap-2">
+            {upcoming.map((item) => (
+              <li key={item.id} className="flex gap-3 rounded-xl bg-secondary/50 px-3 py-2">
+                <span className="grid w-9 shrink-0 place-items-center text-center leading-none">
+                  <span className="text-label text-muted-foreground uppercase">
+                    {new Date(item.startsAt).toLocaleDateString("en-LK", { month: "short", timeZone: COLOMBO })}
+                  </span>
+                  <span className="font-serif text-h4">
+                    {new Date(item.startsAt).toLocaleDateString("en-LK", { day: "numeric", timeZone: COLOMBO })}
+                  </span>
+                </span>
+                <span className="min-w-0">
+                  <span className="block truncate text-compact font-medium">{item.title}</span>
+                  <span className="block truncate text-caption text-muted-foreground">
+                    {new Date(item.startsAt).toLocaleTimeString("en-LK", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      timeZone: COLOMBO,
+                    })}
+                    {item.venueName ? ` · ${item.venueName}` : ""}
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <WidgetEmpty icon={CalendarClock} title="Nothing scheduled" description={t("knotly.noAppointments")} />
+        );
+      case "messages":
+        if (!inquiries) return null;
+        return inquiries.length ? (
+          <ul className="grid gap-1">
+            {inquiries.slice(0, 4).map((item) => {
+              const body = (
+                <>
+                  <span className="block truncate text-compact font-medium">{item.vendorName ?? "Vendor"}</span>
+                  <span className="line-clamp-1 text-caption text-muted-foreground">{item.message}</span>
+                </>
+              );
+              return (
+                <li key={item.id}>
+                  {item.whatsappUrl ? (
+                    <a
+                      href={item.whatsappUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="block rounded-xl px-2 py-1.5 transition-colors hover:bg-muted focus-visible:bg-muted focus-visible:outline-none"
+                    >
+                      {body}
+                    </a>
+                  ) : (
+                    <div className="px-2 py-1.5">{body}</div>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          <WidgetEmpty icon={MessageCircle} title={t("nav.messages")} description={t("knotly.noMessages")} />
+        );
+      case "style":
+        return (
+          <div className="grid gap-3">
+            <div className="flex flex-wrap gap-1.5">
+              {weddingStyleSchema.options.map((style) => (
+                <Button
+                  key={style}
+                  type="button"
+                  size="sm"
+                  shape="pill"
+                  variant={wedding.style === style ? "default" : "secondary"}
+                  onClick={() => void setStyle(style)}
+                >
+                  {t(`knotly.style_${style.toLowerCase()}`)}
+                </Button>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              {(wedding.colors.length ? wedding.colors : weddingStyleColors(wedding.style)).map((color) => (
+                // design-system: user-data-colors (the couple's saved palette)
+                <span key={color} className="size-8 rounded-full border border-border" style={{ background: color }} />
+              ))}
+            </div>
+            {wedding.settingNotes ? (
+              <p className="line-clamp-2 text-caption text-muted-foreground">{wedding.settingNotes}</p>
+            ) : null}
+          </div>
+        );
+      case "inspiration":
+        return (
+          <div className="grid h-full grid-cols-2 gap-2 sm:grid-cols-4">
+            {INSPIRATION.map((item) => (
+              <Link
+                key={item.key}
+                href={`/vendors?category=${item.key}`}
+                className="widget-no-drag group relative block min-h-20 overflow-hidden rounded-xl"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={item.src}
+                  alt=""
+                  className="absolute inset-0 size-full object-cover transition duration-700 group-hover:scale-105"
+                />
+                <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/70 to-transparent px-2 py-1.5 text-caption text-paper">
+                  {CATEGORY_LABELS[item.key] ?? item.key}
+                </span>
+              </Link>
+            ))}
+          </div>
+        );
+      default:
+        return null;
+    }
+  }
+
+  function renderHeaderActions(id: string): ReactNode {
+    const link = (href: string, label = t("hub.viewAll")) => <WidgetHeaderLink href={href}>{label}</WidgetHeaderLink>;
+    switch (id) {
+      case "ceremonies":
+        return link("/planning/studio", "Studio");
+      case "budget_categories":
+        return link("/planning/budget");
+      case "tasks_board":
+        return link("/planning/checklist");
+      case "rsvp_breakdown":
+      case "plates":
+      case "guest_sides":
+        return link("/planning/guests");
+      case "team":
+        return link("/planning/team");
+      case "agenda":
+        return link("/planning/calendar");
+      case "messages":
+        return link("/planning/messages");
+      case "inspiration":
+        return link("/vendors", "Browse");
+      default:
+        return null;
+    }
+  }
 
   return (
     <DashboardStack>
       <CoupleHero
         density="hub"
-        imageSrc="https://images.unsplash.com/photo-1519741497674-611481863552?w=1600&q=80"
-        imageAlt=""
+        imageSrc={resolveWeddingCoverUrl(wedding.coverImageUrl)}
+        imageAlt={`${wedding.partnerOneName} and ${wedding.partnerTwoName}`}
         kicker={t("hub.kicker")}
-        names={`${data.partnerOneName} & ${data.partnerTwoName}`}
+        names={`${wedding.partnerOneName} & ${wedding.partnerTwoName}`}
         date={dateLabel}
-        place={[data.city, data.district].filter(Boolean).join(", ")}
-        days={daysLeft ?? undefined}
-        daysLabel={data.hubStats?.nextEventName ? `to ${data.hubStats.nextEventName}` : t("hub.daysLeft")}
-        chips={[t("knotly.tasksLeft", { count: remaining })]}
+        place={[wedding.city, wedding.district].filter(Boolean).join(", ")}
+        days={daysLeft == null ? undefined : String(daysLeft)}
+        daysLabel={wedding.hubStats?.nextEventName ? `to ${wedding.hubStats.nextEventName}` : t("hub.daysLeft")}
+        chips={openTasks.length ? [t("knotly.tasksLeft", { count: openTasks.length })] : undefined}
+        imageAction={
+          <Button
+            asChild
+            size="sm"
+            variant="secondary"
+            className="border border-background/30 bg-background/85 text-foreground shadow-sm backdrop-blur-md hover:bg-background"
+          >
+            <Link href="/planning/studio?section=style">Cover photo</Link>
+          </Button>
+        }
         actions={
           <div className="flex flex-wrap gap-2">
             <Button asChild>
@@ -139,7 +661,7 @@ export default function PlanningHubPage() {
       />
 
       <TeamGapBanner
-        missing={data.hubStats?.missingCategories ?? []}
+        missing={wedding.hubStats?.missingCategories ?? []}
         labels={CATEGORY_LABELS}
         action={
           <Button asChild size="sm">
@@ -148,279 +670,20 @@ export default function PlanningHubPage() {
         }
       />
 
-      <Stagger>
-        <DashboardStats>
-          {data.myAccess.canViewBudget ? (
-            <StaggerItem>
-              <StatCard
-                icon={Wallet}
-                label={t("knotly.estimated")}
-                value={formatMoney(data.budgetLkr, currency)}
-                hint={`${formatMoney(spent, currency)} ${t("hub.budgetUsed").toLowerCase()}`}
-                tone="warning"
-              />
-            </StaggerItem>
-          ) : null}
-          <StaggerItem>
-            <StatCard
-              icon={Store}
-              label={t("knotly.hired")}
-              value={`${hired}/${Math.max(data.team.length, 1)}`}
-              hint={t("nav.team")}
-              tone="info"
-            />
-          </StaggerItem>
-          <StaggerItem>
-            <StatCard
-              icon={Heart}
-              label={t("hub.rsvp")}
-              value={`${data.rsvpConfirmed}/${data.rsvpTotal}`}
-              hint={plates ? `${plates.confirmedHeads} plates confirmed` : t("nav.guests")}
-              tone="love"
-            />
-          </StaggerItem>
-          <StaggerItem>
-            <StatCard
-              icon={Music2}
-              label={t("nav.music")}
-              value={`${data.hubStats?.musicReadyPlans ?? 0}/${data.hubStats?.musicPlanCount ?? 0}`}
-              hint={t("planning.musicHelp")}
-              tone="info"
-            />
-          </StaggerItem>
-          <StaggerItem>
-            <StatCard
-              icon={CalendarDays}
-              label={t("hub.daysLeft")}
-              value={daysLeft ?? "—"}
-              hint={data.hubStats?.nextEventName ?? dateLabel}
-            />
-          </StaggerItem>
-        </DashboardStats>
-      </Stagger>
-
-      <DashboardMain>
-        <DashboardPrimary>
-          <SectionCard
-            title="Ceremonies"
-            icon={CalendarDays}
-            delay={1}
-            variant="muted"
-            action={
-              <Button asChild variant="ghost" size="sm">
-                <Link href="/planning/studio">Studio</Link>
-              </Button>
-            }
-          >
-            <CeremonySchedule
-              events={data.events ?? []}
-              formatWhen={(iso) =>
-                iso
-                  ? new Date(iso).toLocaleString("en-LK", {
-                      dateStyle: "medium",
-                      timeStyle: "short",
-                      timeZone: "Asia/Colombo",
-                    })
-                  : ""
-              }
-            />
-          </SectionCard>
-
-          <SectionCard title={t("knotly.weddingStyle")} icon={Heart} delay={2} variant="muted">
-            <div className="flex flex-wrap gap-2">
-              {weddingStyleSchema.options.map((style) => (
-                <Button
-                  key={style}
-                  type="button"
-                  size="sm"
-                  shape="pill"
-                  variant={data.style === style ? "default" : "secondary"}
-                  onClick={() => setStyle(style)}
-                >
-                  {t(`knotly.style_${style.toLowerCase()}`)}
-                </Button>
-              ))}
-            </div>
-            {data.settingNotes ? <p className="text-sm text-muted-foreground">{data.settingNotes}</p> : null}
-            <div className="flex gap-2">
-              {(data.colors.length ? data.colors : weddingStyleColors(data.style)).map((color) => (
-                <span key={color} className="size-8 rounded-full border border-border" style={{ background: color }} />
-              ))}
-            </div>
-          </SectionCard>
-
-          <SectionCard
-            title={t("nav.calendar")}
-            icon={CalendarDays}
-            delay={3}
-            action={
-              <Button asChild variant="ghost" size="sm">
-                <Link href="/planning/calendar">{t("hub.viewAll")}</Link>
-              </Button>
-            }
-          >
-            {todayAppts.length === 0 ? (
-              <p className="text-sm text-muted-foreground">{t("knotly.noAppointments")}</p>
-            ) : (
-              todayAppts.map((item) => (
-                <div key={item.id} className="rounded-xl bg-secondary px-4 py-3 text-sm">
-                  <p className="font-medium">{item.title}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {new Date(item.startsAt).toLocaleTimeString("en-LK", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      timeZone: "Asia/Colombo",
-                    })}
-                    {item.venueName ? ` · ${item.venueName}` : ""}
-                  </p>
-                </div>
-              ))
-            )}
-          </SectionCard>
-
-          <SectionCard
-            title={t("knotly.suppliers")}
-            icon={Store}
-            delay={3}
-            action={
-              <Button asChild variant="ghost" size="sm">
-                <Link href="/planning/team">{t("hub.viewAll")}</Link>
-              </Button>
-            }
-          >
-            <SupplierStrip
-              items={data.team.map((item) => ({
-                id: item.vendorId,
-                name: item.name,
-                category: CATEGORY_LABELS[item.category] ?? item.category,
-                photoUrl: item.photoUrl ?? item.photos?.[0],
-                status: item.status,
-                href: `/vendors/${item.slug}`,
-              }))}
-            />
-            {data.team.length ? (
-              <div className="mt-3 flex flex-wrap gap-2">
-                {data.team.map((item) => (
-                  <Link
-                    key={item.vendorId}
-                    href={`/vendors/${item.slug}`}
-                    className="text-xs text-primary underline-offset-2 hover:underline"
-                  >
-                    {item.name}
-                  </Link>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                <Link href="/vendors" className="text-primary underline-offset-2 hover:underline">
-                  Browse vendors
-                </Link>{" "}
-                to build your team.
-              </p>
-            )}
-          </SectionCard>
-        </DashboardPrimary>
-
-        <DashboardSecondary>
-          <PlanningProgress
-            score={completeness.score}
-            total={completeness.total}
-            missing={completeness.missing}
-            labels={{
-              partners: "Partners",
-              date: "Date",
-              city: "City",
-              events: "Events",
-              guests: "Guests",
-              budget: "Budget",
-              website: "Website",
-              family: "Family",
-              inviteTemplate: "Invite template",
-              seating: "Seating",
-              music: "Music",
-            }}
-          />
-          {plates ? (
-            <PlateSummaryCard
-              title="Plates"
-              estimate={plates.estimate}
-              confirmed={plates.confirmedHeads}
-              considering={plates.consideringHeads}
-              bufferGap={plates.bufferGap}
-              byMeal={plates.byMeal}
-            />
-          ) : null}
-          {data.myAccess.canViewBudget ? (
-            <BudgetMeter
-              title={t("nav.costGuide")}
-              usedLabel={formatMoney(spent, currency)}
-              remainingLabel={formatMoney(Math.max(0, data.budgetLkr - spent), currency)}
-              percent={budgetPercent}
-              categories={(data.budgetLines ?? []).slice(0, 5).map((line) => ({
-                label: line.label,
-                spent: formatMoney(line.spentLkr, currency),
-                percent: data.budgetLkr ? Math.round((line.spentLkr / data.budgetLkr) * 100) : 0,
-              }))}
-            />
-          ) : null}
-          <TimelineRail
-            title={t("hub.nextTasks")}
-            items={(data.tasks ?? [])
-              .filter((task) => task.status !== "DONE")
-              .slice(0, 5)
-              .map((task) => ({
-                title: task.title,
-                meta: task.category ?? "",
-                status: task.status === "DONE" ? t("status.done") : t("status.pending"),
-                intent: task.status === "DONE" ? ("success" as const) : ("warning" as const),
-              }))}
-          />
-          <Button asChild variant="ghost" size="sm">
-            <Link href="/planning/checklist">{t("hub.viewAll")}</Link>
-          </Button>
-          <SectionCard title={t("nav.messages")} delay={3}>
-            {inquiries.length === 0 ? (
-              <EmptyState
-                className="border-none bg-transparent py-6"
-                title={t("nav.messages")}
-                description={t("knotly.noMessages")}
-              />
-            ) : (
-              inquiries.slice(0, 4).map((item) =>
-                item.whatsappUrl ? (
-                  <a key={item.id} href={item.whatsappUrl} target="_blank" rel="noreferrer" className="block">
-                    <PreviewRow
-                      title={item.vendorName ?? "Vendor"}
-                      description={item.message}
-                      className="hover:bg-secondary"
-                    />
-                  </a>
-                ) : (
-                  <PreviewRow key={item.id} title={item.vendorName ?? "Vendor"} description={item.message} />
-                ),
-              )
-            )}
-          </SectionCard>
-        </DashboardSecondary>
-      </DashboardMain>
-
-      <Stagger className="grid grid-cols-2 gap-3 md:grid-cols-5 md:gap-4" stagger={0.04}>
-        {INSPIRATION.map((item) => (
-          <StaggerItem key={item.key}>
-            <Link href={`/vendors?category=${item.key}`} className="group relative block overflow-hidden rounded-2xl">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={item.src}
-                alt=""
-                className="aspect-[4/3] w-full object-cover transition duration-700 group-hover:scale-105"
-              />
-              <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/70 to-transparent px-3 py-2 text-xs text-paper">
-                {CATEGORY_LABELS[item.key] ?? item.key}
-              </span>
-            </Link>
-          </StaggerItem>
-        ))}
-      </Stagger>
+      <WidgetDashboard
+        kind="couple"
+        store={useCoupleDashboardLayout}
+        widgets={widgets}
+        categories={COUPLE_WIDGET_CATEGORIES}
+        renderWidget={renderWidget}
+        renderHeaderActions={renderHeaderActions}
+        toolbar={
+          <p className="text-caption text-muted-foreground">
+            Your planning at a glance — make it yours with{" "}
+            <span className="font-medium text-foreground">Edit layout</span>.
+          </p>
+        }
+      />
     </DashboardStack>
   );
 }

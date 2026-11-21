@@ -33,9 +33,7 @@ export default function AwardsPage() {
     return (
       <div className="mx-auto max-w-2xl space-y-4 py-16 text-center">
         <h1 className="font-serif text-3xl font-medium">Awards coming soon</h1>
-        <p className="text-sm text-muted-foreground">
-          The Best of Ceylon awards page is currently unpublished.
-        </p>
+        <p className="text-sm text-muted-foreground">The Best of Ceylon awards page is currently unpublished.</p>
         <Button asChild shape="pill">
           <Link href="/vendors">Browse vendors</Link>
         </Button>
@@ -57,8 +55,8 @@ export default function AwardsPage() {
           Best of Ceylon Weddings Awards {selectedYear}
         </h1>
         <p className="text-sm leading-relaxed text-muted-foreground">
-          Celebrating trusted wedding vendors across Sri Lanka — curated by Ceylon Ops from verified
-          couple feedback and service excellence.
+          Celebrating trusted wedding vendors across Sri Lanka — curated by Ceylon Ops from verified couple feedback and
+          service excellence.
         </p>
         <div className="flex justify-center gap-2">
           {[selectedYear - 1, selectedYear, selectedYear + 1].map((year) => (
@@ -158,7 +156,7 @@ function AwardCard({ award }: { award: PublicAward }) {
       <div
         className="h-40 bg-cover bg-center"
         style={{
-          backgroundImage: `url(${award.vendor.coverUrl || "https://images.unsplash.com/photo-1519741497674-611481863552?w=800&q=80"})`,
+          backgroundImage: `url(${award.vendor.coverUrl || "https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=800&q=80"})`,
         }}
       />
       <div className="space-y-1 p-4">

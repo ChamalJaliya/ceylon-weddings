@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { dashboardLayoutsSchema } from "../dashboard/layout";
 
 // ── Appearance (Kloqra: mode × palette) ─────────────────────────────────────
 
@@ -17,6 +18,19 @@ export const paletteSchema = z.enum([
   "bordeaux-taupe",
   "midnight-ivory",
   "olive-linen",
+  // Festive wedding moodboard palettes
+  "sage-ivory",
+  "champagne-gold",
+  "dusty-blue-ivory",
+  "blush-cream",
+  "emerald-gold",
+  "terracotta-sand",
+  "lavender-taupe",
+  "navy-gold",
+  "mocha-ivory",
+  "black-white",
+  "peach-coral",
+  "greenery-white",
 ]);
 export type Palette = z.infer<typeof paletteSchema>;
 export const DEFAULT_PALETTE: Palette = "ceylon";
@@ -32,6 +46,18 @@ export const PALETTE_OPTIONS: ReadonlyArray<{ value: Palette; label: string; des
   { value: "bordeaux-taupe", label: "Bordeaux & Taupe", description: "Bordeaux red and soft taupe" },
   { value: "midnight-ivory", label: "Midnight & Ivory", description: "Midnight navy and ivory" },
   { value: "olive-linen", label: "Olive & Linen", description: "Olive grove and warm linen" },
+  { value: "sage-ivory", label: "Sage & Ivory", description: "Muted sage and creamy ivory" },
+  { value: "champagne-gold", label: "Champagne & Gold", description: "Pale champagne and warm gold" },
+  { value: "dusty-blue-ivory", label: "Dusty Blue & Ivory", description: "Slate blue and soft ivory" },
+  { value: "blush-cream", label: "Blush & Cream", description: "Dusty rose and warm cream" },
+  { value: "emerald-gold", label: "Emerald & Gold", description: "Deep emerald and antique gold" },
+  { value: "terracotta-sand", label: "Terracotta & Sand", description: "Burnt clay and warm sand" },
+  { value: "lavender-taupe", label: "Lavender & Taupe", description: "Soft lavender and warm taupe" },
+  { value: "navy-gold", label: "Navy & Gold", description: "Midnight navy and antique gold" },
+  { value: "mocha-ivory", label: "Mocha & Ivory", description: "Mocha mousse and creamy ivory" },
+  { value: "black-white", label: "Black & White", description: "Formal black and crisp white" },
+  { value: "peach-coral", label: "Peach & Coral", description: "Soft peach and festive coral" },
+  { value: "greenery-white", label: "Greenery & White", description: "Fresh leaf green and bright white" },
 ];
 
 // ── Notifications ───────────────────────────────────────────────────────────
@@ -108,6 +134,8 @@ export const userPreferencesSchema = z
     themeMode: themeModeSchema.optional(),
     palette: paletteSchema.optional(),
     notifications: z.partialRecord(notificationPreferenceKeySchema, notificationChannelsSchema.partial()).optional(),
+    /** Widget dashboard arrangement per role dashboard. A bad value drops only this key. */
+    dashboardLayouts: dashboardLayoutsSchema.optional().catch(undefined),
   })
   .catch({});
 export type UserPreferences = z.infer<typeof userPreferencesSchema>;
@@ -131,5 +159,7 @@ export const updatePreferencesBodySchema = z.object({
   themeMode: themeModeSchema.optional(),
   palette: paletteSchema.optional(),
   notifications: z.partialRecord(notificationPreferenceKeySchema, notificationChannelsSchema.partial()).optional(),
+  /** Replaces the saved layout of each dashboard kind given; other kinds are kept. */
+  dashboardLayouts: dashboardLayoutsSchema.optional(),
 });
 export type UpdatePreferencesBody = z.infer<typeof updatePreferencesBodySchema>;

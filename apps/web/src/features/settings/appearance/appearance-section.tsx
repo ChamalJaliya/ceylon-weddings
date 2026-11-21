@@ -126,7 +126,7 @@ export default function AppearanceSection() {
 
       <SettingsCard
         title="Palette"
-        description="Every palette works in light and dark mode. Ceylon is our signature ivory and gold."
+        description="Every palette works in light and dark mode. Ceylon is our signature ivory and gold — plus festive wedding moodboard palettes."
       >
         <div role="radiogroup" aria-label="Palette" className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           {PALETTE_OPTIONS.map((option) => {

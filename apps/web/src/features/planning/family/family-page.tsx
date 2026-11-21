@@ -2,7 +2,8 @@
 
 import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Network, UserPlus } from "lucide-react";
+import { KeyRound, Network, UserPlus } from "lucide-react";
+import { HorizontalTabs } from "@ceylonweddings/ui/components/horizontal-tabs";
 import { api } from "@ceylonweddings/web";
 import {
   FAMILY_RELATION_LABELS,
@@ -161,14 +162,15 @@ export default function FamilyPage() {
         description="Who is who — bride’s house, groom’s house, then who can log in."
       />
 
-      <div className="flex flex-wrap gap-2">
-        <Button type="button" variant={tab === "tree" ? "default" : "outline"} onClick={() => setTab("tree")}>
-          Family tree
-        </Button>
-        <Button type="button" variant={tab === "access" ? "default" : "outline"} onClick={() => setTab("access")}>
-          Hub access
-        </Button>
-      </div>
+      <HorizontalTabs
+        ariaLabel="Family"
+        activeId={tab}
+        onChange={setTab}
+        items={[
+          { id: "tree", label: "Family tree", icon: Network },
+          { id: "access", label: "Hub access", icon: KeyRound },
+        ]}
+      />
 
       {tab === "tree" ? (
         <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">

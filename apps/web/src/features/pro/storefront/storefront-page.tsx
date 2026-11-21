@@ -42,6 +42,7 @@ import {
   StickyActionBar,
   StudioShell,
   TagInput,
+  type CreatorSection,
 } from "@ceylonweddings/ui/domain/creator-form";
 import {
   AddOnEditor,
@@ -56,7 +57,7 @@ import { Link } from "@/i18n/navigation";
 import { PlaceFields } from "@/components/place-fields";
 import { CATEGORY_LABELS, localizedText } from "@/lib/labels";
 import { offerTemplatesForCategory, TEMPLATE_LABELS } from "@/lib/offer-templates";
-import { Smartphone, Store } from "lucide-react";
+import { Images, ListChecks, MapPin, MessageCircleQuestion, Send, Smartphone, Store, Tag } from "lucide-react";
 import { CenteredLoader } from "@ceylonweddings/ui/components/spinner";
 
 const fieldClass = "h-11 rounded-xl border-border/80 bg-background/70";
@@ -312,22 +313,44 @@ export default function StorefrontEditPage() {
     }
   }
 
-  const sections: Array<{ id: Section; label: string; done?: boolean }> = [
+  const sections: Array<CreatorSection & { id: Section }> = [
     {
       id: "basics",
       label: "Basics",
+      hint: "Name & story",
+      icon: Store,
       done: !completeness?.missing.includes("name") && !completeness?.missing.includes("description"),
     },
     {
       id: "details",
       label: "Details",
+      hint: "What you offer",
+      icon: ListChecks,
       done: attributeCompleteness ? attributeCompleteness.requiredDone >= attributeCompleteness.requiredTotal : true,
     },
-    { id: "media", label: "Media", done: !completeness?.missing.includes("media") },
-    { id: "offers", label: "Offers", done: !completeness?.missing.includes("offer") },
-    { id: "presence", label: "Presence", done: !completeness?.missing.includes("whatsapp") },
-    { id: "faqs", label: "FAQs" },
-    { id: "publish", label: "Publish", done: completeness?.ready },
+    {
+      id: "media",
+      label: "Media",
+      hint: "Photos & video",
+      icon: Images,
+      done: !completeness?.missing.includes("media"),
+    },
+    {
+      id: "offers",
+      label: "Offers",
+      hint: "Packages & prices",
+      icon: Tag,
+      done: !completeness?.missing.includes("offer"),
+    },
+    {
+      id: "presence",
+      label: "Presence",
+      hint: "WhatsApp & socials",
+      icon: MapPin,
+      done: !completeness?.missing.includes("whatsapp"),
+    },
+    { id: "faqs", label: "FAQs", hint: "Answer common questions", icon: MessageCircleQuestion },
+    { id: "publish", label: "Publish", hint: "Check & go live", icon: Send, done: completeness?.ready },
   ];
 
   return (

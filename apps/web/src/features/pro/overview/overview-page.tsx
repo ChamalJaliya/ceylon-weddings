@@ -1,44 +1,117 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { ArrowRight, Briefcase, MessageCircle, ShieldCheck, Sparkles, Store } from "lucide-react";
-import { api } from "@ceylonweddings/web";
-import type { Inquiry, Vendor, VendorSubscription } from "@ceylonweddings/contracts";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
+import {
+  ArrowRight,
+  BadgeCheck,
+  Briefcase,
+  CheckCircle2,
+  Circle,
+  CreditCard,
+  ExternalLink,
+  Eye,
+  Heart,
+  MessageCircle,
+  Package,
+  Star,
+  Store,
+  Target,
+} from "lucide-react";
+import { api, formatMoney, usePreferenceStore } from "@ceylonweddings/web";
+import type { Inquiry, Vendor, VendorInsights, VendorSubscription } from "@ceylonweddings/contracts";
+import { Badge } from "@ceylonweddings/ui/components/badge";
 import { Button } from "@ceylonweddings/ui/components/button";
 import { FormStatus } from "@ceylonweddings/ui/components/form-status";
-import { CompletenessChecklist } from "@ceylonweddings/ui/domain/creator-form";
-import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
-import { SectionCard } from "@ceylonweddings/ui/domain/section-card";
-import { StatCard } from "@ceylonweddings/ui/domain/stat-card";
-import { DashboardStats } from "@ceylonweddings/ui/domain/dashboard-layout";
-import { MediaFrame } from "@ceylonweddings/ui/domain/media-frame";
-import { BillingAlertBanner, resolveBillingAlertBanner } from "@ceylonweddings/ui/domain/billing-alert-banner";
-import { SubscriptionStatusBanner } from "@ceylonweddings/ui/domain/subscription-status-banner";
-import { Link, useRouter } from "@/i18n/navigation";
 import { CenteredLoader } from "@ceylonweddings/ui/components/spinner";
-import { BulletPreviewRow, PreviewRow, PreviewRowList } from "@ceylonweddings/ui/domain/preview-row";
+import { BillingAlertBanner, resolveBillingAlertBanner } from "@ceylonweddings/ui/domain/billing-alert-banner";
+import { MediaFrame } from "@ceylonweddings/ui/domain/media-frame";
+import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
+import { SubscriptionStatusBanner } from "@ceylonweddings/ui/domain/subscription-status-banner";
+import {
+  DonutChart,
+  KpiCard,
+  ProgressRing,
+  TrendChart,
+  WidgetEmpty,
+  WidgetError,
+  periodTrend,
+} from "@ceylonweddings/ui/domain/dashboard";
+import { Link, useRouter } from "@/i18n/navigation";
+import { WidgetDashboard, type WidgetRenderContext } from "@/features/dashboard/widget-dashboard";
+import {
+  DashboardToolbar,
+  count,
+  days,
+  shortDay,
+  tail,
+  values,
+  WidgetHeaderLink,
+} from "@/features/dashboard/dashboard-format";
+import { VENDOR_WIDGETS, VENDOR_WIDGET_CATEGORIES, useVendorDashboardLayout } from "./vendor-widgets";
+
+type Lead = Inquiry & { wedding: { partnerOneName: string; partnerTwoName: string } };
+
+const LEAD_STATUS = {
+  NEW: { label: "New", intent: "warning", tone: "warning" },
+  REPLIED: { label: "Replied", intent: "info", tone: "info" },
+  CLOSED: { label: "Closed", intent: "default", tone: "muted" },
+} as const;
+
+const SUBSCRIPTION_LABEL: Record<string, string> = {
+  TRIAL: "Free trial",
+  ACTIVE: "Active",
+  GRACE: "Grace period",
+  EXPIRED: "Expired",
+  CANCELLED: "Cancelled",
+  COMPED: "Complimentary",
+};
+
+const humanize = (key: string) => key.replaceAll("_", " ").replace(/^\w/, (c) => c.toUpperCase());
+
+const dayLabel = (iso: string) =>
+  new Date(iso).toLocaleDateString("en-LK", { day: "numeric", month: "short", timeZone: "Asia/Colombo" });
 
 export default function ProHomePage() {
   const router = useRouter();
+  const currency = usePreferenceStore((state) => state.currency);
   const [vendor, setVendor] = useState<Vendor | null>(null);
-  const [leads, setLeads] = useState<(Inquiry & { wedding: { partnerOneName: string; partnerTwoName: string } })[]>([]);
+  const [leads, setLeads] = useState<Lead[] | null>(null);
+  const [insights, setInsights] = useState<VendorInsights | null>(null);
+  const [insightsError, setInsightsError] = useState<string | null>(null);
   const [subscription, setSubscription] = useState<VendorSubscription | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
 
-  useEffect(() => {
-    Promise.all([api.vendors.mine(), api.vendors.leads()])
-      .then(([mine, inbox]) => {
-        setVendor(mine);
-        setLeads(inbox);
-        return api.subscription
-          .vendor(mine.id)
-          .then((sub) => setSubscription(sub))
-          .catch(() => null);
-      })
-      .catch((err: Error) => setError(err.message));
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [mine, inbox] = await Promise.all([api.vendors.mine(), api.vendors.leads()]);
+      setVendor(mine);
+      setLeads(inbox);
+      setError(null);
+      // Secondary sources never block the dashboard.
+      const [nextInsights, sub] = await Promise.allSettled([api.vendors.insights(), api.subscription.vendor(mine.id)]);
+      if (nextInsights.status === "fulfilled") {
+        setInsights(nextInsights.value);
+        setInsightsError(null);
+      } else {
+        setInsightsError(nextInsights.reason instanceof Error ? nextInsights.reason.message : "Request failed");
+      }
+      if (sub.status === "fulfilled") setSubscription(sub.value);
+      setUpdatedAt(new Date());
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not load your workspace");
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  if (error) {
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  if (error && !vendor) {
     return (
       <FormStatus tone="destructive">
         {error}. <Link href="/login">Sign in</Link>
@@ -47,9 +120,10 @@ export default function ProHomePage() {
   }
   if (!vendor) return <CenteredLoader label="Loading…" />;
 
-  const newLeads = leads.filter((lead) => lead.status === "NEW").length;
+  const packages = vendor.packages ?? [];
+  const published = packages.filter((pkg) => pkg.status === "PUBLISHED");
+  const newLeads = (leads ?? []).filter((lead) => lead.status === "NEW").length;
   const completeness = vendor.completeness;
-  const publishedOffers = (vendor.packages ?? []).filter((pkg) => pkg.status === "PUBLISHED").length;
   const cover = vendor.photoUrl ?? vendor.photos?.[0];
   const billingAlert = subscription
     ? resolveBillingAlertBanner({
@@ -60,133 +134,402 @@ export default function ProHomePage() {
         currentPeriodEnd: subscription.currentPeriodEnd,
       })
     : null;
+  const retry = () => void load();
+  const insightsGate = () => (insightsError ? <WidgetError message={insightsError} onRetry={retry} /> : null);
 
-  return (
-    <div className="cw-stack">
-      <div className="overflow-hidden rounded-3xl border border-border/70 bg-gradient-to-br from-card via-card to-secondary/30 shadow-sm">
-        <div className="grid gap-6 p-5 md:grid-cols-[minmax(0,1.2fr)_14rem] md:items-stretch md:p-6">
-          <div className="grid gap-4 self-center">
-            <PageHeader
-              icon={Store}
-              kicker="Vendor workspace"
-              title={vendor.name}
-              description="Polish your storefront until couples feel your work before they message."
-              actions={
-                <Button asChild>
-                  <Link href="/pro/storefront">
-                    Open studio
-                    <ArrowRight className="size-4" />
-                  </Link>
+  function renderWidget(id: string, { variant }: WidgetRenderContext): ReactNode {
+    switch (id) {
+      case "kpi_views":
+        if (!insights) return insightsGate();
+        return (
+          <KpiCard
+            variant={variant}
+            icon={Eye}
+            label="Profile views"
+            value={count(insights.totals.profileViews.current)}
+            hint="Last 30 days"
+            tone="primary"
+            sparkline={tail(insights.series.profileViews)}
+            trend={periodTrend(insights.totals.profileViews.current, insights.totals.profileViews.previous)}
+          />
+        );
+      case "kpi_taps":
+        if (!insights) return insightsGate();
+        return (
+          <KpiCard
+            variant={variant}
+            icon={MessageCircle}
+            label="WhatsApp taps"
+            value={count(insights.totals.whatsappTaps.current)}
+            hint={vendor!.whatsapp ? "Last 30 days" : "Add WhatsApp in Presence"}
+            tone="success"
+            sparkline={tail(insights.series.whatsappTaps)}
+            trend={periodTrend(insights.totals.whatsappTaps.current, insights.totals.whatsappTaps.previous)}
+          />
+        );
+      case "kpi_new_leads":
+        if (!leads) return null;
+        return (
+          <KpiCard
+            variant={variant}
+            icon={Briefcase}
+            label="New leads"
+            value={count(newLeads)}
+            hint={`${count(leads.length)} inquiries in total`}
+            tone="warning"
+            status={newLeads > 0 ? { label: "Reply", tone: "warning" } : { label: "All caught up", tone: "success" }}
+            bars={insights ? tail(insights.series.inquiries) : undefined}
+          />
+        );
+      case "kpi_inquiry_rate": {
+        if (!insights) return insightsGate();
+        const views = insights.totals.profileViews.current;
+        const rate = views ? (insights.totals.inquiries.current / views) * 100 : 0;
+        return (
+          <KpiCard
+            variant={variant}
+            icon={Target}
+            label="Inquiry rate"
+            value={views ? `${rate.toFixed(rate < 10 ? 1 : 0)}%` : "—"}
+            hint={`${count(insights.totals.inquiries.current)} inquiries · ${count(views)} views`}
+            tone="info"
+            gauge={Math.min(100, rate * 5)}
+            visualLabel="vs 20%"
+          />
+        );
+      }
+      case "kpi_shortlisted":
+        if (!insights) return insightsGate();
+        return (
+          <KpiCard
+            variant={variant}
+            icon={Heart}
+            label="Shortlisted"
+            value={count(insights.shortlistedBy)}
+            hint={`${count(insights.bookedBy)} couples booked you`}
+            tone="love"
+            ring={insights.shortlistedBy ? (insights.bookedBy / insights.shortlistedBy) * 100 : 0}
+            visualLabel="Booked"
+          />
+        );
+      case "kpi_offers":
+        return (
+          <KpiCard
+            variant={variant}
+            icon={Package}
+            label="Published offers"
+            value={count(published.length)}
+            hint={`${count(packages.length)} packages in total`}
+            tone="premium"
+            progress={packages.length ? (published.length / packages.length) * 100 : 0}
+          />
+        );
+      case "kpi_listing":
+        return (
+          <KpiCard
+            variant={variant}
+            icon={BadgeCheck}
+            label="Listing"
+            value={vendor!.verified ? "Verified" : "Unverified"}
+            hint={vendor!.featured ? "Featured pick" : "Trust mark"}
+            tone={vendor!.verified ? "success" : "warning"}
+          />
+        );
+      case "trend_performance":
+        if (!insights) return insightsGate();
+        return (
+          <TrendChart
+            ariaLabel="Storefront performance, last 30 days"
+            labels={days(insights.series.profileViews)}
+            formatLabel={shortDay}
+            series={[
+              { key: "views", label: "Profile views", tone: "1", values: values(insights.series.profileViews) },
+              { key: "taps", label: "WhatsApp taps", tone: "success", values: values(insights.series.whatsappTaps) },
+              { key: "inquiries", label: "Inquiries", tone: "love", values: values(insights.series.inquiries) },
+            ]}
+          />
+        );
+      case "leads_status": {
+        if (!leads) return null;
+        if (leads.length === 0) {
+          return (
+            <WidgetEmpty
+              icon={Briefcase}
+              title="No leads yet"
+              description="Publish an offer so couples can reach you."
+            />
+          );
+        }
+        return (
+          <DonutChart
+            ariaLabel="Leads by status"
+            centerLabel="leads"
+            slices={(Object.keys(LEAD_STATUS) as (keyof typeof LEAD_STATUS)[]).map((status) => ({
+              key: status,
+              label: LEAD_STATUS[status].label,
+              value: leads.filter((lead) => lead.status === status).length,
+              tone: LEAD_STATUS[status].tone,
+            }))}
+          />
+        );
+      }
+      case "recent_leads":
+        if (!leads) return null;
+        if (leads.length === 0) {
+          return (
+            <WidgetEmpty
+              icon={Briefcase}
+              title="No inquiries yet"
+              description="Refine your offers and publish to start receiving leads."
+            />
+          );
+        }
+        return (
+          <ul className="grid gap-1">
+            {leads.slice(0, 6).map((lead) => (
+              <li key={lead.id}>
+                <Link
+                  href="/pro/leads"
+                  className="flex items-start gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-muted focus-visible:bg-muted focus-visible:outline-none"
+                >
+                  <span className="inline-grid size-9 shrink-0 place-items-center rounded-full bg-love/15 text-love">
+                    <Heart className="size-4" aria-hidden />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-center gap-2">
+                      <span className="truncate text-compact font-medium">
+                        {lead.wedding.partnerOneName} & {lead.wedding.partnerTwoName}
+                      </span>
+                      <Badge intent={LEAD_STATUS[lead.status].intent} className="shrink-0">
+                        {LEAD_STATUS[lead.status].label}
+                      </Badge>
+                    </span>
+                    <span className="line-clamp-1 text-caption text-muted-foreground">{lead.message}</span>
+                  </span>
+                  <span className="shrink-0 text-label text-muted-foreground">{dayLabel(lead.createdAt)}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        );
+      case "completeness": {
+        if (!completeness) return <WidgetEmpty title="Readiness unavailable" />;
+        const pct = completeness.total ? (completeness.score / completeness.total) * 100 : 0;
+        return (
+          <div className="flex h-full flex-wrap items-center gap-6">
+            <ProgressRing
+              value={pct}
+              tone={completeness.ready ? "success" : "1"}
+              label={`${completeness.score} of ${completeness.total}`}
+            />
+            <div className="grid min-w-44 flex-1 gap-2">
+              <p className="text-compact font-medium">
+                {completeness.ready ? "Your storefront is ready for couples." : "Finish these to stand out:"}
+              </p>
+              <ul className="grid gap-1.5">
+                {(completeness.missing.length
+                  ? completeness.missing.slice(0, 5)
+                  : ["Preview your live storefront"]
+                ).map((item) => (
+                  <li key={item} className="flex items-center gap-2 text-caption text-muted-foreground">
+                    {completeness.missing.length ? (
+                      <Circle className="size-3.5 shrink-0 text-primary" aria-hidden />
+                    ) : (
+                      <CheckCircle2 className="size-3.5 shrink-0 text-success" aria-hidden />
+                    )}
+                    {humanize(item)}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        );
+      }
+      case "listing_preview":
+        return (
+          <div className="relative size-full min-h-40 overflow-hidden">
+            <MediaFrame
+              src={cover}
+              alt={vendor!.name}
+              aspect="aspect-auto"
+              className="absolute inset-0 size-full rounded-none"
+            />
+            <div className="absolute inset-x-0 bottom-0 grid gap-2 bg-gradient-to-t from-ink/75 via-ink/30 to-transparent p-4 pt-12 text-hero-foreground">
+              <div className="flex flex-wrap gap-1.5">
+                {vendor!.verified ? (
+                  <Badge intent="success">Verified</Badge>
+                ) : (
+                  <Badge intent="warning">Unverified</Badge>
+                )}
+                {vendor!.featured ? (
+                  <Badge intent="premium">
+                    <Star className="size-3" aria-hidden /> Featured
+                  </Badge>
+                ) : null}
+              </div>
+              <p className="truncate font-serif text-h4 leading-tight">/vendors/{vendor!.slug}</p>
+              <Link
+                href={`/vendors/${vendor!.slug}`}
+                className="widget-no-drag inline-flex w-fit items-center gap-1 text-caption text-hero-foreground underline-offset-2 hover:underline"
+              >
+                View as a couple <ExternalLink className="size-3" aria-hidden />
+              </Link>
+            </div>
+          </div>
+        );
+      case "offers":
+        if (packages.length === 0) {
+          return (
+            <WidgetEmpty
+              icon={Package}
+              title="No offers yet"
+              description="Packages help couples compare you at a glance."
+              action={
+                <Button asChild size="sm">
+                  <Link href="/pro/storefront">Create an offer</Link>
                 </Button>
               }
             />
-            {completeness ? (
-              <CompletenessChecklist
-                score={completeness.score}
-                total={completeness.total}
-                missing={completeness.missing}
-                ready={completeness.ready}
-              />
-            ) : null}
-          </div>
-          <div className="relative hidden overflow-hidden rounded-2xl md:block">
-            <MediaFrame src={cover} alt={vendor.name} aspect="aspect-[4/5]" className="h-full rounded-2xl" />
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/55 to-transparent p-4 text-hero-foreground">
-              <p className="text-label tracking-eyebrow uppercase opacity-80">Live listing</p>
-              <p className="font-serif text-lg leading-tight">/vendors/{vendor.slug}</p>
+          );
+        }
+        return (
+          <ul className="grid gap-1.5">
+            {packages.slice(0, 5).map((pkg) => (
+              <li key={pkg.id} className="flex items-center gap-3 rounded-xl border border-border/60 px-3 py-2">
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-compact font-medium">{pkg.name}</span>
+                  <span className="text-caption text-muted-foreground">
+                    {pkg.priceLkr != null ? formatMoney(pkg.priceLkr, currency) : "Price on request"}
+                  </span>
+                </span>
+                <Badge intent={pkg.status === "PUBLISHED" ? "success" : "default"}>
+                  {pkg.status === "PUBLISHED" ? "Live" : "Draft"}
+                </Badge>
+              </li>
+            ))}
+          </ul>
+        );
+      case "membership": {
+        if (!subscription)
+          return (
+            <WidgetEmpty
+              icon={CreditCard}
+              title="No membership yet"
+              description="Choose a plan to keep your listing live."
+            />
+          );
+        const trial = subscription.status === "TRIAL";
+        const ends = trial ? subscription.trialEndsAt : subscription.currentPeriodEnd;
+        return (
+          <div className="grid h-full content-between gap-4">
+            <div className="grid gap-1">
+              <div className="flex items-center gap-2">
+                <span className="font-serif text-h3 leading-tight">
+                  {subscription.plan?.name ?? (trial ? "Trial" : "Membership")}
+                </span>
+                <Badge
+                  intent={
+                    subscription.status === "ACTIVE" || subscription.status === "COMPED"
+                      ? "success"
+                      : trial
+                        ? "info"
+                        : "warning"
+                  }
+                >
+                  {SUBSCRIPTION_LABEL[subscription.status] ?? subscription.status}
+                </Badge>
+              </div>
+              {ends ? (
+                <p className="text-caption text-muted-foreground">
+                  {subscription.cancelAtPeriodEnd ? "Ends" : trial ? "Trial ends" : "Renews"} {dayLabel(ends)}
+                </p>
+              ) : null}
+            </div>
+            <div className="grid gap-1.5">
+              <div className="flex items-baseline justify-between text-caption">
+                <span className="text-muted-foreground">Days remaining</span>
+                <span className="font-medium tabular-nums">{count(Math.max(0, subscription.daysRemaining))}</span>
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-muted">
+                <span
+                  className={
+                    subscription.daysRemaining <= 7
+                      ? "block h-full rounded-full bg-warning"
+                      : "block h-full rounded-full bg-primary"
+                  }
+                  style={{ width: `${Math.min(100, (Math.max(0, subscription.daysRemaining) / 30) * 100)}%` }}
+                />
+              </div>
             </div>
           </div>
-        </div>
-      </div>
+        );
+      }
+      case "next_steps":
+        return (
+          <ul className="grid gap-2">
+            {(completeness?.missing.length
+              ? completeness.missing
+              : ["Preview your live storefront", "Check WhatsApp number", "Publish at least one package"]
+            )
+              .slice(0, 5)
+              .map((item) => (
+                <li key={item} className="flex items-center gap-2 text-compact">
+                  <ArrowRight className="size-3.5 shrink-0 text-primary" aria-hidden />
+                  {humanize(item)}
+                </li>
+              ))}
+          </ul>
+        );
+      default:
+        return null;
+    }
+  }
 
+  function renderHeaderActions(id: string): ReactNode {
+    const link = (href: string, label: string) => <WidgetHeaderLink href={href}>{label}</WidgetHeaderLink>;
+    if (id === "recent_leads" || id === "leads_status") return link("/pro/leads", "View all");
+    if (id === "completeness" || id === "offers" || id === "next_steps") return link("/pro/storefront", "Studio");
+    if (id === "membership") return link("/pro/billing", "Billing");
+    if (id === "trend_performance") return link("/pro/promote", "Promote");
+    return null;
+  }
+
+  return (
+    <div className="grid gap-6">
+      <PageHeader
+        icon={Store}
+        kicker="Vendor workspace"
+        title={vendor.name}
+        description="See how couples find you, and polish your storefront until they feel your work before they message."
+        actions={
+          <Button asChild>
+            <Link href="/pro/storefront">
+              Open studio
+              <ArrowRight className="size-4" />
+            </Link>
+          </Button>
+        }
+      />
       {billingAlert ? <BillingAlertBanner model={billingAlert} onCta={() => router.push("/pro/billing")} /> : null}
-
-      {subscription && (
+      {subscription ? (
         <SubscriptionStatusBanner
           status={subscription.status}
           daysRemaining={subscription.daysRemaining}
           trialEndsAt={subscription.trialEndsAt}
           currentPeriodEnd={subscription.currentPeriodEnd}
           planName={subscription.plan?.name}
-          onUpgradeClick={() => {
-            window.location.href = "/pro/billing";
-          }}
+          onUpgradeClick={() => router.push("/pro/billing")}
         />
-      )}
-
-      <DashboardStats>
-        <StatCard icon={Briefcase} label="New leads" value={String(newLeads)} hint="Awaiting reply" tone="warning" />
-        <StatCard
-          icon={Sparkles}
-          label="Published offers"
-          value={String(publishedOffers)}
-          hint={`${vendor.packages?.length ?? 0} total packages`}
-          tone="love"
-        />
-        <StatCard
-          icon={MessageCircle}
-          label="WhatsApp"
-          value={vendor.whatsapp ?? "—"}
-          hint={vendor.whatsapp ? "Connected" : "Add in Presence"}
-          tone="info"
-        />
-        <StatCard
-          icon={ShieldCheck}
-          label="Listing"
-          value={vendor.verified ? "Verified" : "Unverified"}
-          hint={vendor.featured ? "Featured pick" : "Trust mark"}
-          tone={vendor.verified ? "success" : "default"}
-        />
-      </DashboardStats>
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        <SectionCard
-          title="Recent leads"
-          icon={Briefcase}
-          delay={1}
-          action={
-            <Button asChild variant="ghost" size="sm">
-              <Link href="/pro/leads">View all</Link>
-            </Button>
-          }
-        >
-          <PreviewRowList
-            empty={leads.length === 0}
-            emptyTitle="Recent leads"
-            emptyDescription="No inquiries yet — refine offers and publish."
-          >
-            {leads.slice(0, 4).map((lead) => (
-              <PreviewRow
-                key={lead.id}
-                title={`${lead.wedding.partnerOneName} & ${lead.wedding.partnerTwoName}`}
-                description={lead.message}
-              />
-            ))}
-          </PreviewRowList>
-        </SectionCard>
-
-        <SectionCard
-          title="Next studio steps"
-          icon={Sparkles}
-          delay={2}
-          action={
-            <Button asChild variant="outline" size="sm">
-              <Link href="/pro/storefront">Continue</Link>
-            </Button>
-          }
-        >
-          <ul className="grid gap-2">
-            {(completeness?.missing.length
-              ? completeness.missing
-              : ["Preview your live storefront", "Check WhatsApp number", "Publish at least one package"]
-            )
-              .slice(0, 4)
-              .map((item) => (
-                <BulletPreviewRow key={item}>{item.replaceAll("_", " ")}</BulletPreviewRow>
-              ))}
-          </ul>
-        </SectionCard>
-      </div>
+      ) : null}
+      <WidgetDashboard
+        kind="vendor"
+        store={useVendorDashboardLayout}
+        widgets={VENDOR_WIDGETS}
+        categories={VENDOR_WIDGET_CATEGORIES}
+        renderWidget={renderWidget}
+        renderHeaderActions={renderHeaderActions}
+        toolbar={<DashboardToolbar label="Last 30 days" updatedAt={updatedAt} refreshing={loading} onRefresh={retry} />}
+      />
     </div>
   );
 }

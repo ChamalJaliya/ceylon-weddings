@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocale } from "next-intl";
 import { useParams } from "next/navigation";
-import { Megaphone } from "lucide-react";
+import { ArrowLeft, ArrowRight, Link2, Megaphone, Trash2 } from "lucide-react";
 import { api } from "@ceylonweddings/web";
 import {
   promotionCompleteness,
@@ -12,38 +12,40 @@ import {
   type VendorCategory,
 } from "@ceylonweddings/contracts";
 import { Button } from "@ceylonweddings/ui/components/button";
+import { useConfirm } from "@ceylonweddings/ui/components/confirm-dialog";
 import { FormStatus } from "@ceylonweddings/ui/components/form-status";
 import { SimpleSelect } from "@ceylonweddings/ui/components/select";
-import {
-  CompletenessChecklist,
-  CreatorSectionNav,
-  StickyActionBar,
-  StudioShell,
-} from "@ceylonweddings/ui/domain/creator-form";
+import { toast } from "@ceylonweddings/ui/components/toaster";
+import { CreatorSectionNav, FormGroup, StickyActionBar, StudioShell } from "@ceylonweddings/ui/domain/creator-form";
 import {
   emptyPromotionDraft,
+  nextPromotionSection,
   PromotionCreativeFields,
   PromotionPreview,
+  PromotionProgress,
+  PromotionReview,
   PromotionScheduleFields,
+  promotionSections,
+  PromotionStatusBadge,
   PromotionTargetingFields,
   type AdsPromotionDraft,
+  type PromotionSectionId,
 } from "@ceylonweddings/ui/domain/ads-studio";
 import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
 import { Link, useRouter } from "@/i18n/navigation";
 import { CATEGORY_LABELS, localizedText } from "@/lib/labels";
-
-type Section = "creative" | "targeting" | "schedule" | "publish";
+import { uploadImage } from "@/lib/upload-image";
 
 export default function AdminAdsStudioPage() {
   const locale = useLocale();
   const params = useParams<{ id: string }>();
   const router = useRouter();
+  const confirm = useConfirm();
   const isNew = params.id === "new";
-  const [section, setSection] = useState<Section>("creative");
+  const [section, setSection] = useState<PromotionSectionId>("creative");
   const [draft, setDraft] = useState<AdsPromotionDraft>(emptyPromotionDraft());
   const [vendors, setVendors] = useState<Array<{ id: string; name: string }>>([]);
   const [error, setError] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [categoryOptions, setCategoryOptions] = useState(
     Object.entries(CATEGORY_LABELS).map(([value, label]) => ({ value, label })),
@@ -104,15 +106,12 @@ export default function AdminAdsStudioPage() {
   }, [isNew, params.id]);
 
   const completeness = useMemo(() => promotionCompleteness(draft), [draft]);
-  const sections = [
-    { id: "creative" as const, label: "Creative", done: Boolean(draft.headline && draft.coverUrl) },
-    { id: "targeting" as const, label: "Targeting", done: draft.slots.length > 0 },
-    { id: "schedule" as const, label: "Schedule", done: Boolean(draft.startsAt && draft.endsAt) },
-    { id: "publish" as const, label: "Publish", done: completeness.ready },
-  ];
+  const sections = promotionSections(draft, completeness);
+  const prev = nextPromotionSection(section, -1);
+  const next = nextPromotionSection(section, 1);
 
-  function patch(next: Partial<AdsPromotionDraft>) {
-    setDraft((current) => ({ ...current, ...next }));
+  function patch(change: Partial<AdsPromotionDraft>) {
+    setDraft((current) => ({ ...current, ...change }));
   }
 
   function toBody(): UpsertPromotionBody {
@@ -151,12 +150,12 @@ export default function AdminAdsStudioPage() {
       const body = { ...toBody(), status: status ?? draft.status };
       if (isNew) {
         const created = await api.admin.createPromotion(body);
-        setMessage("Created");
+        toast.success(body.status === "ACTIVE" ? "Campaign is live" : "Campaign created");
         router.replace(`/admin/ads/${created.id}`);
       } else {
         await api.admin.updatePromotion(params.id, body);
         setDraft((current) => ({ ...current, status: body.status }));
-        setMessage("Saved");
+        toast.success(body.status === "ACTIVE" ? "Campaign is live" : "Saved");
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Save failed");
@@ -165,40 +164,81 @@ export default function AdminAdsStudioPage() {
     }
   }
 
+  async function remove() {
+    const ok = await confirm({
+      title: `Delete “${draft.name || "this campaign"}”?`,
+      description: "It stops showing immediately and its performance history is lost.",
+      confirmLabel: "Delete campaign",
+      destructive: true,
+      onConfirm: () => api.admin.deletePromotion(params.id),
+    });
+    if (!ok) return;
+    toast.success("Campaign deleted");
+    router.push("/admin/ads");
+  }
+
+  const categoryLabel = (value: string) => categoryOptions.find((option) => option.value === value)?.label ?? value;
+
   return (
     <div className="grid gap-8">
       <PageHeader
         icon={Megaphone}
         kicker="Ads studio"
         title={isNew ? "New campaign" : draft.name || "Edit campaign"}
-        description="Customize creative, targeting, schedule, and publish with a live preview."
+        description="Design the ad, choose where it runs, and see it live as you go."
         actions={
-          <Button asChild variant="outline" size="sm">
-            <Link href="/admin/ads">All campaigns</Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            {!isNew ? <PromotionStatusBadge status={draft.status} /> : null}
+            <Button asChild variant="ghost" size="sm">
+              <Link href="/admin/ads">
+                <ArrowLeft className="size-4" aria-hidden />
+                All campaigns
+              </Link>
+            </Button>
+            {!isNew ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={saving}
+                onClick={() => void remove()}
+                aria-label="Delete campaign"
+              >
+                <Trash2 className="size-4 text-destructive" aria-hidden />
+              </Button>
+            ) : null}
+          </div>
         }
       />
       {error ? <FormStatus tone="destructive">{error}</FormStatus> : null}
-      {message ? <FormStatus>{message}</FormStatus> : null}
       <StudioShell
-        nav={<CreatorSectionNav sections={sections} active={section} onSelect={(id) => setSection(id as Section)} />}
-        previewLabel="Ad preview"
+        defaultPreviewOpen
+        nav={
+          <CreatorSectionNav
+            sections={sections}
+            active={section}
+            onSelect={(id) => setSection(id as PromotionSectionId)}
+          />
+        }
+        previewLabel="Live preview"
         previewTitle={draft.name || "Campaign preview"}
         previewHint={`${completeness.score}/${completeness.total}`}
         previewThumb={draft.coverUrl}
-        preview={
-          <PromotionPreview
-            promo={draft}
-            slotHint={draft.slots.length ? `Slots: ${draft.slots.join(", ")}` : "Pick at least one slot"}
-          />
-        }
+        preview={<PromotionPreview promo={draft} />}
       >
-        {section === "creative" ? <PromotionCreativeFields value={draft} onChange={patch} /> : null}
+        {section === "creative" ? (
+          <PromotionCreativeFields
+            value={draft}
+            onChange={patch}
+            onUpload={(file) => uploadImage(file, (body) => api.admin.onboardingAssetPresign(body))}
+          />
+        ) : null}
         {section === "targeting" ? (
-          <div className="grid gap-4">
-            <PromotionTargetingFields value={draft} onChange={patch} categoryOptions={categoryOptions} />
-            <div className="rounded-2xl border border-border/60 p-4">
-              <label className="mb-2 block text-sm font-medium">Linked vendor (optional)</label>
+          <PromotionTargetingFields value={draft} onChange={patch} categoryOptions={categoryOptions}>
+            <FormGroup
+              title="Linked vendor"
+              description="Optional — credits the vendor and shows their name on the ad."
+              icon={Link2}
+            >
               <SimpleSelect
                 value={draft.vendorId ?? "__none__"}
                 onValueChange={(vendorId) => {
@@ -214,42 +254,38 @@ export default function AdminAdsStudioPage() {
                   ...vendors.map((vendor) => ({ value: vendor.id, label: vendor.name })),
                 ]}
               />
-            </div>
-          </div>
+            </FormGroup>
+          </PromotionTargetingFields>
         ) : null}
-        {section === "schedule" || section === "publish" ? (
-          <div className="grid gap-4">
-            <PromotionScheduleFields value={draft} onChange={patch} />
-            <CompletenessChecklist
-              score={completeness.score}
-              total={completeness.total}
-              missing={completeness.missing}
-              ready={completeness.ready}
-            />
-          </div>
+        {section === "schedule" ? <PromotionScheduleFields value={draft} onChange={patch} /> : null}
+        {section === "publish" ? (
+          <PromotionReview
+            promo={draft}
+            completeness={completeness}
+            onJump={setSection}
+            categoryLabel={categoryLabel}
+          />
         ) : null}
         <StickyActionBar>
-          <span className="mr-auto text-sm text-muted-foreground">
-            {completeness.score}/{completeness.total} ready
-          </span>
+          <PromotionProgress completeness={completeness} status={draft.status} />
+          {prev ? (
+            <Button variant="ghost" onClick={() => setSection(prev)}>
+              Back
+            </Button>
+          ) : null}
           <Button variant="outline" disabled={saving} onClick={() => void save("DRAFT")}>
             Save draft
           </Button>
-          <Button disabled={saving || !completeness.ready} onClick={() => void save("ACTIVE")}>
-            Publish live
-          </Button>
-          {!isNew ? (
-            <Button
-              variant="destructive"
-              disabled={saving}
-              onClick={async () => {
-                await api.admin.deletePromotion(params.id);
-                router.push("/admin/ads");
-              }}
-            >
-              Delete
+          {next ? (
+            <Button onClick={() => setSection(next)}>
+              Continue
+              <ArrowRight className="size-4" aria-hidden />
             </Button>
-          ) : null}
+          ) : (
+            <Button disabled={saving || !completeness.ready} onClick={() => void save("ACTIVE")}>
+              Publish live
+            </Button>
+          )}
         </StickyActionBar>
       </StudioShell>
     </div>

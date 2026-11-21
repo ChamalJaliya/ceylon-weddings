@@ -301,6 +301,10 @@ export class AuthService {
       ...(body.themeMode ? { themeMode: body.themeMode } : {}),
       ...(body.palette ? { palette: body.palette } : {}),
       ...(body.notifications ? { notifications } : {}),
+      // Each dashboard kind is replaced whole; kinds not in the body keep their layout.
+      ...(body.dashboardLayouts
+        ? { dashboardLayouts: { ...(current.dashboardLayouts ?? {}), ...body.dashboardLayouts } }
+        : {}),
     };
     const updated = await this.prisma.user.update({ where: { id: user.id }, data: { preferences: next } });
     return this.toUser(updated);

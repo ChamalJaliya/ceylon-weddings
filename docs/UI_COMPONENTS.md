@@ -263,3 +263,21 @@ List helpers: `getListEmptyMode`, `showListChrome`, `serverSourceCount` in `@cey
 3. Add sample context to `SAMPLES` in `dev-email-preview.controller.ts` and check it at `GET /dev/emails` (API, dev only).
 
 Web: `NotificationBell` (header: All / Unread tabs, day groups, mark all read), `/notifications` inbox (category chips, unread filter, load older) inside the role's dashboard shell, and Settings → Notifications (per-type In-app / Email switches).
+
+---
+
+## Widget dashboards (ported from Kloqra)
+
+The admin (`/admin`), vendor (`/pro`) and couple (`/planning`) home pages are customisable widget grids. Each user's arrangement is saved on their account (`User.preferences.dashboardLayouts[admin|vendor|couple]`, via `PATCH /auth/preferences`), so it follows them across devices.
+
+| Layer      | Where                                                                       | What                                                                                                                                                                                                                                                                           |
+| ---------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Contract   | `packages/contracts/src/dashboard/`                                         | `widgetLayoutItemSchema` (x/y/w/h, visible, emphasis, group fields), `adminInsightsSchema`, `vendorInsightsSchema`                                                                                                                                                             |
+| Logic      | `packages/web/src/dashboard/`                                               | `widget-groups` (group / pack / reorder), `layout-model` (merge saved layout with the registry), `responsive-layouts` (12-col desktop, reflow on tablet, stack on phone), `createDashboardLayoutStore`                                                                         |
+| UI         | `packages/ui/src/domain/dashboard/` (`@ceylonweddings/ui/domain/dashboard`) | `WidgetShell`, `KpiCard`, charts (`TrendChart`, `ColumnChart`, `DonutChart`, `RankedBars`, `ProgressRing`), `WidgetGroupBlock`, `WidgetCatalog`, `EditLayoutMenu`, `ArrangeBanner`, `WidgetEmpty` / `WidgetError` / `WidgetSkeleton`; styles in `styles/components/widget.css` |
+| Engine     | `apps/web/src/features/dashboard/widget-dashboard.tsx`                      | react-grid-layout grid: arrange (drag / resize / group, Save or Cancel), add / remove widgets, highlight, reset                                                                                                                                                                |
+| Dashboards | `features/{admin,pro,planning}/overview/*-widgets.ts`                       | Registry (label, description, category, preview, sizes) + default layout + store                                                                                                                                                                                               |
+
+**Add a widget:** add a definition and a default-layout row (usually `visible: false`) to the dashboard's `*-widgets.ts`, then a `case` in that page's `renderWidget`. Return `null` while its data loads (a shaped skeleton shows) and `WidgetError` on failure. Saved layouts pick new widgets up automatically; removed ones are dropped.
+
+**Data:** `GET /admin/analytics/insights` and `GET /vendors/me/insights` return 30-day Colombo-day series plus previous-period totals for trend chips. Storefront views are recorded when `/vendors/:slug` is served; WhatsApp taps via `POST /vendors/:id/whatsapp-tap`.

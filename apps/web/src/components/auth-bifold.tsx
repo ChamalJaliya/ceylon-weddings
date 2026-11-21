@@ -10,7 +10,7 @@ import { Link } from "../i18n/navigation";
 
 const SLIDES = [
   {
-    src: "https://images.unsplash.com/photo-1519741497674-611481863552?w=1600&q=80",
+    src: "https://images.unsplash.com/photo-1606216794074-735e91aa2c92?w=1600&q=80",
     quoteKey: "auth.quote1" as const,
   },
   {
@@ -143,7 +143,7 @@ export function AuthBifold({ children, size = "default" }: { children: ReactNode
         size === "wide" ? "lg:max-w-[68rem]" : "lg:max-w-[61.25rem]",
       )}
     >
-      <section className="pearl relative flex h-full min-h-0 flex-col overflow-y-auto bg-background text-foreground">
+      <section className="relative flex h-full min-h-0 flex-col overflow-y-auto bg-background text-foreground">
         <div
           aria-hidden="true"
           className="pointer-events-none absolute -top-28 -left-28 size-72 rounded-full border border-primary/15"

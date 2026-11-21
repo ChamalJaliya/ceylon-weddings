@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { CalendarClock } from "lucide-react";
+import { CalendarClock, Inbox } from "lucide-react";
+import { HorizontalTabs } from "@ceylonweddings/ui/components/horizontal-tabs";
 import { api } from "@ceylonweddings/web";
 import {
   CONSULTATION_MODE_LABELS,
@@ -134,14 +135,20 @@ export default function AdminConsultationsPage() {
         {messages.filter((item) => item.status === "NEW").length} new messages
       </p>
 
-      <div className="flex flex-wrap gap-2">
-        <Button size="sm" variant={tab === "bookings" ? "default" : "outline"} onClick={() => setTab("bookings")}>
-          Bookings
-        </Button>
-        <Button size="sm" variant={tab === "inbox" ? "default" : "outline"} onClick={() => setTab("inbox")}>
-          Inbox
-        </Button>
-      </div>
+      <HorizontalTabs
+        ariaLabel="Consultations"
+        activeId={tab}
+        onChange={setTab}
+        items={[
+          { id: "bookings", label: "Bookings", icon: CalendarClock, badge: summary.pending || undefined },
+          {
+            id: "inbox",
+            label: "Inbox",
+            icon: Inbox,
+            badge: messages.filter((item) => item.status === "NEW").length || undefined,
+          },
+        ]}
+      />
 
       {tab === "inbox" ? (
         <ContactInbox rows={messages} loading={loading} onChanged={load} />

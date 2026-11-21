@@ -69,13 +69,13 @@ export function BrandMark({
 }
 
 /**
- * Horizontal lockup: mark + CEYLON / WEDDING.
+ * Horizontal lockup: mark + CEYLON / WEDDINGS.
  * Sized for the app rail; scale with the wrapper's font-size if needed.
  */
 export function BrandLockup({
   className,
   cutColor,
-  name = "Ceylon Wedding",
+  name = "Ceylon Weddings",
   size = "default",
 }: {
   className?: string;
@@ -96,12 +96,12 @@ export function BrandLockup({
         // Compact bar version: two lines, ~28px tall; mark only on phones.
         <div aria-hidden className="hidden min-w-0 leading-none text-foreground sm:block">
           <p className="font-serif text-sm tracking-ornate">CEYLON</p>
-          <p className="mt-1 font-serif text-label tracking-ornate text-muted-foreground">WEDDING</p>
+          <p className="mt-0.5 font-serif text-label tracking-ornate text-muted-foreground">WEDDINGS</p>
         </div>
       ) : (
         <div aria-hidden className="min-w-0 leading-none text-foreground">
           <p className="font-serif text-xl tracking-ornate">CEYLON</p>
-          <p className="mt-1.5 font-serif text-xs tracking-ornate">WEDDING</p>
+          <p className="mt-0.5 font-serif text-xs tracking-ornate">WEDDINGS</p>
         </div>
       )}
     </div>

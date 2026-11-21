@@ -56,11 +56,8 @@ export const createMusicTrackBodySchema = z.object({
   list: musicListKindSchema,
   title: z.string().min(1),
   artist: z.string().nullable().optional(),
-  url: z
-    .string()
-    .nullable()
-    .optional()
-    .transform((value) => (value === "" ? null : value)),
+  // Allow "" from forms; service coerces empty to null (no .transform — OpenAPI-safe).
+  url: z.union([z.string(), z.literal(""), z.null()]).optional(),
   language: musicLanguageSchema.nullable().optional(),
   vibe: musicVibeSchema.nullable().optional(),
   notes: z.string().nullable().optional(),

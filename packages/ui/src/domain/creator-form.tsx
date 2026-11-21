@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useState, type ReactNode } from "react";
-import { ChevronDown, Smartphone, X } from "lucide-react";
+import { Check, ChevronDown, Smartphone, X } from "lucide-react";
 import { cn } from "../lib/utils";
 import { fieldLabel } from "../contracts/field";
 import { Icon, type IconComponent } from "../components/icon";
@@ -47,6 +47,47 @@ export function FormSection({
   );
 }
 
+/** A titled card that groups related fields inside a FormSection. */
+export function FormGroup({
+  title,
+  description,
+  icon,
+  aside,
+  children,
+  className,
+}: {
+  title: string;
+  description?: string;
+  icon?: IconComponent;
+  /** Right-aligned extra (e.g. a live summary or a count). */
+  aside?: ReactNode;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <section
+      data-slot="form-group"
+      className={cn("grid gap-4 rounded-2xl border border-border/60 bg-card/40 p-4 sm:p-5", className)}
+    >
+      <header className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-start gap-3">
+          {icon ? (
+            <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+              <Icon icon={icon} size="sm" />
+            </span>
+          ) : null}
+          <div className="grid min-w-0 gap-0.5">
+            <h3 className="text-sm font-medium tracking-tight text-foreground">{title}</h3>
+            {description ? <p className="text-xs leading-relaxed text-muted-foreground">{description}</p> : null}
+          </div>
+        </div>
+        {aside ? <div className="shrink-0 text-xs text-muted-foreground">{aside}</div> : null}
+      </header>
+      {children}
+    </section>
+  );
+}
+
 export function FieldBlock({
   label,
   hint,
@@ -65,10 +106,7 @@ export function FieldBlock({
   return (
     <div data-slot="field-block" className={cn(compact ? "grid gap-1.5" : "grid gap-2", className)}>
       <div className="grid gap-1">
-        <label
-          htmlFor={htmlFor}
-          className={fieldLabel}
-        >
+        <label htmlFor={htmlFor} className={fieldLabel}>
           {label}
         </label>
         {hint ? <p className="text-xs leading-relaxed text-muted-foreground">{hint}</p> : null}
@@ -166,13 +204,7 @@ export function CompletenessChecklist({
   );
 }
 
-export function StickyActionBar({
-  children,
-  className,
-}: {
-  children: ReactNode;
-  className?: string;
-}) {
+export function StickyActionBar({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <div
       data-slot="sticky-action-bar"
@@ -187,26 +219,68 @@ export function StickyActionBar({
   );
 }
 
+export type CreatorSection = {
+  id: string;
+  label: string;
+  done?: boolean;
+  /** Lucide icon shown in the step tile (falls back to the step number). */
+  icon?: IconComponent;
+  /** One-line helper under the label. */
+  hint?: string;
+};
+
 export function CreatorSectionNav({
   sections,
   active,
   onSelect,
+  showProgress,
 }: {
-  sections: Array<{ id: string; label: string; done?: boolean }>;
+  sections: CreatorSection[];
   active: string;
   onSelect: (id: string) => void;
+  /** Show "n of m complete" with a progress bar above the steps (default: on when any step has an icon). */
+  showProgress?: boolean;
 }) {
+  const doneCount = sections.filter((section) => section.done).length;
+  const withProgress = showProgress ?? sections.some((section) => section.icon);
+
   return (
-    <nav className="sticky top-24 grid gap-1.5 rounded-2xl border border-border/50 bg-card/40 p-2">
+    <nav
+      aria-label="Sections"
+      className={cn(
+        "rounded-2xl border border-border/50 bg-card/40 p-1.5",
+        // Below xl: a horizontally scrolling tab strip above the form.
+        "flex gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+        // xl+: the sticky vertical step list beside the form.
+        "xl:sticky xl:top-24 xl:grid xl:gap-1 xl:overflow-visible xl:p-2",
+      )}
+    >
+      {withProgress ? (
+        <div className="mb-1 hidden gap-2 px-2.5 pt-1.5 pb-2 xl:grid">
+          <div className="flex items-baseline justify-between gap-2 text-xs">
+            <span className="font-medium text-foreground">Progress</span>
+            <span className="text-muted-foreground tabular-nums">
+              {doneCount} of {sections.length} complete
+            </span>
+          </div>
+          <div className="h-1.5 overflow-hidden rounded-full bg-secondary">
+            <div
+              className="h-full rounded-full bg-primary transition-[width] duration-500"
+              style={{ width: `${(doneCount / Math.max(sections.length, 1)) * 100}%` }}
+            />
+          </div>
+        </div>
+      ) : null}
       {sections.map((section, index) => {
         const isActive = active === section.id;
         return (
           <button
             key={section.id}
             type="button"
+            aria-current={isActive ? "step" : undefined}
             onClick={() => onSelect(section.id)}
             className={cn(
-              "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition duration-200",
+              "group relative flex shrink-0 items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-sm transition duration-200 xl:gap-3",
               isActive
                 ? "text-primary-foreground"
                 : "text-muted-foreground hover:bg-secondary/80 hover:text-foreground",
@@ -221,13 +295,43 @@ export function CreatorSectionNav({
             ) : null}
             <span
               className={cn(
-                "relative z-10 grid size-6 place-items-center rounded-full text-label font-medium",
-                isActive ? "bg-primary-foreground/15 text-primary-foreground" : "bg-secondary text-foreground/70",
+                "relative z-10 grid shrink-0 place-items-center rounded-lg text-label font-medium",
+                section.icon ? "size-8" : "size-6 rounded-full",
+                isActive
+                  ? "bg-primary-foreground/15 text-primary-foreground"
+                  : section.done
+                    ? "bg-primary/10 text-primary"
+                    : "bg-secondary text-foreground/70",
               )}
             >
-              {section.done ? "✓" : index + 1}
+              {section.icon ? <Icon icon={section.icon} size="sm" /> : section.done ? "✓" : index + 1}
+              {section.icon && section.done ? (
+                <span
+                  aria-label="Complete"
+                  className={cn(
+                    "absolute -right-1 -bottom-1 grid size-3.5 place-items-center rounded-full ring-2",
+                    isActive
+                      ? "bg-primary-foreground text-primary ring-primary"
+                      : "bg-primary text-primary-foreground ring-background",
+                  )}
+                >
+                  <Check className="size-2.5" strokeWidth={3} aria-hidden />
+                </span>
+              ) : null}
             </span>
-            <span className="relative z-10 font-medium tracking-tight">{section.label}</span>
+            <span className="relative z-10 grid min-w-0 gap-0.5">
+              <span className="truncate font-medium tracking-tight">{section.label}</span>
+              {section.hint ? (
+                <span
+                  className={cn(
+                    "hidden truncate text-xs xl:block",
+                    isActive ? "text-primary-foreground/75" : "text-muted-foreground/80",
+                  )}
+                >
+                  {section.hint}
+                </span>
+              ) : null}
+            </span>
           </button>
         );
       })}
@@ -345,6 +449,7 @@ export function StudioShell({
   previewHint,
   previewThumb,
   previewFooter,
+  defaultPreviewOpen = false,
   children,
 }: {
   nav: ReactNode;
@@ -354,9 +459,14 @@ export function StudioShell({
   previewHint?: string;
   previewThumb?: string | null;
   previewFooter?: ReactNode;
+  /** Open the preview on mount when the viewport is wide enough to sit it beside the form. */
+  defaultPreviewOpen?: boolean;
   children: ReactNode | ((preview: StudioPreviewControls) => ReactNode);
 }) {
   const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (defaultPreviewOpen && window.matchMedia("(min-width: 96rem)").matches) setOpen(true);
+  }, [defaultPreviewOpen]);
   const controls: StudioPreviewControls = {
     open,
     setOpen,
@@ -365,9 +475,16 @@ export function StudioShell({
   const body = typeof children === "function" ? children(controls) : children;
 
   return (
-    <div className="relative grid gap-8 xl:grid-cols-[13rem_minmax(0,1fr)] xl:items-start">
-      <aside className="hidden xl:block">{nav}</aside>
-      <div className={cn("min-w-0 grid gap-6 transition-[padding] duration-300 ease-out motion-reduce:transition-none", open && "xl:pr-[min(27rem,42vw)]")}>{body}</div>
+    <div className="relative grid gap-8 xl:grid-cols-[15.5rem_minmax(0,1fr)] xl:items-start">
+      <aside className="min-w-0">{nav}</aside>
+      <div
+        className={cn(
+          "min-w-0 grid gap-6 transition-[padding] duration-300 ease-out motion-reduce:transition-none",
+          open && "xl:pr-[min(27rem,42vw)]",
+        )}
+      >
+        {body}
+      </div>
       {preview ? (
         <StudioPreviewStage
           open={open}

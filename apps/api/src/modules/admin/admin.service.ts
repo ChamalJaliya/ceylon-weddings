@@ -14,6 +14,7 @@ import {
   type AdminPatchUserBody,
   type AdminPatchVendorBody,
   type AdminReview,
+  type AdminInsights,
   type AdminStats,
   type AdminUser,
   type AdminUserListQuery,
@@ -36,6 +37,7 @@ import {
   FEATURE_FLAG_CATALOG,
 } from "@ceylonweddings/contracts";
 import { AdminAccessService } from "./admin-access.service";
+import { dayCountsSql, insightWindow, seriesWithTotals, type DayCountRow } from "../../common/daily-series";
 import { VendorsService } from "../weddings/vendors.service";
 import { SubscriptionService } from "../subscription/subscription.service";
 import { SiteConfigService } from "./site-config.service";
@@ -1039,6 +1041,82 @@ export class AdminService {
       }),
     ]);
     return { profileViews7d, whatsappTaps7d, inquiries7d, articleViews7d };
+  }
+
+  /** 30-day marketplace trends and breakdowns for the admin dashboard widgets. */
+  async insights(user: User): Promise<AdminInsights> {
+    this.access.assertAdmin(user);
+    const window = insightWindow();
+    const eventDays = (kind: "VENDOR_PROFILE_VIEW" | "WHATSAPP_TAP") =>
+      this.prisma.$queryRaw<DayCountRow[]>(
+        dayCountsSql("AnalyticsEvent", window.since, Prisma.sql`"kind" = ${kind}::"AnalyticsEventKind"`),
+      );
+    const [views, taps, inquiries, couples, vendorUsers, roles, moderation, categories, consultationsUpcoming] =
+      await Promise.all([
+        eventDays("VENDOR_PROFILE_VIEW"),
+        eventDays("WHATSAPP_TAP"),
+        this.prisma.$queryRaw<DayCountRow[]>(dayCountsSql("Inquiry", window.since)),
+        this.prisma.$queryRaw<DayCountRow[]>(
+          dayCountsSql("User", window.since, Prisma.sql`"role" IN ('COUPLE'::"Role", 'FAMILY'::"Role")`),
+        ),
+        this.prisma.$queryRaw<DayCountRow[]>(dayCountsSql("User", window.since, Prisma.sql`"role" = 'VENDOR'::"Role"`)),
+        this.prisma.user.groupBy({ by: ["role"], _count: { _all: true } }),
+        this.prisma.vendor.groupBy({ by: ["moderationStatus"], _count: { _all: true } }),
+        this.prisma.vendor.groupBy({ by: ["categoryId"], _count: { _all: true } }),
+        this.prisma.consultation.count({
+          where: { startsAt: { gte: new Date() }, status: { in: ["PENDING", "CONFIRMED"] } },
+        }),
+      ]);
+
+    const categoryIds = categories.map((row) => row.categoryId).filter((id): id is string => Boolean(id));
+    const types = categoryIds.length
+      ? await this.prisma.vendorType.findMany({
+          where: { id: { in: categoryIds } },
+          select: { id: true, slug: true, label: true },
+        })
+      : [];
+    const typeById = new Map(types.map((type) => [type.id, type]));
+    const labelOf = (raw: unknown, fallback: string) =>
+      raw && typeof raw === "object" && "en" in raw && typeof (raw as { en: unknown }).en === "string"
+        ? (raw as { en: string }).en
+        : fallback;
+
+    const profileViews = seriesWithTotals(window, views);
+    const whatsappTaps = seriesWithTotals(window, taps);
+    const inquiryTrend = seriesWithTotals(window, inquiries);
+    const signups = seriesWithTotals(window, couples);
+    const newVendors = seriesWithTotals(window, vendorUsers);
+
+    return {
+      days: window.days,
+      series: {
+        profileViews: profileViews.series,
+        whatsappTaps: whatsappTaps.series,
+        inquiries: inquiryTrend.series,
+        signups: signups.series,
+        newVendors: newVendors.series,
+      },
+      totals: {
+        profileViews: profileViews.totals,
+        whatsappTaps: whatsappTaps.totals,
+        inquiries: inquiryTrend.totals,
+        signups: signups.totals,
+        newVendors: newVendors.totals,
+      },
+      usersByRole: roles.map((row) => ({ role: row.role, count: row._count._all })),
+      vendorsByModeration: moderation.map((row) => ({ status: row.moderationStatus, count: row._count._all })),
+      vendorsByCategory: categories
+        .map((row) => {
+          const type = row.categoryId ? typeById.get(row.categoryId) : undefined;
+          return {
+            category: type?.slug ?? "uncategorised",
+            label: type ? labelOf(type.label, type.slug) : "Uncategorised",
+            count: row._count._all,
+          };
+        })
+        .sort((a, b) => b.count - a.count),
+      consultationsUpcoming,
+    };
   }
 
   async exportCsv(user: User, kind: "vendors" | "users") {

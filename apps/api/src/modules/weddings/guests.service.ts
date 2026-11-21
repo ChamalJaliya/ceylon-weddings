@@ -367,6 +367,7 @@ export class GuestsService {
       district: wedding.district,
       style: wedding.style,
       colors: wedding.colors,
+      coverImageUrl: wedding.coverImageUrl,
       websiteFaq: wedding.websiteFaq,
       travelNotes: wedding.travelNotes,
       events: wedding.events.map((event) => ({

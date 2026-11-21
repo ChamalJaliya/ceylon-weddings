@@ -10,6 +10,7 @@ import {
 } from "@ceylonweddings/contracts";
 import { api, useAuthStore, useMessagingStore } from "@ceylonweddings/web";
 import { Button } from "@ceylonweddings/ui/components/button";
+import { HorizontalTabs } from "@ceylonweddings/ui/components/horizontal-tabs";
 import { SkeletonText } from "@ceylonweddings/ui/components/skeleton";
 import { toast } from "@ceylonweddings/ui/components/toaster";
 import { EmptyState } from "@ceylonweddings/ui/domain/empty-state";
@@ -105,38 +106,33 @@ export default function NotificationsPage() {
         }
       />
 
-      <div className="flex flex-wrap items-center gap-2" role="toolbar" aria-label="Filter notifications">
-        {(["all", ...categories] as const).map((value) => (
+      <HorizontalTabs
+        ariaLabel="Filter notifications"
+        activeId={category}
+        onChange={setCategory}
+        items={[
+          { id: "all" as const, label: "All" },
+          ...categories.map((value) => ({
+            id: value,
+            label: NOTIFICATION_CATEGORY_LABELS[value],
+          })),
+        ]}
+        actions={
           <button
-            key={value}
             type="button"
-            aria-pressed={category === value}
-            onClick={() => setCategory(value)}
+            aria-pressed={unreadOnly}
+            onClick={() => setUnreadOnly((v) => !v)}
             className={cn(
               "rounded-full border px-3.5 py-1.5 text-caption font-medium transition-colors",
-              category === value
-                ? "border-foreground bg-foreground text-background"
-                : "border-border bg-card text-muted-foreground hover:text-foreground",
+              unreadOnly
+                ? "border-primary bg-primary-subtle text-primary-text"
+                : "border-border bg-card text-muted-foreground",
             )}
           >
-            {value === "all" ? "All" : NOTIFICATION_CATEGORY_LABELS[value]}
+            Unread only{unread ? ` · ${unread}` : ""}
           </button>
-        ))}
-        <span className="mx-1 h-5 w-px bg-border" aria-hidden />
-        <button
-          type="button"
-          aria-pressed={unreadOnly}
-          onClick={() => setUnreadOnly((v) => !v)}
-          className={cn(
-            "rounded-full border px-3.5 py-1.5 text-caption font-medium transition-colors",
-            unreadOnly
-              ? "border-primary bg-primary-subtle text-primary-text"
-              : "border-border bg-card text-muted-foreground",
-          )}
-        >
-          Unread only{unread ? ` · ${unread}` : ""}
-        </button>
-      </div>
+        }
+      />
 
       {items === null ? (
         <div className="card card--raised grid gap-5 p-6">

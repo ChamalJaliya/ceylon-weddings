@@ -14,3 +14,4 @@ export * from "./geo/sri-lanka";
 export * from "./notifications";
 export * from "./brand";
 export * from "./subscription";
+export * from "./dashboard";

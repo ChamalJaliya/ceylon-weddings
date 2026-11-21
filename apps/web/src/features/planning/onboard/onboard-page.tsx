@@ -46,7 +46,7 @@ const TYPE_OPTIONS: Array<{
     value: "WESTERN_CHURCH",
     title: "Western / Church",
     description: "Church vows and a seated reception.",
-    image: "https://images.unsplash.com/photo-1519741497674-611481863552?w=900&q=80",
+    image: "https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=900&q=80",
   },
   {
     value: "HINDU",
@@ -76,7 +76,7 @@ const TYPE_OPTIONS: Array<{
     value: "MEHNDI",
     title: "Mehndi",
     description: "Henna night with music and close family.",
-    image: "https://images.unsplash.com/photo-1591604129939-f30070070ea1?w=900&q=80",
+    image: "https://images.unsplash.com/photo-1684814070823-97e0b9e99c69?w=900&q=80",
   },
   {
     value: "DESTINATION",
@@ -272,9 +272,7 @@ export default function CoupleOnboardPage() {
   };
 
   function toggleType(value: WeddingType) {
-    setTypes((current) =>
-      current.includes(value) ? current.filter((item) => item !== value) : [...current, value],
-    );
+    setTypes((current) => (current.includes(value) ? current.filter((item) => item !== value) : [...current, value]));
   }
 
   let body = null;
@@ -321,12 +319,7 @@ export default function CoupleOnboardPage() {
     body = (
       <div className="grid gap-5">
         {error ? <FormStatus tone="destructive">{error}</FormStatus> : null}
-        <PlaceFields
-          city={city}
-          district={district}
-          onCityChange={setCity}
-          onDistrictChange={setDistrict}
-        />
+        <PlaceFields city={city} district={district} onCityChange={setCity} onDistrictChange={setDistrict} />
         <label className="flex items-center justify-between gap-3 rounded-xl border border-border/70 bg-background/40 px-4 py-3 text-sm">
           <span>We’re planning from overseas</span>
           <Switch checked={planningFromOverseas} onCheckedChange={setPlanningFromOverseas} />
@@ -412,7 +405,9 @@ export default function CoupleOnboardPage() {
             {partnerOneName} & {partnerTwoName}
           </h2>
           <p className="mx-auto max-w-md text-sm text-muted-foreground">
-            {date ? new Date(`${date}T00:00:00`).toLocaleDateString(undefined, { dateStyle: "long" }) : "Date to be decided"}
+            {date
+              ? new Date(`${date}T00:00:00`).toLocaleDateString(undefined, { dateStyle: "long" })
+              : "Date to be decided"}
             {city ? ` · ${city}` : ""}
           </p>
         </div>
@@ -467,9 +462,7 @@ export default function CoupleOnboardPage() {
       onContinue={step === "celebrate" ? undefined : () => void continueFrom(step)}
       onSkip={step === "date" || step === "place" ? () => void continueFrom(step) : undefined}
       skipLabel="Skip"
-      continueDisabled={
-        (step === "names" && !namesReady) || (step === "types" && !typesReady)
-      }
+      continueDisabled={(step === "names" && !namesReady) || (step === "types" && !typesReady)}
       continueLabel={step === "style" ? "Finish & celebrate" : "Continue"}
       saving={saving}
     >

@@ -17,18 +17,18 @@ const prisma = new PrismaClient({
 });
 
 const PHOTO = {
-  venue: "https://images.unsplash.com/photo-1519167758481-83f29da8c12f?w=1200&q=80",
+  venue: "https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=1200&q=80",
   garden: "https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=1200&q=80",
-  photo: "https://images.unsplash.com/photo-1519741497674-611481863552?w=1200&q=80",
+  photo: "https://images.unsplash.com/photo-1606216794074-735e91aa2c92?w=1200&q=80",
   bridal: "https://images.unsplash.com/photo-1591604466107-ec97de577aff?w=1200&q=80",
   jewellery: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=1200&q=80",
   makeup: "https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=1200&q=80",
   florist: "https://images.unsplash.com/photo-1520854221256-17451cc331bf?w=1200&q=80",
-  cake: "https://images.unsplash.com/photo-1535254973040-607b474d7f5a?w=1200&q=80",
+  cake: "https://images.unsplash.com/photo-1564986021890-6f721f19c210?w=1200&q=80",
   food: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1200&q=80",
   dance: "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=1200&q=80",
   car: "https://images.unsplash.com/photo-1485291571150-772bcfc10da5?w=1200&q=80",
-  invite: "https://images.unsplash.com/photo-1464349095431-bbdf92e608d0?w=1200&q=80",
+  invite: "https://images.unsplash.com/photo-1633008965536-4f0766340980?w=1200&q=80",
   mehndi: "https://images.unsplash.com/photo-1606800052052-a08af7148866?w=1200&q=80",
   beach: "https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=1200&q=80",
 };
@@ -2285,7 +2285,7 @@ async function main() {
       body: "Editorial coverage for Kandyan, church, and destination days — packages from Colombo to Galle.",
       ctaLabel: "View Lotus Photography",
       ctaHref: "/vendors/lotus-photography",
-      coverUrl: "https://images.unsplash.com/photo-1519741497674-611481863552?w=1400&q=80",
+      coverUrl: "https://images.unsplash.com/photo-1606216794074-735e91aa2c92?w=1400&q=80",
       accentColor: "#7c2d12",
       overlayTone: "light",
       layout: "SPOTLIGHT",
@@ -2358,7 +2358,7 @@ async function main() {
           ctaPrimaryHref: "/vendors",
           ctaSecondaryLabel: "Start planning",
           ctaSecondaryHref: "/register",
-          imageUrl: "https://images.unsplash.com/photo-1519741497674-611481863552?w=1600&q=80",
+          imageUrl: "https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=1600&q=80",
           chips: ["Poruwa ceremony", "Church & nikah", "All island"],
         },
         stats: [
@@ -2397,7 +2397,7 @@ async function main() {
           title: "Ceylon Weddings — Plan a Sri Lankan wedding in one place",
           description:
             "Ceylon Weddings is Sri Lanka's wedding planning platform. Browse 250+ verified vendors, manage your checklist, budget, and guest list — all in one place.",
-          ogImage: "https://images.unsplash.com/photo-1519741497674-611481863552?w=1200&q=80",
+          ogImage: "https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=1200&q=80",
         },
       },
     },

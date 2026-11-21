@@ -1,12 +1,17 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Megaphone } from "lucide-react";
+import { Megaphone, Plus } from "lucide-react";
 import { api } from "@ceylonweddings/web";
 import type { Promotion } from "@ceylonweddings/contracts";
-import { Badge } from "@ceylonweddings/ui/components/badge";
 import { Button } from "@ceylonweddings/ui/components/button";
 import { FormStatus } from "@ceylonweddings/ui/components/form-status";
+import {
+  PromotionPerf,
+  PromotionRowSummary,
+  PromotionStatusBadge,
+  SLOT_META,
+} from "@ceylonweddings/ui/domain/ads-studio";
 import { AdminListToolbar } from "@ceylonweddings/ui/domain/admin-list-toolbar";
 import { DataTableCell, DataTableHead } from "@ceylonweddings/ui/domain/data-table";
 import { DataTableList } from "@ceylonweddings/ui/domain/data-table-list";
@@ -59,12 +64,15 @@ export default function AdminAdsPage() {
       <PageHeader
         icon={Megaphone}
         kicker="Ads"
-        title="Promotion studio"
-        description="Fully customizable campaigns for homepage, catalog, and ideas."
+        title="Ads studio"
+        description="Campaigns across the homepage and vendor search — design, target, and schedule each one."
         actions={
           chrome ? (
             <Button asChild size="sm">
-              <Link href="/admin/ads/new">New campaign</Link>
+              <Link href="/admin/ads/new">
+                <Plus className="size-4" aria-hidden />
+                New campaign
+              </Link>
             </Button>
           ) : null
         }
@@ -110,9 +118,9 @@ export default function AdminAdsPage() {
           renderHead={(id) => {
             const labels: Record<(typeof COLUMNS)[number], string> = {
               campaign: "Campaign",
-              slots: "Slots",
+              slots: "Placements",
               status: "Status",
-              perf: "Perf",
+              perf: "Performance",
               actions: "",
             };
             return <DataTableHead key={id}>{labels[id as (typeof COLUMNS)[number]]}</DataTableHead>;
@@ -122,30 +130,29 @@ export default function AdminAdsPage() {
               case "campaign":
                 return (
                   <DataTableCell key={id}>
-                    <p className="font-medium">{row.name}</p>
-                    <p className="text-xs text-muted-foreground">{row.headline}</p>
+                    <Link href={`/admin/ads/${row.id}`} className="block rounded-lg hover:opacity-80">
+                      <PromotionRowSummary promo={row} />
+                    </Link>
                   </DataTableCell>
                 );
               case "slots":
                 return (
                   <DataTableCell key={id}>
-                    <div className="flex flex-wrap gap-1">
-                      {row.slots.map((slot) => (
-                        <Badge key={slot}>{slot}</Badge>
-                      ))}
-                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      {row.slots.map((slot) => SLOT_META[slot].label).join(", ") || "—"}
+                    </span>
                   </DataTableCell>
                 );
               case "status":
                 return (
                   <DataTableCell key={id}>
-                    <Badge intent={row.status === "ACTIVE" ? "success" : undefined}>{row.status}</Badge>
+                    <PromotionStatusBadge status={row.status} />
                   </DataTableCell>
                 );
               case "perf":
                 return (
-                  <DataTableCell key={id} className="text-xs text-muted-foreground">
-                    {row.impressionCount} imp · {row.clickCount} clk
+                  <DataTableCell key={id}>
+                    <PromotionPerf impressions={row.impressionCount} clicks={row.clickCount} />
                   </DataTableCell>
                 );
               case "actions":

@@ -18,7 +18,7 @@ import { DateTimePicker } from "@ceylonweddings/ui/components/date-picker";
 import { Input } from "@ceylonweddings/ui/components/input";
 import { SimpleSelect } from "@ceylonweddings/ui/components/select";
 import { Textarea } from "@ceylonweddings/ui/components/textarea";
-import { FieldBlock, InlineFieldRow } from "@ceylonweddings/ui/domain/creator-form";
+import { FieldBlock, StudioCollapse } from "@ceylonweddings/ui/domain/creator-form";
 
 /** Default appointment colours — saved onto the record (user data). design-system: user-data-colors */
 export const KIND_COLOR: Record<AppointmentKind, string> = {
@@ -61,6 +61,23 @@ const emptyValue = (defaults?: Partial<AppointmentEditorValue>): AppointmentEdit
   color: KIND_COLOR.VENDOR_MEETING,
   ...defaults,
 });
+
+function hasExtraDetails(
+  value: Pick<
+    AppointmentEditorValue,
+    "venueName" | "address" | "notes" | "vendorId" | "eventId" | "ownerLabel" | "reminderMinutes"
+  >,
+) {
+  return Boolean(
+    value.venueName.trim() ||
+    value.address.trim() ||
+    value.notes.trim() ||
+    value.vendorId ||
+    value.eventId ||
+    value.ownerLabel.trim() ||
+    value.reminderMinutes !== 30,
+  );
+}
 
 export function appointmentToEditorValue(appt: Appointment): AppointmentEditorValue {
   return {
@@ -109,6 +126,8 @@ export function AppointmentEditor({
   onSubmit,
   onCancel,
   busy = false,
+  formId,
+  hideActions = false,
 }: {
   mode: "create" | "edit";
   initial?: Partial<AppointmentEditorValue> | Appointment;
@@ -120,6 +139,10 @@ export function AppointmentEditor({
   onSubmit: (body: CreateAppointmentBody) => Promise<void> | void;
   onCancel?: () => void;
   busy?: boolean;
+  /** When set (e.g. in AppModal), footer buttons can submit via `form={formId}`. */
+  formId?: string;
+  /** Hide built-in submit/cancel — use when actions live in a modal footer. */
+  hideActions?: boolean;
 }) {
   const t = useTranslations();
   const appointmentId = initial && "id" in initial ? (initial as Appointment).id : null;
@@ -129,10 +152,27 @@ export function AppointmentEditor({
     return emptyValue(initial as Partial<AppointmentEditorValue> | undefined);
   });
   const [error, setError] = useState<string | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(() => {
+    if (appointmentId && initial && "id" in initial) {
+      return hasExtraDetails(appointmentToEditorValue(initial as Appointment));
+    }
+    const partial = (initial as Partial<AppointmentEditorValue> | undefined) ?? {};
+    return hasExtraDetails({
+      venueName: partial.venueName ?? "",
+      address: partial.address ?? "",
+      notes: partial.notes ?? "",
+      vendorId: partial.vendorId ?? null,
+      eventId: partial.eventId ?? null,
+      ownerLabel: partial.ownerLabel ?? "",
+      reminderMinutes: partial.reminderMinutes ?? 30,
+    });
+  });
 
   useEffect(() => {
     if (!appointmentId || !initial || !("id" in initial)) return;
-    setValue(appointmentToEditorValue(initial as Appointment));
+    const next = appointmentToEditorValue(initial as Appointment);
+    setValue(next);
+    setDetailsOpen(hasExtraDetails(next));
     // Only re-hydrate when switching which appointment is edited.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: identity of `initial` changes every render
   }, [appointmentId]);
@@ -175,6 +215,7 @@ export function AppointmentEditor({
       await onSubmit(editorValueToBody(value));
       if (mode === "create") {
         setValue(emptyValue({ kind: value.kind, eventId: value.eventId, reminderMinutes: value.reminderMinutes }));
+        setDetailsOpen(false);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : t("knotly.appointmentSaveFailed"));
@@ -182,18 +223,21 @@ export function AppointmentEditor({
   }
 
   return (
-    <form className="grid gap-3" onSubmit={(e) => void handleSubmit(e)}>
-      <InlineFieldRow>
-        <FieldBlock label={t("knotly.appointmentTitle")} compact className="min-w-[10rem] flex-1">
+    <form id={formId} className="grid gap-7" onSubmit={(e) => void handleSubmit(e)}>
+      <section className="grid gap-5">
+        <FieldBlock label={t("knotly.appointmentTitle")} hint="What should appear on the calendar.">
           <Input
             value={value.title}
             onChange={(e) => patch({ title: e.target.value })}
             placeholder={t("knotly.addMeeting")}
             required
             disabled={busy}
+            className="h-11"
+            autoFocus={mode === "create"}
           />
         </FieldBlock>
-        <FieldBlock label={t("knotly.appointmentKind")} compact>
+
+        <FieldBlock label={t("knotly.appointmentKind")}>
           <SimpleSelect
             value={value.kind}
             onValueChange={(next) => patch({ kind: next as AppointmentKind })}
@@ -204,102 +248,114 @@ export function AppointmentEditor({
             disabled={busy}
           />
         </FieldBlock>
-      </InlineFieldRow>
 
-      <InlineFieldRow>
-        <FieldBlock label={t("knotly.starts")} compact className="min-w-[14rem] flex-1">
-          <DateTimePicker value={value.startsAt} onChange={(startsAt) => patch({ startsAt })} disabled={busy} />
-        </FieldBlock>
-        <FieldBlock label={t("knotly.ends")} compact className="min-w-[14rem] flex-1">
-          <DateTimePicker value={value.endsAt} onChange={(endsAt) => patch({ endsAt })} disabled={busy} />
-        </FieldBlock>
-      </InlineFieldRow>
+        <div className="grid gap-5 sm:grid-cols-2">
+          <FieldBlock label={t("knotly.starts")}>
+            <DateTimePicker value={value.startsAt} onChange={(startsAt) => patch({ startsAt })} disabled={busy} />
+          </FieldBlock>
+          <FieldBlock label={t("knotly.ends")}>
+            <DateTimePicker value={value.endsAt} onChange={(endsAt) => patch({ endsAt })} disabled={busy} />
+          </FieldBlock>
+        </div>
+      </section>
 
-      <InlineFieldRow>
-        <FieldBlock label={t("planning.venue")} compact className="min-w-[8rem] flex-1">
-          <Input
-            value={value.venueName}
-            onChange={(e) => patch({ venueName: e.target.value })}
-            placeholder={t("planning.venue")}
-            disabled={busy}
-          />
-        </FieldBlock>
-        <FieldBlock label={t("knotly.address")} compact className="min-w-[8rem] flex-1">
-          <Input
-            value={value.address}
-            onChange={(e) => patch({ address: e.target.value })}
-            placeholder={t("knotly.address")}
-            disabled={busy}
-          />
-        </FieldBlock>
-      </InlineFieldRow>
+      <StudioCollapse
+        open={detailsOpen}
+        onOpenChange={setDetailsOpen}
+        title="Place & details"
+        subtitle="Venue, vendor, reminder, and notes — only if you need them."
+      >
+        <div className="grid gap-5">
+          <div className="grid gap-5 sm:grid-cols-2">
+            <FieldBlock label={t("planning.venue")}>
+              <Input
+                value={value.venueName}
+                onChange={(e) => patch({ venueName: e.target.value })}
+                placeholder={t("planning.venue")}
+                disabled={busy}
+              />
+            </FieldBlock>
+            <FieldBlock label={t("knotly.address")}>
+              <Input
+                value={value.address}
+                onChange={(e) => patch({ address: e.target.value })}
+                placeholder={t("knotly.address")}
+                disabled={busy}
+              />
+            </FieldBlock>
+          </div>
 
-      <InlineFieldRow>
-        <FieldBlock label={t("knotly.vendorOptional")} compact className="min-w-[12rem] flex-1">
-          <SimpleSelect
-            value={value.vendorId ?? TEAM_VENDOR_NONE}
-            onValueChange={(next) => patch({ vendorId: next === TEAM_VENDOR_NONE ? null : next })}
-            options={[
-              { value: TEAM_VENDOR_NONE, label: t("knotly.vendorNone") },
-              ...vendorOptions.map((option) => ({ value: option.value, label: option.label })),
-            ]}
-            disabled={busy}
-          />
-        </FieldBlock>
-        {showEvent ? (
-          <FieldBlock label={t("knotly.eventOptional")} compact className="min-w-[12rem] flex-1">
+          <div className="grid gap-5 sm:grid-cols-2">
+            <FieldBlock label={t("knotly.vendorOptional")}>
+              <SimpleSelect
+                value={value.vendorId ?? TEAM_VENDOR_NONE}
+                onValueChange={(next) => patch({ vendorId: next === TEAM_VENDOR_NONE ? null : next })}
+                options={[
+                  { value: TEAM_VENDOR_NONE, label: t("knotly.vendorNone") },
+                  ...vendorOptions.map((option) => ({ value: option.value, label: option.label })),
+                ]}
+                disabled={busy}
+              />
+            </FieldBlock>
+            {showEvent ? (
+              <FieldBlock label={t("knotly.eventOptional")}>
+                <SimpleSelect
+                  value={value.eventId ?? TEAM_VENDOR_NONE}
+                  onValueChange={(next) => patch({ eventId: next === TEAM_VENDOR_NONE ? null : next })}
+                  options={[
+                    { value: TEAM_VENDOR_NONE, label: t("knotly.eventNone") },
+                    ...events.map((event) => ({ value: event.id, label: event.name })),
+                  ]}
+                  disabled={busy}
+                />
+              </FieldBlock>
+            ) : null}
+          </div>
+
+          <FieldBlock label={t("knotly.reminder")}>
             <SimpleSelect
-              value={value.eventId ?? TEAM_VENDOR_NONE}
-              onValueChange={(next) => patch({ eventId: next === TEAM_VENDOR_NONE ? null : next })}
-              options={[
-                { value: TEAM_VENDOR_NONE, label: t("knotly.eventNone") },
-                ...events.map((event) => ({ value: event.id, label: event.name })),
-              ]}
+              value={String(value.reminderMinutes)}
+              onValueChange={(next) => patch({ reminderMinutes: Number(next) })}
+              options={reminderOptions}
               disabled={busy}
             />
           </FieldBlock>
-        ) : null}
-        <FieldBlock label={t("knotly.reminder")} compact className="min-w-[8rem]">
-          <SimpleSelect
-            value={String(value.reminderMinutes)}
-            onValueChange={(next) => patch({ reminderMinutes: Number(next) })}
-            options={reminderOptions}
-            disabled={busy}
-          />
-        </FieldBlock>
-      </InlineFieldRow>
 
-      {showOwner ? (
-        <FieldBlock label={t("knotly.ownerLabel")} compact>
-          <Input
-            value={value.ownerLabel}
-            onChange={(e) => patch({ ownerLabel: e.target.value })}
-            placeholder={t("knotly.ownerPlaceholder")}
-            disabled={busy}
-          />
-        </FieldBlock>
-      ) : null}
+          {showOwner ? (
+            <FieldBlock label={t("knotly.ownerLabel")}>
+              <Input
+                value={value.ownerLabel}
+                onChange={(e) => patch({ ownerLabel: e.target.value })}
+                placeholder={t("knotly.ownerPlaceholder")}
+                disabled={busy}
+              />
+            </FieldBlock>
+          ) : null}
 
-      <FieldBlock label={t("knotly.notes")} compact>
-        <Textarea
-          value={value.notes}
-          onChange={(e) => patch({ notes: e.target.value })}
-          placeholder={t("knotly.notesPlaceholder")}
-          rows={2}
-          disabled={busy}
-        />
-      </FieldBlock>
+          <FieldBlock label={t("knotly.notes")}>
+            <Textarea
+              value={value.notes}
+              onChange={(e) => patch({ notes: e.target.value })}
+              placeholder={t("knotly.notesPlaceholder")}
+              rows={3}
+              disabled={busy}
+            />
+          </FieldBlock>
+        </div>
+      </StudioCollapse>
 
-      <div className="flex flex-wrap gap-2">
-        <Button type="submit" disabled={busy}>
-          {submitLabel ?? (mode === "edit" ? t("planning.save") : t("knotly.add"))}
-        </Button>
-        {onCancel ? (
-          <Button type="button" variant="ghost" disabled={busy} onClick={onCancel}>
-            {t("knotly.cancel")}
+      {hideActions ? null : (
+        <div className="flex flex-wrap gap-2">
+          <Button type="submit" disabled={busy}>
+            {submitLabel ?? (mode === "edit" ? t("planning.save") : t("knotly.add"))}
           </Button>
-        ) : null}
-      </div>
+          {onCancel ? (
+            <Button type="button" variant="ghost" disabled={busy} onClick={onCancel}>
+              {t("knotly.cancel")}
+            </Button>
+          ) : null}
+        </div>
+      )}
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
     </form>
   );

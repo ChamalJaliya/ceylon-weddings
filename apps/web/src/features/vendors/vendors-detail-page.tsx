@@ -28,7 +28,7 @@ import { Button } from "@ceylonweddings/ui/components/button";
 import { DatePicker } from "@ceylonweddings/ui/components/date-picker";
 import { FormStatus } from "@ceylonweddings/ui/components/form-status";
 import { Textarea } from "@ceylonweddings/ui/components/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@ceylonweddings/ui/components/tabs";
+import { HorizontalTabs } from "@ceylonweddings/ui/components/horizontal-tabs";
 import { SimpleSelect } from "@ceylonweddings/ui/components/select";
 import { FieldBlock } from "@ceylonweddings/ui/domain/creator-form";
 import { InquirePanel, VendorStatStrip } from "@ceylonweddings/ui/domain/offer-studio";
@@ -253,6 +253,8 @@ export default function VendorStorefrontPage() {
 
   const maps = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${vendor.city}, ${vendor.district}, Sri Lanka`)}`;
   const wa = vendor.whatsapp ? `https://wa.me/${vendor.whatsapp.replace(/\D/g, "")}` : null;
+  // Feeds the vendor's "WhatsApp taps" dashboard widget (fire and forget).
+  const trackWhatsapp = () => void api.vendors.trackWhatsappTap(vendor.id);
   const canCouple = user && (user.role === "COUPLE" || user.role === "FAMILY");
   const tabs: { id: Tab; label: string }[] = [
     { id: "about", label: t("knotly.about") },
@@ -490,7 +492,7 @@ export default function VendorStorefrontPage() {
                 </Button>
                 {wa ? (
                   <Button asChild variant="outline" className="w-full">
-                    <a href={wa} target="_blank" rel="noreferrer">
+                    <a href={wa} target="_blank" rel="noreferrer" onClick={trackWhatsapp}>
                       {t("knotly.whatsapp")}
                     </a>
                   </Button>
@@ -516,7 +518,7 @@ export default function VendorStorefrontPage() {
                 </Button>
                 {wa ? (
                   <Button asChild variant="outline" className="w-full">
-                    <a href={wa} target="_blank" rel="noreferrer">
+                    <a href={wa} target="_blank" rel="noreferrer" onClick={trackWhatsapp}>
                       {t("knotly.whatsapp")}
                     </a>
                   </Button>
@@ -527,16 +529,10 @@ export default function VendorStorefrontPage() {
         </div>
       </div>
 
-      <Tabs value={tab} onValueChange={(value) => setTab(value as Tab)} className="grid gap-2">
-        <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:w-fit">
-          {tabs.map((item) => (
-            <TabsTrigger key={item.id} value={item.id}>
-              {item.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+      <div className="grid gap-4">
+        <HorizontalTabs ariaLabel="Vendor details" activeId={tab} onChange={setTab} items={tabs} />
 
-        <TabsContent value="about" className="mt-4">
+        {tab === "about" ? (
           <div className="grid gap-5 rounded-3xl border border-border/70 bg-card/60 p-6 text-sm shadow-sm md:p-8">
             <p className="max-w-3xl text-base leading-relaxed">{vendor.description}</p>
             {!hasStyleAttribute && vendor.styles?.length ? (
@@ -566,9 +562,9 @@ export default function VendorStorefrontPage() {
               </div>
             ) : null}
           </div>
-        </TabsContent>
+        ) : null}
 
-        <TabsContent value="faqs" className="mt-4">
+        {tab === "faqs" ? (
           <div className="grid gap-1 rounded-3xl border border-border/70 bg-card/60 p-4 text-sm shadow-sm md:p-6">
             {(vendor.faqs ?? []).map((faq, index) => (
               <details key={`${faq.question}-${index}`} className="group border-b border-border/50 py-3 last:border-0">
@@ -581,9 +577,9 @@ export default function VendorStorefrontPage() {
             ))}
             {(vendor.faqs ?? []).length === 0 ? <p className="p-2 text-muted-foreground">—</p> : null}
           </div>
-        </TabsContent>
+        ) : null}
 
-        <TabsContent value="reviews" className="mt-4">
+        {tab === "reviews" ? (
           <div className="grid gap-6 rounded-3xl border border-border/70 bg-card/60 p-6 shadow-sm md:p-8">
             <div>
               <p className="font-serif text-4xl font-medium tracking-tight">★ {(vendor.ratingAvg ?? 0).toFixed(1)}</p>
@@ -630,9 +626,9 @@ export default function VendorStorefrontPage() {
               </form>
             ) : null}
           </div>
-        </TabsContent>
+        ) : null}
 
-        <TabsContent value="pricing" className="mt-4">
+        {tab === "pricing" ? (
           <div className="grid gap-5">
             {vendor.showPricing === false ? (
               <div className="rounded-3xl border border-border/70 bg-card/60 p-5 md:p-6">
@@ -650,9 +646,9 @@ export default function VendorStorefrontPage() {
               <p className="text-xs text-muted-foreground">{vendor.pricingDisclaimer}</p>
             ) : null}
           </div>
-        </TabsContent>
+        ) : null}
 
-        <TabsContent value="location" className="mt-4">
+        {tab === "location" ? (
           <div className="grid gap-3 rounded-3xl border border-border/70 bg-card/60 p-6 text-sm shadow-sm md:p-8">
             <p className="font-serif text-xl tracking-tight">
               {vendor.city}, {vendor.district}
@@ -663,15 +659,15 @@ export default function VendorStorefrontPage() {
               </a>
             </Button>
           </div>
-        </TabsContent>
-      </Tabs>
+        ) : null}
+      </div>
 
       <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/95 p-3 backdrop-blur lg:hidden">
         <div className="mx-auto flex max-w-6xl items-center gap-2">
           {canCouple ? <ShortlistControl saved={shortlisted} onToggle={saveToTeam} className="shrink-0" /> : null}
           {wa ? (
             <Button asChild className="flex-1">
-              <a href={wa} target="_blank" rel="noreferrer">
+              <a href={wa} target="_blank" rel="noreferrer" onClick={trackWhatsapp}>
                 {t("knotly.whatsapp")}
               </a>
             </Button>

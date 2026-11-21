@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocale } from "next-intl";
-import { Megaphone } from "lucide-react";
+import { ArrowLeft, ArrowRight, Megaphone, Plus } from "lucide-react";
 import { api } from "@ceylonweddings/web";
 import {
   promotionCompleteness,
@@ -10,22 +10,26 @@ import {
   type UpsertPromotionBody,
   type VendorCategory,
 } from "@ceylonweddings/contracts";
-import { Badge } from "@ceylonweddings/ui/components/badge";
 import { Button } from "@ceylonweddings/ui/components/button";
 import { FormStatus } from "@ceylonweddings/ui/components/form-status";
-import {
-  CompletenessChecklist,
-  CreatorSectionNav,
-  StickyActionBar,
-  StudioShell,
-} from "@ceylonweddings/ui/domain/creator-form";
+import { toast } from "@ceylonweddings/ui/components/toaster";
+import { CreatorSectionNav, StickyActionBar, StudioShell } from "@ceylonweddings/ui/domain/creator-form";
 import {
   emptyPromotionDraft,
+  nextPromotionSection,
   PromotionCreativeFields,
+  PromotionPerf,
   PromotionPreview,
+  PromotionProgress,
+  PromotionReview,
+  PromotionRowSummary,
   PromotionScheduleFields,
+  promotionSections,
+  PromotionStatusBadge,
   PromotionTargetingFields,
+  SLOT_META,
   type AdsPromotionDraft,
+  type PromotionSectionId,
 } from "@ceylonweddings/ui/domain/ads-studio";
 import { DataTableCell, DataTableHead } from "@ceylonweddings/ui/domain/data-table";
 import { DataTableList } from "@ceylonweddings/ui/domain/data-table-list";
@@ -33,22 +37,21 @@ import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
 import { SectionCard } from "@ceylonweddings/ui/domain/section-card";
 import { useClientTablePagination } from "@ceylonweddings/ui/lib/use-client-table-pagination";
 
-const LIST_COLUMNS = ["campaign", "status", "perf", "actions"] as const;
 import { CATEGORY_LABELS, localizedText } from "@/lib/labels";
+import { uploadImage } from "@/lib/upload-image";
 
-type Section = "creative" | "targeting" | "schedule" | "publish";
+const LIST_COLUMNS = ["campaign", "placements", "status", "perf", "actions"] as const;
 
 export default function VendorPromotePage() {
   const locale = useLocale();
   const [mode, setMode] = useState<"list" | "edit">("list");
   const [editId, setEditId] = useState<string | null>(null);
   const [rows, setRows] = useState<Promotion[]>([]);
-  const [section, setSection] = useState<Section>("creative");
+  const [section, setSection] = useState<PromotionSectionId>("creative");
   const [draft, setDraft] = useState<AdsPromotionDraft>(
     emptyPromotionDraft({ source: "PAID_PENDING", status: "DRAFT", slots: ["CATALOG_TOP", "HOME_PICKS"] }),
   );
   const [error, setError] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [listLoading, setListLoading] = useState(true);
   const [categoryOptions, setCategoryOptions] = useState(
@@ -170,7 +173,7 @@ export default function VendorPromotePage() {
         const created = await api.promotions.createMine(body);
         setEditId(created.id);
       }
-      setMessage(status === "SCHEDULED" ? "Submitted for review" : "Saved draft");
+      toast.success(status === "SCHEDULED" ? "Submitted for review" : "Draft saved");
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Save failed");
@@ -192,6 +195,7 @@ export default function VendorPromotePage() {
           description="Design custom ads for catalog and homepage placements. Paid campaigns go to review."
           actions={
             <Button size="sm" onClick={() => void openNew()}>
+              <Plus className="size-4" aria-hidden />
               New promotion
             </Button>
           }
@@ -227,8 +231,9 @@ export default function VendorPromotePage() {
             renderHead={(id) => {
               const labels: Record<(typeof LIST_COLUMNS)[number], string> = {
                 campaign: "Campaign",
+                placements: "Placements",
                 status: "Status",
-                perf: "Perf",
+                perf: "Performance",
                 actions: "",
               };
               return <DataTableHead key={id}>{labels[id as (typeof LIST_COLUMNS)[number]]}</DataTableHead>;
@@ -238,20 +243,25 @@ export default function VendorPromotePage() {
                 case "campaign":
                   return (
                     <DataTableCell key={id}>
-                      <p className="font-medium">{row.name}</p>
-                      <p className="text-xs text-muted-foreground">{row.headline}</p>
+                      <PromotionRowSummary promo={row} />
+                    </DataTableCell>
+                  );
+                case "placements":
+                  return (
+                    <DataTableCell key={id} className="text-xs text-muted-foreground">
+                      {row.slots.map((slot) => SLOT_META[slot].label).join(", ") || "—"}
                     </DataTableCell>
                   );
                 case "status":
                   return (
                     <DataTableCell key={id}>
-                      <Badge>{row.status}</Badge>
+                      <PromotionStatusBadge status={row.status} />
                     </DataTableCell>
                   );
                 case "perf":
                   return (
-                    <DataTableCell key={id} className="text-xs text-muted-foreground">
-                      {row.impressionCount} / {row.clickCount}
+                    <DataTableCell key={id}>
+                      <PromotionPerf impressions={row.impressionCount} clicks={row.clickCount} />
                     </DataTableCell>
                   );
                 case "actions":
@@ -272,12 +282,10 @@ export default function VendorPromotePage() {
     );
   }
 
-  const sections = [
-    { id: "creative" as const, label: "Creative", done: Boolean(draft.headline && draft.coverUrl) },
-    { id: "targeting" as const, label: "Targeting", done: draft.slots.length > 0 },
-    { id: "schedule" as const, label: "Schedule", done: Boolean(draft.startsAt && draft.endsAt) },
-    { id: "publish" as const, label: "Publish", done: completeness.ready },
-  ];
+  const sections = promotionSections(draft, completeness);
+  const prev = nextPromotionSection(section, -1);
+  const next = nextPromotionSection(section, 1);
+  const categoryLabel = (value: string) => categoryOptions.find((option) => option.value === value)?.label ?? value;
 
   return (
     <div className="grid gap-8">
@@ -285,43 +293,75 @@ export default function VendorPromotePage() {
         icon={Megaphone}
         kicker="Promote studio"
         title={draft.name || "New promotion"}
-        description="Full creative control — layout, copy, media, targeting, and schedule."
+        description="Design your ad, choose where couples see it, and preview it live."
         actions={
-          <Button variant="outline" size="sm" onClick={() => setMode("list")}>
-            Back
-          </Button>
+          <div className="flex items-center gap-2">
+            {editId ? <PromotionStatusBadge status={draft.status} /> : null}
+            <Button variant="ghost" size="sm" onClick={() => setMode("list")}>
+              <ArrowLeft className="size-4" aria-hidden />
+              Your campaigns
+            </Button>
+          </div>
         }
       />
       {error ? <FormStatus tone="destructive">{error}</FormStatus> : null}
-      {message ? <FormStatus>{message}</FormStatus> : null}
       <StudioShell
-        nav={<CreatorSectionNav sections={sections} active={section} onSelect={(id) => setSection(id as Section)} />}
-        previewLabel="Ad preview"
+        defaultPreviewOpen
+        nav={
+          <CreatorSectionNav
+            sections={sections}
+            active={section}
+            onSelect={(id) => setSection(id as PromotionSectionId)}
+          />
+        }
+        previewLabel="Live preview"
         previewTitle={draft.name || "New promotion"}
         previewHint={`${completeness.score}/${completeness.total}`}
         previewThumb={draft.coverUrl}
         preview={<PromotionPreview promo={draft} />}
       >
-        {section === "creative" ? <PromotionCreativeFields value={draft} onChange={patch} /> : null}
+        {section === "creative" ? (
+          <PromotionCreativeFields
+            value={draft}
+            onChange={patch}
+            onUpload={(file) => uploadImage(file, (body) => api.vendors.presignMedia({ ...body, kind: "image" }))}
+          />
+        ) : null}
         {section === "targeting" ? (
           <PromotionTargetingFields value={draft} onChange={patch} categoryOptions={categoryOptions} />
         ) : null}
-        {section === "schedule" || section === "publish" ? (
-          <div className="grid gap-4">
-            <PromotionScheduleFields value={draft} onChange={patch} showSource={false} />
-            <CompletenessChecklist {...completeness} />
-          </div>
+        {section === "schedule" ? (
+          <PromotionScheduleFields value={draft} onChange={patch} showSource={false} showStatus={false} />
+        ) : null}
+        {section === "publish" ? (
+          <PromotionReview
+            promo={draft}
+            completeness={completeness}
+            onJump={setSection}
+            categoryLabel={categoryLabel}
+            readyNote="Looks good — submit it and our team will review it before it goes live."
+          />
         ) : null}
         <StickyActionBar>
-          <span className="mr-auto text-sm text-muted-foreground">
-            {completeness.score}/{completeness.total}
-          </span>
+          <PromotionProgress completeness={completeness} status={draft.status} />
+          {prev ? (
+            <Button variant="ghost" onClick={() => setSection(prev)}>
+              Back
+            </Button>
+          ) : null}
           <Button variant="outline" disabled={saving} onClick={() => void save("DRAFT")}>
             Save draft
           </Button>
-          <Button disabled={saving || !completeness.ready} onClick={() => void save("SCHEDULED")}>
-            Submit for review
-          </Button>
+          {next ? (
+            <Button onClick={() => setSection(next)}>
+              Continue
+              <ArrowRight className="size-4" aria-hidden />
+            </Button>
+          ) : (
+            <Button disabled={saving || !completeness.ready} onClick={() => void save("SCHEDULED")}>
+              Submit for review
+            </Button>
+          )}
         </StickyActionBar>
       </StudioShell>
     </div>

@@ -433,6 +433,8 @@ model Wedding {
   styleNotes            String?
   settingNotes          String?
   colors                String[]
+  /** Couple cover / hero photo for planning hub + public guest site. */
+  coverImageUrl         String?
   onboardingCompletedAt DateTime?
   createdAt             DateTime      @default(now())
   updatedAt             DateTime      @updatedAt

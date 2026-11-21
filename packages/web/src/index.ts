@@ -29,3 +29,4 @@ export {
 export { useRealtimeMessaging } from "./hooks/use-realtime-messaging";
 export { applyDocumentPalette, usePaletteStore } from "./appearance/appearance";
 export { APPEARANCE_BOOT_SCRIPT, PALETTE_STORAGE_KEY, THEME_CLASS } from "./appearance/constants";
+export * from "./dashboard";

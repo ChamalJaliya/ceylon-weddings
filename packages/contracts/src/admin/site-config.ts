@@ -209,7 +209,7 @@ export const DEFAULT_SITE_HOMEPAGE: SiteHomepage = {
     ctaPrimaryHref: "/vendors",
     ctaSecondaryLabel: "Start planning",
     ctaSecondaryHref: "/register",
-    imageUrl: "https://images.unsplash.com/photo-1519741497674-611481863552?w=1600&q=80",
+    imageUrl: "https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=1600&q=80",
     chips: ["Poruwa ceremony", "Church & nikah", "All island"],
   },
   stats: [
@@ -248,7 +248,7 @@ export const DEFAULT_SITE_HOMEPAGE: SiteHomepage = {
     title: "Ceylon Weddings — Plan a Sri Lankan wedding in one place",
     description:
       "Ceylon Weddings is Sri Lanka's wedding planning platform. Browse 250+ verified vendors, manage your checklist, budget, and guest list — all in one place. Poruwa, church, nikah, walima, and homecoming.",
-    ogImage: "https://images.unsplash.com/photo-1519741497674-611481863552?w=1200&q=80",
+    ogImage: "https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=1200&q=80",
   },
 };
 
