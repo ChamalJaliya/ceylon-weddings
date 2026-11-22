@@ -11,7 +11,7 @@ import { CenteredLoader } from "@ceylonweddings/ui/components/spinner";
 import { Textarea } from "@ceylonweddings/ui/components/textarea";
 import { AdminQueueVendorCard, AdminQueueVendorList } from "@ceylonweddings/ui/domain/admin-queue-vendor-card";
 import { EmptyState } from "@ceylonweddings/ui/domain/empty-state";
-import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
+import { PlanningHero } from "@/features/planning/components/planning-hero";
 import { SectionCard } from "@ceylonweddings/ui/domain/section-card";
 import { Link } from "@/i18n/navigation";
 import { CATEGORY_LABELS } from "@/lib/labels";
@@ -57,12 +57,25 @@ export default function AdminVerifyQueuePage() {
 
   return (
     <div className="grid gap-8">
-      <PageHeader
+      <PlanningHero
         icon={ShieldAlert}
         kicker="Queue"
         title="Verify vendors"
         description="Approve with notes or reject incomplete listings."
-      />
+      >
+        <div>
+          <p
+            className={
+              vendors.length
+                ? "font-serif text-5xl leading-none text-[color:var(--cw-gold-300)]"
+                : "font-serif text-5xl leading-none"
+            }
+          >
+            {vendors.length}
+          </p>
+          <p className="mt-1 text-sm text-paper/70">{vendors.length ? "waiting for review" : "Queue clear"}</p>
+        </div>
+      </PlanningHero>
       <SectionCard title="Pending" icon={ShieldAlert}>
         {loading ? (
           <CenteredLoader label="Loading queue" />

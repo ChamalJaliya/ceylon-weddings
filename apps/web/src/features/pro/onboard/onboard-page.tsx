@@ -97,14 +97,9 @@ export default function ProOnboardPage() {
   const currentDef = required.find((def) => def.key === activeStepKey) ?? null;
 
   const stage = useMemo(() => {
-    const activeDef =
-      currentDef ?? optional.find((def) => def.key === activeStepKey) ?? null;
+    const activeDef = currentDef ?? optional.find((def) => def.key === activeStepKey) ?? null;
     if (!activeDef) return null;
-    return resolveStageView(
-      activeDef.presentation,
-      onboarding?.type?.onboardingPresentation?.questionDefault,
-      locale,
-    );
+    return resolveStageView(activeDef.presentation, onboarding?.type?.onboardingPresentation?.questionDefault, locale);
   }, [activeStepKey, currentDef, locale, onboarding, optional]);
 
   const wizardOrder = useMemo(
@@ -242,8 +237,7 @@ export default function ProOnboardPage() {
 
   let stepLabel = "Step 1";
   let title = "What do you do?";
-  let description =
-    "Pick the category couples will browse you under. You will answer key required details next.";
+  let description = "Pick the category couples will browse you under. You will answer key required details next.";
   let onBack: (() => void) | undefined;
   let onContinue: (() => void) | undefined;
   let onSkip: (() => void) | undefined;
@@ -301,8 +295,8 @@ export default function ProOnboardPage() {
         <div className="grid gap-2">
           <h2 className="font-serif text-2xl font-medium tracking-tight">Welcome to Ceylon Weddings Pro</h2>
           <p className="mx-auto max-w-md text-sm text-muted-foreground">
-            You’re registered as a <span className="font-medium text-foreground">{categoryLabel}</span>. Your
-            listing is verified ready and awaiting couples.
+            You’re registered as a <span className="font-medium text-foreground">{categoryLabel}</span>. Your listing is
+            verified ready and awaiting couples.
           </p>
           <button
             type="button"
@@ -409,8 +403,7 @@ export default function ProOnboardPage() {
         : () => setStep("type");
     onContinue = () => void continueRequired();
     continueDisabled = !isCurrentAnswered;
-    continueLabel =
-      stepIndex === required.length - 1 ? (optional.length ? "Continue" : "Finish") : "Continue";
+    continueLabel = stepIndex === required.length - 1 ? (optional.length ? "Continue" : "Finish") : "Continue";
     body = (
       <>
         {error ? <FormStatus tone="destructive">{error}</FormStatus> : null}
@@ -451,4 +444,3 @@ export default function ProOnboardPage() {
     </OnboardWizard>
   );
 }
-

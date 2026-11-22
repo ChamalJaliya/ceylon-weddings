@@ -9,7 +9,7 @@ import { Badge } from "@ceylonweddings/ui/components/badge";
 import { Button } from "@ceylonweddings/ui/components/button";
 import { FormStatus } from "@ceylonweddings/ui/components/form-status";
 import { Textarea } from "@ceylonweddings/ui/components/textarea";
-import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
+import { PlanningHero, heroButtonClass } from "@/features/planning/components/planning-hero";
 import { SectionCard } from "@ceylonweddings/ui/domain/section-card";
 import { AuditTimeline } from "@ceylonweddings/ui/domain/audit-timeline";
 import { Link } from "@/i18n/navigation";
@@ -71,25 +71,50 @@ export default function AdminVendorDetailPage() {
 
   return (
     <div className="grid gap-8">
-      <PageHeader
+      <PlanningHero
         icon={Store}
-        kicker="Admin"
+        kicker="Admin · Vendor"
         title={vendor.name}
-        description={`${vendor.city} · ${vendor.slug}`}
-        actions={
-          <Button asChild variant="outline" size="sm">
-            <Link href={`/vendors/${vendor.slug}`}>Public preview</Link>
-          </Button>
+        description={
+          <span className="inline-flex flex-wrap items-center gap-2">
+            <span>{vendor.city}</span>
+            <span className="rounded-full bg-paper/10 px-2.5 py-0.5 font-mono text-xs">/vendors/{vendor.slug}</span>
+          </span>
         }
-      />
+        actions={
+          <>
+            <Button asChild variant="outline" size="sm" shape="pill" className={heroButtonClass}>
+              <Link href="/admin/vendors">All vendors</Link>
+            </Button>
+            <Button asChild size="sm" shape="pill" className="bg-paper text-ink hover:bg-paper/90">
+              <Link href={`/vendors/${vendor.slug}`}>Public preview</Link>
+            </Button>
+          </>
+        }
+      >
+        <div className="flex flex-wrap gap-2 text-sm">
+          <span
+            className={
+              vendor.verified
+                ? "rounded-full bg-[color:var(--cw-gold-300)]/20 px-3 py-1 text-[color:var(--cw-gold-300)]"
+                : "rounded-full bg-paper/10 px-3 py-1 text-paper/70"
+            }
+          >
+            {vendor.verified ? "Verified" : "Unverified"}
+          </span>
+          {vendor.featured ? (
+            <span className="rounded-full bg-love px-3 py-1 text-love-foreground">Featured</span>
+          ) : null}
+          {vendor.moderationStatus ? (
+            <span className="rounded-full bg-paper/10 px-3 py-1 text-paper/80">
+              {vendor.moderationStatus.charAt(0) + vendor.moderationStatus.slice(1).toLowerCase()}
+            </span>
+          ) : null}
+        </div>
+      </PlanningHero>
       {message ? <FormStatus>{message}</FormStatus> : null}
       <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
         <SectionCard title="Trust actions" icon={Store}>
-          <div className="mb-3 flex flex-wrap gap-2">
-            {vendor.verified ? <Badge intent="success">Verified</Badge> : <Badge>Unverified</Badge>}
-            {vendor.featured ? <Badge intent="love">Featured</Badge> : null}
-            {vendor.moderationStatus ? <Badge>{vendor.moderationStatus}</Badge> : null}
-          </div>
           <div className="mb-4 grid gap-2">
             <label className="text-sm font-medium">Moderation note</label>
             <Textarea value={note} onChange={(event) => setNote(event.target.value)} rows={3} />
@@ -153,10 +178,10 @@ export default function AdminVendorDetailPage() {
                       subscription.status === "ACTIVE"
                         ? "success"
                         : subscription.status === "TRIAL"
-                        ? "info"
-                        : subscription.status === "COMPED"
-                        ? "love"
-                        : "danger"
+                          ? "info"
+                          : subscription.status === "COMPED"
+                            ? "love"
+                            : "danger"
                     }
                   >
                     {subscription.status}

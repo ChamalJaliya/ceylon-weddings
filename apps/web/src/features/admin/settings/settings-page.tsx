@@ -6,7 +6,7 @@ import { api } from "@ceylonweddings/web";
 import type { FeatureFlag, SiteConfig } from "@ceylonweddings/contracts";
 import { Button } from "@ceylonweddings/ui/components/button";
 import { FormStatus } from "@ceylonweddings/ui/components/form-status";
-import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
+import { PlanningHero } from "@/features/planning/components/planning-hero";
 import { SectionCard } from "@ceylonweddings/ui/domain/section-card";
 import { Link } from "@/i18n/navigation";
 
@@ -43,7 +43,7 @@ export default function AdminSettingsOverviewPage() {
 
   return (
     <div className="grid gap-8">
-      <PageHeader
+      <PlanningHero
         icon={Settings}
         kicker="Platform"
         title="Settings"

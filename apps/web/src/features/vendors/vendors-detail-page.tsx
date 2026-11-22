@@ -53,7 +53,6 @@ import {
   ProjectStories,
   InfoTabs,
   ReviewCarousel,
-  SectionNav,
   SimilarVendors,
   StorySection,
   TrustBadges,
@@ -275,16 +274,9 @@ export default function VendorStorefrontPage() {
   const profileAttributes = vendor.attributes ?? [];
   const hasStyleAttribute = profileAttributes.some((chip) => chip.key === "style");
 
-  const sections = [
-    { id: "packages", label: "Packages" },
-    { id: "about", label: t("knotly.about") },
-    { id: "work", label: "Work" },
-    ...(reviewsEnabled ? [{ id: "reviews", label: t("nav.reviews") }] : []),
-    { id: "info", label: "Info" },
-  ];
   const mosaic = [vendor.photoUrl, ...photos]
     .filter((src, i, arr): src is string => Boolean(src) && arr.indexOf(src) === i)
-    .slice(0, 5);
+    .slice(0, 3);
   const projects = (vendor.mediaProjects ?? []).map((project) => ({
     id: project.id,
     title: project.title,
@@ -365,13 +357,37 @@ export default function VendorStorefrontPage() {
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           className="relative isolate grid overflow-hidden rounded-3xl bg-ink text-paper shadow-raised lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]"
         >
+          {/* Hero backdrop: deep emerald → ink base, gold + lotus glows, fine grain */}
           <span
             aria-hidden
-            className="pointer-events-none absolute -top-32 -left-24 -z-10 size-96 rounded-full bg-primary/40 blur-3xl"
+            className="pointer-events-none absolute inset-0 -z-20"
+            style={{
+              background:
+                "radial-gradient(120% 90% at 0% 0%, color-mix(in srgb, var(--color-primary) 75%, transparent) 0%, transparent 60%)," +
+                "radial-gradient(70% 60% at 42% 110%, color-mix(in srgb, var(--cw-gold-300) 16%, transparent) 0%, transparent 55%)," +
+                "radial-gradient(45% 40% at 8% 100%, color-mix(in srgb, var(--cw-lotus-300) 12%, transparent) 0%, transparent 70%)," +
+                "linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 35%, var(--color-ink)) 0%, var(--color-ink) 60%)",
+            }}
+          />
+          <motion.span
+            aria-hidden
+            initial={reduce ? false : { opacity: 0 }}
+            animate={reduce ? undefined : { opacity: [0.55, 0.85, 0.55] }}
+            transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
+            className="pointer-events-none absolute -top-24 left-1/4 -z-10 size-[28rem] rounded-full blur-3xl"
+            style={{ background: "color-mix(in srgb, var(--cw-gold-300) 18%, transparent)" }}
           />
           <span
             aria-hidden
-            className="pointer-events-none absolute -bottom-40 left-1/3 -z-10 size-80 rounded-full bg-love/25 blur-3xl"
+            className="pointer-events-none absolute inset-0 -z-10 opacity-[0.07] mix-blend-overlay"
+            style={{
+              backgroundImage:
+                "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>\")",
+            }}
+          />
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-x-10 top-0 -z-10 h-px bg-gradient-to-r from-transparent via-[color:var(--cw-gold-300)]/40 to-transparent"
           />
           <div className="order-2 grid content-center gap-5 p-6 sm:p-10 lg:order-1">
             <div className="flex items-center gap-3">
@@ -381,7 +397,10 @@ export default function VendorStorefrontPage() {
               <div>
                 <p className="text-label tracking-eyebrow text-paper/60 uppercase">{categoryLabel}</p>
                 <p className="flex items-center gap-1.5 text-sm text-paper/80">
-                  <MapPin className="size-3.5" /> {vendor.city}, {vendor.district}
+                  <MapPin className="size-3.5" />{" "}
+                  {vendor.district && vendor.district.toLowerCase() !== vendor.city?.toLowerCase()
+                    ? `${vendor.city}, ${vendor.district}`
+                    : vendor.city}
                 </p>
               </div>
             </div>
@@ -389,7 +408,7 @@ export default function VendorStorefrontPage() {
               {vendor.name}
               {vendor.verified ? (
                 <BadgeCheck
-                  className="ml-2 inline size-7 align-baseline text-primary sm:size-9"
+                  className="ml-2 inline size-7 align-baseline text-[color:var(--cw-gold-300)] drop-shadow-sm sm:size-9"
                   aria-label="Verified"
                 />
               ) : null}
@@ -412,12 +431,12 @@ export default function VendorStorefrontPage() {
                 </span>
               ) : null}
             </div>
-            <div className="flex flex-wrap items-end gap-x-6 gap-y-4 border-t border-paper/10 pt-5">
+            <div className="grid gap-4 border-t border-paper/10 pt-5">
               <div>
                 <p className="text-xs text-paper/60">Starting at</p>
                 <p className="font-serif text-3xl sm:text-4xl">{startingLabel}</p>
               </div>
-              <div className="flex flex-1 flex-wrap justify-end gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button
                   type="button"
                   shape="pill"
@@ -458,7 +477,9 @@ export default function VendorStorefrontPage() {
                 transition={{ delay: 0.15 + index * 0.08, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                 className={cn(
                   "group relative overflow-hidden rounded-2xl bg-paper/5",
-                  index === 0 ? "col-span-2 row-span-2" : "",
+                  mosaic.length === 1 && "col-span-3 row-span-2",
+                  mosaic.length === 2 && (index === 0 ? "col-span-2 row-span-2" : "row-span-2"),
+                  mosaic.length >= 3 && index === 0 && "col-span-2 row-span-2",
                 )}
                 aria-label="View portfolio"
               >
@@ -484,8 +505,6 @@ export default function VendorStorefrontPage() {
       {/* 2 · Story */}
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-12">
         <div className="grid min-w-0 grid-cols-1 content-start gap-12 sm:gap-14">
-          <SectionNav sections={sections} />
-
           <StorySection id="packages" eyebrow={t("knotly.pricing")} title="Packages">
             {vendor.showPricing === false ? (
               <p className="mb-4 text-sm text-muted-foreground">{t("knotly.pricingHiddenBody")}</p>
@@ -813,15 +832,13 @@ export default function VendorStorefrontPage() {
             id="inquire"
             className="scroll-mt-32 overflow-hidden rounded-3xl border border-border bg-card shadow-raised"
           >
-            <div className="border-b border-border bg-primary/5 p-5">
-              <p className="text-xs text-muted-foreground">Starting at</p>
-              <p className="font-serif text-3xl text-primary">{startingLabel}</p>
-              {vendor.showPricing === false ? (
-                <p className="mt-1 text-xs text-muted-foreground">{t("knotly.pricingHiddenBody")}</p>
-              ) : null}
-            </div>
             <div className="grid gap-4 p-5">
-              <p className="font-serif text-xl">{t("knotly.requestPricing")}</p>
+              <div>
+                <p className="font-serif text-xl">{t("knotly.requestPricing")}</p>
+                {vendor.showPricing === false ? (
+                  <p className="mt-1 text-xs text-muted-foreground">{t("knotly.pricingHiddenBody")}</p>
+                ) : null}
+              </div>
               {canCouple ? (
                 <InquiryStepper
                   packages={packageCards.map((pack) => ({ id: pack.id, name: pack.name, priceLabel: pack.priceLabel }))}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Store } from "lucide-react";
+import { Download, ShieldCheck, Store } from "lucide-react";
 import { api } from "@ceylonweddings/web";
 import { presentationGateFailures, type Vendor } from "@ceylonweddings/contracts";
 import { Badge } from "@ceylonweddings/ui/components/badge";
@@ -12,7 +12,7 @@ import { CategoryPills, FilterChip } from "@ceylonweddings/ui/domain/async-list"
 import { AdminListToolbar } from "@ceylonweddings/ui/domain/admin-list-toolbar";
 import { DataTableCell, DataTableHead } from "@ceylonweddings/ui/domain/data-table";
 import { DataTableList } from "@ceylonweddings/ui/domain/data-table-list";
-import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
+import { PlanningHero, heroButtonClass } from "@/features/planning/components/planning-hero";
 import { SectionCard } from "@ceylonweddings/ui/domain/section-card";
 import { getListEmptyMode, serverSourceCount, showListChrome } from "@ceylonweddings/ui/lib/list-state";
 import { useClientTablePagination } from "@ceylonweddings/ui/lib/use-client-table-pagination";
@@ -28,6 +28,7 @@ export default function AdminVendorsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [quick, setQuick] = useState<"all" | "unverified" | "featured" | "gate">("all");
 
   const load = useCallback(async () => {
     try {
@@ -62,18 +63,36 @@ export default function AdminVendorsPage() {
   );
 
   const displayed = useMemo(
-    () => (activeCategory ? vendors.filter((v) => v.category === activeCategory) : vendors),
-    [vendors, activeCategory],
+    () =>
+      vendors.filter((v) => {
+        if (activeCategory && v.category !== activeCategory) return false;
+        if (quick === "unverified") return !v.verified;
+        if (quick === "featured") return v.featured;
+        if (quick === "gate") return presentationGateFailures(v).length > 0;
+        return true;
+      }),
+    [vendors, activeCategory, quick],
+  );
+  const counts = useMemo(
+    () => ({
+      all: vendors.length,
+      verified: vendors.filter((v) => v.verified).length,
+      unverified: vendors.filter((v) => !v.verified).length,
+      featured: vendors.filter((v) => v.featured).length,
+      gate: vendors.filter((v) => presentationGateFailures(v).length > 0).length,
+    }),
+    [vendors],
   );
 
-  const filterKey = `${q}|${activeCategory ?? ""}`;
+  const filterKey = `${q}|${activeCategory ?? ""}|${quick}`;
   const { page, setPage, setLimit, pageItems, total, totalPages, limit } = useClientTablePagination(
     displayed,
     25,
     filterKey,
   );
-  const isDefaultView = !q && !activeCategory;
-  const sourceCount = activeCategory ? vendors.length : serverSourceCount(vendors.length, isDefaultView);
+  const isDefaultView = !q && !activeCategory && quick === "all";
+  const sourceCount =
+    activeCategory || quick !== "all" ? vendors.length : serverSourceCount(vendors.length, isDefaultView);
   const emptyMode = getListEmptyMode({ sourceCount, filteredCount: displayed.length });
   const chrome = showListChrome(emptyMode, loading);
 
@@ -104,26 +123,80 @@ export default function AdminVendorsPage() {
   }
 
   return (
-    <div className="grid gap-8">
-      <PageHeader
+    <div className="grid min-w-0 gap-6">
+      <PlanningHero
         icon={Store}
         kicker="Admin"
         title="Vendors"
         description="Search, filter, verify, and open listing detail."
         actions={
           chrome ? (
-            <div className="flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" onClick={() => void exportCsv()}>
-                Export CSV
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                shape="pill"
+                className={heroButtonClass}
+                onClick={() => void exportCsv()}
+              >
+                <Download className="size-4" /> Export CSV
               </Button>
-              <Button size="sm" disabled={!selected.length} onClick={() => void bulkVerify()}>
-                Bulk verify ({selected.length})
+              <Button
+                size="sm"
+                shape="pill"
+                className="gap-2 bg-paper text-ink hover:bg-paper/90 disabled:opacity-40"
+                disabled={!selected.length}
+                onClick={() => void bulkVerify()}
+              >
+                <ShieldCheck className="size-4" /> Verify {selected.length ? `${selected.length} selected` : "selected"}
               </Button>
-            </div>
+            </>
           ) : null
         }
-      />
+      >
+        <div className="flex flex-wrap gap-x-8 gap-y-3">
+          {[
+            { k: "Listings", v: counts.all },
+            { k: "Verified", v: counts.verified },
+            { k: "Unverified", v: counts.unverified, gold: counts.unverified > 0 },
+            { k: "Featured", v: counts.featured },
+            { k: "Not ready", v: counts.gate },
+          ].map((stat) => (
+            <div key={stat.k}>
+              <p className="text-xs text-paper/60">{stat.k}</p>
+              <p className={stat.gold ? "font-serif text-2xl text-[color:var(--cw-gold-300)]" : "font-serif text-2xl"}>
+                {stat.v}
+              </p>
+            </div>
+          ))}
+        </div>
+      </PlanningHero>
       <SectionCard title="Listings" icon={Store}>
+        {chrome ? (
+          <div className="inline-flex w-fit flex-wrap rounded-full border border-border bg-background p-1">
+            {(
+              [
+                { id: "all", label: "All", n: counts.all },
+                { id: "unverified", label: "Unverified", n: counts.unverified },
+                { id: "featured", label: "Featured", n: counts.featured },
+                { id: "gate", label: "Not ready", n: counts.gate },
+              ] as const
+            ).map((f) => (
+              <button
+                key={f.id}
+                type="button"
+                onClick={() => setQuick(f.id)}
+                className={
+                  quick === f.id
+                    ? "rounded-full bg-primary px-3.5 py-1.5 text-sm text-primary-foreground"
+                    : "rounded-full px-3.5 py-1.5 text-sm text-muted-foreground hover:text-foreground"
+                }
+              >
+                {f.label} <span className="ml-1 opacity-60 tabular-nums">{f.n}</span>
+              </button>
+            ))}
+          </div>
+        ) : null}
         {chrome && categories.length > 0 ? (
           <div className="mb-4">
             <CategoryPills>
@@ -172,6 +245,7 @@ export default function AdminVendorsPage() {
             onClearFilters: () => {
               setQ("");
               setActiveCategory(null);
+              setQuick("all");
             },
           }}
           pagination={
@@ -198,7 +272,11 @@ export default function AdminVendorsPage() {
               gate: "Gate",
               actions: "",
             };
-            return <DataTableHead key={id}>{labels[id as (typeof COLUMNS)[number]]}</DataTableHead>;
+            return (
+              <DataTableHead key={id} className={id === "select" ? "w-10" : id === "actions" ? "w-16" : undefined}>
+                {labels[id as (typeof COLUMNS)[number]]}
+              </DataTableHead>
+            );
           }}
           renderCell={(id, vendor) => {
             const failures = presentationGateFailures(vendor);
@@ -220,25 +298,48 @@ export default function AdminVendorsPage() {
               case "vendor":
                 return (
                   <DataTableCell key={id}>
-                    <p className="font-medium">{vendor.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {CATEGORY_LABELS[vendor.category] ?? vendor.category}
-                    </p>
+                    <Link href={`/admin/vendors/${vendor.id}`} className="group flex items-center gap-3">
+                      {(vendor.photoUrl ?? vendor.photos?.[0]) ? (
+                        <img
+                          src={vendor.photoUrl ?? vendor.photos?.[0] ?? ""}
+                          alt=""
+                          className="size-10 shrink-0 rounded-xl object-cover"
+                        />
+                      ) : (
+                        <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-secondary text-sm font-medium">
+                          {vendor.name.charAt(0)}
+                        </span>
+                      )}
+                      <span className="min-w-0">
+                        <span className="block truncate font-medium group-hover:text-primary">{vendor.name}</span>
+                        <span className="block text-xs text-muted-foreground">
+                          {CATEGORY_LABELS[vendor.category] ?? vendor.category}
+                        </span>
+                      </span>
+                    </Link>
                   </DataTableCell>
                 );
               case "location":
                 return (
                   <DataTableCell key={id}>
-                    {vendor.city}, {vendor.district}
+                    {[...new Set([vendor.city, vendor.district].filter(Boolean))].join(", ")}
                   </DataTableCell>
                 );
               case "status":
                 return (
                   <DataTableCell key={id}>
-                    <div className="flex flex-wrap gap-1">
-                      {vendor.verified ? <Badge intent="success">Verified</Badge> : <Badge>Unverified</Badge>}
+                    <div className="flex flex-wrap items-center gap-1">
+                      {vendor.verified ? (
+                        <Badge intent="success">Verified</Badge>
+                      ) : (
+                        <Badge intent="warning">Unverified</Badge>
+                      )}
                       {vendor.featured ? <Badge intent="love">Featured</Badge> : null}
-                      {vendor.moderationStatus ? <Badge>{vendor.moderationStatus}</Badge> : null}
+                      {vendor.moderationStatus && vendor.moderationStatus !== "APPROVED" ? (
+                        <Badge>
+                          {vendor.moderationStatus.charAt(0) + vendor.moderationStatus.slice(1).toLowerCase()}
+                        </Badge>
+                      ) : null}
                     </div>
                   </DataTableCell>
                 );

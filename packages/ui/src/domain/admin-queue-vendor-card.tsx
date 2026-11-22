@@ -41,7 +41,7 @@ export function AdminQueueVendorCard({
   return (
     <div
       className={cn(
-        "grid gap-3 rounded-xl border border-border/70 p-4",
+        "grid gap-3 border-b border-border py-4 first:pt-1 last:border-0 last:pb-1",
         layout === "split" && "md:grid-cols-[1fr_auto] md:items-center",
         className,
       )}
@@ -74,7 +74,7 @@ export function AdminQueueVendorCard({
 
 export function AdminQueueVendorList({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <div className={cn("grid gap-4", className)} data-slot="admin-queue-vendor-list">
+    <div className={cn("grid", className)} data-slot="admin-queue-vendor-list">
       {children}
     </div>
   );

@@ -20,7 +20,7 @@ import { FormStatus } from "@ceylonweddings/ui/components/form-status";
 import { Input } from "@ceylonweddings/ui/components/input";
 import { SimpleSelect } from "@ceylonweddings/ui/components/select";
 import { Textarea } from "@ceylonweddings/ui/components/textarea";
-import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
+import { PlanningHero, heroButtonClass } from "@/features/planning/components/planning-hero";
 import { SectionCard } from "@ceylonweddings/ui/domain/section-card";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useConfirm } from "@ceylonweddings/ui/components/confirm-dialog";
@@ -163,7 +163,16 @@ export default function AdminConsultationDetailPage() {
   }
 
   async function cancel() {
-    if (!row || !(await confirm({ title: "Cancel this consultation and free the slot?", destructive: true, confirmLabel: "Cancel consultation", cancelLabel: "Keep it" }))) return;
+    if (
+      !row ||
+      !(await confirm({
+        title: "Cancel this consultation and free the slot?",
+        destructive: true,
+        confirmLabel: "Cancel consultation",
+        cancelLabel: "Keep it",
+      }))
+    )
+      return;
     setSaving(true);
     try {
       setRow(await api.admin.cancelConsultation(row.id, { reason: "Cancelled by the team" }));
@@ -188,25 +197,38 @@ export default function AdminConsultationDetailPage() {
 
   return (
     <div className="grid gap-8">
-      <PageHeader
+      <PlanningHero
         icon={CalendarClock}
         kicker="Consultations"
-        title={isNew ? "Book a consultation" : row?.name ?? "Consultation"}
+        title={isNew ? "Book a consultation" : (row?.name ?? "Consultation")}
         description={isNew ? "Add a call that came in by phone or WhatsApp." : row?.reference}
         actions={
-          <div className="flex flex-wrap gap-2">
-            <Button asChild size="sm" variant="ghost">
+          <>
+            <Button asChild size="sm" variant="outline" shape="pill" className={heroButtonClass}>
               <Link href="/admin/consultations">Back</Link>
             </Button>
             {!isNew && row && row.status !== "CANCELLED" ? (
-              <Button size="sm" variant="outline" disabled={saving} onClick={() => void cancel()}>
+              <Button
+                size="sm"
+                variant="outline"
+                shape="pill"
+                className={heroButtonClass}
+                disabled={saving}
+                onClick={() => void cancel()}
+              >
                 Cancel booking
               </Button>
             ) : null}
-            <Button size="sm" disabled={saving} onClick={() => void save()}>
+            <Button
+              size="sm"
+              shape="pill"
+              className="bg-paper text-ink hover:bg-paper/90"
+              disabled={saving}
+              onClick={() => void save()}
+            >
               {saving ? "Saving…" : isNew ? "Create booking" : "Save"}
             </Button>
-          </div>
+          </>
         }
       />
       {error ? <FormStatus tone="destructive">{error}</FormStatus> : null}

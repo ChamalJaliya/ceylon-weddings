@@ -5,10 +5,9 @@ import { useParams } from "next/navigation";
 import { Users } from "lucide-react";
 import { api } from "@ceylonweddings/web";
 import type { AdminUser, AuditLog } from "@ceylonweddings/contracts";
-import { Badge } from "@ceylonweddings/ui/components/badge";
 import { Button } from "@ceylonweddings/ui/components/button";
 import { FormStatus } from "@ceylonweddings/ui/components/form-status";
-import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
+import { PlanningHero, heroButtonClass } from "@/features/planning/components/planning-hero";
 import { SectionCard } from "@ceylonweddings/ui/domain/section-card";
 import { AuditTimeline } from "@ceylonweddings/ui/domain/audit-timeline";
 import { Link } from "@/i18n/navigation";
@@ -55,14 +54,35 @@ export default function AdminUserDetailPage() {
 
   return (
     <div className="grid gap-8">
-      <PageHeader icon={Users} kicker="Admin" title={user.name} description={user.email} />
+      <PlanningHero
+        icon={Users}
+        kicker="Admin · User"
+        title={user.name}
+        description={user.email}
+        actions={
+          <Button asChild variant="outline" size="sm" shape="pill" className={heroButtonClass}>
+            <Link href="/admin/users">All users</Link>
+          </Button>
+        }
+      >
+        <div className="flex flex-wrap gap-2 text-sm">
+          <span className="rounded-full bg-paper/10 px-3 py-1">
+            {user.role.charAt(0) + user.role.slice(1).toLowerCase()}
+          </span>
+          <span
+            className={
+              user.status === "SUSPENDED"
+                ? "rounded-full bg-love px-3 py-1 text-love-foreground"
+                : "rounded-full bg-[color:var(--cw-gold-300)]/20 px-3 py-1 text-[color:var(--cw-gold-300)]"
+            }
+          >
+            {user.status.charAt(0) + user.status.slice(1).toLowerCase()}
+          </span>
+        </div>
+      </PlanningHero>
       {message ? <FormStatus>{message}</FormStatus> : null}
       <div className="grid gap-4 lg:grid-cols-2">
         <SectionCard title="Account" icon={Users}>
-          <div className="mb-3 flex flex-wrap gap-2">
-            <Badge>{user.role}</Badge>
-            <Badge intent={user.status === "SUSPENDED" ? "danger" : "success"}>{user.status}</Badge>
-          </div>
           <div className="flex flex-wrap gap-2">
             <Button
               size="sm"

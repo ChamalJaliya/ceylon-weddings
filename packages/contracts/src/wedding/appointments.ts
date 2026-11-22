@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { appointmentKindSchema } from "./enums";
+import { appointmentKindSchema, appointmentSourceSchema } from "./enums";
 
 export const appointmentSchema = z.object({
   id: z.string(),
@@ -10,6 +10,7 @@ export const appointmentSchema = z.object({
   vendorWhatsapp: z.string().nullable().optional(),
   title: z.string(),
   kind: appointmentKindSchema,
+  source: appointmentSourceSchema.default("MANUAL"),
   startsAt: z.string(),
   endsAt: z.string(),
   venueName: z.string().nullable(),
@@ -24,6 +25,7 @@ export const appointmentSchema = z.object({
 export const createAppointmentBodySchema = z.object({
   title: z.string().min(1),
   kind: appointmentKindSchema.default("VENDOR_MEETING"),
+  source: appointmentSourceSchema.default("MANUAL").optional(),
   startsAt: z.string(),
   endsAt: z.string(),
   venueName: z.string().nullable().optional(),

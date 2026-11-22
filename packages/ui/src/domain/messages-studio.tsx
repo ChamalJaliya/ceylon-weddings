@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { type ReactNode , useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { MessageCircle, Paperclip, Send, ArrowLeft } from "lucide-react";
 import { Button } from "../components/button";
 import { Textarea } from "../components/textarea";
@@ -131,7 +131,10 @@ export function MessagesStudio({
   currentUserId,
   onConversationsChange,
   onMessagesChange,
+  renderHeader,
 }: {
+  /** Replace the default page header (e.g. with a branded hero). Receives the open-support handler. */
+  renderHeader?: (ctx: { openSupport?: () => Promise<void> }) => ReactNode;
   labels: MessagesStudioLabels;
   actions: MessagesStudioActions;
   initialConversationId?: string | null;
@@ -151,10 +154,7 @@ export function MessagesStudio({
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
 
-  const active = useMemo(
-    () => conversations.find((item) => item.id === activeId) ?? null,
-    [conversations, activeId],
-  );
+  const active = useMemo(() => conversations.find((item) => item.id === activeId) ?? null, [conversations, activeId]);
 
   useEffect(() => {
     if (initialConversationId) {
@@ -271,40 +271,37 @@ export function MessagesStudio({
     }
   }
 
+  async function openSupportThread() {
+    const conversation = await actions.openSupport?.();
+    if (!conversation) return;
+    const inbox = await actions.loadInbox();
+    onConversationsChange(inbox.items, inbox.unreadTotal);
+    setActiveId(conversation.id);
+    setMobileThread(true);
+  }
+
   return (
     <div className="cw-stack">
-      <PageHeader
-        icon={MessageCircle}
-        kicker={labels.kicker}
-        title={labels.title}
-        description={labels.description}
-        actions={
-          labels.openSupport && actions.openSupport ? (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={async () => {
-                const conversation = await actions.openSupport?.();
-                if (!conversation) return;
-                const inbox = await actions.loadInbox();
-                onConversationsChange(inbox.items, inbox.unreadTotal);
-                setActiveId(conversation.id);
-                setMobileThread(true);
-              }}
-            >
-              {labels.openSupport}
-            </Button>
-          ) : null
-        }
-      />
+      {renderHeader ? (
+        renderHeader({ openSupport: labels.openSupport && actions.openSupport ? openSupportThread : undefined })
+      ) : (
+        <PageHeader
+          icon={MessageCircle}
+          kicker={labels.kicker}
+          title={labels.title}
+          description={labels.description}
+          actions={
+            labels.openSupport && actions.openSupport ? (
+              <Button type="button" variant="outline" onClick={() => void openSupportThread()}>
+                {labels.openSupport}
+              </Button>
+            ) : null
+          }
+        />
+      )}
 
       <Reveal className="grid min-h-[70vh] overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-background via-background to-secondary/20 md:grid-cols-[minmax(240px,320px)_1fr]">
-        <aside
-          className={cn(
-            "border-border/60 md:border-r",
-            mobileThread ? "hidden md:block" : "block",
-          )}
-        >
+        <aside className={cn("border-border/60 md:border-r", mobileThread ? "hidden md:block" : "block")}>
           <div className="border-b border-border/50 px-4 py-3 text-xs font-medium tracking-spaced text-muted-foreground uppercase">
             Inbox
           </div>
@@ -335,9 +332,7 @@ export function MessagesStudio({
                       ) : null}
                     </div>
                     <p className="text-label text-muted-foreground">{typeLabel(item.type)}</p>
-                    <p className="line-clamp-2 text-xs text-muted-foreground">
-                      {item.lastMessagePreview ?? "—"}
-                    </p>
+                    <p className="line-clamp-2 text-xs text-muted-foreground">{item.lastMessagePreview ?? "—"}</p>
                   </button>
                 );
               })
@@ -400,7 +395,12 @@ export function MessagesStudio({
                               ))}
                             </>
                           )}
-                          <p className={cn("mt-1 text-label", mine ? "text-primary-foreground/70" : "text-muted-foreground")}>
+                          <p
+                            className={cn(
+                              "mt-1 text-label",
+                              mine ? "text-primary-foreground/70" : "text-muted-foreground",
+                            )}
+                          >
                             {new Date(message.createdAt).toLocaleString()}
                           </p>
                         </div>

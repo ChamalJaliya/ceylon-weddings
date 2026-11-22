@@ -6,7 +6,7 @@ import { LayoutGrid, Search } from "lucide-react";
 import { api } from "@ceylonweddings/web";
 import type { Vendor } from "@ceylonweddings/contracts";
 import { Input } from "@ceylonweddings/ui/components/input";
-import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
+import { PlanningHero } from "@/features/planning/components/planning-hero";
 import { FormStatus } from "@ceylonweddings/ui/components/form-status";
 import {
   AnimatePresence,
@@ -126,7 +126,7 @@ export default function AdminCategoriesPage() {
 
   return (
     <div className="grid gap-8">
-      <PageHeader
+      <PlanningHero
         icon={LayoutGrid}
         kicker="Admin"
         title="Categories"

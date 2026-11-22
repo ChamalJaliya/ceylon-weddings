@@ -10,7 +10,7 @@ import { Input } from "@ceylonweddings/ui/components/input";
 import { SimpleSelect } from "@ceylonweddings/ui/components/select";
 import { DataTableCell, DataTableHead } from "@ceylonweddings/ui/domain/data-table";
 import { DataTableList } from "@ceylonweddings/ui/domain/data-table-list";
-import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
+import { PlanningHero } from "@/features/planning/components/planning-hero";
 import { SectionCard } from "@ceylonweddings/ui/domain/section-card";
 import { useClientTablePagination } from "@ceylonweddings/ui/lib/use-client-table-pagination";
 import { Link } from "@/i18n/navigation";
@@ -57,7 +57,7 @@ export default function AdminFeaturedPage() {
 
   return (
     <div className="grid gap-8">
-      <PageHeader
+      <PlanningHero
         icon={Store}
         kicker="Inventory"
         title="Featured placements"

@@ -2,15 +2,14 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Check, Copy, Link2, Palette, Plus, Share2, Trash2 } from "lucide-react";
+import { Check, Copy, Palette, Plus, Share2, Trash2 } from "lucide-react";
 import { api } from "@ceylonweddings/web";
 import type { Moodboard, MoodboardSummary } from "@ceylonweddings/contracts";
 import { Button } from "@ceylonweddings/ui/components/button";
-import { HorizontalTabs } from "@ceylonweddings/ui/components/horizontal-tabs";
 import { Input } from "@ceylonweddings/ui/components/input";
-import { SimpleSelect } from "@ceylonweddings/ui/components/select";
-import { EmptyState } from "@ceylonweddings/ui/domain/empty-state";
 import { cn } from "@ceylonweddings/ui/utils";
+import { Combobox } from "@ceylonweddings/ui/components/combobox";
+import { heroButtonClass, heroSelectClass } from "@/features/planning/components/planning-hero";
 import { SignInPrompt, useWedding } from "@/components/use-wedding";
 import { MoodboardStudio } from "@/components/moodboard/studio";
 import type { AutosaveStatus } from "@/components/moodboard/use-autosave";
@@ -185,27 +184,151 @@ export default function MoodboardPage() {
     window.setTimeout(() => setCopied(false), 1600);
   }
 
+  const counts = summaries.find((s) => s.id === selectedId);
+
   return (
     <div className="flex h-[calc(100vh-5.5rem)] min-h-[42rem] flex-col gap-3">
-      <header className="flex flex-wrap items-end justify-between gap-2">
-        <div>
-          <h1 className="font-display text-2xl tracking-tight text-studio-ink sm:text-3xl">{t("nav.moodboard")}</h1>
-          <p className="text-sm text-muted-foreground">
-            Pin photos, notes, and video — fullscreen when you need room to work.
-          </p>
+      <section
+        className="relative isolate shrink-0 overflow-hidden rounded-3xl px-5 py-4 text-paper shadow-raised sm:px-6"
+        style={{
+          background:
+            "radial-gradient(120% 140% at 0% 0%, color-mix(in srgb, var(--color-primary) 75%, transparent) 0%, transparent 60%)," +
+            "radial-gradient(60% 120% at 100% 120%, color-mix(in srgb, var(--cw-gold-300) 18%, transparent) 0%, transparent 60%)," +
+            "linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 35%, var(--color-ink)) 0%, var(--color-ink) 70%)",
+        }}
+      >
+        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+          <div className="flex items-center gap-3">
+            <span className="grid size-10 place-items-center rounded-2xl bg-paper/10">
+              <Palette className="size-5" />
+            </span>
+            <div>
+              <h1 className="font-serif text-2xl leading-none sm:text-3xl">{t("nav.moodboard")}</h1>
+              <p className="mt-1 flex items-center gap-2 text-xs text-paper/60">
+                {counts ? (
+                  <span>
+                    {counts.elementCount} items · {counts.assetCount} uploads
+                  </span>
+                ) : null}
+                <span
+                  className={cn(
+                    "inline-flex items-center gap-1",
+                    (status === "error" || status === "conflict") && "text-love",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "size-1.5 rounded-full",
+                      status === "saving"
+                        ? "animate-pulse bg-[color:var(--cw-gold-300)]"
+                        : status === "error" || status === "conflict"
+                          ? "bg-love"
+                          : "bg-paper/50",
+                    )}
+                  />
+                  {statusLabel}
+                </span>
+              </p>
+            </div>
+          </div>
+
+          {board ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <Input
+                aria-label="Board title"
+                defaultValue={board.title}
+                key={`title-${board.id}-${board.title}`}
+                className="h-9 w-40 border-paper/20 bg-paper/10 text-paper placeholder:text-paper/50"
+                onBlur={(e) => {
+                  const next = e.target.value.trim();
+                  if (next && next !== board.title) void renameBoard(next);
+                }}
+              />
+              <Combobox
+                aria-label="Link event"
+                value={board.eventId ?? "__none__"}
+                onValueChange={(value) => void linkEvent(value === "__none__" ? "" : value)}
+                options={eventOptions}
+                searchPlaceholder="Search events…"
+                className={cn("h-9 w-40", heroSelectClass)}
+              />
+              <Button
+                type="button"
+                size="sm"
+                shape="pill"
+                variant="outline"
+                className={cn(heroButtonClass, board.shareEnabled && "border-[color:var(--cw-gold-300)]/60")}
+                disabled={busy}
+                onClick={() => void toggleShare(!board.shareEnabled)}
+              >
+                <Share2 className="size-3.5" />
+                {board.shareEnabled ? "Shared" : "Share"}
+              </Button>
+              {shareUrl ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  shape="pill"
+                  variant="outline"
+                  className={heroButtonClass}
+                  onClick={() => void copyShareLink()}
+                >
+                  {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+                  {copied ? "Copied" : "Copy link"}
+                </Button>
+              ) : null}
+              {summaries.length > 1 ? (
+                <button
+                  type="button"
+                  aria-label="Delete board"
+                  disabled={busy}
+                  onClick={() => void deleteBoard()}
+                  className="grid size-9 place-items-center rounded-full text-paper/60 transition hover:bg-love/20 hover:text-love"
+                >
+                  <Trash2 className="size-4" />
+                </button>
+              ) : null}
+            </div>
+          ) : null}
         </div>
-        <p
-          className={cn(
-            "text-xs",
-            status === "error" || status === "conflict" ? "text-destructive" : "text-muted-foreground",
-          )}
-        >
-          {statusLabel}
-        </p>
-      </header>
+
+        {/* Board tabs */}
+        <div className="mt-4 -mb-1 flex items-center gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none]">
+          {summaries.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => setSelectedId(item.id)}
+              className={cn(
+                "shrink-0 rounded-full px-3.5 py-1.5 text-sm transition",
+                item.id === selectedId ? "bg-paper text-ink" : "text-paper/70 hover:bg-paper/10 hover:text-paper",
+              )}
+            >
+              {item.title}
+              {item.eventName ? <span className="ml-1.5 opacity-60">· {item.eventName}</span> : null}
+            </button>
+          ))}
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => void createBoard()}
+            className="inline-flex shrink-0 items-center gap-1 rounded-full border border-dashed border-paper/30 px-3 py-1.5 text-sm text-paper/70 transition hover:border-paper/60 hover:text-paper"
+          >
+            <Plus className="size-3.5" /> New board
+          </button>
+        </div>
+      </section>
 
       {!board ? (
-        <EmptyState icon={Palette} title="No moodboard yet" description="Create a board to start designing." />
+        <div className="grid flex-1 place-items-center rounded-3xl border border-dashed border-border text-center">
+          <div className="grid place-items-center gap-3">
+            <span className="grid size-14 place-items-center rounded-2xl bg-primary/10 text-primary">
+              <Palette className="size-6" />
+            </span>
+            <p className="font-serif text-2xl">No moodboard yet</p>
+            <p className="text-sm text-muted-foreground">Create a board to start designing.</p>
+          </div>
+        </div>
       ) : (
         <div className="min-h-0 flex-1">
           <MoodboardStudio
@@ -218,96 +341,9 @@ export default function MoodboardPage() {
               setStatus(next);
               setStatusMessage(message ?? null);
             }}
-            headerExtra={
-              <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-                <HorizontalTabs
-                  size="sm"
-                  ariaLabel="Moodboards"
-                  activeId={selectedId}
-                  onChange={setSelectedId}
-                  className="border-paper/15 bg-paper/10"
-                  items={summaries.map((item) => ({
-                    id: item.id,
-                    label: item.title,
-                  }))}
-                  actions={
-                    <button
-                      type="button"
-                      disabled={busy}
-                      onClick={() => void createBoard()}
-                      className="inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-xs text-studio-paper/70 hover:bg-paper/10"
-                    >
-                      <Plus className="size-3.5" />
-                      New
-                    </button>
-                  }
-                />
-                <Input
-                  aria-label="Board title"
-                  defaultValue={board.title}
-                  key={`title-${board.id}-${board.title}`}
-                  className="h-8 w-32 border-paper/15 bg-paper/5 text-studio-paper sm:w-40"
-                  onBlur={(e) => {
-                    const next = e.target.value.trim();
-                    if (next && next !== board.title) void renameBoard(next);
-                  }}
-                />
-                <SimpleSelect
-                  value={board.eventId ?? "__none__"}
-                  onValueChange={(value) => void linkEvent(value === "__none__" ? "" : value)}
-                  options={eventOptions}
-                  className="h-8 w-32 border-paper/15 bg-paper/5 text-sm text-studio-paper sm:w-36"
-                  aria-label="Link event"
-                />
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="secondary"
-                  className="h-8"
-                  disabled={busy}
-                  onClick={() => void toggleShare(!board.shareEnabled)}
-                >
-                  <Share2 className="mr-1 size-3.5" />
-                  {board.shareEnabled ? "Shared" : "Share"}
-                </Button>
-                {shareUrl ? (
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="ghost"
-                    className="h-8 text-studio-paper"
-                    onClick={() => void copyShareLink()}
-                  >
-                    {copied ? <Check className="mr-1 size-3.5" /> : <Copy className="mr-1 size-3.5" />}
-                    {copied ? "Copied" : "Copy"}
-                  </Button>
-                ) : null}
-                {summaries.length > 1 ? (
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="ghost"
-                    className="h-8 text-studio-danger"
-                    disabled={busy}
-                    onClick={() => void deleteBoard()}
-                  >
-                    <Trash2 className="size-3.5" />
-                  </Button>
-                ) : null}
-              </div>
-            }
           />
         </div>
       )}
-
-      {shareUrl ? (
-        <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <Link2 className="size-3.5" />
-          <a className="truncate underline underline-offset-2" href={shareUrl} target="_blank" rel="noreferrer">
-            {shareUrl}
-          </a>
-        </p>
-      ) : null}
     </div>
   );
 }

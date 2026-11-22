@@ -10,7 +10,7 @@ import { FormStatus } from "@ceylonweddings/ui/components/form-status";
 import { Input } from "@ceylonweddings/ui/components/input";
 import { SimpleSelect } from "@ceylonweddings/ui/components/select";
 import { Textarea } from "@ceylonweddings/ui/components/textarea";
-import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
+import { PlanningHero } from "@/features/planning/components/planning-hero";
 import { SectionCard } from "@ceylonweddings/ui/domain/section-card";
 import { Link } from "@/i18n/navigation";
 
@@ -55,7 +55,7 @@ export default function AdminCmsPageEditorPage() {
 
   return (
     <div className="grid gap-8">
-      <PageHeader
+      <PlanningHero
         icon={FileText}
         kicker="CMS"
         title={title || slug}

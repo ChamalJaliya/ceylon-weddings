@@ -11,7 +11,7 @@ import { Input } from "@ceylonweddings/ui/components/input";
 import { AdminListToolbar } from "@ceylonweddings/ui/domain/admin-list-toolbar";
 import { DataTableCell, DataTableHead } from "@ceylonweddings/ui/domain/data-table";
 import { DataTableList } from "@ceylonweddings/ui/domain/data-table-list";
-import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
+import { PlanningHero } from "@/features/planning/components/planning-hero";
 import { SectionCard } from "@ceylonweddings/ui/domain/section-card";
 import { SettingsList, SettingsListRow } from "@ceylonweddings/ui/domain/settings-list-row";
 import { getListEmptyMode, showListChrome } from "@ceylonweddings/ui/lib/list-state";
@@ -89,7 +89,7 @@ export default function AdminCategoriesPage() {
 
   return (
     <div className="grid gap-8">
-      <PageHeader
+      <PlanningHero
         icon={Layers}
         kicker="Settings"
         title="Vendor types"

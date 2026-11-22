@@ -29,7 +29,7 @@ const WEDDING = [
 
 const PHOTO = {
   venue: "https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=1200&q=80",
-  garden: "https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=1200&q=80",
+  garden: "https://images.unsplash.com/photo-1519167758481-83f29da8c12f?w=1200&q=80",
   photo: "https://images.unsplash.com/photo-1606216794074-735e91aa2c92?w=1200&q=80",
   bridal: "https://images.unsplash.com/photo-1591604466107-ec97de577aff?w=1200&q=80",
   jewellery: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=1200&q=80",
@@ -816,13 +816,18 @@ async function main() {
     },
   });
 
+  /** Colombo wall clock → Date (UTC). Month is 1–12. */
+  const lk = (y: number, m: number, d: number, h = 0, min = 0) => new Date(Date.UTC(y, m - 1, d, h - 5, min - 30));
+
   const poruwa = await prisma.event.create({
     data: {
       weddingId: nimaliWedding.id,
       kind: "PORUWA",
       name: "Poruwa ceremony",
       venueName: "Glen Receptions",
-      nekathAt: new Date("2026-12-12T04:30:00.000Z"),
+      address: "Bauddhaloka Mawatha, Colombo 07",
+      startsAt: lk(2026, 12, 12, 10, 0),
+      nekathAt: lk(2026, 12, 12, 10, 0),
     },
   });
   const reception = await prisma.event.create({
@@ -831,34 +836,19 @@ async function main() {
       kind: "RECEPTION",
       name: "Reception",
       venueName: "Glen Receptions",
+      address: "Bauddhaloka Mawatha, Colombo 07",
+      startsAt: lk(2026, 12, 12, 13, 0),
     },
   });
-  await prisma.event.create({
+  const homecoming = await prisma.event.create({
     data: {
       weddingId: nimaliWedding.id,
       kind: "HOMECOMING",
       name: "Homecoming",
       venueName: "Jayawardena home, Kandy",
+      address: "Asgiriya, Kandy",
+      startsAt: lk(2026, 12, 13, 16, 0),
     },
-  });
-
-  await prisma.task.createMany({
-    data: [
-      { weddingId: nimaliWedding.id, title: "Confirm nekath with Pandith", category: "tradition", status: "DONE" },
-      { weddingId: nimaliWedding.id, title: "Book poruwa and ashtaka", category: "tradition", status: "DOING" },
-      { weddingId: nimaliWedding.id, title: "Lock catering plate count", category: "venue" },
-      { weddingId: nimaliWedding.id, title: "Share guest list with Amma", category: "guests", assigneeUserId: amma.id },
-      { weddingId: nimaliWedding.id, title: "Jayamangala gatha rehearsal", category: "tradition" },
-      { weddingId: nimaliWedding.id, title: "Bridal dresser trial in Kandy", category: "beauty" },
-      {
-        weddingId: nimaliWedding.id,
-        title: "Homecoming menu with Kasun's family",
-        category: "homecoming",
-        assigneeUserId: kasun.id,
-      },
-      { weddingId: nimaliWedding.id, title: "Airport coaches for diaspora guests", category: "travel" },
-      { weddingId: nimaliWedding.id, title: "Lock entertainment and music brief", category: "entertainment" },
-    ],
   });
 
   await prisma.budgetLine.createMany({
@@ -1174,8 +1164,8 @@ async function main() {
     ],
   });
 
-  const nekathAnchor = poruwa.nekathAt ?? poruwa.startsAt ?? new Date("2026-12-12T04:30:00.000Z");
-  const agendaSeed = [
+  const nekathAnchor = poruwa.nekathAt ?? poruwa.startsAt ?? lk(2026, 12, 12, 10, 0);
+  const poruwaAgendaSeed = [
     {
       title: "Bridal dresser arrives",
       kind: "DAY_OF" as const,
@@ -1183,6 +1173,7 @@ async function main() {
       durationMinutes: 90,
       color: "#C4A574",
       ownerLabel: "Bridal dresser",
+      vendorId: bySlug["kandyan-bridal-dresser"].id,
     },
     {
       title: "Wedding cars ready",
@@ -1191,14 +1182,16 @@ async function main() {
       durationMinutes: 45,
       color: "#1F4B73",
       ownerLabel: "Transport",
+      vendorId: bySlug["bridal-fleet-colombo"].id,
     },
     {
-      title: `${poruwa.name} ceremony`,
+      title: /\bceremony\s*$/i.test(poruwa.name) ? poruwa.name : `${poruwa.name} ceremony`,
       kind: "CEREMONY" as const,
       offsetMinutes: 0,
       durationMinutes: 75,
       color: "#7A1F2B",
       ownerLabel: "Couple",
+      vendorId: bySlug["ashtaka-poruwa-craft"].id,
     },
     {
       title: "Guest plates / seating",
@@ -1207,26 +1200,98 @@ async function main() {
       durationMinutes: 120,
       color: "#1F4D3A",
       ownerLabel: "Amma / hosts",
+      vendorId: bySlug["glen-receptions"].id,
     },
   ];
-  for (const [index, spec] of agendaSeed.entries()) {
+  const poruwaAgenda: { id: string; title: string; startsAt: Date }[] = [];
+  for (const [index, spec] of poruwaAgendaSeed.entries()) {
     const startsAt = new Date(nekathAnchor.getTime() + spec.offsetMinutes * 60_000);
     const endsAt = new Date(startsAt.getTime() + spec.durationMinutes * 60_000);
-    await prisma.appointment.create({
+    const row = await prisma.appointment.create({
       data: {
         weddingId: nimaliWedding.id,
         eventId: poruwa.id,
+        vendorId: spec.vendorId,
         title: spec.title,
         kind: spec.kind,
+        source: "NEKATH",
         startsAt,
         endsAt,
         venueName: poruwa.venueName,
+        address: poruwa.address,
         color: spec.color,
         sortOrder: index,
         ownerLabel: spec.ownerLabel,
         reminderMinutes: 30,
+        notes: "Seeded from nekath — day-of run sheet",
       },
     });
+    poruwaAgenda.push({ id: row.id, title: row.title, startsAt: row.startsAt });
+  }
+
+  const homecomingAgendaSeed: Array<{
+    title: string;
+    kind: "DAY_OF" | "CEREMONY";
+    offsetMinutes: number;
+    durationMinutes: number;
+    color: string;
+    ownerLabel: string;
+    sortOrder: number;
+    vendorId?: string;
+  }> = [
+    {
+      title: "Family welcome drinks",
+      kind: "DAY_OF",
+      offsetMinutes: -60,
+      durationMinutes: 45,
+      color: "#C4A574",
+      ownerLabel: "Kasun's family",
+      sortOrder: 0,
+    },
+    {
+      title: "Homecoming porch greeting",
+      kind: "CEREMONY",
+      offsetMinutes: 0,
+      durationMinutes: 40,
+      color: "#7A1F2B",
+      ownerLabel: "Couple",
+      sortOrder: 1,
+    },
+    {
+      title: "Homecoming feast",
+      kind: "DAY_OF",
+      offsetMinutes: 60,
+      durationMinutes: 120,
+      color: "#1F4D3A",
+      ownerLabel: "Amma / hosts",
+      sortOrder: 2,
+      vendorId: bySlug["kandy-hills-estate"].id,
+    },
+  ];
+  const homecomingAnchor = homecoming.startsAt ?? lk(2026, 12, 13, 16, 0);
+  const homecomingAgenda: { id: string; title: string; startsAt: Date }[] = [];
+  for (const spec of homecomingAgendaSeed) {
+    const startsAt = new Date(homecomingAnchor.getTime() + spec.offsetMinutes * 60_000);
+    const endsAt = new Date(startsAt.getTime() + spec.durationMinutes * 60_000);
+    const row = await prisma.appointment.create({
+      data: {
+        weddingId: nimaliWedding.id,
+        eventId: homecoming.id,
+        vendorId: spec.vendorId,
+        title: spec.title,
+        kind: spec.kind,
+        source: "MANUAL",
+        startsAt,
+        endsAt,
+        venueName: homecoming.venueName,
+        address: homecoming.address,
+        color: spec.color,
+        sortOrder: spec.sortOrder,
+        ownerLabel: spec.ownerLabel,
+        reminderMinutes: 30,
+      },
+    });
+    homecomingAgenda.push({ id: row.id, title: row.title, startsAt: row.startsAt });
   }
 
   const seedHouseholds = await prisma.guestHousehold.findMany({
@@ -1368,8 +1433,21 @@ async function main() {
       { weddingId: nimaliWedding.id, vendorId: bySlug["fort-lawn-galle"].id, status: "SHORTLISTED" },
       { weddingId: nimaliWedding.id, vendorId: bySlug["ashtaka-poruwa-craft"].id, status: "INQUIRED" },
       { weddingId: nimaliWedding.id, vendorId: bySlug["magul-bera-collective"].id, status: "BOOKED" },
+      { weddingId: nimaliWedding.id, vendorId: bySlug["ransilu-bridal"].id, status: "BOOKED" },
+      { weddingId: nimaliWedding.id, vendorId: bySlug["kandyan-bridal-dresser"].id, status: "BOOKED" },
+      { weddingId: nimaliWedding.id, vendorId: bySlug["glam-by-nadeesha"].id, status: "BOOKED" },
+      { weddingId: nimaliWedding.id, vendorId: bySlug["pandith-nekath"].id, status: "BOOKED" },
+      { weddingId: nimaliWedding.id, vendorId: bySlug["temple-blooms"].id, status: "INQUIRED" },
+      { weddingId: nimaliWedding.id, vendorId: bySlug["bridal-fleet-colombo"].id, status: "BOOKED" },
+      { weddingId: nimaliWedding.id, vendorId: bySlug["guest-coaches"].id, status: "SHORTLISTED" },
+      { weddingId: nimaliWedding.id, vendorId: bySlug["butter-and-bloom"].id, status: "INQUIRED" },
     ],
   });
+
+  const ceremonyBlock = poruwaAgenda.find((row) => row.title.includes("ceremony")) ?? poruwaAgenda[2];
+  const dresserBlock = poruwaAgenda[0];
+  const carsBlock = poruwaAgenda[1];
+  const platesBlock = poruwaAgenda[3];
 
   await prisma.musicPlan.create({
     data: {
@@ -1392,6 +1470,14 @@ async function main() {
             sortOrder: 0,
           },
           {
+            list: "MUST",
+            title: "Jayamangala gatha",
+            artist: "Temple choir",
+            language: "SINHALA",
+            vibe: "TRADITIONAL",
+            sortOrder: 1,
+          },
+          {
             list: "DO_NOT",
             title: "Club remixes during poruwa",
             notes: "No EDM until reception open dance",
@@ -1407,6 +1493,7 @@ async function main() {
             offsetMinutes: -15,
             durationMinutes: 15,
             sortOrder: 0,
+            appointmentId: ceremonyBlock?.id,
           },
           {
             kind: "ENTRANCE",
@@ -1414,6 +1501,7 @@ async function main() {
             offsetMinutes: 0,
             durationMinutes: 5,
             sortOrder: 1,
+            appointmentId: ceremonyBlock?.id,
           },
           {
             kind: "CEREMONY",
@@ -1421,6 +1509,7 @@ async function main() {
             offsetMinutes: 5,
             durationMinutes: 45,
             sortOrder: 2,
+            appointmentId: ceremonyBlock?.id,
           },
         ],
       },
@@ -1432,7 +1521,7 @@ async function main() {
       slug: "aisha-and-farhan",
       partnerOneName: "Aisha",
       partnerTwoName: "Farhan",
-      date: new Date("2026-09-05T11:00:00.000Z"),
+      date: lk(2026, 9, 5, 11, 0),
       city: "Colombo",
       district: "Colombo",
       guestCountEstimate: 280,
@@ -1445,15 +1534,18 @@ async function main() {
       members: { create: [{ userId: aisha.id, role: "COUPLE", canManageVendors: true }] },
       events: {
         create: [
-          { kind: "NIKAH", name: "Nikah", venueName: "Colombo mosque hall" },
-          { kind: "WALIMA", name: "Walima", venueName: "Cinnamon Grand" },
-        ],
-      },
-      tasks: {
-        create: [
-          { title: "Confirm maulvi and mahr note", category: "tradition", status: "DONE" },
-          { title: "Book halal catering", category: "venue" },
-          { title: "Mehndi evening guest list", category: "guests" },
+          {
+            kind: "NIKAH",
+            name: "Nikah",
+            venueName: "Colombo mosque hall",
+            startsAt: lk(2026, 9, 5, 11, 0),
+          },
+          {
+            kind: "WALIMA",
+            name: "Walima",
+            venueName: "Cinnamon Grand",
+            startsAt: lk(2026, 9, 5, 19, 0),
+          },
         ],
       },
       budgetLines: {
@@ -1471,6 +1563,123 @@ async function main() {
         ],
       },
     },
+  });
+
+  const aishaEvents = await prisma.event.findMany({ where: { weddingId: aishaWedding.id } });
+  const aishaNikah = aishaEvents.find((e) => e.kind === "NIKAH")!;
+  const aishaWalima = aishaEvents.find((e) => e.kind === "WALIMA")!;
+
+  await prisma.weddingVendor.createMany({
+    data: [
+      { weddingId: aishaWedding.id, vendorId: bySlug["saffron-kitchen"].id, status: "BOOKED" },
+      { weddingId: aishaWedding.id, vendorId: bySlug["henna-by-aisha"].id, status: "BOOKED" },
+      { weddingId: aishaWedding.id, vendorId: bySlug["lotus-photography"].id, status: "INQUIRED" },
+      { weddingId: aishaWedding.id, vendorId: bySlug["glen-receptions"].id, status: "SHORTLISTED" },
+    ],
+  });
+
+  const aishaHalalTasting = await prisma.appointment.create({
+    data: {
+      weddingId: aishaWedding.id,
+      eventId: aishaWalima.id,
+      vendorId: bySlug["saffron-kitchen"].id,
+      title: "Halal catering tasting",
+      kind: "TASTING",
+      source: "MANUAL",
+      startsAt: lk(2026, 7, 12, 15, 0),
+      endsAt: lk(2026, 7, 12, 16, 30),
+      venueName: "Saffron Kitchen",
+      color: "#d8f0c8",
+      notes: "Confirm separate dessert station and prayer-break timing.",
+    },
+  });
+  const aishaMehndi = await prisma.appointment.create({
+    data: {
+      weddingId: aishaWedding.id,
+      eventId: aishaNikah.id,
+      vendorId: bySlug["henna-by-aisha"].id,
+      title: "Mehndi evening setup",
+      kind: "VENDOR_MEETING",
+      source: "MANUAL",
+      startsAt: lk(2026, 9, 4, 17, 0),
+      endsAt: lk(2026, 9, 4, 20, 0),
+      venueName: "Rahman home",
+      color: "#f7d4e0",
+      ownerLabel: "Henna artists",
+    },
+  });
+  await prisma.appointment.create({
+    data: {
+      weddingId: aishaWedding.id,
+      eventId: aishaNikah.id,
+      title: "Nikah ceremony",
+      kind: "CEREMONY",
+      source: "MANUAL",
+      startsAt: lk(2026, 9, 5, 11, 0),
+      endsAt: lk(2026, 9, 5, 12, 0),
+      venueName: "Colombo mosque hall",
+      color: "#e4d4f5",
+      sortOrder: 0,
+      ownerLabel: "Maulvi / couple",
+    },
+  });
+  await prisma.appointment.create({
+    data: {
+      weddingId: aishaWedding.id,
+      eventId: aishaWalima.id,
+      title: "Walima reception",
+      kind: "DAY_OF",
+      source: "MANUAL",
+      startsAt: lk(2026, 9, 5, 19, 0),
+      endsAt: lk(2026, 9, 5, 22, 0),
+      venueName: "Cinnamon Grand",
+      color: "#1F4D3A",
+      sortOrder: 0,
+      ownerLabel: "Hosts",
+      vendorId: bySlug["saffron-kitchen"].id,
+    },
+  });
+
+  await prisma.task.createMany({
+    data: [
+      {
+        weddingId: aishaWedding.id,
+        title: "Confirm maulvi and mahr note",
+        category: "tradition",
+        status: "DONE",
+        dueAt: lk(2026, 6, 1, 12, 0),
+      },
+      {
+        weddingId: aishaWedding.id,
+        title: "Book halal catering",
+        category: "venue",
+        status: "DOING",
+        dueAt: aishaHalalTasting.startsAt,
+        appointmentId: aishaHalalTasting.id,
+      },
+      {
+        weddingId: aishaWedding.id,
+        title: "Mehndi evening guest list",
+        category: "guests",
+        status: "TODO",
+        dueAt: aishaMehndi.startsAt,
+        appointmentId: aishaMehndi.id,
+      },
+      {
+        weddingId: aishaWedding.id,
+        title: "Prep: seating chart for walima",
+        category: "schedule",
+        status: "TODO",
+        dueAt: lk(2026, 9, 3, 12, 0),
+      },
+      {
+        weddingId: aishaWedding.id,
+        title: "Confirm prayer room signage",
+        category: "venue",
+        status: "TODO",
+        dueAt: lk(2026, 9, 1, 10, 0),
+      },
+    ],
   });
 
   await prisma.guestHousehold.createMany({
@@ -1513,7 +1722,7 @@ async function main() {
       slug: "priya-and-arjun",
       partnerOneName: "Priya",
       partnerTwoName: "Arjun",
-      date: new Date("2027-01-18T03:30:00.000Z"),
+      date: lk(2027, 1, 18, 9, 0),
       city: "Galle",
       district: "Galle",
       guestCountEstimate: 180,
@@ -1528,16 +1737,24 @@ async function main() {
       members: { create: [{ userId: priya.id, role: "COUPLE", canManageVendors: true }] },
       events: {
         create: [
-          { kind: "MEHNDI", name: "Mehndi", venueName: "Fort Bazaar courtyard" },
-          { kind: "OTHER", name: "Hindu ceremony", venueName: "Fort Lawn Galle" },
-          { kind: "RECEPTION", name: "Destination reception", venueName: "Fort Lawn Galle" },
-        ],
-      },
-      tasks: {
-        create: [
-          { title: "Book priest and thaali", category: "tradition" },
-          { title: "Confirm Fort Lawn monsoon backup", category: "venue", status: "DOING" },
-          { title: "Guest airport pickups", category: "travel" },
+          {
+            kind: "MEHNDI",
+            name: "Mehndi",
+            venueName: "Fort Bazaar courtyard",
+            startsAt: lk(2027, 1, 17, 17, 0),
+          },
+          {
+            kind: "OTHER",
+            name: "Hindu ceremony",
+            venueName: "Fort Lawn Galle",
+            startsAt: lk(2027, 1, 18, 9, 0),
+          },
+          {
+            kind: "RECEPTION",
+            name: "Destination reception",
+            venueName: "Fort Lawn Galle",
+            startsAt: lk(2027, 1, 18, 18, 0),
+          },
         ],
       },
       budgetLines: {
@@ -1562,6 +1779,163 @@ async function main() {
         ],
       },
     },
+  });
+
+  const priyaEvents = await prisma.event.findMany({ where: { weddingId: priyaWedding.id } });
+  const priyaMehndi = priyaEvents.find((e) => e.kind === "MEHNDI")!;
+  const priyaCeremony = priyaEvents.find((e) => e.kind === "OTHER")!;
+  const priyaReception = priyaEvents.find((e) => e.kind === "RECEPTION")!;
+
+  await prisma.weddingVendor.createMany({
+    data: [
+      { weddingId: priyaWedding.id, vendorId: bySlug["fort-lawn-galle"].id, status: "BOOKED" },
+      { weddingId: priyaWedding.id, vendorId: bySlug["lotus-photography"].id, status: "BOOKED" },
+      { weddingId: priyaWedding.id, vendorId: bySlug["henna-by-aisha"].id, status: "INQUIRED" },
+      { weddingId: priyaWedding.id, vendorId: bySlug["guest-coaches"].id, status: "SHORTLISTED" },
+      { weddingId: priyaWedding.id, vendorId: bySlug["marriage-registrar-network"].id, status: "BOOKED" },
+    ],
+  });
+
+  const fortWalk = await prisma.appointment.create({
+    data: {
+      weddingId: priyaWedding.id,
+      eventId: priyaCeremony.id,
+      vendorId: bySlug["fort-lawn-galle"].id,
+      title: "Fort Lawn monsoon backup walkthrough",
+      kind: "VENDOR_MEETING",
+      source: "MANUAL",
+      startsAt: lk(2026, 11, 8, 10, 0),
+      endsAt: lk(2026, 11, 8, 11, 30),
+      venueName: "Fort Lawn Galle",
+      color: "#c4e0ff",
+      notes: "Confirm pavilion if rain; generator for mandap lights.",
+    },
+  });
+  const registrarMeet = await prisma.appointment.create({
+    data: {
+      weddingId: priyaWedding.id,
+      eventId: priyaCeremony.id,
+      vendorId: bySlug["marriage-registrar-network"].id,
+      title: "Destination marriage registrar brief",
+      kind: "VENDOR_MEETING",
+      source: "MANUAL",
+      startsAt: lk(2026, 10, 22, 14, 0),
+      endsAt: lk(2026, 10, 22, 15, 0),
+      venueName: "Galle District Registrar",
+      color: "#e4d4f5",
+      notes: "4-day residency clock for foreign couples.",
+    },
+  });
+  await prisma.appointment.create({
+    data: {
+      weddingId: priyaWedding.id,
+      eventId: priyaMehndi.id,
+      title: "Mehndi night",
+      kind: "DAY_OF",
+      source: "MANUAL",
+      startsAt: lk(2027, 1, 17, 17, 0),
+      endsAt: lk(2027, 1, 17, 21, 0),
+      venueName: "Fort Bazaar courtyard",
+      color: "#f7d4e0",
+      sortOrder: 0,
+      ownerLabel: "Henna / hosts",
+    },
+  });
+  await prisma.appointment.create({
+    data: {
+      weddingId: priyaWedding.id,
+      eventId: priyaCeremony.id,
+      title: "Hindu ceremony",
+      kind: "CEREMONY",
+      source: "MANUAL",
+      startsAt: lk(2027, 1, 18, 9, 0),
+      endsAt: lk(2027, 1, 18, 11, 0),
+      venueName: "Fort Lawn Galle",
+      color: "#7A1F2B",
+      sortOrder: 0,
+      ownerLabel: "Priest / couple",
+    },
+  });
+  await prisma.appointment.create({
+    data: {
+      weddingId: priyaWedding.id,
+      eventId: priyaReception.id,
+      title: "Destination reception",
+      kind: "DAY_OF",
+      source: "MANUAL",
+      startsAt: lk(2027, 1, 18, 18, 0),
+      endsAt: lk(2027, 1, 18, 23, 0),
+      venueName: "Fort Lawn Galle",
+      color: "#1F4D3A",
+      sortOrder: 0,
+      ownerLabel: "Hosts",
+      vendorId: bySlug["fort-lawn-galle"].id,
+    },
+  });
+  const airportPickup = await prisma.appointment.create({
+    data: {
+      weddingId: priyaWedding.id,
+      eventId: priyaMehndi.id,
+      vendorId: bySlug["guest-coaches"].id,
+      title: "Guest airport pickups (CMB→Galle)",
+      kind: "VENDOR_MEETING",
+      source: "MANUAL",
+      startsAt: lk(2027, 1, 16, 12, 0),
+      endsAt: lk(2027, 1, 16, 18, 0),
+      venueName: "Bandaranaike International Airport",
+      color: "#c4e0ff",
+      notes: "Two coaches; Amangalla + Fort Bazaar drops.",
+    },
+  });
+
+  await prisma.task.createMany({
+    data: [
+      {
+        weddingId: priyaWedding.id,
+        title: "Book priest and thaali",
+        category: "tradition",
+        status: "TODO",
+        dueAt: lk(2026, 11, 1, 12, 0),
+      },
+      {
+        weddingId: priyaWedding.id,
+        title: "Confirm Fort Lawn monsoon backup",
+        category: "venue",
+        status: "DOING",
+        dueAt: fortWalk.startsAt,
+        appointmentId: fortWalk.id,
+      },
+      {
+        weddingId: priyaWedding.id,
+        title: "Guest airport pickups",
+        category: "travel",
+        status: "TODO",
+        dueAt: airportPickup.startsAt,
+        appointmentId: airportPickup.id,
+      },
+      {
+        weddingId: priyaWedding.id,
+        title: "Prep: residency stamps for registrar",
+        category: "legal",
+        status: "TODO",
+        dueAt: registrarMeet.startsAt,
+        appointmentId: registrarMeet.id,
+      },
+      {
+        weddingId: priyaWedding.id,
+        title: "Mandap florals brief",
+        category: "decor",
+        status: "TODO",
+        dueAt: lk(2026, 12, 15, 12, 0),
+      },
+      {
+        weddingId: priyaWedding.id,
+        title: "Print day-of call sheet for Fort Lawn",
+        category: "schedule",
+        status: "TODO",
+        dueAt: lk(2027, 1, 15, 12, 0),
+      },
+    ],
   });
 
   await prisma.guestHousehold.createMany({
@@ -1638,10 +2012,6 @@ async function main() {
         status: "NEW",
       },
     ],
-  });
-
-  await prisma.weddingVendor.create({
-    data: { weddingId: priyaWedding.id, vendorId: bySlug["lotus-photography"].id, status: "INQUIRED" },
   });
 
   const lotus = bySlug["lotus-photography"];
@@ -2159,76 +2529,320 @@ async function main() {
     ],
   });
 
-  const aug = (day: number, hour: number, minute = 0) => new Date(Date.UTC(2026, 7, day, hour - 5, minute - 30));
+  const fitting = await prisma.appointment.create({
+    data: {
+      weddingId: nimaliWedding.id,
+      eventId: poruwa.id,
+      vendorId: bySlug["ransilu-bridal"].id,
+      title: "Osariya fitting",
+      kind: "FITTING",
+      source: "MANUAL",
+      startsAt: lk(2026, 8, 14, 9, 0),
+      endsAt: lk(2026, 8, 14, 10, 30),
+      venueName: "Ransilu Bridal, Colombo",
+      reminderMinutes: 30,
+      color: "#c4e0ff",
+      notes: "Bring the Kandyan jacket reference and neththi hire list.",
+    },
+  });
+  const tasting = await prisma.appointment.create({
+    data: {
+      weddingId: nimaliWedding.id,
+      eventId: reception.id,
+      vendorId: glen.id,
+      title: "Catering tasting",
+      kind: "TASTING",
+      source: "MANUAL",
+      startsAt: lk(2026, 8, 14, 11, 0),
+      endsAt: lk(2026, 8, 14, 12, 30),
+      venueName: "Glen Receptions",
+      reminderMinutes: 30,
+      color: "#d8f0c8",
+      notes: "Fish, veg, and a diaspora mild plate. Confirm kiribath station.",
+    },
+  });
+  const photoMeet = await prisma.appointment.create({
+    data: {
+      weddingId: nimaliWedding.id,
+      eventId: poruwa.id,
+      vendorId: lotus.id,
+      title: "Photo posing workshop",
+      kind: "VENDOR_MEETING",
+      source: "MANUAL",
+      startsAt: lk(2026, 8, 14, 13, 0),
+      endsAt: lk(2026, 8, 14, 14, 30),
+      venueName: "Independence Arcade",
+      reminderMinutes: 30,
+      color: "#f7d4e0",
+      notes: "Shot list for poruwa + homecoming travel day.",
+    },
+  });
+  const nekathMeet = await prisma.appointment.create({
+    data: {
+      weddingId: nimaliWedding.id,
+      eventId: poruwa.id,
+      vendorId: bySlug["pandith-nekath"].id,
+      title: "Nekath confirmation",
+      kind: "VENDOR_MEETING",
+      source: "MANUAL",
+      startsAt: lk(2026, 8, 15, 10, 0),
+      endsAt: lk(2026, 8, 15, 11, 0),
+      venueName: "Pandith Nekath",
+      reminderMinutes: 60,
+      color: "#e4d4f5",
+      notes: "Lock poruwa nekath 10:00 on 12 Dec — regenerate run sheet after.",
+    },
+  });
+  const glamTrial = await prisma.appointment.create({
+    data: {
+      weddingId: nimaliWedding.id,
+      eventId: poruwa.id,
+      vendorId: bySlug["glam-by-nadeesha"].id,
+      title: "Bridal glam trial",
+      kind: "FITTING",
+      source: "MANUAL",
+      startsAt: lk(2026, 9, 20, 14, 0),
+      endsAt: lk(2026, 9, 20, 16, 0),
+      venueName: "Glam by Nadeesha",
+      reminderMinutes: 60,
+      color: "#f7d4e0",
+      notes: "Osariya hair + soft glam. Bring jewellery hire pieces.",
+    },
+  });
+  const floralsMeet = await prisma.appointment.create({
+    data: {
+      weddingId: nimaliWedding.id,
+      eventId: poruwa.id,
+      vendorId: bySlug["temple-blooms"].id,
+      title: "Poruwa florals walkthrough",
+      kind: "VENDOR_MEETING",
+      source: "MANUAL",
+      startsAt: lk(2026, 10, 5, 11, 0),
+      endsAt: lk(2026, 10, 5, 12, 0),
+      venueName: "Glen Receptions poruwa bay",
+      reminderMinutes: 30,
+      color: "#d8f0c8",
+      notes: "Jasmine + temple flowers; confirm load-in before dresser arrival.",
+    },
+  });
+  const homecomingWalk = await prisma.appointment.create({
+    data: {
+      weddingId: nimaliWedding.id,
+      eventId: homecoming.id,
+      vendorId: hills.id,
+      title: "Homecoming walkthrough",
+      kind: "VENDOR_MEETING",
+      source: "MANUAL",
+      startsAt: lk(2026, 8, 16, 15, 0),
+      endsAt: lk(2026, 8, 16, 16, 30),
+      venueName: "Kandy Hills Estate",
+      color: "#c4e0ff",
+      notes: "Porch greeting flow + feast seating for elders.",
+    },
+  });
+  const coachBrief = await prisma.appointment.create({
+    data: {
+      weddingId: nimaliWedding.id,
+      eventId: reception.id,
+      vendorId: bySlug["guest-coaches"].id,
+      title: "Airport coach briefing",
+      kind: "VENDOR_MEETING",
+      source: "MANUAL",
+      startsAt: lk(2026, 11, 2, 9, 30),
+      endsAt: lk(2026, 11, 2, 10, 30),
+      venueName: "Cinnamon Lakeside lobby",
+      reminderMinutes: 30,
+      color: "#c4e0ff",
+      notes: "CMB → Glen coaches for diaspora guests; 8:00 departure day-of.",
+    },
+  });
+  const cakeMeet = await prisma.appointment.create({
+    data: {
+      weddingId: nimaliWedding.id,
+      eventId: reception.id,
+      vendorId: bySlug["butter-and-bloom"].id,
+      title: "Cake & sweetmeats tasting",
+      kind: "TASTING",
+      source: "MANUAL",
+      startsAt: lk(2026, 10, 18, 16, 0),
+      endsAt: lk(2026, 10, 18, 17, 0),
+      venueName: "Butter and Bloom",
+      color: "#fde68a",
+      notes: "Buttercream tier + kevum/kokis side table.",
+    },
+  });
 
-  await prisma.appointment.createMany({
+  // Checklist · Calendar · Agenda coupling — due dates align to meetings; prep tasks link to appointments.
+  await prisma.task.createMany({
     data: [
       {
         weddingId: nimaliWedding.id,
-        vendorId: bySlug["ransilu-bridal"].id,
-        title: "Osariya fitting",
-        kind: "FITTING",
-        startsAt: aug(14, 9),
-        endsAt: aug(14, 10, 30),
-        venueName: "Ransilu Bridal, Colombo",
-        reminderMinutes: 30,
-        color: "#c4e0ff",
-        notes: "Bring the Kandyan jacket reference.",
+        title: "Confirm nekath with Pandith",
+        category: "tradition",
+        status: "DONE",
+        dueAt: nekathMeet.startsAt,
+        appointmentId: nekathMeet.id,
+        assigneeUserId: nimali.id,
       },
       {
         weddingId: nimaliWedding.id,
-        vendorId: glen.id,
-        title: "Catering tasting",
-        kind: "TASTING",
-        startsAt: aug(14, 11),
-        endsAt: aug(14, 12, 30),
-        venueName: "Glen Receptions",
-        reminderMinutes: 30,
-        color: "#d8f0c8",
-        notes: "Fish, veg, and a diaspora mild plate.",
+        title: "Book poruwa and ashtaka",
+        category: "tradition",
+        status: "DOING",
+        dueAt: lk(2026, 9, 1, 12, 0),
+        assigneeUserId: kasun.id,
       },
       {
         weddingId: nimaliWedding.id,
-        vendorId: lotus.id,
-        title: "Photo posing workshop",
-        kind: "VENDOR_MEETING",
-        startsAt: aug(14, 13),
-        endsAt: aug(14, 14, 30),
-        venueName: "Independence Arcade",
-        reminderMinutes: 30,
-        color: "#f7d4e0",
+        title: "Prep: bring jacket reference to fitting",
+        category: "schedule",
+        status: "TODO",
+        dueAt: fitting.startsAt,
+        appointmentId: fitting.id,
+        assigneeUserId: nimali.id,
       },
       {
         weddingId: nimaliWedding.id,
-        vendorId: bySlug["pandith-nekath"].id,
-        title: "Nekath confirmation",
-        kind: "CEREMONY",
-        startsAt: aug(15, 10),
-        endsAt: aug(15, 11),
-        venueName: "Pandith Nekath",
-        reminderMinutes: 60,
-        color: "#e4d4f5",
-        notes: "Poruwa at 10:00 on 12 Dec.",
+        title: "Prep: allergy list for tasting",
+        category: "schedule",
+        status: "TODO",
+        dueAt: tasting.startsAt,
+        appointmentId: tasting.id,
+        assigneeUserId: amma.id,
       },
       {
         weddingId: nimaliWedding.id,
-        vendorId: hills.id,
-        title: "Homecoming walkthrough",
-        kind: "VENDOR_MEETING",
-        startsAt: aug(16, 15),
-        endsAt: aug(16, 16, 30),
-        venueName: "Kandy Hills Estate",
-        color: "#c4e0ff",
+        title: "Prep: shot list for photo workshop",
+        category: "schedule",
+        status: "DOING",
+        dueAt: photoMeet.startsAt,
+        appointmentId: photoMeet.id,
+        assigneeUserId: kasun.id,
       },
       {
         weddingId: nimaliWedding.id,
-        title: "Poruwa ceremony",
-        kind: "CEREMONY",
-        startsAt: new Date("2026-12-12T04:30:00.000Z"),
-        endsAt: new Date("2026-12-12T06:30:00.000Z"),
-        venueName: "Glen Receptions",
-        color: "#e4d4f5",
-        notes: "Nekath 10:00 Sri Lanka time.",
+        title: "Lock catering plate count",
+        category: "venue",
+        status: "TODO",
+        dueAt: tasting.startsAt,
+        appointmentId: tasting.id,
+        assigneeUserId: amma.id,
+      },
+      {
+        weddingId: nimaliWedding.id,
+        title: "Share guest list with Amma",
+        category: "guests",
+        status: "DOING",
+        dueAt: lk(2026, 9, 15, 18, 0),
+        assigneeUserId: amma.id,
+      },
+      {
+        weddingId: nimaliWedding.id,
+        title: "Jayamangala gatha rehearsal",
+        category: "tradition",
+        status: "TODO",
+        dueAt: lk(2026, 12, 5, 17, 0),
+      },
+      {
+        weddingId: nimaliWedding.id,
+        title: "Bridal dresser trial in Kandy",
+        category: "beauty",
+        status: "TODO",
+        dueAt: glamTrial.startsAt,
+        appointmentId: glamTrial.id,
+        assigneeUserId: nimali.id,
+      },
+      {
+        weddingId: nimaliWedding.id,
+        title: "Confirm florals load-in before dresser",
+        category: "decor",
+        status: "TODO",
+        dueAt: floralsMeet.startsAt,
+        appointmentId: floralsMeet.id,
+      },
+      {
+        weddingId: nimaliWedding.id,
+        title: "Homecoming menu with Kasun's family",
+        category: "homecoming",
+        status: "DOING",
+        dueAt: homecomingWalk.startsAt,
+        appointmentId: homecomingWalk.id,
+        assigneeUserId: kasun.id,
+      },
+      {
+        weddingId: nimaliWedding.id,
+        title: "Airport coaches for diaspora guests",
+        category: "travel",
+        status: "TODO",
+        dueAt: coachBrief.startsAt,
+        appointmentId: coachBrief.id,
+        assigneeUserId: kasun.id,
+      },
+      {
+        weddingId: nimaliWedding.id,
+        title: "Lock entertainment and music brief",
+        category: "entertainment",
+        status: "DONE",
+        dueAt: lk(2026, 8, 20, 12, 0),
+        assigneeUserId: nimali.id,
+      },
+      {
+        weddingId: nimaliWedding.id,
+        title: "Order cake & traditional sweetmeats",
+        category: "catering",
+        status: "TODO",
+        dueAt: cakeMeet.startsAt,
+        appointmentId: cakeMeet.id,
+      },
+      {
+        weddingId: nimaliWedding.id,
+        title: "Prep: dresser kit & neththi pins (day-of)",
+        category: "schedule",
+        status: "TODO",
+        dueAt: dresserBlock?.startsAt ?? lk(2026, 12, 12, 7, 0),
+        appointmentId: dresserBlock?.id,
+        assigneeUserId: nimali.id,
+      },
+      {
+        weddingId: nimaliWedding.id,
+        title: "Prep: car sequence & ribbon kit",
+        category: "schedule",
+        status: "TODO",
+        dueAt: carsBlock?.startsAt ?? lk(2026, 12, 12, 8, 30),
+        appointmentId: carsBlock?.id,
+      },
+      {
+        weddingId: nimaliWedding.id,
+        title: "Prep: seating cards for plates block",
+        category: "schedule",
+        status: "TODO",
+        dueAt: platesBlock?.startsAt ?? lk(2026, 12, 12, 11, 30),
+        appointmentId: platesBlock?.id,
+        assigneeUserId: amma.id,
+      },
+      {
+        weddingId: nimaliWedding.id,
+        title: "Submit Notice of Marriage to Registrar",
+        category: "legal",
+        status: "DONE",
+        dueAt: lk(2026, 7, 20, 10, 0),
+      },
+      {
+        weddingId: nimaliWedding.id,
+        title: "Print day-of run sheet for vendors",
+        category: "schedule",
+        status: "TODO",
+        dueAt: lk(2026, 12, 10, 12, 0),
+        appointmentId: ceremonyBlock?.id,
+      },
+      {
+        weddingId: nimaliWedding.id,
+        title: "Homecoming feast seating for elders",
+        category: "homecoming",
+        status: "TODO",
+        dueAt: homecomingAgenda[2]?.startsAt ?? lk(2026, 12, 13, 17, 0),
+        appointmentId: homecomingAgenda[2]?.id,
+        assigneeUserId: kasun.id,
       },
     ],
   });
@@ -2524,8 +3138,9 @@ async function main() {
     });
   }
 
+  const [taskCount, appointmentCount] = await Promise.all([prisma.task.count(), prisma.appointment.count()]);
   console.log(
-    `Seeded ${rich.vendorCount} vendors, ${rich.defCount} attribute definitions, ${rich.attrValueCount} answers, ${rich.packageCount} packages, 3 weddings, ${households.length} main-wedding households, site config, ${cmsPages.length} CMS pages.`,
+    `Seeded ${rich.vendorCount} vendors, ${rich.defCount} attribute definitions, ${rich.attrValueCount} answers, ${rich.packageCount} packages, 3 weddings, ${households.length} main-wedding households, ${taskCount} checklist tasks, ${appointmentCount} calendar/agenda appointments (coupled), site config, ${cmsPages.length} CMS pages.`,
   );
 }
 

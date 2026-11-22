@@ -15,7 +15,7 @@ import {
 import { AdminListToolbar } from "@ceylonweddings/ui/domain/admin-list-toolbar";
 import { DataTableCell, DataTableHead } from "@ceylonweddings/ui/domain/data-table";
 import { DataTableList } from "@ceylonweddings/ui/domain/data-table-list";
-import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
+import { PlanningHero } from "@/features/planning/components/planning-hero";
 import { SectionCard } from "@ceylonweddings/ui/domain/section-card";
 import { getListEmptyMode, serverSourceCount, showListChrome } from "@ceylonweddings/ui/lib/list-state";
 import { useClientTablePagination } from "@ceylonweddings/ui/lib/use-client-table-pagination";
@@ -61,7 +61,7 @@ export default function AdminAdsPage() {
 
   return (
     <div className="grid gap-8">
-      <PageHeader
+      <PlanningHero
         icon={Megaphone}
         kicker="Ads"
         title="Ads studio"

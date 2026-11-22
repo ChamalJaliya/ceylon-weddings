@@ -11,7 +11,7 @@ import { CheckboxField } from "@ceylonweddings/ui/components/checkbox";
 import { Input } from "@ceylonweddings/ui/components/input";
 import { SimpleSelect } from "@ceylonweddings/ui/components/select";
 import { Textarea } from "@ceylonweddings/ui/components/textarea";
-import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
+import { PlanningHero } from "@/features/planning/components/planning-hero";
 import { SectionCard } from "@ceylonweddings/ui/domain/section-card";
 import { Link, useRouter } from "@/i18n/navigation";
 
@@ -92,7 +92,7 @@ export default function AdminContentEditorPage() {
 
   return (
     <div className="grid gap-8">
-      <PageHeader
+      <PlanningHero
         icon={Lightbulb}
         kicker="CMS"
         title={isNew ? "New article" : form.title || "Edit article"}

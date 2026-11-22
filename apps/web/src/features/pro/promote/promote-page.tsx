@@ -33,7 +33,7 @@ import {
 } from "@ceylonweddings/ui/domain/ads-studio";
 import { DataTableCell, DataTableHead } from "@ceylonweddings/ui/domain/data-table";
 import { DataTableList } from "@ceylonweddings/ui/domain/data-table-list";
-import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
+import { PlanningHero, heroButtonClass } from "@/features/planning/components/planning-hero";
 import { SectionCard } from "@ceylonweddings/ui/domain/section-card";
 import { useClientTablePagination } from "@ceylonweddings/ui/lib/use-client-table-pagination";
 
@@ -188,13 +188,18 @@ export default function VendorPromotePage() {
   if (mode === "list") {
     return (
       <div className="grid gap-8">
-        <PageHeader
+        <PlanningHero
           icon={Megaphone}
           kicker="Grow"
           title="Promote"
           description="Design custom ads for catalog and homepage placements. Paid campaigns go to review."
           actions={
-            <Button size="sm" onClick={() => void openNew()}>
+            <Button
+              size="sm"
+              shape="pill"
+              className="gap-2 bg-paper text-ink hover:bg-paper/90"
+              onClick={() => void openNew()}
+            >
               <Plus className="size-4" aria-hidden />
               New promotion
             </Button>
@@ -289,19 +294,25 @@ export default function VendorPromotePage() {
 
   return (
     <div className="grid gap-8">
-      <PageHeader
+      <PlanningHero
         icon={Megaphone}
         kicker="Promote studio"
         title={draft.name || "New promotion"}
         description="Design your ad, choose where couples see it, and preview it live."
         actions={
-          <div className="flex items-center gap-2">
+          <>
             {editId ? <PromotionStatusBadge status={draft.status} /> : null}
-            <Button variant="ghost" size="sm" onClick={() => setMode("list")}>
+            <Button
+              variant="outline"
+              size="sm"
+              shape="pill"
+              className={heroButtonClass}
+              onClick={() => setMode("list")}
+            >
               <ArrowLeft className="size-4" aria-hidden />
               Your campaigns
             </Button>
-          </div>
+          </>
         }
       />
       {error ? <FormStatus tone="destructive">{error}</FormStatus> : null}

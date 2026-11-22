@@ -9,6 +9,7 @@ export const taskSchema = z.object({
   status: taskStatusSchema,
   category: z.string().nullable(),
   assigneeUserId: z.string().nullable(),
+  appointmentId: z.string().nullable().optional(),
 });
 
 export const createTaskBodySchema = z.object({
@@ -17,6 +18,7 @@ export const createTaskBodySchema = z.object({
   dueAt: z.string().nullable().optional(),
   assigneeUserId: z.string().nullable().optional(),
   status: taskStatusSchema.default("TODO"),
+  appointmentId: z.string().nullable().optional(),
 });
 
 export const updateTaskBodySchema = z.object({
@@ -25,6 +27,7 @@ export const updateTaskBodySchema = z.object({
   dueAt: z.string().nullable().optional(),
   assigneeUserId: z.string().nullable().optional(),
   status: taskStatusSchema.optional(),
+  appointmentId: z.string().nullable().optional(),
 });
 
 export type Task = z.infer<typeof taskSchema>;

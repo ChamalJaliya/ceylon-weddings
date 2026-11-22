@@ -31,7 +31,7 @@ import {
   type AdsPromotionDraft,
   type PromotionSectionId,
 } from "@ceylonweddings/ui/domain/ads-studio";
-import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
+import { PlanningHero } from "@/features/planning/components/planning-hero";
 import { Link, useRouter } from "@/i18n/navigation";
 import { CATEGORY_LABELS, localizedText } from "@/lib/labels";
 import { uploadImage } from "@/lib/upload-image";
@@ -181,7 +181,7 @@ export default function AdminAdsStudioPage() {
 
   return (
     <div className="grid gap-8">
-      <PageHeader
+      <PlanningHero
         icon={Megaphone}
         kicker="Ads studio"
         title={isNew ? "New campaign" : draft.name || "Edit campaign"}

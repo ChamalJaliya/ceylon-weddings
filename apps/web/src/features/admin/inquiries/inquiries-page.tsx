@@ -9,7 +9,7 @@ import { Button } from "@ceylonweddings/ui/components/button";
 import { FormStatus } from "@ceylonweddings/ui/components/form-status";
 import { DataTableCell, DataTableHead } from "@ceylonweddings/ui/domain/data-table";
 import { DataTableList } from "@ceylonweddings/ui/domain/data-table-list";
-import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
+import { PlanningHero } from "@/features/planning/components/planning-hero";
 import { SectionCard } from "@ceylonweddings/ui/domain/section-card";
 import { useClientTablePagination } from "@ceylonweddings/ui/lib/use-client-table-pagination";
 import { Link } from "@/i18n/navigation";
@@ -49,8 +49,29 @@ export default function AdminInquiriesPage() {
   }
 
   return (
-    <div className="grid gap-8">
-      <PageHeader icon={Inbox} kicker="Marketplace" title="Inquiries" description="Cross-vendor lead oversight." />
+    <div className="grid min-w-0 gap-6">
+      <PlanningHero icon={Inbox} kicker="Marketplace" title="Inquiries" description="Cross-vendor lead oversight.">
+        <div className="flex flex-wrap gap-x-8 gap-y-3">
+          <div>
+            <p className="text-xs text-paper/60">All inquiries</p>
+            <p className="font-serif text-2xl">{rows.length}</p>
+          </div>
+          <div>
+            <p className="text-xs text-paper/60">New</p>
+            <p className="font-serif text-2xl text-[color:var(--cw-gold-300)]">
+              {rows.filter((r) => r.status === "NEW").length}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-paper/60">Replied</p>
+            <p className="font-serif text-2xl">{rows.filter((r) => r.status === "REPLIED").length}</p>
+          </div>
+          <div>
+            <p className="text-xs text-paper/60">Closed</p>
+            <p className="font-serif text-2xl">{rows.filter((r) => r.status === "CLOSED").length}</p>
+          </div>
+        </div>
+      </PlanningHero>
       <SectionCard title="Leads" icon={Inbox}>
         <DataTableList
           framed={false}

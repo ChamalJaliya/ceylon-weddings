@@ -193,6 +193,11 @@ export function hubStats(input: {
   };
 }
 
+/** "Poruwa" → "Poruwa ceremony", but "Poruwa ceremony" stays as is. */
+export function ceremonyTitle(name: string) {
+  return /\bceremony\s*$/i.test(name.trim()) ? name.trim() : `${name.trim()} ceremony`;
+}
+
 export function nekathAppointmentSpecs(
   event: Pick<Event, "name" | "kind" | "nekathAt" | "startsAt">,
 ): NekathAppointmentSpec[] {
@@ -224,7 +229,7 @@ export function nekathAppointmentSpecs(
       ownerLabel: "Transport",
     },
     {
-      title: `${event.name} ceremony`,
+      title: ceremonyTitle(event.name),
       kind: "CEREMONY",
       offsetMinutes: 0,
       durationMinutes: 75,
@@ -495,14 +500,20 @@ export function weddingCompleteness(wedding: {
   guestEventIds?: string[] | null;
   musicPlans?: Array<{ ready?: boolean | null; mustCount?: number | null; cueCount?: number | null }> | null;
   moodboards?: Array<{ ready?: boolean | null; elementCount?: number | null }> | null;
+  /** Checklist tasks already on the wedding (any status). */
+  taskCount?: number | null;
+  /** Event ids that already have at least one agenda/calendar appointment. */
+  runSheetEventIds?: string[] | null;
 }): CompletenessResult {
+  const datedEvents = (wedding.events ?? []).filter((event) => Boolean(event.startsAt) && Boolean(event.name?.trim()));
+  const runSheetIds = new Set(wedding.runSheetEventIds ?? []);
   const checks: Array<{ key: string; ok: boolean }> = [
     { key: "partners", ok: Boolean(wedding.partnerOneName?.trim() && wedding.partnerTwoName?.trim()) },
     { key: "date", ok: Boolean(wedding.date) },
     { key: "city", ok: Boolean(wedding.city?.trim()) },
     {
       key: "events",
-      ok: (wedding.events ?? []).some((event) => Boolean(event.startsAt) && Boolean(event.name?.trim())),
+      ok: datedEvents.length > 0,
     },
     { key: "guests", ok: (wedding.guestCountEstimate ?? 0) >= 20 },
     {
@@ -540,6 +551,11 @@ export function weddingCompleteness(wedding: {
     {
       key: "moodboard",
       ok: (wedding.moodboards ?? []).some((board) => board.ready === true || (board.elementCount ?? 0) >= 1),
+    },
+    { key: "checklist", ok: (wedding.taskCount ?? 0) > 0 },
+    {
+      key: "runSheet",
+      ok: datedEvents.length === 0 || datedEvents.some((event) => event.id && runSheetIds.has(event.id)),
     },
   ];
   const missing = checks.filter((item) => !item.ok).map((item) => item.key);

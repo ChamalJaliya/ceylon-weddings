@@ -17,7 +17,7 @@ import { FormStatus } from "@ceylonweddings/ui/components/form-status";
 import { Input } from "@ceylonweddings/ui/components/input";
 import { Switch } from "@ceylonweddings/ui/components/switch";
 import { Textarea } from "@ceylonweddings/ui/components/textarea";
-import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
+import { PlanningHero } from "@/features/planning/components/planning-hero";
 import { SectionCard } from "@ceylonweddings/ui/domain/section-card";
 import { Link } from "@/i18n/navigation";
 
@@ -93,7 +93,7 @@ export default function AdminConsultationSettingsPage() {
 
   return (
     <div className="grid gap-8">
-      <PageHeader
+      <PlanningHero
         icon={CalendarClock}
         kicker="Settings"
         title="Consultation hours"
@@ -235,7 +235,12 @@ export default function AdminConsultationSettingsPage() {
                         type="button"
                         size="sm"
                         variant="ghost"
-                        onClick={() => setWindows(day, settings.weekly[day].filter((_, itemIndex) => itemIndex !== index))}
+                        onClick={() =>
+                          setWindows(
+                            day,
+                            settings.weekly[day].filter((_, itemIndex) => itemIndex !== index),
+                          )
+                        }
                       >
                         Remove
                       </Button>
@@ -315,9 +320,7 @@ export default function AdminConsultationSettingsPage() {
             <Textarea
               rows={3}
               value={settings.intro.body}
-              onChange={(event) =>
-                setSettings({ ...settings, intro: { ...settings.intro, body: event.target.value } })
-              }
+              onChange={(event) => setSettings({ ...settings, intro: { ...settings.intro, body: event.target.value } })}
             />
           </label>
           <label className="grid gap-1 text-sm">
@@ -338,23 +341,11 @@ export default function AdminConsultationSettingsPage() {
   );
 }
 
-function NumberField({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: number;
-  onChange: (value: number) => void;
-}) {
+function NumberField({ label, value, onChange }: { label: string; value: number; onChange: (value: number) => void }) {
   return (
     <label className="grid gap-1 text-sm">
       <span className="text-muted-foreground">{label}</span>
-      <Input
-        type="number"
-        value={value}
-        onChange={(event) => onChange(Number(event.target.value))}
-      />
+      <Input type="number" value={value} onChange={(event) => onChange(Number(event.target.value))} />
     </label>
   );
 }

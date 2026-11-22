@@ -99,11 +99,23 @@ export function HorizontalTabs<T extends string = string>({
     }
     const ro = new ResizeObserver(() => requestAnimationFrame(() => updateIndicator()));
     ro.observe(nav);
+    // Tabs can change width without the nav resizing (web fonts swapping in, labels changing),
+    // so watch every tab too and re-measure once fonts are ready.
+    nav.querySelectorAll<HTMLElement>("[data-tab-item]").forEach((tab) => ro.observe(tab));
+    let cancelled = false;
+    if (typeof document !== "undefined" && document.fonts?.ready) {
+      void document.fonts.ready.then(() => {
+        if (!cancelled) requestAnimationFrame(() => updateIndicator());
+      });
+    }
+    window.addEventListener("resize", updateIndicator);
     return () => {
+      cancelled = true;
       ro.disconnect();
       nav.removeEventListener("scroll", updateIndicator);
+      window.removeEventListener("resize", updateIndicator);
     };
-  }, [updateIndicator]);
+  }, [updateIndicator, items]);
 
   // Arrow-key navigation between tabs (roving focus).
   function onKeyDown(event: React.KeyboardEvent<HTMLElement>) {

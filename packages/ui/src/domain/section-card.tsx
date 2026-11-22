@@ -37,7 +37,7 @@ export function SectionCard({
         data-slot="section-card"
         data-variant={variant}
         elevation={variant === "raised" ? "raised" : "flat"}
-        className={cn(variantClass[variant], className)}
+        className={cn("min-w-0", variantClass[variant], className)}
       >
         <CardHeader
           className={cn(
@@ -55,9 +55,15 @@ export function SectionCard({
             ) : null}
             <CardTitle className="truncate">{title}</CardTitle>
           </div>
-          {action ? <div data-slot="card-action" className="shrink-0">{action}</div> : null}
+          {action ? (
+            <div data-slot="card-action" className="shrink-0">
+              {action}
+            </div>
+          ) : null}
         </CardHeader>
-        <CardContent className={cn("grid gap-3", variant === "plain" && "px-0 pb-0")}>{children}</CardContent>
+        <CardContent className={cn("grid min-w-0 grid-cols-1 gap-3", variant === "plain" && "px-0 pb-0")}>
+          {children}
+        </CardContent>
       </Card>
     </Reveal>
   );

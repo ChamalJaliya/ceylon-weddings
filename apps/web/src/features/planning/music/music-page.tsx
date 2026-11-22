@@ -2,10 +2,26 @@
 
 import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Music2 } from "lucide-react";
+import {
+  Ban,
+  Copy,
+  Disc3,
+  ExternalLink,
+  Heart,
+  HelpCircle,
+  Link2,
+  Mic2,
+  Music2,
+  Plus,
+  RefreshCw,
+  Send,
+  Sparkles,
+  Trash2,
+} from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
 import { api } from "@ceylonweddings/web";
 import {
+  agendaForEvent,
   musicTracksByList,
   orderedMusicCues,
   resolveCueStartsAt,
@@ -19,19 +35,22 @@ import {
 } from "@ceylonweddings/contracts";
 import { Button } from "@ceylonweddings/ui/components/button";
 import { Input } from "@ceylonweddings/ui/components/input";
-import { Label } from "@ceylonweddings/ui/components/label";
-import { SimpleSelect } from "@ceylonweddings/ui/components/select";
 import { FormStatus } from "@ceylonweddings/ui/components/form-status";
-import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
-import { EmptyState } from "@ceylonweddings/ui/domain/empty-state";
-import { PlanningEventToolbar, PlanningFormPanel } from "@ceylonweddings/ui/domain/planning-form-panel";
-import { PlanningList, PlanningListRow } from "@ceylonweddings/ui/domain/planning-list-row";
+import { Combobox } from "@ceylonweddings/ui/components/combobox";
+import { cn } from "@ceylonweddings/ui/utils";
 import { SignInPrompt, useWedding } from "@/components/use-wedding";
+import { PlanningHero, heroButtonClass, heroSelectClass } from "@/features/planning/components/planning-hero";
 
 const LIST_LABELS: Record<MusicListKind, string> = {
   MUST: "Must play",
   MAYBE: "Maybe",
   DO_NOT: "Do not play",
+};
+
+const LIST_STYLE: Record<MusicListKind, { chip: string; icon: typeof Heart }> = {
+  MUST: { chip: "bg-primary/10 text-primary", icon: Heart },
+  MAYBE: { chip: "bg-warning/10 text-warning", icon: HelpCircle },
+  DO_NOT: { chip: "bg-destructive/10 text-destructive", icon: Ban },
 };
 
 const CUE_KINDS: MusicCueKind[] = [
@@ -63,6 +82,7 @@ export default function MusicPage() {
   const [plan, setPlan] = useState<MusicPlan | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [addingCue, setAddingCue] = useState(false);
 
   const [trackTitle, setTrackTitle] = useState("");
   const [trackArtist, setTrackArtist] = useState("");
@@ -106,7 +126,7 @@ export default function MusicPage() {
 
   const event = useMemo(() => data?.events?.find((item) => item.id === eventId) ?? null, [data, eventId]);
 
-  const agenda = useMemo(() => appointments.filter((a) => a.eventId === eventId), [appointments, eventId]);
+  const agenda = useMemo(() => (eventId ? agendaForEvent(appointments, eventId) : []), [appointments, eventId]);
 
   const entertainment = useMemo(
     () => (data?.team ?? []).filter((v) => v.category === "ENTERTAINMENT" && v.status === "BOOKED"),
@@ -341,272 +361,466 @@ export default function MusicPage() {
 
   if (!data) return <SignInPrompt error={error} />;
 
+  const fmtTime = (iso: string) => new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const pretty = (v: string) => v.charAt(0) + v.slice(1).toLowerCase().replaceAll("_", " ");
+  const trackCount = (plan?.tracks ?? []).length;
+  const iconBtn =
+    "grid size-8 shrink-0 place-items-center rounded-full text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive disabled:opacity-30";
+
   if (!data.events?.length) {
     return (
-      <div className="space-y-6">
-        <PageHeader title={t("nav.music")} description={t("planning.musicHelp")} />
-        <EmptyState icon={Music2} title={t("planning.noEvents")} description={t("planning.musicNeedEvent")} />
+      <div className="cw-stack">
+        <PlanningHero
+          icon={Music2}
+          kicker={t("hub.kicker")}
+          title={t("nav.music")}
+          description={t("planning.musicHelp")}
+        />
+        <div className="grid place-items-center gap-3 rounded-3xl border border-dashed border-border p-12 text-center">
+          <p className="font-serif text-2xl">{t("planning.noEvents")}</p>
+          <p className="max-w-sm text-sm text-muted-foreground">{t("planning.musicNeedEvent")}</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
-      <PageHeader title={t("nav.music")} description={t("planning.musicHelp")} />
-
-      <PlanningEventToolbar>
-        <div className="min-w-[12rem] space-y-1">
-          <Label>{t("planning.event")}</Label>
-          <SimpleSelect
-            value={eventId}
-            onValueChange={setEventId}
-            options={(data.events ?? []).map((item) => ({
-              value: item.id,
-              label: `${item.name} (${item.kind})`,
-            }))}
-          />
+    <div className="cw-stack">
+      <PlanningHero
+        icon={Music2}
+        kicker={t("hub.kicker")}
+        title={t("nav.music")}
+        description={t("planning.musicHelp")}
+        actions={
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              shape="pill"
+              size="sm"
+              className={heroButtonClass}
+              disabled={busy}
+              onClick={() => void onSeedTemplates(false)}
+            >
+              <Sparkles className="size-4" /> {t("planning.musicSeedCues")}
+            </Button>
+            {(plan?.cues?.length ?? 0) > 0 ? (
+              <Button
+                type="button"
+                variant="outline"
+                shape="pill"
+                size="sm"
+                className={heroButtonClass}
+                disabled={busy}
+                onClick={() => void onSeedTemplates(true)}
+              >
+                <RefreshCw className="size-4" /> {t("planning.musicReplaceCues")}
+              </Button>
+            ) : null}
+          </>
+        }
+      >
+        <div className="flex flex-wrap items-end gap-x-8 gap-y-4">
+          <div className="grid gap-1.5">
+            <span className="text-xs text-paper/60">{t("planning.event")}</span>
+            <Combobox
+              aria-label={t("planning.event")}
+              className={cn("w-64", heroSelectClass)}
+              value={eventId}
+              onValueChange={setEventId}
+              searchPlaceholder="Search events…"
+              options={(data.events ?? []).map((item) => ({ value: item.id, label: item.name }))}
+            />
+          </div>
+          {plan ? (
+            <>
+              <div className="grid gap-1.5">
+                <span className="text-xs text-paper/60">{t("planning.musicVibe")}</span>
+                <Combobox
+                  aria-label={t("planning.musicVibe")}
+                  className={cn("w-44", heroSelectClass)}
+                  value={plan.vibePrimary ?? "__none__"}
+                  onValueChange={(value) => void onSaveVibe(value === "__none__" ? null : (value as MusicVibe))}
+                  searchPlaceholder="Search vibes…"
+                  options={[
+                    { value: "__none__", label: "No vibe yet" },
+                    ...VIBES.map((v) => ({ value: v, label: pretty(v) })),
+                  ]}
+                />
+              </div>
+              <div>
+                <p className="text-xs text-paper/60">Songs</p>
+                <p className="font-serif text-2xl">{trackCount}</p>
+              </div>
+              <div>
+                <p className="text-xs text-paper/60">Cues</p>
+                <p className="font-serif text-2xl">{cues.length}</p>
+              </div>
+            </>
+          ) : null}
         </div>
-        <Button type="button" disabled={busy} onClick={() => void ensurePlan()}>
-          {plan ? t("planning.musicRefresh") : t("planning.musicCreate")}
-        </Button>
-        <Button type="button" variant="outline" disabled={busy} onClick={() => void onSeedTemplates(false)}>
-          {t("planning.musicSeedCues")}
-        </Button>
-        {(plan?.cues?.length ?? 0) > 0 ? (
-          <Button type="button" variant="ghost" disabled={busy} onClick={() => void onSeedTemplates(true)}>
-            {t("planning.musicReplaceCues")}
-          </Button>
-        ) : null}
-      </PlanningEventToolbar>
+      </PlanningHero>
 
       {status ? <FormStatus>{status}</FormStatus> : null}
 
       {!plan ? (
-        <EmptyState icon={Music2} title={t("planning.musicEmptyTitle")} description={t("planning.musicEmptyBody")} />
+        <div className="grid place-items-center gap-4 rounded-3xl border border-dashed border-border p-12 text-center">
+          <span className="grid size-14 place-items-center rounded-2xl bg-primary/10 text-primary">
+            <Music2 className="size-6" />
+          </span>
+          <div>
+            <p className="font-serif text-2xl">{t("planning.musicEmptyTitle")}</p>
+            <p className="mt-1 max-w-sm text-sm text-muted-foreground">{t("planning.musicEmptyBody")}</p>
+          </div>
+          <div className="flex flex-wrap justify-center gap-2">
+            <Button shape="pill" disabled={busy} onClick={() => void ensurePlan()}>
+              {t("planning.musicCreate")}
+            </Button>
+            <Button
+              shape="pill"
+              variant="outline"
+              className="gap-2"
+              disabled={busy}
+              onClick={() => void onSeedTemplates(false)}
+            >
+              <Sparkles className="size-4" /> {t("planning.musicSeedCues")}
+            </Button>
+          </div>
+        </div>
       ) : (
         <>
-          <section className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2 rounded-xl border border-border/60 p-4">
-              <Label>{t("planning.musicVibe")}</Label>
-              <SimpleSelect
-                value={plan.vibePrimary ?? "__none__"}
-                onValueChange={(value) => void onSaveVibe(value === "__none__" ? null : (value as MusicVibe))}
-                options={[{ value: "__none__", label: "—" }, ...VIBES.map((vibe) => ({ value: vibe, label: vibe }))]}
-              />
-            </div>
-            <div className="space-y-2 rounded-xl border border-border/60 p-4">
-              <Label>{t("planning.musicEntertainment")}</Label>
-              <SimpleSelect
-                value={plan.entertainmentVendorId ?? "__none__"}
-                onValueChange={(value) => void onSaveVendor(value === "__none__" ? null : value)}
-                options={[
-                  { value: "__none__", label: t("planning.musicNoVendor") },
-                  ...entertainment.map((v) => ({ value: v.vendorId, label: v.name })),
-                ]}
-              />
-            </div>
-          </section>
-
-          <section className="space-y-4 rounded-xl border border-border/60 p-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h2 className="font-medium">{t("planning.musicShare")}</h2>
-                <p className="text-sm text-muted-foreground">{t("planning.musicShareHelp")}</p>
+          {/* Who's playing + share brief */}
+          <div className="grid gap-4 lg:grid-cols-2">
+            <section className="min-w-0 rounded-3xl border border-border bg-card p-5 shadow-card">
+              <p className="text-label tracking-eyebrow text-muted-foreground uppercase">
+                {t("planning.musicEntertainment")}
+              </p>
+              <div className="mt-3 flex items-center gap-3">
+                <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
+                  <Mic2 className="size-5" />
+                </span>
+                <Combobox
+                  aria-label={t("planning.musicEntertainment")}
+                  className="flex-1"
+                  value={plan.entertainmentVendorId ?? "__none__"}
+                  onValueChange={(value) => void onSaveVendor(value === "__none__" ? null : value)}
+                  searchPlaceholder="Search vendors…"
+                  options={[
+                    { value: "__none__", label: t("planning.musicNoVendor") },
+                    ...entertainment.map((v) => ({ value: v.vendorId, label: v.name })),
+                  ]}
+                />
               </div>
-              <div className="flex flex-wrap gap-2">
-                {plan.shareEnabled ? (
-                  <>
-                    <Button type="button" variant="outline" disabled={busy} onClick={() => void copyBrief()}>
-                      {t("planning.musicCopyLink")}
-                    </Button>
-                    <Button type="button" variant="outline" disabled={busy} onClick={() => void onShare(true, true)}>
-                      {t("planning.musicRotateLink")}
-                    </Button>
-                    <Button type="button" variant="ghost" disabled={busy} onClick={() => void onShare(false)}>
-                      {t("planning.musicDisableShare")}
-                    </Button>
+            </section>
+
+            <section className="min-w-0 rounded-3xl border border-border bg-card p-5 shadow-card">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-label tracking-eyebrow text-muted-foreground uppercase">
+                    {t("planning.musicShare")}
+                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">{t("planning.musicShareHelp")}</p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={plan.shareEnabled}
+                  aria-label={plan.shareEnabled ? t("planning.musicDisableShare") : t("planning.musicEnableShare")}
+                  disabled={busy}
+                  onClick={() => void onShare(!plan.shareEnabled)}
+                  className={cn(
+                    "relative h-6 w-11 shrink-0 rounded-full transition-colors",
+                    plan.shareEnabled ? "bg-primary" : "bg-muted",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "absolute top-0.5 left-0.5 size-5 rounded-full bg-background shadow transition-transform",
+                      plan.shareEnabled && "translate-x-5",
+                    )}
+                  />
+                </button>
+              </div>
+              {briefUrl ? (
+                <div className="mt-3 grid min-w-0 gap-2">
+                  <div className="flex min-w-0 items-center gap-2 rounded-2xl bg-secondary/60 py-1.5 pr-1.5 pl-3">
+                    <Link2 className="size-3.5 shrink-0 text-muted-foreground" />
+                    <span className="min-w-0 flex-1 truncate font-mono text-xs text-muted-foreground">{briefUrl}</span>
                     <Button
                       type="button"
+                      size="sm"
+                      variant="ghost"
+                      shape="pill"
+                      className="gap-1.5"
+                      disabled={busy}
+                      onClick={() => void copyBrief()}
+                    >
+                      <Copy className="size-3.5" /> {t("planning.musicCopyLink")}
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      shape="pill"
+                      className="gap-1.5"
                       disabled={busy || !plan.entertainmentVendorId}
                       onClick={() => void messageEntertainment()}
                     >
-                      {t("planning.musicMessageVendor")}
+                      <Send className="size-3.5" /> {t("planning.musicMessageVendor")}
                     </Button>
-                  </>
-                ) : (
-                  <Button type="button" disabled={busy} onClick={() => void onShare(true)}>
-                    {t("planning.musicEnableShare")}
-                  </Button>
-                )}
-              </div>
-            </div>
-            {briefUrl ? <p className="break-all font-mono text-xs text-muted-foreground">{briefUrl}</p> : null}
-          </section>
-
-          <section className="space-y-4">
-            <h2 className="text-lg font-medium">{t("planning.musicLists")}</h2>
-            <form onSubmit={onAddTrack}>
-              <PlanningFormPanel className="rounded-xl md:grid-cols-4">
-                <div className="grid gap-3 md:grid-cols-4">
-                  <div className="space-y-1 md:col-span-1">
-                    <Label>{t("planning.musicList")}</Label>
-                    <SimpleSelect
-                      value={trackList}
-                      onValueChange={(value) => setTrackList(value as MusicListKind)}
-                      options={(Object.keys(LIST_LABELS) as MusicListKind[]).map((list) => ({
-                        value: list,
-                        label: LIST_LABELS[list],
-                      }))}
-                    />
-                  </div>
-                  <div className="space-y-1 md:col-span-1">
-                    <Label>{t("planning.musicTitle")}</Label>
-                    <Input value={trackTitle} onChange={(e) => setTrackTitle(e.target.value)} required />
-                  </div>
-                  <div className="space-y-1">
-                    <Label>{t("planning.musicArtist")}</Label>
-                    <Input value={trackArtist} onChange={(e) => setTrackArtist(e.target.value)} />
-                  </div>
-                  <div className="space-y-1">
-                    <Label>{t("planning.musicUrl")}</Label>
-                    <Input value={trackUrl} onChange={(e) => setTrackUrl(e.target.value)} placeholder="https://" />
-                  </div>
-                  <div className="md:col-span-4">
-                    <Button type="submit" disabled={busy}>
-                      {t("planning.musicAddTrack")}
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      shape="pill"
+                      className="gap-1.5"
+                      disabled={busy}
+                      onClick={() => void onShare(true, true)}
+                    >
+                      <RefreshCw className="size-3.5" /> {t("planning.musicRotateLink")}
                     </Button>
                   </div>
                 </div>
-              </PlanningFormPanel>
+              ) : null}
+            </section>
+          </div>
+
+          {/* Cue timeline */}
+          <section className="grid gap-4">
+            <div className="flex items-end justify-between gap-3">
+              <div>
+                <p className="font-serif text-2xl">{t("planning.musicCues")}</p>
+                <p className="text-sm text-muted-foreground">
+                  When each song plays during {event?.name ?? "the event"}.
+                </p>
+              </div>
+              {!addingCue ? (
+                <Button size="sm" shape="pill" variant="outline" className="gap-1.5" onClick={() => setAddingCue(true)}>
+                  <Plus className="size-4" /> {t("planning.musicAddCue")}
+                </Button>
+              ) : null}
+            </div>
+
+            {addingCue ? (
+              <form
+                onSubmit={(e) => void onAddCue(e).then(() => setAddingCue(false))}
+                className="grid gap-3 rounded-3xl border border-border bg-card p-5 shadow-card sm:grid-cols-2"
+              >
+                <label className="grid gap-1 text-xs text-muted-foreground">
+                  {t("planning.musicCueKind")}
+                  <Combobox
+                    value={cueKind}
+                    onValueChange={(value) => setCueKind(value as MusicCueKind)}
+                    searchPlaceholder="Search moments…"
+                    options={CUE_KINDS.map((kind) => ({ value: kind, label: pretty(kind) }))}
+                  />
+                </label>
+                <label className="grid gap-1 text-xs text-muted-foreground">
+                  {t("planning.musicCueLabel")}
+                  <Input
+                    value={cueLabel}
+                    onChange={(e) => setCueLabel(e.target.value)}
+                    placeholder="e.g. Bride walks to the Poruwa"
+                    required
+                  />
+                </label>
+                <label className="grid gap-1 text-xs text-muted-foreground">
+                  {t("planning.musicCueSong")}
+                  <Input value={cueTrackTitle} onChange={(e) => setCueTrackTitle(e.target.value)} />
+                </label>
+                <div className="grid grid-cols-[1fr_7rem] gap-3">
+                  <label className="grid gap-1 text-xs text-muted-foreground">
+                    {t("planning.musicCueAgenda")}
+                    <Combobox
+                      value={cueAppointmentId || "__none__"}
+                      onValueChange={(value) => setCueAppointmentId(value === "__none__" ? "" : value)}
+                      searchPlaceholder="Search agenda…"
+                      options={[
+                        { value: "__none__", label: "Event start" },
+                        ...agenda.map((item) => ({ value: item.id, label: item.title })),
+                      ]}
+                    />
+                  </label>
+                  <label className="grid gap-1 text-xs text-muted-foreground">
+                    + minutes
+                    <Input value={cueOffset} onChange={(e) => setCueOffset(e.target.value)} type="number" />
+                  </label>
+                </div>
+                <div className="flex justify-end gap-2 sm:col-span-2">
+                  <Button type="button" variant="ghost" shape="pill" onClick={() => setAddingCue(false)}>
+                    {t("knotly.cancel")}
+                  </Button>
+                  <Button type="submit" shape="pill" disabled={busy}>
+                    {t("planning.musicAddCue")}
+                  </Button>
+                </div>
+              </form>
+            ) : null}
+
+            {cues.length === 0 ? (
+              <div className="grid place-items-center gap-3 rounded-3xl border border-dashed border-border p-10 text-center">
+                <p className="text-sm text-muted-foreground">{t("planning.musicNoCues")}</p>
+                <Button
+                  size="sm"
+                  shape="pill"
+                  className="gap-2"
+                  disabled={busy}
+                  onClick={() => void onSeedTemplates(false)}
+                >
+                  <Sparkles className="size-4" /> {t("planning.musicSeedCues")}
+                </Button>
+              </div>
+            ) : (
+              <ol className="relative grid gap-3">
+                <span aria-hidden className="absolute top-4 bottom-4 left-[5.25rem] w-px bg-border" />
+                {cues.map((cue) => {
+                  const startsAt = event ? resolveCueStartsAt(cue, event) : cue.startsAt;
+                  return (
+                    <li key={cue.id} className="group relative grid grid-cols-[4.5rem_1fr] gap-6">
+                      <div className="pt-4 text-right">
+                        <p className="font-serif text-lg leading-none tabular-nums">
+                          {startsAt ? fmtTime(startsAt) : "—"}
+                        </p>
+                        {!startsAt && cue.offsetMinutes != null ? (
+                          <p className="mt-1 text-xs text-muted-foreground">+{cue.offsetMinutes} min</p>
+                        ) : null}
+                      </div>
+                      <span
+                        aria-hidden
+                        className="absolute top-5 left-[5.25rem] size-3 -translate-x-1/2 rounded-full bg-primary ring-4 ring-background"
+                      />
+                      <div className="flex items-start gap-3 rounded-3xl border border-border bg-card p-4 shadow-card">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="font-medium">{cue.label}</p>
+                            <span className="rounded-full border border-border px-2.5 py-0.5 text-xs text-muted-foreground">
+                              {pretty(cue.kind)}
+                            </span>
+                          </div>
+                          {cue.trackTitle ? (
+                            <p className="mt-1.5 inline-flex items-center gap-1.5 text-sm text-primary">
+                              <Music2 className="size-3.5" /> {cue.trackTitle}
+                            </p>
+                          ) : (
+                            <p className="mt-1.5 text-sm text-muted-foreground">No song picked yet</p>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          aria-label={t("planning.remove")}
+                          disabled={busy}
+                          onClick={() => void onDeleteCue(cue.id)}
+                          className={cn(iconBtn, "opacity-0 group-hover:opacity-100 focus-visible:opacity-100")}
+                        >
+                          <Trash2 className="size-4" />
+                        </button>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ol>
+            )}
+          </section>
+
+          {/* Song lists */}
+          <section className="grid gap-4">
+            <p className="font-serif text-2xl">{t("planning.musicLists")}</p>
+            <form
+              onSubmit={onAddTrack}
+              className="flex flex-col gap-2 rounded-3xl border border-border bg-card p-2 shadow-card lg:flex-row lg:items-center"
+            >
+              <div className="inline-flex shrink-0 rounded-full bg-secondary p-1">
+                {(Object.keys(LIST_LABELS) as MusicListKind[]).map((list) => (
+                  <button
+                    key={list}
+                    type="button"
+                    onClick={() => setTrackList(list)}
+                    className={cn(
+                      "rounded-full px-3 py-1.5 text-sm transition-colors",
+                      trackList === list ? "bg-background shadow-sm" : "text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    {LIST_LABELS[list]}
+                  </button>
+                ))}
+              </div>
+              <Input
+                value={trackTitle}
+                onChange={(e) => setTrackTitle(e.target.value)}
+                placeholder={t("planning.musicTitle")}
+                required
+              />
+              <Input
+                value={trackArtist}
+                onChange={(e) => setTrackArtist(e.target.value)}
+                placeholder={t("planning.musicArtist")}
+                className="lg:w-44"
+              />
+              <Input
+                value={trackUrl}
+                onChange={(e) => setTrackUrl(e.target.value)}
+                placeholder="Link (optional)"
+                className="lg:w-44"
+              />
+              <Button type="submit" shape="pill" className="shrink-0 gap-1.5" disabled={busy}>
+                <Plus className="size-4" /> Add
+              </Button>
             </form>
 
             <div className="grid gap-4 lg:grid-cols-3">
               {(Object.keys(LIST_LABELS) as MusicListKind[]).map((list) => (
-                <div key={list} className="space-y-3 rounded-xl border border-border/60 p-4">
-                  <h3 className="font-medium">{LIST_LABELS[list]}</h3>
+                <section key={list} className="overflow-hidden rounded-3xl border border-border bg-card shadow-card">
+                  <header className="flex items-center gap-3 border-b border-border px-5 py-4">
+                    <span className={cn("grid size-9 place-items-center rounded-xl", LIST_STYLE[list].chip)}>
+                      {(() => {
+                        const I = LIST_STYLE[list].icon;
+                        return <I className="size-4" />;
+                      })()}
+                    </span>
+                    <p className="flex-1 font-medium">{LIST_LABELS[list]}</p>
+                    <span className="text-sm text-muted-foreground tabular-nums">{tracksByList[list].length}</span>
+                  </header>
                   {tracksByList[list].length === 0 ? (
-                    <p className="text-sm text-muted-foreground">{t("planning.musicNoTracks")}</p>
+                    <p className="px-5 py-6 text-sm text-muted-foreground">{t("planning.musicNoTracks")}</p>
                   ) : (
-                    <PlanningList className="gap-2">
+                    <ul className="divide-y divide-border">
                       {tracksByList[list].map((track) => (
-                        <PlanningListRow
-                          key={track.id}
-                          variant="plain"
-                          className="text-sm"
-                          title={track.title}
-                          description={track.artist ?? undefined}
-                          meta={
-                            track.url ? (
-                              <a className="text-xs underline" href={track.url} target="_blank" rel="noreferrer">
-                                Link
-                              </a>
-                            ) : undefined
-                          }
-                          actions={
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              disabled={busy}
-                              onClick={() => void onDeleteTrack(track.id)}
+                        <li key={track.id} className="group flex items-center gap-3 px-5 py-3">
+                          <Disc3 className="size-4 shrink-0 text-muted-foreground" />
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-medium">{track.title}</p>
+                            {track.artist ? (
+                              <p className="truncate text-xs text-muted-foreground">{track.artist}</p>
+                            ) : null}
+                          </div>
+                          {track.url ? (
+                            <a
+                              href={track.url}
+                              target="_blank"
+                              rel="noreferrer"
+                              aria-label={`Open ${track.title}`}
+                              className="grid size-8 shrink-0 place-items-center rounded-full text-muted-foreground transition hover:bg-secondary hover:text-foreground"
                             >
-                              {t("planning.remove")}
-                            </Button>
-                          }
-                        />
+                              <ExternalLink className="size-3.5" />
+                            </a>
+                          ) : null}
+                          <button
+                            type="button"
+                            aria-label={t("planning.remove")}
+                            disabled={busy}
+                            onClick={() => void onDeleteTrack(track.id)}
+                            className={cn(iconBtn, "opacity-0 group-hover:opacity-100 focus-visible:opacity-100")}
+                          >
+                            <Trash2 className="size-4" />
+                          </button>
+                        </li>
                       ))}
-                    </PlanningList>
+                    </ul>
                   )}
-                </div>
+                </section>
               ))}
             </div>
-          </section>
-
-          <section className="space-y-4">
-            <h2 className="text-lg font-medium">{t("planning.musicCues")}</h2>
-            <form onSubmit={onAddCue}>
-              <PlanningFormPanel className="rounded-xl">
-                <div className="grid gap-3 md:grid-cols-2">
-                  <div className="space-y-1">
-                    <Label>{t("planning.musicCueKind")}</Label>
-                    <SimpleSelect
-                      value={cueKind}
-                      onValueChange={(value) => setCueKind(value as MusicCueKind)}
-                      options={CUE_KINDS.map((kind) => ({ value: kind, label: kind }))}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label>{t("planning.musicCueLabel")}</Label>
-                    <Input value={cueLabel} onChange={(e) => setCueLabel(e.target.value)} required />
-                  </div>
-                  <div className="space-y-1">
-                    <Label>{t("planning.musicCueSong")}</Label>
-                    <Input value={cueTrackTitle} onChange={(e) => setCueTrackTitle(e.target.value)} />
-                  </div>
-                  <div className="space-y-1">
-                    <Label>{t("planning.musicCueOffset")}</Label>
-                    <Input value={cueOffset} onChange={(e) => setCueOffset(e.target.value)} type="number" />
-                  </div>
-                  <div className="space-y-1 md:col-span-2">
-                    <Label>{t("planning.musicCueAgenda")}</Label>
-                    <SimpleSelect
-                      value={cueAppointmentId || "__none__"}
-                      onValueChange={(value) => setCueAppointmentId(value === "__none__" ? "" : value)}
-                      options={[
-                        { value: "__none__", label: "—" },
-                        ...agenda.map((item) => ({ value: item.id, label: item.title })),
-                      ]}
-                    />
-                  </div>
-                  <div className="md:col-span-2">
-                    <Button type="submit" disabled={busy}>
-                      {t("planning.musicAddCue")}
-                    </Button>
-                  </div>
-                </div>
-              </PlanningFormPanel>
-            </form>
-
-            {cues.length === 0 ? (
-              <p className="text-sm text-muted-foreground">{t("planning.musicNoCues")}</p>
-            ) : (
-              <PlanningList>
-                {cues.map((cue) => {
-                  const startsAt = event ? resolveCueStartsAt(cue, event) : cue.startsAt;
-                  return (
-                    <PlanningListRow
-                      key={cue.id}
-                      variant="card"
-                      title={cue.label}
-                      description={cue.kind}
-                      meta={
-                        <>
-                          {cue.trackTitle ? <p className="text-sm">{cue.trackTitle}</p> : null}
-                          <p className="text-sm text-muted-foreground">
-                            {startsAt
-                              ? new Date(startsAt).toLocaleString()
-                              : cue.offsetMinutes != null
-                                ? `${cue.offsetMinutes} min from start`
-                                : "Time TBD"}
-                          </p>
-                        </>
-                      }
-                      actions={
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          disabled={busy}
-                          onClick={() => void onDeleteCue(cue.id)}
-                        >
-                          {t("planning.remove")}
-                        </Button>
-                      }
-                    />
-                  );
-                })}
-              </PlanningList>
-            )}
           </section>
         </>
       )}

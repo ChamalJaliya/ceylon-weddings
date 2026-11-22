@@ -68,6 +68,7 @@ export class WeddingsService {
         moodboards: {
           select: { id: true, scene: true },
         },
+        appointments: { select: { eventId: true } },
       },
     });
 
@@ -179,6 +180,10 @@ export class WeddingsService {
         guestEventIds: full.households.flatMap((h) => h.invites.map((inv) => inv.eventId)),
         musicPlans,
         moodboards,
+        taskCount: tasks.length,
+        runSheetEventIds: [
+          ...new Set(full.appointments.map((row) => row.eventId).filter((id): id is string => Boolean(id))),
+        ],
       }),
       hubStats: hubStats({
         events,
@@ -226,7 +231,8 @@ export class WeddingsService {
   }
 
   async createTask(user: User, body: CreateTaskBody) {
-    const wedding = await this.access.requireWedding(user); // tasks: any member
+    const { wedding } = await this.access.requireCanEditSchedule(user);
+    await this.assertAppointment(wedding.id, body.appointmentId);
     const task = await this.prisma.task.create({
       data: {
         weddingId: wedding.id,
@@ -235,16 +241,20 @@ export class WeddingsService {
         status: body.status,
         dueAt: parseDate(body.dueAt) as Date | null | undefined,
         assigneeUserId: body.assigneeUserId,
+        appointmentId: body.appointmentId ?? null,
       },
     });
     return this.serializeTask(task);
   }
 
   async updateTask(user: User, taskId: string, body: UpdateTaskBody) {
-    const wedding = await this.access.requireWedding(user);
+    const { wedding } = await this.access.requireCanEditSchedule(user);
     const existing = await this.prisma.task.findFirst({ where: { id: taskId, weddingId: wedding.id } });
     if (!existing) {
       throw new NotFoundException("Task not found");
+    }
+    if (body.appointmentId !== undefined) {
+      await this.assertAppointment(wedding.id, body.appointmentId);
     }
     const task = await this.prisma.task.update({
       where: { id: taskId },
@@ -254,13 +264,14 @@ export class WeddingsService {
         status: body.status,
         dueAt: parseDate(body.dueAt) as Date | null | undefined,
         assigneeUserId: body.assigneeUserId,
+        appointmentId: body.appointmentId === undefined ? undefined : body.appointmentId,
       },
     });
     return this.serializeTask(task);
   }
 
   async deleteTask(user: User, taskId: string) {
-    const wedding = await this.access.requireWedding(user);
+    const { wedding } = await this.access.requireCanEditSchedule(user);
     const existing = await this.prisma.task.findFirst({ where: { id: taskId, weddingId: wedding.id } });
     if (!existing) {
       throw new NotFoundException("Task not found");
@@ -393,8 +404,18 @@ export class WeddingsService {
     }
   }
 
+  private async assertAppointment(weddingId: string, appointmentId: string | null | undefined) {
+    if (appointmentId === undefined || appointmentId === null) return;
+    const appointment = await this.prisma.appointment.findFirst({
+      where: { id: appointmentId, weddingId },
+    });
+    if (!appointment) {
+      throw new BadRequestException("Invalid appointment for this wedding");
+    }
+  }
+
   async createAppointment(user: User, body: CreateAppointmentBody) {
-    const wedding = await this.access.requireWedding(user);
+    const { wedding } = await this.access.requireCanEditSchedule(user);
     const startsAt = parseDate(body.startsAt);
     const endsAt = parseDate(body.endsAt);
     if (!startsAt || !endsAt) {
@@ -406,6 +427,7 @@ export class WeddingsService {
         weddingId: wedding.id,
         title: body.title,
         kind: body.kind,
+        source: body.source ?? "MANUAL",
         startsAt,
         endsAt,
         venueName: body.venueName,
@@ -424,7 +446,7 @@ export class WeddingsService {
   }
 
   async updateAppointment(user: User, id: string, body: UpdateAppointmentBody) {
-    const wedding = await this.access.requireWedding(user);
+    const { wedding } = await this.access.requireCanEditSchedule(user);
     const existing = await this.prisma.appointment.findFirst({ where: { id, weddingId: wedding.id } });
     if (!existing) {
       throw new NotFoundException("Appointment not found");
@@ -435,6 +457,7 @@ export class WeddingsService {
       data: {
         title: body.title,
         kind: body.kind,
+        source: body.source,
         startsAt: parseDate(body.startsAt) as Date | undefined,
         endsAt: parseDate(body.endsAt) as Date | undefined,
         venueName: body.venueName,
@@ -453,7 +476,7 @@ export class WeddingsService {
   }
 
   async deleteAppointment(user: User, id: string) {
-    const wedding = await this.access.requireWedding(user);
+    const { wedding } = await this.access.requireCanEditSchedule(user);
     const existing = await this.prisma.appointment.findFirst({ where: { id, weddingId: wedding.id } });
     if (!existing) {
       throw new NotFoundException("Appointment not found");
@@ -474,6 +497,14 @@ export class WeddingsService {
     if (bodies.length === 0) {
       throw new BadRequestException("Event needs a nekath or start time");
     }
+    const titles = bodies.map((body) => body.title);
+    await this.prisma.appointment.deleteMany({
+      where: {
+        weddingId: wedding.id,
+        eventId,
+        OR: [{ source: "NEKATH" }, { title: { in: titles }, kind: { in: ["DAY_OF", "CEREMONY"] } }],
+      },
+    });
     const created = [];
     for (const body of bodies) {
       const row = await this.prisma.appointment.create({
@@ -482,6 +513,7 @@ export class WeddingsService {
           eventId: body.eventId,
           title: body.title,
           kind: body.kind,
+          source: "NEKATH",
           startsAt: new Date(body.startsAt),
           endsAt: new Date(body.endsAt),
           venueName: body.venueName,
@@ -561,6 +593,7 @@ export class WeddingsService {
     status: string;
     category: string | null;
     assigneeUserId: string | null;
+    appointmentId?: string | null;
   }) {
     return {
       id: task.id,
@@ -570,6 +603,7 @@ export class WeddingsService {
       status: task.status,
       category: task.category,
       assigneeUserId: task.assigneeUserId,
+      appointmentId: task.appointmentId ?? null,
     };
   }
 
@@ -649,6 +683,7 @@ export class WeddingsService {
     vendorId: string | null;
     title: string;
     kind: string;
+    source?: string;
     startsAt: Date;
     endsAt: Date;
     venueName: string | null;
@@ -669,6 +704,7 @@ export class WeddingsService {
       vendorWhatsapp: row.vendor?.whatsapp ?? null,
       title: row.title,
       kind: row.kind,
+      source: row.source === "NEKATH" ? ("NEKATH" as const) : ("MANUAL" as const),
       startsAt: row.startsAt.toISOString(),
       endsAt: row.endsAt.toISOString(),
       venueName: row.venueName,

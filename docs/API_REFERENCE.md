@@ -40,11 +40,13 @@ All couple/family endpoints require a valid session; the API resolves the caller
 
 ### Tasks
 
-| Method   | Path                       | Notes                                           |
-| -------- | -------------------------- | ----------------------------------------------- |
-| `POST`   | `/weddings/mine/tasks`     | Create task                                     |
-| `PATCH`  | `/weddings/mine/tasks/:id` | Update title, status, dueAt, category, assignee |
-| `DELETE` | `/weddings/mine/tasks/:id` | Delete task                                     |
+Checklist items (`Task`). Mutations require couple or family with `canEditGuests`. Optional `appointmentId` links a task to a calendar/agenda block without syncing fields. `POST /ai/checklist` suggests tasks but does not persist them.
+
+| Method   | Path                       | Notes                                                            |
+| -------- | -------------------------- | ---------------------------------------------------------------- |
+| `POST`   | `/weddings/mine/tasks`     | Create task (optional `appointmentId`)                           |
+| `PATCH`  | `/weddings/mine/tasks/:id` | Update title, status, dueAt, category, assignee, `appointmentId` |
+| `DELETE` | `/weddings/mine/tasks/:id` | Delete task (does not delete a linked appointment)               |
 
 ### Budget
 
@@ -63,15 +65,17 @@ All couple/family endpoints require a valid session; the API resolves the caller
 | `PATCH`  | `/weddings/mine/events/:id` | Update event                                         |
 | `DELETE` | `/weddings/mine/events/:id` | Delete event                                         |
 
-### Appointments / Calendar
+### Appointments / Calendar & Agenda
 
-| Method   | Path                                        | Notes                                                        |
-| -------- | ------------------------------------------- | ------------------------------------------------------------ |
-| `GET`    | `/weddings/mine/appointments`               | All appointments for this wedding                            |
-| `POST`   | `/weddings/mine/appointments`               | Create appointment                                           |
-| `PATCH`  | `/weddings/mine/appointments/:id`           | Update                                                       |
-| `DELETE` | `/weddings/mine/appointments/:id`           | Delete                                                       |
-| `POST`   | `/weddings/mine/events/:id/nekath-schedule` | Auto-generate nekath-based appointments for a ceremony event |
+One `Appointment` store powers **Calendar** (clock time) and **Agenda** (per-event `sortOrder` run-of-show). Mutations require couple or family with `canEditGuests`. Rows may be tagged `source: MANUAL | NEKATH`.
+
+| Method   | Path                                        | Notes                                                                                     |
+| -------- | ------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `GET`    | `/weddings/mine/appointments`               | All appointments for this wedding                                                         |
+| `POST`   | `/weddings/mine/appointments`               | Create appointment (`source` defaults to `MANUAL`)                                        |
+| `PATCH`  | `/weddings/mine/appointments/:id`           | Update                                                                                    |
+| `DELETE` | `/weddings/mine/appointments/:id`           | Delete                                                                                    |
+| `POST`   | `/weddings/mine/events/:id/nekath-schedule` | Couple-only; replaces prior `NEKATH` (and matching legacy) rows, then seeds day-of blocks |
 
 ### Guests
 

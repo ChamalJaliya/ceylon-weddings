@@ -13,13 +13,13 @@ User ── Vendor (optional claim)
 
 Wedding ──< WeddingMember
 Wedding ──< Event
-Wedding ──< Task
+Wedding ──< Task ──> Appointment?   (optional Schedule bridge)
 Wedding ──< BudgetLine ──> Vendor?
 Wedding ──< GuestHousehold ──< EventInvite >── Event
 Wedding ──< GuestHousehold ──< SeatAssignment >── SeatingTable
 Wedding ──< Inquiry >── Vendor
 Wedding ──< WeddingVendor >── Vendor
-Wedding ──< Appointment
+Wedding ──< Appointment ──> Event? / Vendor?
 Wedding ──< InviteTemplate
 Wedding ──< SeatingPlan ──< SeatingTable ──< SeatAssignment
 Wedding ──< MusicPlan ──< MusicTrack
@@ -219,16 +219,19 @@ Relations: `invites`, `appointments`, `seatingPlan?`, `musicPlan?`, `moodboards`
 
 ### `Task`
 
-Checklist item. Assignable to any `User` on the wedding.
+Checklist item (months-out planning work). Assignable to any `User` on the wedding. **Not** a day-of clock block — that is `Appointment`.
 
-| Field            | Type         | Notes                     |
-| ---------------- | ------------ | ------------------------- |
-| `weddingId`      | FK           |                           |
-| `title`          | String       |                           |
-| `dueAt`          | DateTime?    |                           |
-| `status`         | `TaskStatus` | `TODO` → `DOING` → `DONE` |
-| `category`       | String?      | free-text category tag    |
-| `assigneeUserId` | FK → `User`? |                           |
+| Field            | Type                | Notes                                     |
+| ---------------- | ------------------- | ----------------------------------------- |
+| `weddingId`      | FK                  |                                           |
+| `title`          | String              |                                           |
+| `dueAt`          | DateTime?           | deadline (not a time box)                 |
+| `status`         | `TaskStatus`        | `TODO` → `DOING` → `DONE`                 |
+| `category`       | String?             | free-text category tag                    |
+| `assigneeUserId` | FK → `User`?        |                                           |
+| `appointmentId`  | FK → `Appointment`? | optional Schedule bridge (user-initiated) |
+
+**Ownership:** Checklist owns status lifecycle. Explicit “Schedule on calendar” may create/link an `Appointment`; deleting one side does not delete the other unless the user chooses.
 
 ---
 
@@ -364,16 +367,28 @@ The couple's shortlist / booked team. Join between `Wedding` and `Vendor` with a
 
 ### `Appointment`
 
-Scheduled meetings, tastings, fittings, or ceremony slots. Can be linked to an `Event` and/or a `Vendor`.
+Scheduled meetings, tastings, fittings, or ceremony / day-of slots. Can be linked to an `Event` and/or a `Vendor`.
 
-| Key fields              | Notes                  |
-| ----------------------- | ---------------------- |
-| `kind`                  | `AppointmentKind`      |
-| `startsAt` / `endsAt`   | DateTime               |
-| `venueName` / `address` | optional               |
-| `reminderMinutes`       | default 30             |
-| `color`                 | calendar color         |
-| `ownerLabel`            | display label override |
+**Two views, one store:**
+
+| View         | Route                | Owns                                         | Lens               |
+| ------------ | -------------------- | -------------------------------------------- | ------------------ |
+| **Calendar** | `/planning/calendar` | Clock time (`startsAt` / `endsAt`)           | Wedding-wide grid  |
+| **Agenda**   | `/planning/agenda`   | Ceremony order (`sortOrder`) for one `Event` | Day-of run-of-show |
+
+| Key fields              | Notes                                                         |
+| ----------------------- | ------------------------------------------------------------- |
+| `kind`                  | `AppointmentKind`                                             |
+| `eventId`               | optional; required for Agenda visibility                      |
+| `startsAt` / `endsAt`   | DateTime (Calendar canonical)                                 |
+| `sortOrder`             | Agenda canonical order within an event                        |
+| `venueName` / `address` | optional                                                      |
+| `reminderMinutes`       | default 30                                                    |
+| `color`                 | calendar color                                                |
+| `ownerLabel`            | display label override                                        |
+| `source`                | `MANUAL` \| `NEKATH` (seed tagging for idempotent regenerate) |
+
+Nekath schedule (`POST …/events/:id/nekath-schedule`) replaces previously generated `NEKATH` rows for that event; it does not duplicate on re-run.
 
 ---
 

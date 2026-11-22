@@ -140,18 +140,6 @@ export function VendorStickyBar({
                 <Heart className={cn("size-4", saved && "fill-current")} />
               </motion.button>
             ) : null}
-            <Button
-              type="button"
-              shape="pill"
-              className="group"
-              onClick={() =>
-                document.getElementById("inquire")?.scrollIntoView({ behavior: "smooth", block: "center" })
-              }
-            >
-              <span className="inline-flex items-center gap-2">
-                Inquire <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
-              </span>
-            </Button>
           </div>
         </motion.div>
       ) : null}
@@ -238,19 +226,19 @@ export function TrustBadges({ vendor }: { vendor: Vendor }) {
   if (!badges.length) return null;
   return (
     <Stagger
-      className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-3 sm:overflow-visible sm:px-0 lg:grid-cols-3"
+      className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0"
       stagger={0.05}
     >
       {badges.map((badge) => (
         <StaggerItem key={badge.title} className="h-full shrink-0">
-          <div className="group flex h-full items-center gap-3 rounded-2xl border border-border bg-card p-2.5 pr-4 shadow-card transition-all hover:-translate-y-0.5 hover:border-primary/40 sm:p-3">
-            <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary transition-all group-hover:rotate-6 group-hover:bg-primary group-hover:text-primary-foreground">
-              <badge.icon className="size-4" />
+          <div
+            title={badge.body}
+            className="group inline-flex h-full items-center gap-2 rounded-full border border-border bg-card py-1.5 pr-3.5 pl-1.5 transition-colors hover:border-primary/40"
+          >
+            <span className="grid size-7 shrink-0 place-items-center rounded-full bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+              <badge.icon className="size-3.5" />
             </span>
-            <div className="min-w-0">
-              <p className="text-sm font-medium whitespace-nowrap">{badge.title}</p>
-              <p className="hidden truncate text-xs text-muted-foreground sm:block">{badge.body}</p>
-            </div>
+            <span className="text-sm font-medium whitespace-nowrap">{badge.title}</span>
           </div>
         </StaggerItem>
       ))}

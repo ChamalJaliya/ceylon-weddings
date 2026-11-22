@@ -20,25 +20,45 @@ import {
 import { Button } from "@ceylonweddings/ui/components/button";
 import { FormStatus } from "@ceylonweddings/ui/components/form-status";
 import { Input } from "@ceylonweddings/ui/components/input";
-import { Label } from "@ceylonweddings/ui/components/label";
 import { Textarea } from "@ceylonweddings/ui/components/textarea";
 import { CheckboxField } from "@ceylonweddings/ui/components/checkbox";
-import { SimpleSelect } from "@ceylonweddings/ui/components/select";
-import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
-import { GuestInviteChip, GuestRow } from "@ceylonweddings/ui/domain/guest-row";
-import { EmptyState } from "@ceylonweddings/ui/domain/empty-state";
-import { PlateSummaryCard, RsvpSummaryStrip } from "@ceylonweddings/ui/domain/wedding-presentation";
+import { GuestInviteChip } from "@ceylonweddings/ui/domain/guest-row";
+import { Combobox } from "@ceylonweddings/ui/components/combobox";
+import { cn } from "@ceylonweddings/ui/utils";
+import { PlanningHero, heroButtonClass } from "@/features/planning/components/planning-hero";
 import { SignInPrompt, useWedding } from "@/components/use-wedding";
 import { initials } from "@/lib/labels";
 import { Link } from "@/i18n/navigation";
-import { Users } from "lucide-react";
+import {
+  Download,
+  Gift,
+  HeartHandshake,
+  LayoutGrid,
+  MessageCircle,
+  MessageSquareText,
+  Pencil,
+  Plus,
+  Search,
+  Star,
+  Trash2,
+  Upload,
+  Users,
+  UtensilsCrossed,
+} from "lucide-react";
 import { useConfirm } from "@ceylonweddings/ui/components/confirm-dialog";
-import { AdminListToolbar } from "@ceylonweddings/ui/domain/admin-list-toolbar";
-import { PlanningFormPanel } from "@ceylonweddings/ui/domain/planning-form-panel";
-import { getListEmptyMode, showListChrome } from "@ceylonweddings/ui/lib/list-state";
+import { getListEmptyMode } from "@ceylonweddings/ui/lib/list-state";
 
 const CHANNELS: InviteChannel[] = ["WHATSAPP", "PHONE", "PRINTED", "OVERSEAS"];
 const STATUSES: RsvpStatus[] = ["CONSIDERING", "INVITED", "CONFIRMED", "DECLINED", "MAYBE", "WALK_IN"];
+
+const STATUS_COLOR: Record<RsvpStatus, string> = {
+  CONSIDERING: "color-mix(in srgb, var(--color-paper) 35%, transparent)",
+  INVITED: "var(--info)",
+  CONFIRMED: "var(--cw-gold-300)",
+  DECLINED: "var(--love)",
+  MAYBE: "var(--warning)",
+  WALK_IN: "var(--chart-2)",
+};
 
 const SAMPLE_CSV = `Household,Name,Side,Plus,Phone,Email,Status,Channel,Events
 Perera aunties,Kumari Perera,BRIDE,3,+94771234567,,CONSIDERING,WHATSAPP,Poruwa ceremony|Reception
@@ -276,232 +296,332 @@ export default function GuestsPage() {
     await reload();
   }
 
+  const canEdit = data.myAccess.canEditGuests;
+  const pretty = (v: string) => v.charAt(0) + v.slice(1).toLowerCase().replaceAll("_", " ");
+  const statusCount = (s: RsvpStatus) => summary.byStatus.find((row) => row.status === s)?.households ?? 0;
+  const confirmedHeads = summary.byStatus.find((row) => row.status === "CONFIRMED")?.heads ?? 0;
+  const statusOptions = STATUSES.map((item) => ({ value: item, label: pretty(item) }));
+
+  function exportCsv() {
+    const header = "Household,HeadName,Side,PlusCount,Status,Meal,Phone,GiftReceived,Thanked\n";
+    const rows = guests
+      .map(
+        (g) =>
+          `"${g.label.replace(/"/g, '""')}","${g.headName.replace(/"/g, '""')}",${g.side},${g.plusCount},${g.status},${g.meal || ""},"${g.phone || ""}",${g.giftReceived},${g.thanked}`,
+      )
+      .join("\n");
+    const blob = new Blob([header + rows], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `ceylon-weddings-guests-${Date.now()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  const panelToggle = (on: boolean) => cn(heroButtonClass, on && "bg-paper/15");
+  const iconBtn =
+    "grid size-8 shrink-0 place-items-center rounded-full text-muted-foreground transition hover:bg-secondary hover:text-foreground";
+
   return (
     <div className="cw-stack">
-      <PageHeader
+      <PlanningHero
         icon={Users}
         kicker={t("hub.kicker")}
         title={t("nav.guests")}
         description="Plates, RSVPs, WhatsApp templates, and CSV import — auntie-speed ops."
-      />
-
-      <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-        <RsvpSummaryStrip
-          confirmed={summary.byStatus.find((row) => row.status === "CONFIRMED")?.households ?? 0}
-          total={summary.households}
-          byStatus={summary.byStatus}
-        />
-        <PlateSummaryCard
-          title="Plates"
-          estimate={plates.estimate}
-          confirmed={plates.confirmedHeads}
-          considering={plates.consideringHeads}
-          bufferGap={plates.bufferGap}
-          byMeal={plates.byMeal}
-        />
-      </div>
-
-      {showListChrome(getListEmptyMode({ sourceCount: guests.length, filteredCount: filtered.length })) ||
-      guests.length > 0 ? (
-        <AdminListToolbar
-          searchValue={query}
-          onSearchChange={setQuery}
-          searchPlaceholder="Search households"
-          filters={
+        actions={
+          canEdit ? (
             <>
-              <SimpleSelect
-                className="w-[11rem]"
-                value={filterStatus}
-                onValueChange={setFilterStatus}
-                options={[
-                  { value: "ALL", label: "All statuses" },
-                  ...STATUSES.map((item) => ({ value: item, label: item })),
-                ]}
-              />
-              <SimpleSelect
-                className="w-[10rem]"
-                value={filterSide}
-                onValueChange={setFilterSide}
-                options={[
-                  { value: "ALL", label: "All sides" },
-                  { value: "BRIDE", label: "Bride" },
-                  { value: "GROOM", label: "Groom" },
-                  { value: "BOTH", label: "Both" },
-                ]}
-              />
-              {templates.length ? (
-                <SimpleSelect
-                  className="w-[14rem]"
-                  value={templateId || selectedTemplate?.id || ""}
-                  onValueChange={setTemplateId}
-                  options={templates.map((row) => ({
-                    value: row.id,
-                    label: `${row.name}${row.isDefault ? " ★" : ""}`,
-                  }))}
-                />
-              ) : null}
+              <Button
+                type="button"
+                size="sm"
+                shape="pill"
+                variant="outline"
+                className={panelToggle(showTemplates)}
+                onClick={() => setShowTemplates((v) => !v)}
+              >
+                <MessageSquareText className="size-4" /> Templates
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                shape="pill"
+                variant="outline"
+                className={panelToggle(showImport)}
+                onClick={() => setShowImport((v) => !v)}
+              >
+                <Upload className="size-4" /> Import
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                shape="pill"
+                variant="outline"
+                className={heroButtonClass}
+                onClick={exportCsv}
+              >
+                <Download className="size-4" /> Export
+              </Button>
+              <Button asChild size="sm" shape="pill" variant="outline" className={heroButtonClass}>
+                <Link href="/planning/seating">
+                  <LayoutGrid className="size-4" /> Seating
+                </Link>
+              </Button>
             </>
-          }
-          actions={
-            data.myAccess.canEditGuests ? (
-              <>
-                <Button type="button" variant="outline" onClick={() => setShowTemplates((v) => !v)}>
-                  Templates
-                </Button>
-                <Button type="button" variant="outline" onClick={() => setShowImport((v) => !v)}>
-                  Import CSV
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    const header = "Household,HeadName,Side,PlusCount,Status,Meal,Phone,GiftReceived,Thanked\n";
-                    const rows = guests
-                      .map(
-                        (g) =>
-                          `"${g.label.replace(/"/g, '""')}","${g.headName.replace(/"/g, '""')}",${g.side},${g.plusCount},${g.status},${g.meal || ""},"${g.phone || ""}",${g.giftReceived},${g.thanked}`,
-                      )
-                      .join("\n");
-                    const blob = new Blob([header + rows], { type: "text/csv;charset=utf-8;" });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement("a");
-                    a.href = url;
-                    a.download = `ceylon-weddings-guests-${Date.now()}.csv`;
-                    a.click();
-                    URL.revokeObjectURL(url);
-                  }}
+          ) : null
+        }
+      >
+        <div className="grid gap-6 lg:grid-cols-[auto_1fr] lg:items-end">
+          <div className="flex flex-wrap gap-x-8 gap-y-3">
+            <div>
+              <p className="text-xs text-paper/60">Households</p>
+              <p className="font-serif text-3xl">{summary.households}</p>
+            </div>
+            <div>
+              <p className="text-xs text-paper/60">Guests</p>
+              <p className="font-serif text-3xl">{summary.heads}</p>
+            </div>
+            <div>
+              <p className="text-xs text-paper/60">Confirmed</p>
+              <p className="font-serif text-3xl text-[color:var(--cw-gold-300)]">{confirmedHeads}</p>
+            </div>
+            <div>
+              <p className="text-xs text-paper/60">Plates planned</p>
+              <p className="font-serif text-3xl">{plates.estimate}</p>
+            </div>
+          </div>
+          {summary.households ? (
+            <div className="grid gap-2">
+              <div className="flex h-2.5 overflow-hidden rounded-full bg-paper/10">
+                {STATUSES.map((s) =>
+                  statusCount(s) ? (
+                    <button
+                      key={s}
+                      type="button"
+                      aria-label={`${pretty(s)}: ${statusCount(s)}`}
+                      onClick={() => setFilterStatus(filterStatus === s ? "ALL" : s)}
+                      className="h-full transition-opacity hover:opacity-80"
+                      style={{ width: `${(statusCount(s) / summary.households) * 100}%`, background: STATUS_COLOR[s] }}
+                    />
+                  ) : null,
+                )}
+              </div>
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-paper/70">
+                {STATUSES.filter((s) => statusCount(s)).map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setFilterStatus(filterStatus === s ? "ALL" : s)}
+                    className={cn("inline-flex items-center gap-1.5", filterStatus === s && "text-paper")}
+                  >
+                    <span className="size-2 rounded-full" style={{ background: STATUS_COLOR[s] }} />
+                    {pretty(s)} {statusCount(s)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </div>
+      </PlanningHero>
+
+      {/* Plates */}
+      {plates.estimate || plates.confirmedHeads || plates.consideringHeads ? (
+        <section className="flex flex-wrap items-center gap-x-8 gap-y-3 rounded-3xl border border-border bg-card px-5 py-4 shadow-card">
+          <span className="flex items-center gap-2 text-sm font-medium">
+            <UtensilsCrossed className="size-4 text-primary" /> Plates
+          </span>
+          <span className="text-sm">
+            <span className="font-medium tabular-nums">{plates.confirmedHeads}</span>
+            <span className="text-muted-foreground"> confirmed</span>
+          </span>
+          <span className="text-sm">
+            <span className="font-medium tabular-nums">{plates.consideringHeads}</span>
+            <span className="text-muted-foreground"> still deciding</span>
+          </span>
+          <span className="text-sm">
+            <span className="font-medium tabular-nums">{plates.estimate}</span>
+            <span className="text-muted-foreground"> planned</span>
+          </span>
+          {plates.bufferGap ? (
+            <span
+              className={cn(
+                "rounded-full px-2.5 py-0.5 text-xs",
+                plates.bufferGap > 0 ? "bg-primary/10 text-primary" : "bg-love/15 text-love-fg",
+              )}
+            >
+              {plates.bufferGap > 0 ? `${plates.bufferGap} spare` : `${-plates.bufferGap} short`}
+            </span>
+          ) : null}
+          {plates.byMeal?.length ? (
+            <span className="ml-auto flex flex-wrap gap-1.5">
+              {plates.byMeal.map((m) => (
+                <span
+                  key={m.meal}
+                  className="rounded-full border border-border px-2.5 py-0.5 text-xs text-muted-foreground"
                 >
-                  Export CSV
-                </Button>
-                <Button asChild variant="ghost" size="sm">
-                  <Link href="/planning/seating">Seating board</Link>
-                </Button>
-              </>
-            ) : null
-          }
-        />
+                  {pretty(String(m.meal))} · {m.heads}
+                </span>
+              ))}
+            </span>
+          ) : null}
+        </section>
       ) : null}
 
-      {showTemplates && data.myAccess.canEditGuests ? (
-        <PlanningFormPanel title="Invite templates">
-          <div className="flex flex-wrap justify-end gap-2">
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() =>
-                setEditingTemplate({
-                  id: `new-${Date.now()}`,
-                  weddingId: data.id,
-                  name: "New template",
-                  locale: locale.slice(0, 2),
-                  channel: "WHATSAPP",
-                  body: "Ayubowan {{guestName}}! {{partnerOne}} & {{partnerTwo}} — {{eventName}} on {{date}} at {{venue}}. RSVP: {{rsvpUrl}}",
-                  isDefault: false,
-                })
-              }
-            >
-              New
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              onClick={async () => {
-                const rows = await api.wedding.resetInviteTemplates();
-                setTemplates(rows);
-                const def = rows.find((r) => r.isDefault) ?? rows[0];
-                if (def) setTemplateId(def.id);
-              }}
-            >
-              Reset to starters
-            </Button>
+      {status ? <FormStatus>{status}</FormStatus> : null}
+
+      {showTemplates && canEdit ? (
+        <section className="rounded-3xl border border-border bg-card p-5 shadow-card">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="font-serif text-xl">Invite templates</p>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                size="sm"
+                shape="pill"
+                variant="outline"
+                className="gap-1.5"
+                onClick={() =>
+                  setEditingTemplate({
+                    id: `new-${Date.now()}`,
+                    weddingId: data.id,
+                    name: "New template",
+                    locale: locale.slice(0, 2),
+                    channel: "WHATSAPP",
+                    body: "Ayubowan {{guestName}}! {{partnerOne}} & {{partnerTwo}} — {{eventName}} on {{date}} at {{venue}}. RSVP: {{rsvpUrl}}",
+                    isDefault: false,
+                  })
+                }
+              >
+                <Plus className="size-4" /> New
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                shape="pill"
+                variant="ghost"
+                onClick={async () => {
+                  const rows = await api.wedding.resetInviteTemplates();
+                  setTemplates(rows);
+                  const def = rows.find((r) => r.isDefault) ?? rows[0];
+                  if (def) setTemplateId(def.id);
+                }}
+              >
+                Reset to starters
+              </Button>
+            </div>
           </div>
-          <ul className="grid gap-2">
+          <ul className="mt-3 grid gap-2 sm:grid-cols-2">
             {templates.map((row) => (
-              <li key={row.id} className="flex flex-wrap items-center justify-between gap-2 text-sm">
-                <span>
-                  {row.name} · {row.locale}
-                  {row.isDefault ? " · default" : ""}
-                </span>
-                <div className="flex gap-2">
-                  <Button type="button" size="sm" variant="ghost" onClick={() => setEditingTemplate(row)}>
-                    Edit
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="ghost"
-                    onClick={async () => {
-                      await api.wedding.deleteInviteTemplate(row.id);
-                      const rows = await api.wedding.inviteTemplates();
-                      setTemplates(rows);
-                    }}
-                  >
-                    Delete
-                  </Button>
-                </div>
+              <li
+                key={row.id}
+                className={cn(
+                  "group flex items-center gap-3 rounded-2xl border p-3 text-sm",
+                  row.id === selectedTemplate?.id ? "border-primary/40 bg-primary/5" : "border-border",
+                )}
+              >
+                <button type="button" className="min-w-0 flex-1 text-left" onClick={() => setTemplateId(row.id)}>
+                  <span className="block truncate font-medium">
+                    {row.name}
+                    {row.isDefault ? (
+                      <Star className="ml-1.5 inline size-3.5 fill-current text-[color:var(--cw-gold-400)]" />
+                    ) : null}
+                  </span>
+                  <span className="block truncate text-xs text-muted-foreground">
+                    {row.locale.toUpperCase()} · {row.body}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  className={iconBtn}
+                  aria-label="Edit template"
+                  onClick={() => setEditingTemplate(row)}
+                >
+                  <Pencil className="size-4" />
+                </button>
+                <button
+                  type="button"
+                  className={cn(iconBtn, "hover:bg-destructive/10 hover:text-destructive")}
+                  aria-label="Delete template"
+                  onClick={async () => {
+                    await api.wedding.deleteInviteTemplate(row.id);
+                    setTemplates(await api.wedding.inviteTemplates());
+                  }}
+                >
+                  <Trash2 className="size-4" />
+                </button>
               </li>
             ))}
           </ul>
           {editingTemplate ? (
-            <form className="grid gap-3 border-t border-border/60 pt-3" onSubmit={saveTemplate}>
-              <div className="grid gap-3 md:grid-cols-3">
-                <div className="grid gap-1">
-                  <Label>Name</Label>
+            <form className="mt-4 grid gap-3 border-t border-border pt-4" onSubmit={saveTemplate}>
+              <div className="grid gap-3 md:grid-cols-[1fr_8rem_auto] md:items-end">
+                <label className="grid gap-1 text-xs text-muted-foreground">
+                  Name
                   <Input
                     value={editingTemplate.name}
                     onChange={(e) => setEditingTemplate({ ...editingTemplate, name: e.target.value })}
                     required
                   />
-                </div>
-                <div className="grid gap-1">
-                  <Label>Locale</Label>
+                </label>
+                <label className="grid gap-1 text-xs text-muted-foreground">
+                  Language
                   <Input
                     value={editingTemplate.locale}
                     onChange={(e) => setEditingTemplate({ ...editingTemplate, locale: e.target.value })}
                   />
-                </div>
+                </label>
                 <CheckboxField
                   label="Default"
                   checked={editingTemplate.isDefault}
                   onCheckedChange={(checked) => setEditingTemplate({ ...editingTemplate, isDefault: checked === true })}
                 />
               </div>
-              <div className="grid gap-1">
-                <Label>Body</Label>
-                <Textarea
-                  className="min-h-28"
-                  value={editingTemplate.body}
-                  onChange={(e) => setEditingTemplate({ ...editingTemplate, body: e.target.value })}
-                  required
-                />
+              <div className="grid gap-3 md:grid-cols-2">
+                <label className="grid gap-1 text-xs text-muted-foreground">
+                  Message
+                  <Textarea
+                    className="min-h-32"
+                    value={editingTemplate.body}
+                    onChange={(e) => setEditingTemplate({ ...editingTemplate, body: e.target.value })}
+                    required
+                  />
+                </label>
+                <div className="grid content-start gap-1 text-xs text-muted-foreground">
+                  Preview
+                  <div className="rounded-2xl rounded-tl-sm bg-success/20 p-3 text-sm whitespace-pre-wrap text-foreground">
+                    {renderInviteTemplate(editingTemplate.body, { ...templateVarsBase, guestName: "Amma" })}
+                  </div>
+                </div>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Preview:{" "}
-                {renderInviteTemplate(editingTemplate.body, {
-                  ...templateVarsBase,
-                  guestName: "Amma",
-                })}
-              </p>
-              <div className="flex gap-2">
-                <Button type="submit">Save template</Button>
-                <Button type="button" variant="ghost" onClick={() => setEditingTemplate(null)}>
+              <div className="flex justify-end gap-2">
+                <Button type="button" variant="ghost" shape="pill" onClick={() => setEditingTemplate(null)}>
                   Cancel
+                </Button>
+                <Button type="submit" shape="pill">
+                  Save template
                 </Button>
               </div>
             </form>
           ) : null}
-        </PlanningFormPanel>
+        </section>
       ) : null}
 
-      {showImport && data.myAccess.canEditGuests ? (
-        <PlanningFormPanel title="Import guests (CSV)">
-          <div className="flex flex-wrap items-center justify-end gap-2">
+      {showImport && canEdit ? (
+        <section className="rounded-3xl border border-border bg-card p-5 shadow-card">
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div>
+              <p className="font-serif text-xl">Import guests</p>
+              <p className="text-sm text-muted-foreground">
+                Export Excel as CSV. Columns: Household, Name, Side, Plus, Phone, Email, Status, Channel, Events.
+              </p>
+            </div>
             <Button
               type="button"
               size="sm"
+              shape="pill"
               variant="outline"
+              className="gap-1.5"
               onClick={() => {
                 const blob = new Blob([SAMPLE_CSV], { type: "text/csv;charset=utf-8" });
                 const url = URL.createObjectURL(blob);
@@ -512,87 +632,107 @@ export default function GuestsPage() {
                 URL.revokeObjectURL(url);
               }}
             >
-              Download sample
+              <Download className="size-4" /> Sample file
             </Button>
           </div>
-          <p className="text-sm text-muted-foreground">
-            Export Excel as CSV. Columns: Household, Name, Side, Plus, Phone, Email, Status, Channel, Events.
-          </p>
-          <Input
-            type="file"
-            accept=".csv,text/csv"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) void onImportFile(file);
-            }}
-          />
+          <label className="mt-4 grid cursor-pointer place-items-center gap-2 rounded-2xl border border-dashed border-border p-8 text-center transition hover:border-primary/50">
+            <Upload className="size-6 text-primary" />
+            <span className="text-sm font-medium">Choose a CSV file</span>
+            <span className="text-xs text-muted-foreground">We'll check every row before importing.</span>
+            <input
+              type="file"
+              accept=".csv,text/csv"
+              className="sr-only"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) void onImportFile(file);
+              }}
+            />
+          </label>
           {importErrors.length ? (
-            <ul className="text-sm text-destructive">
+            <ul className="mt-3 grid gap-1 text-sm text-destructive">
               {importErrors.slice(0, 8).map((err) => (
                 <li key={err}>{err}</li>
               ))}
             </ul>
           ) : null}
           {importPreview.length ? (
-            <>
-              <p className="text-sm">{importPreview.length} rows ready</p>
-              <Button type="button" onClick={() => void confirmImport()}>
+            <div className="mt-3 flex items-center justify-between gap-3 rounded-2xl bg-primary/5 p-3">
+              <p className="text-sm">{importPreview.length} households ready</p>
+              <Button type="button" shape="pill" onClick={() => void confirmImport()}>
                 Import {importPreview.length} households
               </Button>
-            </>
+            </div>
           ) : null}
-        </PlanningFormPanel>
+        </section>
       ) : null}
 
-      {data.myAccess.canEditGuests ? (
-        <form onSubmit={onSubmit}>
-          <PlanningFormPanel>
-            <div className="grid gap-3 md:grid-cols-3 lg:grid-cols-6">
-              <div className="grid gap-1">
-                <Label>{t("planning.household")}</Label>
-                <Input value={label} onChange={(e) => setLabel(e.target.value)} required />
-              </div>
-              <div className="grid gap-1">
-                <Label>{t("planning.headName")}</Label>
-                <Input value={headName} onChange={(e) => setHeadName(e.target.value)} required />
-              </div>
-              <div className="grid gap-1">
-                <Label>{t("planning.side")}</Label>
-                <SimpleSelect
-                  value={side}
-                  onValueChange={(value) => setSide(value as typeof side)}
-                  options={[
-                    { value: "BRIDE", label: t("planning.bride") },
-                    { value: "GROOM", label: t("planning.groom") },
-                    { value: "BOTH", label: t("planning.both") },
-                  ]}
-                />
-              </div>
-              <div className="grid gap-1">
-                <Label>{t("planning.plusCount")}</Label>
-                <Input type="number" value={plusCount} onChange={(e) => setPlusCount(Number(e.target.value))} />
-              </div>
-              <div className="grid gap-1">
-                <Label>{t("planning.channel")}</Label>
-                <SimpleSelect
-                  value={channel}
-                  onValueChange={(value) => setChannel(value as InviteChannel)}
-                  options={CHANNELS.map((item) => ({ value: item, label: item }))}
-                />
-              </div>
-              <div className="grid gap-1">
-                <Label>Phone</Label>
-                <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+94…" />
-              </div>
+      {/* Add household */}
+      {canEdit ? (
+        <form onSubmit={onSubmit} className="grid gap-3 rounded-3xl border border-border bg-card p-4 shadow-card">
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_auto] xl:grid-cols-[1fr_1fr_auto_4.5rem_9rem_9rem_auto] xl:items-center">
+            <Input
+              value={label}
+              onChange={(e) => setLabel(e.target.value)}
+              placeholder={`${t("planning.household")}, e.g. Perera aunties`}
+              required
+            />
+            <Input
+              value={headName}
+              onChange={(e) => setHeadName(e.target.value)}
+              placeholder={t("planning.headName")}
+              required
+            />
+            <div className="inline-flex rounded-full bg-secondary p-1">
+              {(["BRIDE", "GROOM", "BOTH"] as const).map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setSide(s)}
+                  className={cn(
+                    "rounded-full px-3 py-1.5 text-sm transition-colors",
+                    side === s ? "bg-background shadow-sm" : "text-muted-foreground",
+                  )}
+                >
+                  {s === "BRIDE" ? t("planning.bride") : s === "GROOM" ? t("planning.groom") : t("planning.both")}
+                </button>
+              ))}
             </div>
-            <div className="flex flex-wrap gap-2">
+            <Input
+              type="number"
+              min={0}
+              value={plusCount}
+              aria-label={t("planning.plusCount")}
+              title={t("planning.plusCount")}
+              onChange={(e) => setPlusCount(Number(e.target.value))}
+            />
+            <Combobox
+              aria-label={t("planning.channel")}
+              value={channel}
+              onValueChange={(value) => setChannel(value as InviteChannel)}
+              searchPlaceholder="Search channels…"
+              options={CHANNELS.map((item) => ({ value: item, label: pretty(item) }))}
+            />
+            <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+94…" />
+            <Button type="submit" shape="pill" className="gap-1.5">
+              <Plus className="size-4" /> {t("planning.addGuest")}
+            </Button>
+          </div>
+          {(data.events ?? []).length ? (
+            <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+              Invited to
               {(data.events ?? []).map((event) => {
                 const on = eventIds.includes(event.id);
                 return (
                   <button
                     key={event.id}
                     type="button"
-                    className={`rounded-full px-3 py-1 text-xs ${on ? "bg-primary text-primary-foreground" : "bg-secondary"}`}
+                    className={cn(
+                      "rounded-full border px-3 py-1 text-xs transition",
+                      on
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border text-muted-foreground hover:border-primary/40",
+                    )}
                     onClick={() =>
                       setEventIds((ids) => (on ? ids.filter((id) => id !== event.id) : [...ids, event.id]))
                     }
@@ -602,31 +742,100 @@ export default function GuestsPage() {
                 );
               })}
             </div>
-            <Button type="submit">{t("planning.addGuest")}</Button>
-            {status ? <FormStatus>{status}</FormStatus> : null}
-          </PlanningFormPanel>
+          ) : null}
         </form>
       ) : (
         <p className="text-sm text-muted-foreground">{t("planning.noGuestEdit")}</p>
       )}
 
-      <div className="rounded-3xl border border-border/70 bg-card/30 px-4">
-        {filtered.length === 0 ? (
-          getListEmptyMode({ sourceCount: guests.length, filteredCount: filtered.length }) === "no-results" ? (
-            <EmptyState
-              kind="no-results"
-              description="No households match this search or filter."
-              onClearFilters={() => {
+      {/* Toolbar */}
+      {guests.length ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative min-w-[14rem] flex-1">
+            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search households"
+              className="pl-9"
+            />
+          </div>
+          <div className="inline-flex rounded-full border border-border bg-card p-1">
+            {[
+              { v: "ALL", l: "All" },
+              { v: "BRIDE", l: t("planning.bride") },
+              { v: "GROOM", l: t("planning.groom") },
+              { v: "BOTH", l: t("planning.both") },
+            ].map((o) => (
+              <button
+                key={o.v}
+                type="button"
+                onClick={() => setFilterSide(o.v)}
+                className={cn(
+                  "rounded-full px-3 py-1.5 text-sm transition-colors",
+                  filterSide === o.v
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {o.l}
+              </button>
+            ))}
+          </div>
+          <Combobox
+            aria-label="Filter by status"
+            className="w-44"
+            value={filterStatus}
+            onValueChange={setFilterStatus}
+            searchPlaceholder="Search statuses…"
+            options={[{ value: "ALL", label: "All statuses" }, ...statusOptions]}
+          />
+          {templates.length ? (
+            <Combobox
+              aria-label="Invite template"
+              className="w-52"
+              value={templateId || selectedTemplate?.id || ""}
+              onValueChange={setTemplateId}
+              searchPlaceholder="Search templates…"
+              options={templates.map((row) => ({
+                value: row.id,
+                label: `Invite: ${row.name}${row.isDefault ? " ★" : ""}`,
+              }))}
+            />
+          ) : null}
+        </div>
+      ) : null}
+
+      {/* List */}
+      {filtered.length === 0 ? (
+        getListEmptyMode({ sourceCount: guests.length, filteredCount: filtered.length }) === "no-results" ? (
+          <div className="grid place-items-center gap-3 rounded-3xl border border-dashed border-border p-10 text-center">
+            <p className="text-sm text-muted-foreground">No households match this search or filter.</p>
+            <Button
+              size="sm"
+              shape="pill"
+              variant="outline"
+              onClick={() => {
                 setQuery("");
                 setFilterStatus("ALL");
                 setFilterSide("ALL");
               }}
-            />
-          ) : (
-            <EmptyState icon={Users} title={t("nav.guests")} description={t("planning.guestsHelp")} />
-          )
+            >
+              Clear filters
+            </Button>
+          </div>
         ) : (
-          filtered.map((guest) => {
+          <div className="grid place-items-center gap-3 rounded-3xl border border-dashed border-border p-12 text-center">
+            <span className="grid size-14 place-items-center rounded-2xl bg-primary/10 text-primary">
+              <Users className="size-6" />
+            </span>
+            <p className="font-serif text-2xl">No guests yet</p>
+            <p className="max-w-sm text-sm text-muted-foreground">{t("planning.guestsHelp")}</p>
+          </div>
+        )
+      ) : (
+        <ul className="overflow-hidden rounded-3xl border border-border bg-card shadow-card">
+          {filtered.map((guest) => {
             const message = inviteMessage(guest.headName);
             const wa = guest.phone
               ? whatsappInviteUrl({
@@ -639,72 +848,124 @@ export default function GuestsPage() {
                 })
               : null;
             return (
-              <div key={guest.id} className="border-b border-border/50 py-2 last:border-0">
-                <GuestRow
-                  initials={initials(guest.headName)}
-                  name={guest.headName}
-                  household={`${guest.label} · +${guest.plusCount} · ${guest.side}`}
-                  meta={`${guest.channel}${guest.meal ? ` · ${guest.meal}` : ""}`}
-                  status={guest.status}
-                  actions={
-                    data.myAccess.canEditGuests ? (
-                      <>
-                        <SimpleSelect
-                          className="h-8 w-[9.5rem] text-xs"
-                          value={guest.status}
-                          onValueChange={(value) => setHouseholdStatus(guest.id, value as RsvpStatus)}
-                          options={STATUSES.map((item) => ({ value: item, label: item }))}
-                        />
-                        {wa ? (
-                          <Button asChild size="sm" variant="outline">
-                            <a href={wa} target="_blank" rel="noreferrer">
-                              WhatsApp
-                            </a>
-                          </Button>
-                        ) : null}
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => toggleGift(guest.id, !guest.giftReceived, guest.thanked)}
-                        >
-                          {guest.giftReceived ? "Gift ✓" : "Gift"}
-                        </Button>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => toggleGift(guest.id, guest.giftReceived, !guest.thanked)}
-                        >
-                          {guest.thanked ? "Thanked ✓" : "Thank"}
-                        </Button>
-                        <Button type="button" size="sm" variant="ghost" onClick={() => removeGuest(guest.id)}>
-                          Remove
-                        </Button>
-                      </>
-                    ) : null
-                  }
-                />
-                <div className="mb-2 ml-12 flex flex-wrap gap-2">
-                  {(guest.invites ?? []).map((invite) => (
-                    <GuestInviteChip
-                      key={invite.eventId}
-                      label={invite.eventName ?? invite.eventId}
-                      status={invite.status}
-                      onClick={() => {
-                        if (!data.myAccess.canEditGuests) return;
-                        const idx = STATUSES.indexOf(invite.status);
-                        const next = STATUSES[(idx + 1) % STATUSES.length]!;
-                        void setInviteStatus(guest.id, invite.eventId, next);
-                      }}
-                    />
-                  ))}
+              <li
+                key={guest.id}
+                className="group grid gap-3 border-b border-border px-5 py-4 last:border-0 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center"
+              >
+                <div className="flex min-w-0 items-start gap-3">
+                  <span
+                    className={cn(
+                      "grid size-10 shrink-0 place-items-center rounded-full text-sm font-medium",
+                      guest.side === "BRIDE"
+                        ? "bg-love/15 text-love-fg"
+                        : guest.side === "GROOM"
+                          ? "bg-info/15 text-info"
+                          : "bg-secondary",
+                    )}
+                  >
+                    {initials(guest.headName)}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium">
+                      {guest.headName}
+                      {guest.plusCount ? (
+                        <span className="ml-1.5 text-sm font-normal text-muted-foreground">+{guest.plusCount}</span>
+                      ) : null}
+                    </p>
+                    <p className="truncate text-sm text-muted-foreground">
+                      {guest.label} · {pretty(guest.side)} side · {pretty(guest.channel)}
+                      {guest.meal ? ` · ${pretty(guest.meal)}` : ""}
+                    </p>
+                    {(guest.invites ?? []).length ? (
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {(guest.invites ?? []).map((invite) => (
+                          <GuestInviteChip
+                            key={invite.eventId}
+                            label={invite.eventName ?? invite.eventId}
+                            status={invite.status}
+                            onClick={() => {
+                              if (!canEdit) return;
+                              const idx = STATUSES.indexOf(invite.status);
+                              const next = STATUSES[(idx + 1) % STATUSES.length]!;
+                              void setInviteStatus(guest.id, invite.eventId, next);
+                            }}
+                          />
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
-              </div>
+                <div className="flex flex-wrap items-center gap-1.5 pl-13 lg:pl-0">
+                  {canEdit ? (
+                    <Combobox
+                      aria-label="RSVP status"
+                      className="h-9 w-36 text-sm"
+                      value={guest.status}
+                      onValueChange={(value) => setHouseholdStatus(guest.id, value as RsvpStatus)}
+                      searchPlaceholder="Search statuses…"
+                      options={statusOptions}
+                    />
+                  ) : (
+                    <span className="rounded-full border border-border px-3 py-1 text-xs">{pretty(guest.status)}</span>
+                  )}
+                  {wa ? (
+                    <a
+                      href={wa}
+                      target="_blank"
+                      rel="noreferrer"
+                      aria-label="Send WhatsApp invite"
+                      title="Send WhatsApp invite"
+                      className="grid size-9 place-items-center rounded-full bg-success/15 text-success transition hover:bg-success/25"
+                    >
+                      <MessageCircle className="size-4" />
+                    </a>
+                  ) : null}
+                  {canEdit ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => toggleGift(guest.id, !guest.giftReceived, guest.thanked)}
+                        aria-pressed={guest.giftReceived}
+                        title={guest.giftReceived ? "Gift received" : "Mark gift received"}
+                        className={cn(
+                          "inline-flex h-9 items-center gap-1.5 rounded-full border px-3 text-xs transition",
+                          guest.giftReceived
+                            ? "border-primary/30 bg-primary/10 text-primary"
+                            : "border-border text-muted-foreground hover:border-primary/40",
+                        )}
+                      >
+                        <Gift className="size-3.5" /> Gift
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => toggleGift(guest.id, guest.giftReceived, !guest.thanked)}
+                        aria-pressed={guest.thanked}
+                        title={guest.thanked ? "Thanked" : "Mark thanked"}
+                        className={cn(
+                          "inline-flex h-9 items-center gap-1.5 rounded-full border px-3 text-xs transition",
+                          guest.thanked
+                            ? "border-primary/30 bg-primary/10 text-primary"
+                            : "border-border text-muted-foreground hover:border-primary/40",
+                        )}
+                      >
+                        <HeartHandshake className="size-3.5" /> Thanked
+                      </button>
+                      <button
+                        type="button"
+                        aria-label="Remove household"
+                        onClick={() => removeGuest(guest.id)}
+                        className="grid size-9 place-items-center rounded-full text-muted-foreground opacity-0 transition group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive focus-visible:opacity-100"
+                      >
+                        <Trash2 className="size-4" />
+                      </button>
+                    </>
+                  ) : null}
+                </div>
+              </li>
             );
-          })
-        )}
-      </div>
+          })}
+        </ul>
+      )}
     </div>
   );
 }

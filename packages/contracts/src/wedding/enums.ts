@@ -31,14 +31,7 @@ export type Payer = z.infer<typeof payerSchema>;
 export const guestSideSchema = z.enum(["BRIDE", "GROOM", "BOTH"]);
 export type GuestSide = z.infer<typeof guestSideSchema>;
 
-export const rsvpStatusSchema = z.enum([
-  "CONSIDERING",
-  "INVITED",
-  "CONFIRMED",
-  "DECLINED",
-  "MAYBE",
-  "WALK_IN",
-]);
+export const rsvpStatusSchema = z.enum(["CONSIDERING", "INVITED", "CONFIRMED", "DECLINED", "MAYBE", "WALK_IN"]);
 export type RsvpStatus = z.infer<typeof rsvpStatusSchema>;
 
 export const mealSchema = z.enum(["VEG", "FISH", "CHICKEN", "BEEF", "HALAL", "OTHER"]);
@@ -59,12 +52,8 @@ export type TaskStatus = z.infer<typeof taskStatusSchema>;
 export const weddingStyleSchema = z.enum(["MINIMALIST", "TRADITIONAL", "KANDYAN", "MODERN", "BEACH"]);
 export type WeddingStyle = z.infer<typeof weddingStyleSchema>;
 
-export const appointmentKindSchema = z.enum([
-  "VENDOR_MEETING",
-  "TASTING",
-  "FITTING",
-  "CEREMONY",
-  "DAY_OF",
-  "OTHER",
-]);
+export const appointmentKindSchema = z.enum(["VENDOR_MEETING", "TASTING", "FITTING", "CEREMONY", "DAY_OF", "OTHER"]);
 export type AppointmentKind = z.infer<typeof appointmentKindSchema>;
+
+export const appointmentSourceSchema = z.enum(["MANUAL", "NEKATH"]);
+export type AppointmentSource = z.infer<typeof appointmentSourceSchema>;

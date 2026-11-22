@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  agendaForEvent,
   resolveWeddingCoverUrl,
   weddingStyleColors,
   weddingStyleSchema,
@@ -14,6 +15,7 @@ import {
   CalendarClock,
   CalendarDays,
   CheckSquare,
+  ClipboardList,
   Hourglass,
   MessageCircle,
   Music2,
@@ -24,10 +26,9 @@ import {
 } from "lucide-react";
 import { api, formatMoney, usePreferenceStore } from "@ceylonweddings/web";
 import { Button } from "@ceylonweddings/ui/components/button";
-import { CoupleHero } from "@ceylonweddings/ui/domain/couple-hero";
 import { DashboardStack } from "@ceylonweddings/ui/domain/dashboard-layout";
 import { SupplierStrip } from "@ceylonweddings/ui/domain/team-vendor";
-import { CeremonySchedule, TeamGapBanner } from "@ceylonweddings/ui/domain/wedding-presentation";
+import { CeremonySchedule } from "@ceylonweddings/ui/domain/wedding-presentation";
 import {
   ColumnChart,
   DonutChart,
@@ -74,6 +75,8 @@ const PROGRESS_LABELS: Record<string, string> = {
   seating: "Plan seating",
   music: "Plan the music",
   moodboard: "Start a moodboard",
+  checklist: "Start the checklist",
+  runSheet: "Seed a day-of run sheet",
 };
 
 const PROGRESS_HREF: Record<string, string> = {
@@ -89,6 +92,8 @@ const PROGRESS_HREF: Record<string, string> = {
   seating: "/planning/seating",
   music: "/planning/music",
   moodboard: "/planning/moodboard",
+  checklist: "/planning/checklist",
+  runSheet: "/planning/agenda",
 };
 
 const RSVP: Record<string, { label: string; tone: ChartTone }> = {
@@ -276,14 +281,33 @@ export default function PlanningHubPage() {
         );
       case "ceremonies":
         return wedding.events?.length ? (
-          <CeremonySchedule
-            events={wedding.events}
-            formatWhen={(iso) =>
-              iso
-                ? new Date(iso).toLocaleString("en-LK", { dateStyle: "medium", timeStyle: "short", timeZone: COLOMBO })
-                : ""
-            }
-          />
+          <div className="grid gap-3">
+            <CeremonySchedule
+              events={wedding.events}
+              formatWhen={(iso) =>
+                iso
+                  ? new Date(iso).toLocaleString("en-LK", {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                      timeZone: COLOMBO,
+                    })
+                  : ""
+              }
+            />
+            <ul className="grid gap-1.5">
+              {wedding.events.map((event) => (
+                <li key={`agenda-${event.id}`}>
+                  <Link
+                    href={`/planning/agenda?eventId=${event.id}`}
+                    className="widget-no-drag flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-compact transition-colors hover:bg-muted focus-visible:bg-muted focus-visible:outline-none"
+                  >
+                    <span className="truncate text-muted-foreground">{event.name}</span>
+                    <span className="shrink-0 text-caption text-primary">{t("knotly.openAgenda")}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
         ) : (
           <WidgetEmpty
             icon={CalendarDays}
@@ -483,37 +507,91 @@ export default function PlanningHubPage() {
             }
           />
         );
-      case "agenda":
+      case "upcoming_schedule":
         if (!appointments) return null;
         return upcoming.length ? (
           <ul className="grid gap-2">
-            {upcoming.map((item) => (
-              <li key={item.id} className="flex gap-3 rounded-xl bg-secondary/50 px-3 py-2">
-                <span className="grid w-9 shrink-0 place-items-center text-center leading-none">
-                  <span className="text-label text-muted-foreground uppercase">
-                    {new Date(item.startsAt).toLocaleDateString("en-LK", { month: "short", timeZone: COLOMBO })}
-                  </span>
-                  <span className="font-serif text-h4">
-                    {new Date(item.startsAt).toLocaleDateString("en-LK", { day: "numeric", timeZone: COLOMBO })}
-                  </span>
-                </span>
-                <span className="min-w-0">
-                  <span className="block truncate text-compact font-medium">{item.title}</span>
-                  <span className="block truncate text-caption text-muted-foreground">
+            {upcoming.map((item) => {
+              const day = new Date(item.startsAt).toLocaleDateString("en-CA", { timeZone: COLOMBO });
+              return (
+                <li key={item.id}>
+                  <Link
+                    href={`/planning/calendar?focus=${day}&highlight=${item.id}`}
+                    className="widget-no-drag flex gap-3 rounded-xl bg-secondary/50 px-3 py-2 transition-colors hover:bg-secondary focus-visible:bg-secondary focus-visible:outline-none"
+                  >
+                    <span className="grid w-9 shrink-0 place-items-center text-center leading-none">
+                      <span className="text-label text-muted-foreground uppercase">
+                        {new Date(item.startsAt).toLocaleDateString("en-LK", { month: "short", timeZone: COLOMBO })}
+                      </span>
+                      <span className="font-serif text-h4">
+                        {new Date(item.startsAt).toLocaleDateString("en-LK", { day: "numeric", timeZone: COLOMBO })}
+                      </span>
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block truncate text-compact font-medium">{item.title}</span>
+                      <span className="block truncate text-caption text-muted-foreground">
+                        {new Date(item.startsAt).toLocaleTimeString("en-LK", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          timeZone: COLOMBO,
+                        })}
+                        {item.venueName ? ` · ${item.venueName}` : ""}
+                      </span>
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          <WidgetEmpty icon={CalendarClock} title="Nothing scheduled" description={t("knotly.noAppointments")} />
+        );
+      case "run_sheet": {
+        if (!appointments) return null;
+        const nextEventId =
+          wedding.hubStats?.nextEventId ?? wedding.events?.find((event) => event.startsAt || event.nekathAt)?.id;
+        const nextEvent = wedding.events?.find((event) => event.id === nextEventId);
+        const blocks = nextEventId ? agendaForEvent(appointments, nextEventId).slice(0, 4) : [];
+        return blocks.length ? (
+          <ul className="grid gap-2">
+            {blocks.map((item) => (
+              <li key={item.id}>
+                <Link
+                  href={`/planning/agenda?eventId=${nextEventId}&highlight=${item.id}`}
+                  className="widget-no-drag flex gap-3 rounded-xl bg-secondary/50 px-3 py-2 transition-colors hover:bg-secondary focus-visible:bg-secondary focus-visible:outline-none"
+                >
+                  <span className="w-12 shrink-0 pt-0.5 text-caption tabular-nums text-muted-foreground">
                     {new Date(item.startsAt).toLocaleTimeString("en-LK", {
                       hour: "2-digit",
                       minute: "2-digit",
                       timeZone: COLOMBO,
                     })}
-                    {item.venueName ? ` · ${item.venueName}` : ""}
                   </span>
-                </span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-compact font-medium">{item.title}</span>
+                    <span className="block truncate text-caption text-muted-foreground">
+                      {item.ownerLabel || nextEvent?.name || t("nav.agenda")}
+                    </span>
+                  </span>
+                </Link>
               </li>
             ))}
           </ul>
         ) : (
-          <WidgetEmpty icon={CalendarClock} title="Nothing scheduled" description={t("knotly.noAppointments")} />
+          <WidgetEmpty
+            icon={ClipboardList}
+            title={t("nav.agenda")}
+            description={t("knotly.agendaEmpty")}
+            action={
+              nextEventId ? (
+                <Button asChild size="sm">
+                  <Link href={`/planning/agenda?eventId=${nextEventId}`}>{t("knotly.openAgenda")}</Link>
+                </Button>
+              ) : undefined
+            }
+          />
         );
+      }
       case "messages":
         if (!inquiries) return null;
         return inquiries.length ? (
@@ -605,7 +683,18 @@ export default function PlanningHubPage() {
     const link = (href: string, label = t("hub.viewAll")) => <WidgetHeaderLink href={href}>{label}</WidgetHeaderLink>;
     switch (id) {
       case "ceremonies":
-        return link("/planning/studio", "Studio");
+        return (
+          <span className="flex items-center gap-2">
+            {link("/planning/studio", "Studio")}
+            {wedding.hubStats?.nextEventId || wedding.events?.[0]?.id ? (
+              <WidgetHeaderLink
+                href={`/planning/agenda?eventId=${wedding.hubStats?.nextEventId ?? wedding.events![0]!.id}`}
+              >
+                {t("nav.agenda")}
+              </WidgetHeaderLink>
+            ) : null}
+          </span>
+        );
       case "budget_categories":
         return link("/planning/budget");
       case "tasks_board":
@@ -616,8 +705,13 @@ export default function PlanningHubPage() {
         return link("/planning/guests");
       case "team":
         return link("/planning/team");
-      case "agenda":
+      case "upcoming_schedule":
         return link("/planning/calendar");
+      case "run_sheet": {
+        const eventId =
+          wedding.hubStats?.nextEventId ?? wedding.events?.find((event) => event.startsAt || event.nekathAt)?.id;
+        return link(eventId ? `/planning/agenda?eventId=${eventId}` : "/planning/agenda");
+      }
       case "messages":
         return link("/planning/messages");
       case "inspiration":
@@ -629,46 +723,95 @@ export default function PlanningHubPage() {
 
   return (
     <DashboardStack>
-      <CoupleHero
-        density="hub"
-        imageSrc={resolveWeddingCoverUrl(wedding.coverImageUrl)}
-        imageAlt={`${wedding.partnerOneName} and ${wedding.partnerTwoName}`}
-        kicker={t("hub.kicker")}
-        names={`${wedding.partnerOneName} & ${wedding.partnerTwoName}`}
-        date={dateLabel}
-        place={[wedding.city, wedding.district].filter(Boolean).join(", ")}
-        days={daysLeft == null ? undefined : String(daysLeft)}
-        daysLabel={wedding.hubStats?.nextEventName ? `to ${wedding.hubStats.nextEventName}` : t("hub.daysLeft")}
-        chips={openTasks.length ? [t("knotly.tasksLeft", { count: openTasks.length })] : undefined}
-        imageAction={
+      <section className="relative isolate grid overflow-hidden rounded-3xl text-paper shadow-raised lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
+        <span
+          aria-hidden
+          className="absolute inset-0 -z-10"
+          style={{
+            background:
+              "radial-gradient(120% 90% at 0% 0%, color-mix(in srgb, var(--color-primary) 75%, transparent) 0%, transparent 60%)," +
+              "radial-gradient(60% 70% at 40% 120%, color-mix(in srgb, var(--cw-gold-300) 18%, transparent) 0%, transparent 60%)," +
+              "linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 35%, var(--color-ink)) 0%, var(--color-ink) 70%)",
+          }}
+        />
+        <div className="order-2 grid content-between gap-8 p-6 sm:p-10 lg:order-1">
+          <div className="grid gap-3">
+            <p className="text-label tracking-eyebrow text-paper/60 uppercase">{t("hub.kicker")}</p>
+            <h1 className="font-serif text-4xl leading-none font-medium tracking-tight text-balance sm:text-6xl">
+              {wedding.partnerOneName} <span className="text-[color:var(--cw-gold-300)]">&</span>{" "}
+              {wedding.partnerTwoName}
+            </h1>
+            <p className="text-paper/70">
+              {[dateLabel, [...new Set([wedding.city, wedding.district].filter(Boolean))].join(", ")]
+                .filter(Boolean)
+                .join(" · ")}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-end gap-x-10 gap-y-4">
+            {daysLeft != null ? (
+              <div>
+                <p className="font-serif text-6xl leading-none text-[color:var(--cw-gold-300)] sm:text-7xl">
+                  {daysLeft}
+                </p>
+                <p className="mt-1 text-sm text-paper/70">
+                  days {wedding.hubStats?.nextEventName ? `to ${wedding.hubStats.nextEventName}` : "to go"}
+                </p>
+              </div>
+            ) : null}
+            {openTasks.length ? (
+              <Link href="/planning/checklist" className="group">
+                <p className="font-serif text-3xl leading-none">{openTasks.length}</p>
+                <p className="mt-1 text-sm text-paper/70 group-hover:text-paper">tasks still open →</p>
+              </Link>
+            ) : null}
+          </div>
+
+          <div className="grid gap-4">
+            {(wedding.hubStats?.missingCategories ?? []).length ? (
+              <div className="flex flex-wrap items-center gap-2 text-sm">
+                <span className="text-paper/60">Still need</span>
+                {(wedding.hubStats?.missingCategories ?? []).map((cat) => (
+                  <Link
+                    key={cat}
+                    href={`/vendors?category=${cat}`}
+                    className="rounded-full border border-paper/25 px-3 py-1 transition hover:border-[color:var(--cw-gold-300)] hover:text-[color:var(--cw-gold-300)]"
+                  >
+                    {CATEGORY_LABELS[cat] ?? cat}
+                  </Link>
+                ))}
+              </div>
+            ) : null}
+            <div className="flex flex-wrap gap-2">
+              <Button asChild shape="pill" className="bg-paper text-ink hover:bg-paper/90">
+                <Link href="/planning/studio">Open studio</Link>
+              </Button>
+              <AiStub />
+            </div>
+          </div>
+        </div>
+
+        <div className="relative order-1 min-h-56 lg:order-2 lg:min-h-[26rem]">
+          <img
+            src={resolveWeddingCoverUrl(wedding.coverImageUrl)}
+            alt={`${wedding.partnerOneName} and ${wedding.partnerTwoName}`}
+            className="absolute inset-0 size-full object-cover"
+          />
+          <span
+            aria-hidden
+            className="absolute inset-0 bg-gradient-to-t from-ink/40 to-transparent lg:bg-gradient-to-r lg:from-ink/50 lg:via-transparent"
+          />
           <Button
             asChild
             size="sm"
+            shape="pill"
             variant="secondary"
-            className="border border-background/30 bg-background/85 text-foreground shadow-sm backdrop-blur-md hover:bg-background"
+            className="absolute top-4 right-4 border border-background/30 bg-background/85 text-foreground shadow-sm backdrop-blur-md hover:bg-background"
           >
             <Link href="/planning/studio?section=style">Cover photo</Link>
           </Button>
-        }
-        actions={
-          <div className="flex flex-wrap gap-2">
-            <Button asChild>
-              <Link href="/planning/studio">Open studio</Link>
-            </Button>
-            <AiStub />
-          </div>
-        }
-      />
-
-      <TeamGapBanner
-        missing={wedding.hubStats?.missingCategories ?? []}
-        labels={CATEGORY_LABELS}
-        action={
-          <Button asChild size="sm">
-            <Link href="/vendors">Browse</Link>
-          </Button>
-        }
-      />
+        </div>
+      </section>
 
       <WidgetDashboard
         kind="couple"

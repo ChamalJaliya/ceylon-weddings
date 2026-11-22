@@ -3,32 +3,34 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { CalendarDays, Columns3, Plus, Rows3, SlidersHorizontal } from "lucide-react";
+import {
+  CalendarDays,
+  CheckSquare,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Columns3,
+  MapPin,
+  MessageCircle,
+  Plus,
+  Rows3,
+  User,
+} from "lucide-react";
 import { api } from "@ceylonweddings/web";
 import {
   duplicateAppointmentBody,
   shiftAppointmentWindow,
   type Appointment,
   type CreateAppointmentBody,
+  type Task,
 } from "@ceylonweddings/contracts";
 import { Button } from "@ceylonweddings/ui/components/button";
-import { Card, CardContent } from "@ceylonweddings/ui/components/card";
 import { useConfirm } from "@ceylonweddings/ui/components/confirm-dialog";
 import { FormStatus } from "@ceylonweddings/ui/components/form-status";
 import { HorizontalTabs } from "@ceylonweddings/ui/components/horizontal-tabs";
-import { Icon } from "@ceylonweddings/ui/components/icon";
 import { Input } from "@ceylonweddings/ui/components/input";
-import { SimpleSelect } from "@ceylonweddings/ui/components/select";
+import { Combobox } from "@ceylonweddings/ui/components/combobox";
 import { toast } from "@ceylonweddings/ui/components/toaster";
-import {
-  FloatingPanel,
-  FloatingPanelBody,
-  FloatingPanelContent,
-  FloatingPanelFooter,
-  FloatingPanelHeader,
-  FloatingPanelSection,
-  FloatingPanelTrigger,
-} from "@ceylonweddings/ui/domain/floating-panel";
 import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
 import { cn } from "@ceylonweddings/ui/lib/utils";
 import { Link } from "@/i18n/navigation";
@@ -74,7 +76,6 @@ export default function CalendarPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
   const [createDraft, setCreateDraft] = useState<{ startsAt: string; endsAt: string } | null>(null);
-  const [dayPanelOpen, setDayPanelOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const dragRef = useRef<{
@@ -115,7 +116,6 @@ export default function CalendarPage() {
         setFocusDay(dayKeyFromIso(match.startsAt));
       }
     }
-     
   }, [searchParams, items]);
 
   const days = useMemo(() => getWeekDays(cursor), [cursor]);
@@ -130,11 +130,22 @@ export default function CalendarPage() {
     });
   }, [items, query, eventFilter]);
 
-  const rail = filtered
-    .filter((item) => dayKeyFromIso(item.startsAt) === calendarDateKey(selectedDay))
-    .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
+  const dueTasksByDay = useMemo(() => {
+    const map = new Map<string, Task[]>();
+    for (const task of data?.tasks ?? []) {
+      if (!task.dueAt || task.status === "DONE") continue;
+      const key = dayKeyFromIso(task.dueAt);
+      const list = map.get(key) ?? [];
+      list.push(task);
+      map.set(key, list);
+    }
+    return map;
+  }, [data?.tasks]);
 
   if (!data) return <SignInPrompt error={error} />;
+
+  const canEdit = Boolean(data.myAccess.canEditGuests || data.myAccess.role === "COUPLE");
+  const focusDueTasks = dueTasksByDay.get(focusDay) ?? [];
 
   function changeLayout(next: CalendarOrientation) {
     setLayout(next);
@@ -142,6 +153,7 @@ export default function CalendarPage() {
   }
 
   function openCreate(startsAt?: Date, endsAt?: Date) {
+    if (!canEdit) return;
     const start = startsAt ?? combineDayAndTime(selectedDay, 10, 0);
     const end = endsAt ?? new Date(start.getTime() + 60 * 60_000);
     setDialogMode("create");
@@ -231,7 +243,7 @@ export default function CalendarPage() {
   }
 
   function onEntryMoveStart(item: Appointment, event: ReactPointerEvent) {
-    if (view !== "week" || event.button !== 0) return;
+    if (!canEdit || view !== "week" || event.button !== 0) return;
     event.preventDefault();
     event.stopPropagation();
     (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
@@ -289,7 +301,185 @@ export default function CalendarPage() {
     day: "numeric",
     month: "short",
   });
+  function stepDay(delta: number) {
+    const d = new Date(`${focusDay}T12:00:00`);
+    d.setDate(d.getDate() + delta);
+    setFocusDay(calendarDateKey(d));
+    setCursor(startOfWeek(d));
+  }
+  const fmtTime = (iso: string) => new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const dayItems = filtered
+    .filter((item) => dayKeyFromIso(item.startsAt) === focusDay)
+    .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
+  const isToday = focusDay === calendarDateKey(new Date());
+  const nowMs = Date.now();
   const activeFilters = (query.trim() ? 1 : 0) + (eventFilter !== EVENT_ALL ? 1 : 0);
+
+  const dayTimeline = (
+    <section className="grid gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            aria-label="Previous day"
+            onClick={() => stepDay(-1)}
+            className="grid size-9 place-items-center rounded-full border border-border transition hover:border-primary/40"
+          >
+            <ChevronLeft className="size-4" />
+          </button>
+          <div>
+            <p className="font-serif text-3xl leading-none">
+              {isToday ? "Today" : new Date(`${focusDay}T12:00:00`).toLocaleDateString(undefined, { weekday: "long" })}
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {new Date(`${focusDay}T12:00:00`).toLocaleDateString(undefined, {
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+              })}
+              {dayItems.length ? ` · ${dayItems.length} ${dayItems.length === 1 ? "appointment" : "appointments"}` : ""}
+            </p>
+          </div>
+          <button
+            type="button"
+            aria-label="Next day"
+            onClick={() => stepDay(1)}
+            className="grid size-9 place-items-center rounded-full border border-border transition hover:border-primary/40"
+          >
+            <ChevronRight className="size-4" />
+          </button>
+        </div>
+        {canEdit ? (
+          <Button size="sm" shape="pill" variant="outline" className="gap-1.5" onClick={() => openCreate()}>
+            <Plus className="size-4" /> {t("knotly.add")}
+          </Button>
+        ) : null}
+      </div>
+
+      {focusDueTasks.length ? (
+        <div className="mb-3 rounded-2xl border border-dashed border-border bg-secondary/40 px-4 py-3">
+          <p className="mb-2 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            <CheckSquare className="size-3.5" /> {t("knotly.dueTasks")}
+          </p>
+          <ul className="grid gap-1.5">
+            {focusDueTasks.map((task) => (
+              <li key={task.id}>
+                <Link
+                  href={`/planning/checklist?taskId=${task.id}`}
+                  className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors hover:bg-background"
+                >
+                  <span className="truncate font-medium">{task.title}</span>
+                  {task.category ? <span className="text-caption text-muted-foreground">{task.category}</span> : null}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      {dayItems.length === 0 ? (
+        <button
+          type="button"
+          onClick={() => openCreate()}
+          disabled={!canEdit}
+          className="grid place-items-center gap-3 rounded-3xl border border-dashed border-border p-12 text-center transition hover:border-primary/40 disabled:pointer-events-none disabled:opacity-60"
+        >
+          <span className="grid size-12 place-items-center rounded-2xl bg-primary/10 text-primary">
+            <CalendarDays className="size-5" />
+          </span>
+          <span className="font-serif text-xl">Nothing planned</span>
+          <span className="text-sm text-muted-foreground">
+            {canEdit ? "Tap to add an appointment for this day." : "No appointments for this day."}
+          </span>
+        </button>
+      ) : (
+        <ol className="relative grid gap-3">
+          <span aria-hidden className="absolute top-4 bottom-4 left-[5.25rem] w-px bg-border" />
+          {dayItems.map((item) => {
+            const color = item.color ?? KIND_COLOR[item.kind];
+            const start = new Date(item.startsAt).getTime();
+            const end = new Date(item.endsAt).getTime();
+            const mins = Math.round((end - start) / 60000);
+            const live = isToday && nowMs >= start && nowMs < end;
+            const past = end < nowMs;
+            return (
+              <li key={item.id} className="relative grid grid-cols-[4.5rem_1fr] gap-6">
+                <div className="pt-4 text-right">
+                  <p className={cn("font-serif text-lg leading-none tabular-nums", past && "text-muted-foreground")}>
+                    {fmtTime(item.startsAt)}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">{mins} min</p>
+                </div>
+                <span
+                  aria-hidden
+                  className={cn(
+                    "absolute top-5 left-[5.25rem] size-3 -translate-x-1/2 rounded-full ring-4 ring-background",
+                    live && "animate-pulse",
+                  )}
+                  style={{ background: color }}
+                />
+                <button
+                  type="button"
+                  onClick={() => openEdit(item)}
+                  className={cn(
+                    "rounded-3xl border border-border bg-card p-4 text-left shadow-card transition hover:border-primary/40",
+                    live && "ring-2 ring-primary",
+                    past && "opacity-70",
+                  )}
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <p className="font-medium">{item.title}</p>
+                    <span className="flex items-center gap-2">
+                      {live ? (
+                        <span className="rounded-full bg-primary px-2.5 py-0.5 text-xs text-primary-foreground">
+                          Now
+                        </span>
+                      ) : null}
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-border px-2.5 py-0.5 text-xs text-muted-foreground capitalize">
+                        <span className="size-2 rounded-full" style={{ background: color }} />
+                        {item.kind.replaceAll("_", " ").toLowerCase()}
+                      </span>
+                    </span>
+                  </div>
+                  <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+                    <span className="inline-flex items-center gap-1">
+                      <Clock className="size-3.5" /> {fmtTime(item.startsAt)} – {fmtTime(item.endsAt)}
+                    </span>
+                    {item.venueName ? (
+                      <span className="inline-flex items-center gap-1">
+                        <MapPin className="size-3.5" /> {item.venueName}
+                      </span>
+                    ) : null}
+                    {item.ownerLabel ? (
+                      <span className="inline-flex items-center gap-1">
+                        <User className="size-3.5" /> {item.ownerLabel}
+                      </span>
+                    ) : null}
+                  </p>
+                  {item.vendorName ? (
+                    <p className="mt-2 inline-flex items-center gap-2 rounded-full bg-secondary px-3 py-1 text-sm">
+                      {item.vendorName}
+                      {item.vendorWhatsapp ? (
+                        <a
+                          href={`https://wa.me/${item.vendorWhatsapp.replace(/\D/g, "")}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="inline-flex items-center gap-1 text-primary"
+                        >
+                          <MessageCircle className="size-3.5" /> {t("knotly.message")}
+                        </a>
+                      ) : null}
+                    </p>
+                  ) : null}
+                </button>
+              </li>
+            );
+          })}
+        </ol>
+      )}
+    </section>
+  );
 
   return (
     <div className="grid gap-4">
@@ -298,10 +488,6 @@ export default function CalendarPage() {
         title={t("nav.calendar")}
         actions={
           <div className="flex flex-wrap items-center gap-2">
-            <Button size="sm" onClick={() => openCreate()}>
-              <Plus className="size-4" />
-              {t("knotly.add")}
-            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -309,19 +495,27 @@ export default function CalendarPage() {
                 const today = new Date();
                 setCursor(startOfWeek(today));
                 setFocusDay(calendarDateKey(today));
-                setDayPanelOpen(true);
+                setView("day");
               }}
             >
               {t("knotly.today")}
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => setCursor(new Date(cursor.getTime() - 7 * 86400000))}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => (view === "day" ? stepDay(-1) : setCursor(new Date(cursor.getTime() - 7 * 86400000)))}
+            >
               ‹
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => setCursor(new Date(cursor.getTime() + 7 * 86400000))}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => (view === "day" ? stepDay(1) : setCursor(new Date(cursor.getTime() + 7 * 86400000)))}
+            >
               ›
             </Button>
             <span className="text-sm">
-              {days[0].toLocaleDateString()} – {days[6].toLocaleDateString()}
+              {view === "day" ? focusDayLabel : `${days[0].toLocaleDateString()} – ${days[6].toLocaleDateString()}`}
             </span>
             <HorizontalTabs
               size="sm"
@@ -345,200 +539,117 @@ export default function CalendarPage() {
                 ]}
               />
             ) : null}
-            <FloatingPanel open={dayPanelOpen} onOpenChange={setDayPanelOpen}>
-              <FloatingPanelTrigger asChild>
-                <Button
-                  type="button"
-                  shape="pill"
-                  size="sm"
-                  variant={dayPanelOpen || rail.length > 0 || activeFilters ? "default" : "outline"}
-                >
-                  <Icon icon={SlidersHorizontal} size="sm" />
-                  {t("knotly.dayList")}
-                  {rail.length > 0 ? (
-                    <span className="grid size-5 place-items-center rounded-full bg-primary-foreground text-xs text-primary">
-                      {rail.length}
-                    </span>
-                  ) : null}
-                </Button>
-              </FloatingPanelTrigger>
-              <FloatingPanelContent side="right" width="22rem">
-                <FloatingPanelHeader
-                  icon={CalendarDays}
-                  title={t("knotly.dayList")}
-                  description={focusDayLabel}
-                  actions={
-                    activeFilters ? (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setQuery("");
-                          setEventFilter(EVENT_ALL);
-                        }}
-                        className="rounded-lg px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                      >
-                        Clear
-                      </button>
-                    ) : null
-                  }
-                />
-                <FloatingPanelBody className="gap-6">
-                  <FloatingPanelSection title={t("prefs.search")}>
-                    <Input placeholder={t("prefs.search")} value={query} onChange={(e) => setQuery(e.target.value)} />
-                    <SimpleSelect
-                      value={eventFilter}
-                      onValueChange={setEventFilter}
-                      options={[
-                        { value: EVENT_ALL, label: t("knotly.allEvents") },
-                        ...(data.events ?? []).map((event) => ({
-                          value: event.id,
-                          label: event.name,
-                        })),
-                      ]}
-                    />
-                  </FloatingPanelSection>
-                  <FloatingPanelSection title={focusDayLabel}>
-                    {rail.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">No appointments this day.</p>
-                    ) : (
-                      <div className="grid gap-2">
-                        {rail.map((item) => (
-                          <button
-                            key={item.id}
-                            type="button"
-                            className="rounded-xl bg-secondary p-3 text-left text-sm transition-colors hover:bg-accent"
-                            onClick={() => {
-                              setDayPanelOpen(false);
-                              openEdit(item);
-                            }}
-                          >
-                            <p className="font-medium">{item.title}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {new Date(item.startsAt).toLocaleTimeString([], {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}{" "}
-                              · {item.kind.replaceAll("_", " ")}
-                            </p>
-                            {item.vendorName ? (
-                              <p className="text-xs text-muted-foreground">{item.vendorName}</p>
-                            ) : null}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                    {selected?.eventId ? (
-                      <Button asChild variant="outline" size="sm" className="w-full">
-                        <Link href={`/planning/agenda?eventId=${selected.eventId}&highlight=${selected.id}`}>
-                          {t("knotly.openAgenda")}
-                        </Link>
-                      </Button>
-                    ) : null}
-                  </FloatingPanelSection>
-                  {status ? <FormStatus>{status}</FormStatus> : null}
-                </FloatingPanelBody>
-                <FloatingPanelFooter>
-                  <Button
-                    type="button"
-                    className="h-11 w-full rounded-xl"
-                    onClick={() => {
-                      setDayPanelOpen(false);
-                      openCreate();
-                    }}
-                  >
-                    <Plus className="size-4" />
-                    {t("knotly.add")}
-                  </Button>
-                </FloatingPanelFooter>
-              </FloatingPanelContent>
-            </FloatingPanel>
+            <Input
+              className="h-9 w-44"
+              placeholder={t("prefs.search")}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+            <Combobox
+              aria-label={t("knotly.allEvents")}
+              className="h-9 w-48"
+              value={eventFilter}
+              onValueChange={setEventFilter}
+              searchPlaceholder="Search events…"
+              options={[
+                { value: EVENT_ALL, label: t("knotly.allEvents") },
+                ...(data.events ?? []).map((event) => ({ value: event.id, label: event.name })),
+              ]}
+            />
+            {activeFilters ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setQuery("");
+                  setEventFilter(EVENT_ALL);
+                }}
+              >
+                Clear
+              </Button>
+            ) : null}
           </div>
         }
       />
 
       <p className="text-xs text-muted-foreground">
         {view === "week"
-          ? "Click an empty slot to add · drag an event to reschedule · open Today for filters and the day list."
+          ? "Click an empty slot to add · drag an event to reschedule · click a day to see its timeline above."
           : t("knotly.dragHint")}
       </p>
-      {status && !dayPanelOpen ? <FormStatus>{status}</FormStatus> : null}
+      {status ? <FormStatus>{status}</FormStatus> : null}
 
-      {view === "week" ? (
-        <AppointmentCalendar
-          orientation={layout}
-          days={days}
-          appointments={filtered}
-          focusDay={focusDay}
-          preview={dragPreview}
-          onFocusDay={setFocusDay}
-          onSlotClick={onSlotClick}
-          onEntryClick={openEdit}
-          onEntryMoveStart={onEntryMoveStart}
-          onEntryMove={onEntryMove}
-          onEntryMoveEnd={(e) => void onEntryMoveEnd(e)}
-        />
-      ) : view === "month" ? (
-        <div className="grid grid-cols-7 gap-1 rounded-3xl border border-border bg-card p-3 text-xs">
-          {Array.from({ length: 42 }, (_, index) => {
-            const start = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
-            const offset = (start.getDay() + 6) % 7;
-            const date = new Date(start);
-            date.setDate(1 - offset + index);
-            const key = calendarDateKey(date);
-            const inMonth = date.getMonth() === cursor.getMonth();
-            const dayItems = filtered.filter((item) => dayKeyFromIso(item.startsAt) === key);
-            return (
-              <button
-                key={key + index}
-                type="button"
-                className={cn(
-                  "min-h-20 rounded-xl p-1 text-left",
-                  inMonth ? "bg-background" : "opacity-40",
-                  key === focusDay && "ring-1 ring-primary",
-                )}
-                onClick={() => {
-                  setFocusDay(key);
-                  if (dayItems.length === 0) {
-                    openCreate(combineDayAndTime(date, 10, 0), combineDayAndTime(date, 11, 0));
-                  }
-                }}
-              >
-                <span className="font-medium">{date.getDate()}</span>
-                {dayItems.slice(0, 2).map((item) => (
-                  <span
-                    key={item.id}
-                    className="mt-1 block truncate rounded px-1"
-                    style={{ background: item.color ?? KIND_COLOR[item.kind] }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openEdit(item);
+      <div className="grid gap-6">
+        {dayTimeline}
+        <div className={cn("min-w-0", view === "day" && "hidden")}>
+          {view === "week" ? (
+            <AppointmentCalendar
+              orientation={layout}
+              days={days}
+              appointments={filtered}
+              focusDay={focusDay}
+              preview={dragPreview}
+              onFocusDay={setFocusDay}
+              onSlotClick={onSlotClick}
+              onEntryClick={openEdit}
+              onEntryMoveStart={onEntryMoveStart}
+              onEntryMove={onEntryMove}
+              onEntryMoveEnd={(e) => void onEntryMoveEnd(e)}
+            />
+          ) : view === "month" ? (
+            <div className="grid grid-cols-7 gap-1 rounded-3xl border border-border bg-card p-3 text-xs">
+              {Array.from({ length: 42 }, (_, index) => {
+                const start = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
+                const offset = (start.getDay() + 6) % 7;
+                const date = new Date(start);
+                date.setDate(1 - offset + index);
+                const key = calendarDateKey(date);
+                const inMonth = date.getMonth() === cursor.getMonth();
+                const dayItems = filtered.filter((item) => dayKeyFromIso(item.startsAt) === key);
+                const dayDue = dueTasksByDay.get(key) ?? [];
+                return (
+                  <button
+                    key={key + index}
+                    type="button"
+                    className={cn(
+                      "min-h-20 rounded-xl p-1 text-left",
+                      inMonth ? "bg-background" : "opacity-40",
+                      key === focusDay && "ring-1 ring-primary",
+                    )}
+                    onClick={() => {
+                      setFocusDay(key);
+                      if (dayItems.length === 0 && canEdit) {
+                        openCreate(combineDayAndTime(date, 10, 0), combineDayAndTime(date, 11, 0));
+                      }
                     }}
                   >
-                    {item.title}
-                  </span>
-                ))}
-              </button>
-            );
-          })}
+                    <span className="font-medium">{date.getDate()}</span>
+                    {dayItems.slice(0, 2).map((item) => (
+                      <span
+                        key={item.id}
+                        className="mt-1 block truncate rounded px-1"
+                        style={{ background: item.color ?? KIND_COLOR[item.kind] }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openEdit(item);
+                        }}
+                      >
+                        {item.title}
+                      </span>
+                    ))}
+                    {dayDue.length ? (
+                      <span className="mt-1 block truncate rounded border border-dashed border-border px-1 text-label text-muted-foreground">
+                        {dayDue.length} {t("knotly.dueTasks").toLowerCase()}
+                      </span>
+                    ) : null}
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
         </div>
-      ) : (
-        <Card>
-          <CardContent className="grid gap-2 p-6">
-            {filtered.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                className="rounded-xl border border-border p-3 text-left"
-                onClick={() => openEdit(item)}
-              >
-                <p className="font-medium">{item.title}</p>
-                <p className="text-xs text-muted-foreground">{new Date(item.startsAt).toLocaleString()}</p>
-                {item.vendorName ? <p className="text-xs text-muted-foreground">{item.vendorName}</p> : null}
-              </button>
-            ))}
-          </CardContent>
-        </Card>
-      )}
+      </div>
 
       <AppointmentEditorModal
         open={dialogOpen}
@@ -554,9 +665,33 @@ export default function CalendarPage() {
         team={data.team ?? []}
         events={data.events ?? []}
         busy={busy}
+        canEdit={canEdit}
         onSubmit={dialogMode === "edit" ? onUpdate : onCreate}
         onDelete={selected ? () => void onDelete(selected.id) : undefined}
         onDuplicate={selected ? () => void onDuplicate(selected) : undefined}
+        onAddPrepTask={
+          selected
+            ? () => {
+                void (async () => {
+                  setBusy(true);
+                  try {
+                    await api.wedding.createTask({
+                      title: `Prep: ${selected.title}`,
+                      category: "schedule",
+                      dueAt: selected.startsAt,
+                      appointmentId: selected.id,
+                      status: "TODO",
+                    });
+                    toast.success(t("knotly.prepTaskCreated"));
+                  } catch (err) {
+                    toast.error(err instanceof Error ? err.message : t("knotly.appointmentSaveFailed"));
+                  } finally {
+                    setBusy(false);
+                  }
+                })();
+              }
+            : undefined
+        }
       />
     </div>
   );

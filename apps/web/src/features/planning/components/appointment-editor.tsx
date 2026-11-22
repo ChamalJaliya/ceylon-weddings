@@ -308,6 +308,9 @@ export function AppointmentEditor({
                   ]}
                   disabled={busy}
                 />
+                {!value.eventId ? (
+                  <p className="mt-1.5 text-caption text-muted-foreground">{t("knotly.attachToCeremonyHint")}</p>
+                ) : null}
               </FieldBlock>
             ) : null}
           </div>

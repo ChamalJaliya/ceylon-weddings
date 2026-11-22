@@ -197,14 +197,15 @@ function DayColumn({
             key={id}
             type="button"
             data-appt-id={id}
-            className="absolute z-10 touch-none overflow-hidden rounded-md border-l-2 border-l-black/20 px-1.5 py-1 text-left text-label select-none shadow-sm"
+            className="absolute z-10 touch-none flex flex-col justify-start overflow-hidden rounded-[6px] border-l-[3px] px-2 py-1 text-left select-none ring-1 ring-background transition hover:z-20 hover:shadow-card"
             style={{
               top: style.top,
               height: style.height,
               left: `${cross.offsetPct}%`,
               width: `${cross.sizePct}%`,
               display: style.display,
-              background: appointment.color ?? KIND_COLOR[appointment.kind],
+              background: `color-mix(in srgb, ${appointment.color ?? KIND_COLOR[appointment.kind]} 22%, var(--color-card))`,
+              borderLeftColor: appointment.color ?? KIND_COLOR[appointment.kind],
             }}
             onClick={(e) => {
               e.stopPropagation();
@@ -215,10 +216,13 @@ function DayColumn({
             onPointerUp={onEntryMoveEnd}
             onPointerCancel={onEntryMoveEnd}
           >
-            <span className="block truncate font-medium leading-tight">{appointment.title}</span>
-            {appointment.vendorName ? (
-              <span className="mt-0.5 block truncate opacity-75">{appointment.vendorName}</span>
-            ) : null}
+            <span className="block truncate text-xs font-medium leading-tight text-foreground">
+              {appointment.title}
+            </span>
+            <span className="mt-0.5 block truncate text-label leading-tight text-muted-foreground tabular-nums">
+              {new Date(appointment.startsAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+              {appointment.vendorName ? ` · ${appointment.vendorName}` : ""}
+            </span>
           </button>
         );
       })}

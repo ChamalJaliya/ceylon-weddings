@@ -17,7 +17,7 @@ import { SimpleSelect } from "@ceylonweddings/ui/components/select";
 import { Textarea } from "@ceylonweddings/ui/components/textarea";
 import { DataTableCell, DataTableHead } from "@ceylonweddings/ui/domain/data-table";
 import { DataTableList } from "@ceylonweddings/ui/domain/data-table-list";
-import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
+import { PlanningHero } from "@/features/planning/components/planning-hero";
 import { SectionCard } from "@ceylonweddings/ui/domain/section-card";
 import { SettingsSwitchRow } from "@ceylonweddings/ui/domain/settings-switch-row";
 import { useClientTablePagination } from "@ceylonweddings/ui/lib/use-client-table-pagination";
@@ -140,7 +140,7 @@ export default function AdminPlansPage() {
 
   return (
     <div className="grid gap-8">
-      <PageHeader
+      <PlanningHero
         icon={CreditCard}
         kicker="Settings"
         title="Plans & pricing"

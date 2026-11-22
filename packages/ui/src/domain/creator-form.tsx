@@ -67,7 +67,7 @@ export function FormGroup({
   return (
     <section
       data-slot="form-group"
-      className={cn("grid gap-4 rounded-2xl border border-border/60 bg-card/40 p-4 sm:p-5", className)}
+      className={cn("grid gap-4 rounded-3xl border border-border bg-card p-4 shadow-card sm:p-5", className)}
     >
       <header className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-start gap-3">
@@ -352,12 +352,12 @@ export function TagInput({
     <div className="grid gap-2.5 rounded-xl border border-input bg-background/60 p-3 transition-[border-color,box-shadow] duration-200 focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/40">
       {values.length ? (
         <div className="flex flex-wrap gap-2">
-          {values.map((value) => (
+          {values.map((value, index) => (
             <button
-              key={value}
+              key={`${index}-${value}`}
               type="button"
               className="rounded-full border border-border/60 bg-secondary/80 px-3 py-1 text-xs transition hover:border-destructive/40 hover:text-destructive"
-              onClick={() => onChange(values.filter((item) => item !== value))}
+              onClick={() => onChange(values.filter((_, i) => i !== index))}
             >
               {value} ×
             </button>

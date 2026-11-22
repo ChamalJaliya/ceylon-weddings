@@ -43,11 +43,13 @@ export function mergeLayoutWithRegistry(
   defaultLayout: WidgetLayoutItem[],
 ): WidgetLayoutItem[] {
   const source = saved?.length ? saved : defaultLayout;
+  /** Legacy hub id `agenda` was the “Coming up” schedule strip, not day-of Agenda. */
+  const aliased = source.map((item) => (item.i === "agenda" ? { ...item, i: "upcoming_schedule" } : item));
   const out: WidgetLayoutItem[] = [];
-  let nextY = source.reduce((max, item) => (item.visible === false ? max : Math.max(max, item.y + item.h)), 0);
+  let nextY = aliased.reduce((max, item) => (item.visible === false ? max : Math.max(max, item.y + item.h)), 0);
 
   for (const reg of registry) {
-    const prior = source.find((item) => item.i === reg.id);
+    const prior = aliased.find((item) => item.i === reg.id);
     if (prior) {
       const size = clampWidgetSize(prior.w, prior.h, reg);
       const kept: WidgetLayoutItem = {
@@ -73,7 +75,7 @@ export function mergeLayoutWithRegistry(
       : { i: reg.id, x: 0, y: nextY, w: reg.defaultSize.w, h: reg.defaultSize.h, visible: reg.defaultVisible };
     if (
       candidate.visible !== false &&
-      [...source, ...out].some((item) => item.visible !== false && item.i !== candidate.i && overlaps(item, candidate))
+      [...aliased, ...out].some((item) => item.visible !== false && item.i !== candidate.i && overlaps(item, candidate))
     ) {
       candidate.x = 0;
       candidate.y = nextY;

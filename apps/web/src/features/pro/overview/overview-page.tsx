@@ -25,8 +25,6 @@ import { FormStatus } from "@ceylonweddings/ui/components/form-status";
 import { CenteredLoader } from "@ceylonweddings/ui/components/spinner";
 import { BillingAlertBanner, resolveBillingAlertBanner } from "@ceylonweddings/ui/domain/billing-alert-banner";
 import { MediaFrame } from "@ceylonweddings/ui/domain/media-frame";
-import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
-import { SubscriptionStatusBanner } from "@ceylonweddings/ui/domain/subscription-status-banner";
 import {
   DonutChart,
   KpiCard,
@@ -496,30 +494,115 @@ export default function ProHomePage() {
 
   return (
     <div className="grid gap-6">
-      <PageHeader
-        icon={Store}
-        kicker="Vendor workspace"
-        title={vendor.name}
-        description="See how couples find you, and polish your storefront until they feel your work before they message."
-        actions={
-          <Button asChild>
-            <Link href="/pro/storefront">
-              Open studio
-              <ArrowRight className="size-4" />
-            </Link>
-          </Button>
-        }
-      />
-      {billingAlert ? <BillingAlertBanner model={billingAlert} onCta={() => router.push("/pro/billing")} /> : null}
-      {subscription ? (
-        <SubscriptionStatusBanner
-          status={subscription.status}
-          daysRemaining={subscription.daysRemaining}
-          trialEndsAt={subscription.trialEndsAt}
-          currentPeriodEnd={subscription.currentPeriodEnd}
-          planName={subscription.plan?.name}
-          onUpgradeClick={() => router.push("/pro/billing")}
+      <section className="relative isolate grid overflow-hidden rounded-3xl text-paper shadow-raised lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
+        <span
+          aria-hidden
+          className="absolute inset-0 -z-10"
+          style={{
+            background:
+              "radial-gradient(120% 90% at 0% 0%, color-mix(in srgb, var(--color-primary) 75%, transparent) 0%, transparent 60%)," +
+              "radial-gradient(60% 70% at 40% 120%, color-mix(in srgb, var(--cw-gold-300) 18%, transparent) 0%, transparent 60%)," +
+              "linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 35%, var(--color-ink)) 0%, var(--color-ink) 70%)",
+          }}
         />
+        <div className="order-2 grid content-between gap-8 p-6 sm:p-10 lg:order-1">
+          <div className="grid gap-3">
+            <p className="flex items-center gap-2 text-label tracking-eyebrow text-paper/60 uppercase">
+              <Store className="size-3.5" /> Vendor workspace
+            </p>
+            <h1 className="font-serif text-4xl leading-none font-medium tracking-tight text-balance sm:text-5xl">
+              {vendor.name}
+            </h1>
+            <p className="max-w-md text-paper/70">
+              See how couples find you, and polish your storefront until they feel your work before they message.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-end gap-x-10 gap-y-4">
+            <Link href="/pro/leads" className="group">
+              <p className="font-serif text-5xl leading-none text-[color:var(--cw-gold-300)]">{newLeads}</p>
+              <p className="mt-1 text-sm text-paper/70 group-hover:text-paper">
+                new {newLeads === 1 ? "lead" : "leads"} →
+              </p>
+            </Link>
+            {completeness ? (
+              <Link href="/pro/storefront" className="group">
+                <p className="font-serif text-3xl leading-none">
+                  {completeness.total ? Math.round((completeness.score / completeness.total) * 100) : 0}%
+                </p>
+                <p className="mt-1 text-sm text-paper/70 group-hover:text-paper">storefront ready</p>
+              </Link>
+            ) : null}
+            <div>
+              <p className="font-serif text-3xl leading-none">{published.length}</p>
+              <p className="mt-1 text-sm text-paper/70">live {published.length === 1 ? "package" : "packages"}</p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <Button asChild shape="pill" className="gap-2 bg-paper text-ink hover:bg-paper/90">
+              <Link href="/pro/storefront">
+                Open studio <ArrowRight className="size-4" />
+              </Link>
+            </Button>
+            {billingAlert ? (
+              <Link
+                href="/pro/billing"
+                className={
+                  billingAlert.tone === "danger"
+                    ? "inline-flex items-center gap-2 rounded-full bg-love px-3.5 py-2 text-sm text-love-foreground"
+                    : "inline-flex items-center gap-2 rounded-full border border-paper/25 px-3.5 py-2 text-sm text-paper/80 transition hover:border-[color:var(--cw-gold-300)] hover:text-paper"
+                }
+                title={billingAlert.message}
+              >
+                <span
+                  className={
+                    billingAlert.tone === "danger"
+                      ? "size-2 rounded-full bg-love-foreground"
+                      : billingAlert.tone === "warning"
+                        ? "size-2 rounded-full bg-[color:var(--cw-saffron-300)]"
+                        : "size-2 rounded-full bg-[color:var(--cw-gold-300)]"
+                  }
+                />
+                {billingAlert.title}
+                {subscription?.daysRemaining != null && billingAlert.tone !== "danger"
+                  ? ` · ${subscription.daysRemaining} days left`
+                  : ""}
+                <span className="opacity-70">· View plans</span>
+              </Link>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="relative order-1 min-h-48 lg:order-2 lg:min-h-[22rem]">
+          {cover ? (
+            <img src={cover} alt={vendor.name} className="absolute inset-0 size-full object-cover" />
+          ) : (
+            <div className="absolute inset-0 grid place-items-center bg-paper/5 text-paper/50">
+              <Link href="/pro/storefront" className="text-sm underline underline-offset-4">
+                Add a cover photo
+              </Link>
+            </div>
+          )}
+          <span
+            aria-hidden
+            className="absolute inset-0 bg-gradient-to-t from-ink/40 to-transparent lg:bg-gradient-to-r lg:from-ink/50 lg:via-transparent"
+          />
+          <Button
+            asChild
+            size="sm"
+            shape="pill"
+            variant="secondary"
+            className="absolute top-4 right-4 border border-background/30 bg-background/85 text-foreground shadow-sm backdrop-blur-md hover:bg-background"
+          >
+            <Link href={`/vendors/${vendor.slug}`}>View public page</Link>
+          </Button>
+        </div>
+      </section>
+
+      {/* Only interrupt for billing problems; trial/active status lives in the hero. */}
+      {billingAlert && (billingAlert.tone === "danger" || billingAlert.tone === "warning") ? (
+        <BillingAlertBanner model={billingAlert} onCta={() => router.push("/pro/billing")} />
       ) : null}
       <WidgetDashboard
         kind="vendor"

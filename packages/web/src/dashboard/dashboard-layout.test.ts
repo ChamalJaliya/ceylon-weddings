@@ -152,6 +152,17 @@ test("merge with nothing saved uses the default layout", () => {
   assert.deepEqual(mergeLayoutWithRegistry(null, registry, defaults), defaults);
 });
 
+test("merge aliases legacy hub id agenda to upcoming_schedule", () => {
+  const scheduleRegistry: WidgetSizing[] = [
+    { id: "upcoming_schedule", defaultVisible: true, defaultSize: { w: 3, h: 8 } },
+  ];
+  const saved = [item("agenda", 6, 32, 3, 8)];
+  const defaults = [item("upcoming_schedule", 6, 32, 3, 8)];
+  const merged = mergeLayoutWithRegistry(saved, scheduleRegistry, defaults);
+  assert.equal(merged[0]!.i, "upcoming_schedule");
+  assert.deepEqual([merged[0]!.x, merged[0]!.y], [6, 32]);
+});
+
 test("toggle shows a widget at the bottom and hides it in place", () => {
   const layout = [item("a", 0, 0), item("b", 3, 0, 3, 3, { visible: false })];
   const shown = toggleWidgetVisibility(layout, "b", registry);

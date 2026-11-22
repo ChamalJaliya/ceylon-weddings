@@ -9,7 +9,7 @@ import { FormStatus } from "@ceylonweddings/ui/components/form-status";
 import { Input } from "@ceylonweddings/ui/components/input";
 import { CenteredLoader } from "@ceylonweddings/ui/components/spinner";
 import { EmptyState } from "@ceylonweddings/ui/domain/empty-state";
-import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
+import { PlanningHero } from "@/features/planning/components/planning-hero";
 import { SectionCard } from "@ceylonweddings/ui/domain/section-card";
 import { SettingsList, SettingsListRow } from "@ceylonweddings/ui/domain/settings-list-row";
 import { Link } from "@/i18n/navigation";
@@ -52,7 +52,7 @@ export default function AdminFlagsPage() {
 
   return (
     <div className="grid gap-8">
-      <PageHeader
+      <PlanningHero
         icon={Flag}
         kicker="Settings"
         title="Feature flags"

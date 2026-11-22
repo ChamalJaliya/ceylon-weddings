@@ -11,7 +11,7 @@ import { Input } from "@ceylonweddings/ui/components/input";
 import { Textarea } from "@ceylonweddings/ui/components/textarea";
 import { DataTableCell, DataTableHead } from "@ceylonweddings/ui/domain/data-table";
 import { DataTableList } from "@ceylonweddings/ui/domain/data-table-list";
-import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
+import { PlanningHero, heroButtonClass } from "@/features/planning/components/planning-hero";
 import { SectionCard } from "@ceylonweddings/ui/domain/section-card";
 import { useClientTablePagination } from "@ceylonweddings/ui/lib/use-client-table-pagination";
 import { Link } from "@/i18n/navigation";
@@ -20,6 +20,7 @@ const COLUMNS = ["entity", "reason", "reporter", "actions"] as const;
 
 export default function AdminReportsQueuePage() {
   const [reports, setReports] = useState<Report[]>([]);
+  const [showFile, setShowFile] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [entityId, setEntityId] = useState("");
@@ -69,21 +70,52 @@ export default function AdminReportsQueuePage() {
 
   return (
     <div className="grid gap-8">
-      <PageHeader icon={Flag} kicker="Queue" title="Reports" description="Abuse and takedown inbox." />
-      <SectionCard title="File report (ops ingest)" icon={Flag}>
-        <div className="grid gap-2 md:grid-cols-3">
-          <Input placeholder="Vendor id" value={entityId} onChange={(e) => setEntityId(e.target.value)} />
-          <Input placeholder="Reason" value={reason} onChange={(e) => setReason(e.target.value)} />
-          <Button onClick={() => void createDemo()}>Create</Button>
+      <PlanningHero
+        icon={Flag}
+        kicker="Queue"
+        title="Reports"
+        description="Abuse and takedown inbox."
+        actions={
+          <Button
+            variant="outline"
+            size="sm"
+            shape="pill"
+            className={heroButtonClass}
+            onClick={() => setShowFile((v) => !v)}
+          >
+            {showFile ? "Close" : "File a report"}
+          </Button>
+        }
+      >
+        <div>
+          <p
+            className={
+              reports.length
+                ? "font-serif text-5xl leading-none text-[color:var(--cw-gold-300)]"
+                : "font-serif text-5xl leading-none"
+            }
+          >
+            {reports.length}
+          </p>
+          <p className="mt-1 text-sm text-paper/70">{reports.length ? "open reports" : "Inbox clear"}</p>
         </div>
-        <Textarea
-          className="mt-2"
-          placeholder="Details"
-          value={details}
-          onChange={(e) => setDetails(e.target.value)}
-          rows={2}
-        />
-      </SectionCard>
+      </PlanningHero>
+      {showFile ? (
+        <SectionCard title="File a report (ops)" icon={Flag}>
+          <div className="grid gap-2 md:grid-cols-3">
+            <Input placeholder="Vendor id" value={entityId} onChange={(e) => setEntityId(e.target.value)} />
+            <Input placeholder="Reason" value={reason} onChange={(e) => setReason(e.target.value)} />
+            <Button onClick={() => void createDemo()}>Create</Button>
+          </div>
+          <Textarea
+            className="mt-2"
+            placeholder="Details"
+            value={details}
+            onChange={(e) => setDetails(e.target.value)}
+            rows={2}
+          />
+        </SectionCard>
+      ) : null}
       <SectionCard title="Open" icon={Flag}>
         <DataTableList
           framed={false}

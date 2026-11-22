@@ -6,7 +6,7 @@ import { MessagesPage } from "../../../../components/messages-page";
 export default function ProMessagesPage() {
   return (
     <Suspense fallback={null}>
-      <MessagesPage supportType="VENDOR_ADMIN" />
+      <MessagesPage supportType="VENDOR_ADMIN" hero />
     </Suspense>
   );
 }

@@ -1,5 +1,7 @@
 # UI layout plan — Knotly chrome, Ceylon product
 
+> **Shipped update (2026-11):** Couple planning has three distinct surfaces — **Checklist** (`/planning/checklist`, `Task`), **Calendar** (`/planning/calendar`, appointments grid), **Agenda** (`/planning/agenda`, day-of run-of-show). Do not use Checklist as a Calendar stand-in. See `docs/MODULES.md` and `docs/DATA_MODEL.md` for ownership rules. Sections below that say “Checklist = Calendar slot” or “nekath run-of-show is Phase B/C” are historical; the routes above are live.
+
 **Chrome reversal (2026-08-14, later the same day):** restore the previous **left side nav** (`AppShell` / `PlanningShell`). TopNav-first couple chrome stacked with PreferenceBar / the inner `AppHeader` (“two headers”) and broke UX. Logged-in couple / vendor / admin use the left rail again; public `/` and `/vendors` keep a **single** PublicHeader (logo + catalog + login); guest `/w/[slug]` stays chrome-light. Calendar, Ideas, catalog, messages, and writable checklist/budget stay — only the competing top pill nav was removed.
 
 Status: **approved — user chose all** (2026-08-14). Implement in this drop: TopNav, real week calendar, full hub (widgets + cinematic/profile), Ideas in nav, and all seven Knotly screens.
@@ -34,22 +36,22 @@ Today couple / pro / admin use a persistent **left rail** (`AppShell` in `packag
 
 Knotly’s wow is the **shared top nav**, not a 15.5rem sidebar on every planning page.
 
-| Surface | Chrome |
-| --- | --- |
+| Surface                                                     | Chrome                                                                                                        |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
 | Public (`/`, `/vendors`, `/vendors/[slug]`, login/register) | Shared **TopNav**. Marketing links when logged out; couple primary links when a couple/family session exists. |
-| Couple / family (`/planning/*`) | Same **TopNav** as primary chrome. Optional **page-level left sidebar** only on hub and budget. |
-| Guest (`/w/[slug]`) | Unchanged: language / currency / theme only. No dashboard chrome. |
-| Vendor Pro (`/pro/*`) and Admin (`/admin/*`) | Keep current left-rail `AppShell` in Phase A. Out of this layout pass. |
+| Couple / family (`/planning/*`)                             | Same **TopNav** as primary chrome. Optional **page-level left sidebar** only on hub and budget.               |
+| Guest (`/w/[slug]`)                                         | Unchanged: language / currency / theme only. No dashboard chrome.                                             |
+| Vendor Pro (`/pro/*`) and Admin (`/admin/*`)                | Keep current left-rail `AppShell` in Phase A. Out of this layout pass.                                        |
 
 **Couple TopNav (primary, 5 slots like Knotly):**
 
-| Knotly | Ceylon label | Route | Phase |
-| --- | --- | --- | --- |
-| Dashboard | Planning | `/planning` | A |
-| Calendar | Checklist | `/planning/checklist` | A (list). Week grid = B / v1.5 |
-| Catalog | Vendors | `/vendors` | A — one marketplace, not a second catalog at `/planning/vendors` |
-| Cost Guide | Budget | `/planning/budget` | A (hide if `!canViewBudget`) |
-| Ideas | omit from v1 nav | `/inspiration` later | C lite, then v2 editorial |
+| Knotly     | Ceylon label     | Route                 | Phase                                                            |
+| ---------- | ---------------- | --------------------- | ---------------------------------------------------------------- |
+| Dashboard  | Planning         | `/planning`           | A                                                                |
+| Calendar   | Checklist        | `/planning/checklist` | A (list). Week grid = B / v1.5                                   |
+| Catalog    | Vendors          | `/vendors`            | A — one marketplace, not a second catalog at `/planning/vendors` |
+| Cost Guide | Budget           | `/planning/budget`    | A (hide if `!canViewBudget`)                                     |
+| Ideas      | omit from v1 nav | `/inspiration` later  | C lite, then v2 editorial                                        |
 
 **Trail (right):** inquiry popover (WhatsApp list, not Messenger) · notifications (can stay dormant) · locale / currency / theme · avatar menu.
 
@@ -238,18 +240,18 @@ Mobile: TopNav collapses to logo + hamburger (primary 5 + overflow) + avatar. Bu
 
 ## 3. Visual system (tokens, not Knotly blue)
 
-Do not introduce a Knotly blue hex. Map the *feel* onto existing pearl / temple / night.
+Do not introduce a Knotly blue hex. Map the _feel_ onto existing pearl / temple / night.
 
-| Knotly | Ceylon |
-| --- | --- |
-| Soft blue active pill | `--secondary` / `--info` fill, `--info` text (pearl already has a cool teal-blue secondary) |
-| Primary action blue | Stay `--primary` (gold / temple saffron / night gold) so the brand does not become a US planner |
-| White cards on grey-blue canvas | `--card` on `--background` (pearl ivory is already close) |
-| Pastel event chips | `--info`, `--success`, `--love`, `--warning`, `--chart-*` at ~15% fill |
-| Serif page titles | Existing `--font-serif` (Cormorant Garamond) — use on Catalog / Budget / Planning titles the way Knotly uses serif on Ideas |
-| 16–24px radius | `--radius` is already `1rem`. Bump catalog/vendor cards toward `rounded-2xl` / `rounded-3xl` via card contract, not one-off hex |
-| Soft shadow | Existing `--elevation-card` / `shadow-card` |
-| Photography-forward | Triptych + countdown image + guest/marketing heroes |
+| Knotly                          | Ceylon                                                                                                                          |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Soft blue active pill           | `--secondary` / `--info` fill, `--info` text (pearl already has a cool teal-blue secondary)                                     |
+| Primary action blue             | Stay `--primary` (gold / temple saffron / night gold) so the brand does not become a US planner                                 |
+| White cards on grey-blue canvas | `--card` on `--background` (pearl ivory is already close)                                                                       |
+| Pastel event chips              | `--info`, `--success`, `--love`, `--warning`, `--chart-*` at ~15% fill                                                          |
+| Serif page titles               | Existing `--font-serif` (Cormorant Garamond) — use on Catalog / Budget / Planning titles the way Knotly uses serif on Ideas     |
+| 16–24px radius                  | `--radius` is already `1rem`. Bump catalog/vendor cards toward `rounded-2xl` / `rounded-3xl` via card contract, not one-off hex |
+| Soft shadow                     | Existing `--elevation-card` / `shadow-card`                                                                                     |
+| Photography-forward             | Triptych + countdown image + guest/marketing heroes                                                                             |
 
 Temple and night keep the same components; only tokens swap. No pink–purple page gradients.
 
@@ -261,25 +263,25 @@ Existing pieces to **reuse**, not rebuild: `Card`, `Button` (`shape="pill"`), `B
 
 Domain composites live in `packages/ui/src/domain/`. Apps compose; they do not invent radius or color.
 
-| Component | Phase | Role |
-| --- | --- | --- |
-| `TopNav` | A | Logo, primary links with icon + active pill, trail slots. Replaces couple left rail. Unifies `PublicHeader`. |
-| `InquiryPopover` | A | Inquiry rows + WhatsApp CTA. Layout around existing `Inquiry`. |
-| `CategoryPills` | A | View all + categories + More. Used on `/vendors` and Ideas lite. |
-| `VendorTriptychCard` | A | Replaces `VendorCard` media; keep name/rating/location/price API. |
-| `VendorGallery` | A | Featured + stacked thumbs on `/vendors/[slug]`. |
-| `VendorTabs` | A | About / Pricing / Location (Reviews disabled until v2). |
-| `InquirePanel` | A | Sticky quote + WhatsApp. No meet-now. |
-| `HubSidebar` | A | Optional left column on `/planning`: couple, countdown, budget cats. |
-| `CountdownCard` | A | Photo + next Event date + live D:H:M:S. |
-| `ScheduleWidget` | A | Compact day rail of tasks/events (not WeekCalendar). |
-| `SupplierStrip` | A | Booked/shortlist photo tiles → `/planning/team` or storefront. |
-| `BudgetSidebar` | A | Category list + add line. |
-| `BudgetSummaryPair` | A | Planned vs spent cards (extends `StatCard` language). |
-| `BudgetBarChart` | A | Category spend; `chart-*` tokens. Lightweight (CSS bars or existing chart token colors). No new chart library unless already in the repo. |
-| `ExpenseTable` | A | Planned / spent / payer + row actions wrapping current edits. |
-| `WeekCalendar` | B | Mon–Sun grid, time gutter, `CalendarEventBlock`, agenda list, event sheet. |
-| `InspirationHero` + `EditorialSplit` | C | Title/search/photo + feature/list. Static cards OK. |
+| Component                            | Phase | Role                                                                                                                                      |
+| ------------------------------------ | ----- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `TopNav`                             | A     | Logo, primary links with icon + active pill, trail slots. Replaces couple left rail. Unifies `PublicHeader`.                              |
+| `InquiryPopover`                     | A     | Inquiry rows + WhatsApp CTA. Layout around existing `Inquiry`.                                                                            |
+| `CategoryPills`                      | A     | View all + categories + More. Used on `/vendors` and Ideas lite.                                                                          |
+| `VendorTriptychCard`                 | A     | Replaces `VendorCard` media; keep name/rating/location/price API.                                                                         |
+| `VendorGallery`                      | A     | Featured + stacked thumbs on `/vendors/[slug]`.                                                                                           |
+| `VendorTabs`                         | A     | About / Pricing / Location (Reviews disabled until v2).                                                                                   |
+| `InquirePanel`                       | A     | Sticky quote + WhatsApp. No meet-now.                                                                                                     |
+| `HubSidebar`                         | A     | Optional left column on `/planning`: couple, countdown, budget cats.                                                                      |
+| `CountdownCard`                      | A     | Photo + next Event date + live D:H:M:S.                                                                                                   |
+| `ScheduleWidget`                     | A     | Compact day rail of tasks/events (not WeekCalendar).                                                                                      |
+| `SupplierStrip`                      | A     | Booked/shortlist photo tiles → `/planning/team` or storefront.                                                                            |
+| `BudgetSidebar`                      | A     | Category list + add line.                                                                                                                 |
+| `BudgetSummaryPair`                  | A     | Planned vs spent cards (extends `StatCard` language).                                                                                     |
+| `BudgetBarChart`                     | A     | Category spend; `chart-*` tokens. Lightweight (CSS bars or existing chart token colors). No new chart library unless already in the repo. |
+| `ExpenseTable`                       | A     | Planned / spent / payer + row actions wrapping current edits.                                                                             |
+| `WeekCalendar`                       | B     | Mon–Sun grid, time gutter, `CalendarEventBlock`, agenda list, event sheet.                                                                |
+| `InspirationHero` + `EditorialSplit` | C     | Title/search/photo + feature/list. Static cards OK.                                                                                       |
 
 **Evolve in place:** `AppShell` stays for Pro/Admin. `CoupleHero` stays for marketing + guest. `BudgetMeter` can power hub chip + sidebar totals.
 

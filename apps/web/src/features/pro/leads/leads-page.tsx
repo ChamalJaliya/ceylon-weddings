@@ -9,7 +9,7 @@ import { Badge } from "@ceylonweddings/ui/components/badge";
 import { FormStatus } from "@ceylonweddings/ui/components/form-status";
 import { DataTableCell, DataTableHead } from "@ceylonweddings/ui/domain/data-table";
 import { DataTableList } from "@ceylonweddings/ui/domain/data-table-list";
-import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
+import { PlanningHero } from "@/features/planning/components/planning-hero";
 import { SectionCard } from "@ceylonweddings/ui/domain/section-card";
 import { useClientTablePagination } from "@ceylonweddings/ui/lib/use-client-table-pagination";
 import { Link } from "@/i18n/navigation";
@@ -51,7 +51,25 @@ export default function LeadsPage() {
 
   return (
     <div className="cw-stack">
-      <PageHeader icon={Briefcase} kicker="Pro" title="Leads" description="Inquiries with a WhatsApp deep link." />
+      <PlanningHero
+        icon={Briefcase}
+        kicker="Vendor workspace"
+        title="Leads"
+        description="Every couple who has reached out — reply on WhatsApp in one tap."
+      >
+        <div className="flex flex-wrap gap-x-8 gap-y-3">
+          <div>
+            <p className="text-xs text-paper/60">All leads</p>
+            <p className="font-serif text-2xl">{leads.length}</p>
+          </div>
+          <div>
+            <p className="text-xs text-paper/60">New</p>
+            <p className="font-serif text-2xl text-[color:var(--cw-gold-300)]">
+              {leads.filter((lead) => lead.status === "NEW").length}
+            </p>
+          </div>
+        </div>
+      </PlanningHero>
       <SectionCard title="Inbox" icon={Briefcase} variant="muted">
         <DataTableList
           framed={false}

@@ -6,7 +6,7 @@ import { MessagesPage } from "../../../../components/messages-page";
 export default function AdminMessagesPage() {
   return (
     <Suspense fallback={null}>
-      <MessagesPage />
+      <MessagesPage hero />
     </Suspense>
   );
 }

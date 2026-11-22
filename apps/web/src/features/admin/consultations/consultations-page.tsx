@@ -20,7 +20,7 @@ import { SimpleSelect } from "@ceylonweddings/ui/components/select";
 import { AdminListToolbar } from "@ceylonweddings/ui/domain/admin-list-toolbar";
 import { DataTableCell, DataTableHead } from "@ceylonweddings/ui/domain/data-table";
 import { DataTableList } from "@ceylonweddings/ui/domain/data-table-list";
-import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
+import { PlanningHero, heroButtonClass } from "@/features/planning/components/planning-hero";
 import { SectionCard } from "@ceylonweddings/ui/domain/section-card";
 import { getListEmptyMode, serverSourceCount, showListChrome } from "@ceylonweddings/ui/lib/list-state";
 import { useClientTablePagination } from "@ceylonweddings/ui/lib/use-client-table-pagination";
@@ -112,28 +112,38 @@ export default function AdminConsultationsPage() {
   }
 
   return (
-    <div className="grid gap-8">
-      <PageHeader
+    <div className="grid min-w-0 gap-6">
+      <PlanningHero
         icon={CalendarClock}
         kicker="Support"
         title="Consultations"
         description="Platform calls booked by guests. Confirm, add a meeting link, or free a slot."
         actions={
-          <div className="flex flex-wrap gap-2">
-            <Button asChild size="sm" variant="outline">
+          <>
+            <Button asChild size="sm" variant="outline" shape="pill" className={heroButtonClass}>
               <Link href="/admin/settings/consultations">Availability</Link>
             </Button>
-            <Button asChild size="sm">
+            <Button asChild size="sm" shape="pill" className="bg-paper text-ink hover:bg-paper/90">
               <Link href="/admin/consultations/new">Book for someone</Link>
             </Button>
-          </div>
+          </>
         }
-      />
-
-      <p className="text-sm text-muted-foreground">
-        {summary.upcoming} upcoming · {summary.pending} awaiting confirmation ·{" "}
-        {messages.filter((item) => item.status === "NEW").length} new messages
-      </p>
+      >
+        <div className="flex flex-wrap gap-x-8 gap-y-3">
+          <div>
+            <p className="text-xs text-paper/60">Upcoming</p>
+            <p className="font-serif text-2xl">{summary.upcoming}</p>
+          </div>
+          <div>
+            <p className="text-xs text-paper/60">Awaiting confirmation</p>
+            <p className="font-serif text-2xl text-[color:var(--cw-gold-300)]">{summary.pending}</p>
+          </div>
+          <div>
+            <p className="text-xs text-paper/60">New messages</p>
+            <p className="font-serif text-2xl">{messages.filter((item) => item.status === "NEW").length}</p>
+          </div>
+        </div>
+      </PlanningHero>
 
       <HorizontalTabs
         ariaLabel="Consultations"

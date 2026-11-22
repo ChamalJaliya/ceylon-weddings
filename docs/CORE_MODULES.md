@@ -1,19 +1,22 @@
 > **Superseded.** This file has been replaced by [MODULES.md](./MODULES.md), which reflects the current implementation status (MVP ✅ / v1.5 🔶 / v2 🔮). The research content below is preserved for historical context.
 
 ---
+
 name: Core Modules Research
 overview: "Research-backed product architecture for a The Knot–style wedding platform built for Sri Lanka: two-sided (couples + vendors), serving local couples, the diaspora, and destination weddings — with modules adapted to how Sri Lankan weddings actually work, not a US clone."
 todos:
-  - id: confirm-modules
-    content: Confirm MVP module set (profile, checklist, budget, marketplace, guests, website, vendor listings, family access)
-    status: pending
-  - id: ia-screens
-    content: Turn confirmed modules into screen-level information architecture for couple, vendor, and guest surfaces
-    status: pending
-  - id: data-model
-    content: "Define v1 domain model: Wedding, Event, GuestHousehold, Vendor, Inquiry, BudgetLine, Role"
-    status: pending
-isProject: false
+
+- id: confirm-modules
+  content: Confirm MVP module set (profile, checklist, budget, marketplace, guests, website, vendor listings, family access)
+  status: pending
+- id: ia-screens
+  content: Turn confirmed modules into screen-level information architecture for couple, vendor, and guest surfaces
+  status: pending
+- id: data-model
+  content: "Define v1 domain model: Wedding, Event, GuestHousehold, Vendor, Inquiry, BudgetLine, Role"
+  status: pending
+  isProject: false
+
 ---
 
 # Ceylon Weddings: Core Modules (Sri Lanka First)
@@ -37,8 +40,6 @@ flowchart LR
   Guests -->|RSVP WhatsApp cash gifts| Couples
   Platform -->|qualified inquiries| Vendors
 ```
-
-
 
 ---
 
@@ -74,7 +75,6 @@ flowchart LR
 
 These are the design constraints. Modules that ignore them will feel like a US app with a Sri Lankan skin.
 
-
 | Reality                                                                                                            | Product implication                                              |
 | ------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------- |
 | Weddings are **multi-event**: poruwa, church, nikah, walima, homecoming, mehndi, engagement                        | Event objects, not one “wedding day”                             |
@@ -88,8 +88,7 @@ These are the design constraints. Modules that ignore them will feel like a US a
 | Diaspora + destination guests need hotels, travel, currency                                                        | Multi-currency (LKR + USD/AUD/GBP), hotel blocks, bilingual site |
 | Languages: English, Sinhala, Tamil                                                                                 | i18n from day one in data model, even if UI ships EN+SI first    |
 
-
-**Local vendor categories The Knot does not have:** poruwa / ashtaka, astrologer, bridal dresser, Kandyan dancers / magul bera, nadaswaram & melam, jayamangala gatha, wedding cars, jewellery *hire*, marriage registrar, mehndi, halal catering, thaali / jewellery.
+**Local vendor categories The Knot does not have:** poruwa / ashtaka, astrologer, bridal dresser, Kandyan dancers / magul bera, nadaswaram & melam, jayamangala gatha, wedding cars, jewellery _hire_, marriage registrar, mehndi, halal catering, thaali / jewellery.
 
 **Budget context (local, 2025):** typical range ~LKR 0.8M–10M+, average around LKR 2.5M; venue+catering 40–50%. Destination mid-range often USD 10k–20k. Budget tool must use **LKR plates, guest count, and city**, not US %.
 
@@ -140,8 +139,6 @@ flowchart TB
   PublicSite --> RSVP
 ```
 
-
-
 ### 1. Wedding Profile and Onboarding (foundation)
 
 Creates the wedding object everything else personalizes against.
@@ -164,7 +161,11 @@ The Knot’s “peace of mind” home.
 - Per-event status chips (Poruwa / Reception / Homecoming)
 - Diaspora view: “family in Colombo can update guests; you approve vendors”
 
-### 3. Checklist and Timeline
+### 3. Checklist · Calendar · Agenda
+
+Three distinct couple surfaces — do not conflate them into one “timeline.”
+
+#### 3a. Checklist (`Task`)
 
 The Knot’s strongest couple tool. Localize the **task graph**, not just labels.
 
@@ -175,8 +176,16 @@ The Knot’s strongest couple tool. Localize the **task graph**, not just labels
 - Christian extras: church booking, banns, choir
 - Shared: venue, photo/video, bridal dresser, makeup, cake, cars, invitations, registrar
 - Custom tasks; assign to a person (mother, planner, photographer)
-- **Day-of run-of-show** generated backward from nekath / ceremony start
+- Optional due dates (`dueAt`) are deadlines, not clock blocks
 - Vendor recommendations injected beside relevant tasks (The Knot pattern)
+
+#### 3b. Calendar (`Appointment`)
+
+Time-box vendor work and ceremony slots on a week/day/month grid. Owns **clock time** (`startsAt` / `endsAt`).
+
+#### 3c. Agenda (day-of run-of-show)
+
+Per-ceremony ordered blocks on the same `Appointment` rows, filtered by `eventId`, ordered by `sortOrder`. Generated backward from nekath / ceremony start. Owns **ceremony order**; deep-links to Calendar for the clock view.
 
 ### 4. Budget
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Check, ChevronsUpDown, Search } from "lucide-react";
+import { Check, ChevronsUpDown, Plus, Search } from "lucide-react";
 import { cn } from "../lib/utils";
 import { fieldVariants } from "../contracts/field";
 import { Icon } from "./icon";
@@ -23,6 +23,8 @@ export function Combobox({
   className,
   id,
   "aria-label": ariaLabel,
+  allowCustom = false,
+  formatCustom = (query: string) => query,
 }: {
   value: string;
   onValueChange: (value: string) => void;
@@ -34,11 +36,16 @@ export function Combobox({
   className?: string;
   id?: string;
   "aria-label"?: string;
+  /** Let the user pick what they typed when it matches no option. */
+  allowCustom?: boolean;
+  /** Turns typed text into the stored value (e.g. lowercase slug). */
+  formatCustom?: (query: string) => string;
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
 
-  const selected = options.find((option) => option.value === value);
+  const selected =
+    options.find((option) => option.value === value) ?? (value && allowCustom ? { value, label: value } : undefined);
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
     if (!needle) return options;
@@ -70,7 +77,7 @@ export function Combobox({
           <Icon icon={ChevronsUpDown} size="sm" className="shrink-0 text-muted-foreground/80" />
         </button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-[var(--radix-popover-trigger-width)] p-1.5">
+      <PopoverContent align="start" className="w-[var(--radix-popover-trigger-width)] min-w-56 p-1.5">
         <div className="relative mb-1.5">
           <Icon
             icon={Search}
@@ -86,7 +93,25 @@ export function Combobox({
           />
         </div>
         <div className="max-h-60 overflow-y-auto p-0.5">
-          {filtered.length === 0 ? (
+          {allowCustom &&
+          query.trim() &&
+          !options.some(
+            (o) => o.label.toLowerCase() === query.trim().toLowerCase() || o.value === formatCustom(query.trim()),
+          ) ? (
+            <button
+              type="button"
+              onClick={() => {
+                onValueChange(formatCustom(query.trim()));
+                setOpen(false);
+                setQuery("");
+              }}
+              className="flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left text-sm text-primary hover:bg-accent/80"
+            >
+              <Icon icon={Plus} size="xs" className="shrink-0" />
+              <span className="min-w-0 flex-1 truncate">Add “{query.trim()}”</span>
+            </button>
+          ) : null}
+          {filtered.length === 0 && !(allowCustom && query.trim()) ? (
             <p className="px-2.5 py-6 text-center text-sm text-muted-foreground">{emptyText}</p>
           ) : (
             filtered.map((option) => {

@@ -1,8 +1,9 @@
 "use client";
 
+import { CreditCard , FileText, History, Sparkles } from "lucide-react";
+
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { FileText, History, Sparkles } from "lucide-react";
 import { api, formatMoney, RATES_TO_LKR, usePreferenceStore } from "@ceylonweddings/web";
 import {
   type PaymentProvider,
@@ -20,11 +21,10 @@ import { FilterChip } from "@ceylonweddings/ui/domain/async-list";
 import { DataTableCell, DataTableHead } from "@ceylonweddings/ui/domain/data-table";
 import { DataTableList } from "@ceylonweddings/ui/domain/data-table-list";
 import { BillingAlertBanner, resolveBillingAlertBanner } from "@ceylonweddings/ui/domain/billing-alert-banner";
-import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
+import { PlanningHero } from "@/features/planning/components/planning-hero";
 import { Pricing, type BillingInterval, type PricingPlan } from "@ceylonweddings/ui/domain/pricing";
 import { SectionCard } from "@ceylonweddings/ui/domain/section-card";
 import { SettingsList, SettingsListRow } from "@ceylonweddings/ui/domain/settings-list-row";
-import { SubscriptionStatusBanner } from "@ceylonweddings/ui/domain/subscription-status-banner";
 import { useClientTablePagination } from "@ceylonweddings/ui/lib/use-client-table-pagination";
 import { Link } from "@/i18n/navigation";
 
@@ -269,12 +269,35 @@ export default function VendorBillingPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Pro Billing & Subscriptions"
+      <PlanningHero
+        icon={CreditCard}
+        kicker="Vendor workspace"
+        title="Billing"
         description="Manage your Ceylon Weddings vendor storefront membership, plans, and invoices"
-      />
+      >
+        {subscription ? (
+          <div className="flex flex-wrap gap-x-8 gap-y-3">
+            <div>
+              <p className="text-xs text-paper/60">Plan</p>
+              <p className="font-serif text-2xl">{subscription.plan?.name ?? "Free"}</p>
+            </div>
+            <div>
+              <p className="text-xs text-paper/60">Status</p>
+              <p className="font-serif text-2xl capitalize">
+                {String(subscription.status).toLowerCase().replaceAll("_", " ")}
+              </p>
+            </div>
+            {subscription.daysRemaining != null ? (
+              <div>
+                <p className="text-xs text-paper/60">Days left</p>
+                <p className="font-serif text-2xl text-[color:var(--cw-gold-300)]">{subscription.daysRemaining}</p>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+      </PlanningHero>
 
-      {billingAlert ? (
+      {billingAlert && (billingAlert.tone === "warning" || billingAlert.tone === "danger") ? (
         <BillingAlertBanner
           model={billingAlert}
           onCta={() => {
@@ -284,20 +307,6 @@ export default function VendorBillingPage() {
               return;
             }
             scrollToPlans();
-          }}
-        />
-      ) : null}
-
-      {subscription ? (
-        <SubscriptionStatusBanner
-          status={subscription.status}
-          daysRemaining={subscription.daysRemaining}
-          trialEndsAt={subscription.trialEndsAt}
-          currentPeriodEnd={subscription.currentPeriodEnd}
-          planName={subscription.plan?.name}
-          onUpgradeClick={() => {
-            if (defaultCheckoutPlan) void handleCheckout(defaultCheckoutPlan.id, selectedInterval);
-            else scrollToPlans();
           }}
         />
       ) : null}

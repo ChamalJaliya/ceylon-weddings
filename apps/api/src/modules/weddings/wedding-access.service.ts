@@ -29,7 +29,10 @@ export class WeddingAccessService {
 
     await this.prisma.wedding.create({
       data: {
-        slug: `${user.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-wedding-${user.id.slice(-6)}`.replace(/^-|-$/g, ""),
+        slug: `${user.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-wedding-${user.id.slice(-6)}`.replace(
+          /^-|-$/g,
+          "",
+        ),
         partnerOneName: user.name,
         partnerTwoName: "Partner",
         types: ["KANDYAN_PORUWA"],
@@ -100,6 +103,11 @@ export class WeddingAccessService {
       throw new ForbiddenException("Only the couple can edit the wedding profile and events");
     }
     return context;
+  }
+
+  /** Checklist tasks + calendar/agenda appointments: couple or family with canEditGuests. */
+  async requireCanEditSchedule(user: User) {
+    return this.requireFlag(user, "canEditGuests");
   }
 
   private withFlags(membership: {

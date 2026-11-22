@@ -9,7 +9,7 @@ import { Button } from "@ceylonweddings/ui/components/button";
 import { FormStatus } from "@ceylonweddings/ui/components/form-status";
 import { DataTableCell, DataTableHead } from "@ceylonweddings/ui/domain/data-table";
 import { DataTableList } from "@ceylonweddings/ui/domain/data-table-list";
-import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
+import { PlanningHero } from "@/features/planning/components/planning-hero";
 import { SectionCard } from "@ceylonweddings/ui/domain/section-card";
 import { useClientTablePagination } from "@ceylonweddings/ui/lib/use-client-table-pagination";
 import { Link } from "@/i18n/navigation";
@@ -49,13 +49,34 @@ export default function AdminReviewsPage() {
   }
 
   return (
-    <div className="grid gap-8">
-      <PageHeader
+    <div className="grid min-w-0 gap-6">
+      <PlanningHero
         icon={Star}
         kicker="Moderation"
         title="Reviews"
         description="Hide abusive reviews from public storefronts."
-      />
+      >
+        <div className="flex flex-wrap gap-x-8 gap-y-3">
+          <div>
+            <p className="text-xs text-paper/60">Reviews</p>
+            <p className="font-serif text-2xl">{rows.length}</p>
+          </div>
+          <div>
+            <p className="text-xs text-paper/60">Average</p>
+            <p className="font-serif text-2xl text-[color:var(--cw-gold-300)]">
+              {rows.length ? (rows.reduce((s, r) => s + r.rating, 0) / rows.length).toFixed(1) + " ★" : "—"}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-paper/60">Low (1–2 ★)</p>
+            <p className="font-serif text-2xl">{rows.filter((r) => r.rating <= 2).length}</p>
+          </div>
+          <div>
+            <p className="text-xs text-paper/60">Hidden</p>
+            <p className="font-serif text-2xl">{rows.filter((r) => r.hidden).length}</p>
+          </div>
+        </div>
+      </PlanningHero>
       <SectionCard title="All reviews" icon={Star}>
         <DataTableList
           framed={false}

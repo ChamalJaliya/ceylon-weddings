@@ -133,7 +133,7 @@ export function AdminListingPreview({
 }) {
   const strip = (photos?.filter(Boolean).length ? photos : photoUrl ? [photoUrl] : []).slice(0, 3) as string[];
   return (
-    <div className="flex gap-3 overflow-hidden rounded-2xl border border-border bg-card p-2">
+    <div className="flex min-w-0 items-center gap-4 overflow-hidden">
       <div className="grid h-16 w-28 grid-cols-3 gap-0.5 overflow-hidden rounded-xl">
         {strip.length ? (
           strip.map((src, index) => (

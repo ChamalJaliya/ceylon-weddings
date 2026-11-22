@@ -5,7 +5,7 @@ import { Globe, Copy, Check, Plane, HelpCircle, Sparkles, Save, Plus, Trash2, Ey
 import { api } from "@ceylonweddings/web";
 import { Button } from "@ceylonweddings/ui/components/button";
 import { Switch } from "@ceylonweddings/ui/components/switch";
-import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
+import { PlanningHero, heroButtonClass } from "@/features/planning/components/planning-hero";
 import { SectionCard } from "@ceylonweddings/ui/domain/section-card";
 import { Reveal } from "@ceylonweddings/ui/domain/motion";
 import { SignInPrompt, useWedding } from "@/components/use-wedding";
@@ -97,25 +97,58 @@ export default function WeddingWebsiteManagerPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <PageHeader
-          title="Guest Wedding Website"
-          description="Customize your shareable wedding website, RSVP link, FAQs, and overseas guest travel notes"
-        />
-        <div className="flex items-center gap-2">
-          <Button asChild variant="secondary" size="sm">
-            <a href={siteUrl} target="_blank" rel="noopener noreferrer">
-              <Eye className="size-4 mr-1.5" />
-              Live Preview
-            </a>
-          </Button>
-          <Button onClick={handleSave} disabled={saving} size="sm">
-            <Save className="size-4 mr-1.5" />
-            {saving ? "Saving..." : "Save Changes"}
-          </Button>
+    <div className="cw-stack">
+      <PlanningHero
+        icon={Globe}
+        kicker="Guest site"
+        title="Wedding website"
+        description="Customize your shareable wedding website, RSVP link, FAQs, and overseas guest travel notes"
+        actions={
+          <>
+            <Button asChild size="sm" shape="pill" variant="outline" className={heroButtonClass}>
+              <a href={siteUrl} target="_blank" rel="noopener noreferrer">
+                <Eye className="size-4" /> Live preview
+              </a>
+            </Button>
+            <Button
+              onClick={handleSave}
+              disabled={saving}
+              size="sm"
+              shape="pill"
+              className="gap-2 bg-paper text-ink hover:bg-paper/90"
+            >
+              <Save className="size-4" /> {saving ? "Saving…" : "Save changes"}
+            </Button>
+          </>
+        }
+      >
+        <div className="flex flex-wrap items-center gap-3">
+          <span
+            className={
+              websiteEnabled
+                ? "inline-flex items-center gap-2 rounded-full bg-[color:var(--cw-gold-300)]/20 px-3 py-1.5 text-sm text-[color:var(--cw-gold-300)]"
+                : "inline-flex items-center gap-2 rounded-full bg-paper/10 px-3 py-1.5 text-sm text-paper/70"
+            }
+          >
+            <span
+              className={
+                websiteEnabled
+                  ? "size-2 animate-pulse rounded-full bg-[color:var(--cw-gold-300)]"
+                  : "size-2 rounded-full bg-paper/40"
+              }
+            />
+            {websiteEnabled ? "Live for guests" : "Hidden from guests"}
+          </span>
+          <a
+            href={siteUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="min-w-0 truncate font-mono text-sm text-paper/70 underline-offset-4 hover:text-paper hover:underline"
+          >
+            {siteUrl}
+          </a>
         </div>
-      </div>
+      </PlanningHero>
 
       {successToast && (
         <Reveal direction="down">

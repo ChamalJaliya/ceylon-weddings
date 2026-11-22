@@ -148,6 +148,11 @@ enum AppointmentKind {
   OTHER
 }
 
+enum AppointmentSource {
+  MANUAL
+  NEKATH
+}
+
 enum MusicListKind {
   MUST
   MAYBE
@@ -511,15 +516,19 @@ model Event {
 }
 
 model Task {
-  id             String     @id @default(cuid())
+  id             String        @id @default(cuid())
   weddingId      String
-  wedding        Wedding    @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  wedding        Wedding       @relation(fields: [weddingId], references: [id], onDelete: Cascade)
   title          String
   dueAt          DateTime?
-  status         TaskStatus @default(TODO)
+  status         TaskStatus    @default(TODO)
   category       String?
   assigneeUserId String?
-  assignee       User?      @relation(fields: [assigneeUserId], references: [id])
+  assignee       User?         @relation(fields: [assigneeUserId], references: [id])
+  appointmentId  String?
+  appointment    Appointment?  @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+
+  @@index([appointmentId])
 }
 
 model BudgetLine {
@@ -868,28 +877,31 @@ model Review {
 }
 
 model Appointment {
-  id               String           @id @default(cuid())
+  id               String             @id @default(cuid())
   weddingId        String
-  wedding          Wedding          @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  wedding          Wedding            @relation(fields: [weddingId], references: [id], onDelete: Cascade)
   eventId          String?
-  event            Event?           @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  event            Event?             @relation(fields: [eventId], references: [id], onDelete: SetNull)
   vendorId         String?
-  vendor           Vendor?          @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+  vendor           Vendor?            @relation(fields: [vendorId], references: [id], onDelete: SetNull)
   title            String
-  kind             AppointmentKind  @default(VENDOR_MEETING)
+  kind             AppointmentKind    @default(VENDOR_MEETING)
+  source           AppointmentSource  @default(MANUAL)
   startsAt         DateTime
   endsAt           DateTime
   venueName        String?
   address          String?
-  reminderMinutes  Int              @default(30)
+  reminderMinutes  Int                @default(30)
   notes            String?
   color            String?
-  sortOrder        Int              @default(0)
+  sortOrder        Int                @default(0)
   ownerLabel       String?
   musicCues        MusicCue[]
+  linkedTasks      Task[]
 
   @@index([weddingId, startsAt])
   @@index([eventId, sortOrder])
+  @@index([eventId, source])
 }
 
 model InviteTemplate {

@@ -80,7 +80,7 @@ import {
   StyleStoryPicker,
   WeddingSitePreview,
 } from "@ceylonweddings/ui/domain/wedding-presentation";
-import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
+import { PlanningHero } from "@/features/planning/components/planning-hero";
 import { PlaceFields } from "@/components/place-fields";
 import { Link } from "@/i18n/navigation";
 import { SignInPrompt, useWedding } from "@/components/use-wedding";
@@ -186,9 +186,11 @@ export default function WeddingStudioPage() {
     canManageVendors: false,
   });
 
+  const [savedForm, setSavedForm] = useState<typeof form | null>(null);
+
   useEffect(() => {
     if (!data) return;
-    setForm({
+    const next = {
       partnerOneName: data.partnerOneName,
       partnerTwoName: data.partnerTwoName,
       date: data.date ? data.date.slice(0, 10) : "",
@@ -207,9 +209,14 @@ export default function WeddingStudioPage() {
       websiteEnabled: data.websiteEnabled,
       websiteFaq: data.websiteFaq ?? "",
       travelNotes: data.travelNotes ?? "",
-    });
+    };
+    setForm((prev) => ({ ...prev, ...next }));
+    setSavedForm((prev) => ({ ...(prev ?? form), ...next }));
     setEventDrafts(data.events ?? []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data]);
+
+  const dirty = savedForm != null && JSON.stringify(form) !== JSON.stringify(savedForm);
 
   useEffect(() => {
     const requested = searchParams.get("section");
@@ -424,7 +431,8 @@ export default function WeddingStudioPage() {
 
   return (
     <div className="cw-stack">
-      <PageHeader
+      <PlanningHero
+        icon={Palette}
         kicker={t("hub.kicker")}
         title={t("nav.studio")}
         description="Shape the wedding object — ceremonies, style, guest site — with a live preview."
@@ -1097,9 +1105,28 @@ export default function WeddingStudioPage() {
 
           {section !== "preview" ? (
             <StickyActionBar>
-              <div className="flex flex-wrap items-center gap-3">
-                <Button type="submit">{t("planning.save")}</Button>
-                {status ? <span className="text-sm text-muted-foreground">{status}</span> : null}
+              <div className="flex w-full flex-wrap items-center gap-3">
+                <span className="mr-auto text-sm text-muted-foreground">
+                  {dirty ? (
+                    <span className="inline-flex items-center gap-2">
+                      <span className="size-2 rounded-full bg-[color:var(--cw-gold-400)]" /> Unsaved changes
+                    </span>
+                  ) : (
+                    (status ?? "All changes saved")
+                  )}
+                </span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  shape="pill"
+                  disabled={!dirty}
+                  onClick={() => savedForm && setForm(savedForm)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" shape="pill" disabled={!dirty}>
+                  {t("planning.save")}
+                </Button>
               </div>
             </StickyActionBar>
           ) : null}

@@ -8,7 +8,7 @@ import { FormStatus } from "@ceylonweddings/ui/components/form-status";
 import { CenteredLoader } from "@ceylonweddings/ui/components/spinner";
 import { AdminListToolbar } from "@ceylonweddings/ui/domain/admin-list-toolbar";
 import { EmptyState } from "@ceylonweddings/ui/domain/empty-state";
-import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
+import { PlanningHero } from "@/features/planning/components/planning-hero";
 import { SectionCard } from "@ceylonweddings/ui/domain/section-card";
 import { AuditTimeline } from "@ceylonweddings/ui/domain/audit-timeline";
 import { Link } from "@/i18n/navigation";
@@ -45,7 +45,7 @@ export default function AdminAuditPage() {
 
   return (
     <div className="grid gap-8">
-      <PageHeader
+      <PlanningHero
         icon={FileText}
         kicker="Compliance"
         title="Audit trail"

@@ -11,7 +11,7 @@ import { CenteredLoader } from "@ceylonweddings/ui/components/spinner";
 import { AdminQueueVendorCard, AdminQueueVendorList } from "@ceylonweddings/ui/domain/admin-queue-vendor-card";
 import { AdminQueue, AdminQueueChip } from "@ceylonweddings/ui/domain/admin-queue";
 import { EmptyState } from "@ceylonweddings/ui/domain/empty-state";
-import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
+import { PlanningHero } from "@/features/planning/components/planning-hero";
 import { SectionCard } from "@ceylonweddings/ui/domain/section-card";
 import { getListEmptyMode, showListChrome } from "@ceylonweddings/ui/lib/list-state";
 import { Link } from "@/i18n/navigation";
@@ -58,12 +58,27 @@ export default function AdminPicksQueuePage() {
 
   return (
     <div className="grid gap-8">
-      <PageHeader
+      <PlanningHero
         icon={Sparkles}
         kicker="Queue"
         title="Ceylon Picks"
         description="Feature only gate-ready verified listings."
-      />
+      >
+        <div className="flex flex-wrap gap-x-8 gap-y-3">
+          <div>
+            <p className="text-xs text-paper/60">Candidates</p>
+            <p className="font-serif text-2xl">{vendors.length}</p>
+          </div>
+          <div>
+            <p className="text-xs text-paper/60">Ready to pick</p>
+            <p className="font-serif text-2xl text-[color:var(--cw-gold-300)]">{ready.length}</p>
+          </div>
+          <div>
+            <p className="text-xs text-paper/60">Failing the gate</p>
+            <p className="font-serif text-2xl">{failing.length}</p>
+          </div>
+        </div>
+      </PlanningHero>
       {chrome ? (
         <AdminQueue>
           <AdminQueueChip

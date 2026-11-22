@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import { api } from "@ceylonweddings/web";
 import type { AdminInsights, AdminJobHealth, AdminStats } from "@ceylonweddings/contracts";
-import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
+import { PlanningHero } from "@/features/planning/components/planning-hero";
 import {
   ColumnChart,
   DonutChart,
@@ -473,12 +473,57 @@ export default function AdminHomePage() {
 
   return (
     <div className="grid gap-6">
-      <PageHeader
+      <PlanningHero
         icon={LayoutDashboard}
         kicker="Admin"
         title="Operations"
         description="Queues, trust and marketplace health at a glance. Press ⌘K to jump."
-      />
+      >
+        {data.stats
+          ? (() => {
+              const st = data.stats;
+              const queue = [
+                { href: "/admin/queues/verify", label: "to verify", value: st.vendorsPendingVerify, urgent: true },
+                { href: "/admin/queues/reports", label: "open reports", value: st.reportsOpen, urgent: true },
+                { href: "/admin/inquiries", label: "unanswered inquiries", value: st.inquiriesNew, urgent: true },
+                { href: "/admin/queues/picks", label: "Picks candidates", value: st.vendorsGateFailFeaturedCandidates },
+                { href: "/admin/content", label: "draft articles", value: st.articlesDraft },
+              ];
+              const waiting = queue.filter((q) => q.urgent).reduce((sum, q) => sum + (q.value ?? 0), 0);
+              return (
+                <div className="flex flex-wrap items-end gap-x-10 gap-y-4">
+                  <div>
+                    <p
+                      className={
+                        waiting
+                          ? "font-serif text-6xl leading-none text-[color:var(--cw-gold-300)]"
+                          : "font-serif text-6xl leading-none"
+                      }
+                    >
+                      {waiting}
+                    </p>
+                    <p className="mt-1 text-sm text-paper/70">{waiting ? "items need you" : "All clear"}</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {queue.map((q) => (
+                      <Link
+                        key={q.href}
+                        href={q.href}
+                        className={
+                          q.value
+                            ? "inline-flex items-center gap-2 rounded-full border border-paper/25 px-3.5 py-1.5 text-sm transition hover:border-[color:var(--cw-gold-300)]"
+                            : "inline-flex items-center gap-2 rounded-full border border-paper/10 px-3.5 py-1.5 text-sm text-paper/50 transition hover:text-paper/80"
+                        }
+                      >
+                        <span className="font-medium tabular-nums">{q.value ?? 0}</span> {q.label}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()
+          : null}
+      </PlanningHero>
       <WidgetDashboard
         kind="admin"
         store={useAdminDashboardLayout}
