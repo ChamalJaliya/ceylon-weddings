@@ -494,17 +494,7 @@ export default function ProHomePage() {
 
   return (
     <div className="grid gap-6">
-      <section className="relative isolate grid overflow-hidden rounded-3xl text-paper shadow-raised lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
-        <span
-          aria-hidden
-          className="absolute inset-0 -z-10"
-          style={{
-            background:
-              "radial-gradient(120% 90% at 0% 0%, color-mix(in srgb, var(--color-primary) 75%, transparent) 0%, transparent 60%)," +
-              "radial-gradient(60% 70% at 40% 120%, color-mix(in srgb, var(--cw-gold-300) 18%, transparent) 0%, transparent 60%)," +
-              "linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 35%, var(--color-ink)) 0%, var(--color-ink) 70%)",
-          }}
-        />
+      <section className="cw-hero-soft relative isolate grid overflow-hidden rounded-3xl lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
         <div className="order-2 grid content-between gap-8 p-6 sm:p-10 lg:order-1">
           <div className="grid gap-3">
             <p className="flex items-center gap-2 text-label tracking-eyebrow text-paper/60 uppercase">

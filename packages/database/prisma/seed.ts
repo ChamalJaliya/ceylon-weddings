@@ -2957,8 +2957,8 @@ async function main() {
       accentColor: "#7c2d12",
       overlayTone: "light",
       layout: "SPOTLIGHT",
-      badgeLabel: "Ceylon Pick",
-      slots: ["HOME_HERO", "HOME_PICKS", "CATALOG_TOP"],
+      badgeLabel: "Featured",
+      slots: ["HOME_HERO", "HOME_PICKS"],
       cities: [],
       categories: ["PHOTO_VIDEO"],
       locales: ["en"],
@@ -2968,6 +2968,319 @@ async function main() {
       vendorId: lotus.id,
       source: "EDITORIAL",
     },
+  });
+
+  const slotConfigs: Array<{
+    slot:
+      | "HOME_HERO"
+      | "HOME_PICKS"
+      | "CATALOG_TOP"
+      | "CATALOG_INLINE"
+      | "CATALOG_DATE_AVAILABLE"
+      | "CATALOG_MAP"
+      | "IDEAS_RAIL"
+      | "IDEAS_INLINE"
+      | "VENDOR_SIDEBAR"
+      | "VENDOR_COMPLEMENTARY"
+      | "VENDOR_SIMILAR"
+      | "COMPARE_SUGGEST"
+      | "ARTICLE_INLINE"
+      | "ARTICLE_NEXT_STEP"
+      | "ARTICLE_STORY_CREDITS"
+      | "REELS"
+      | "AWARDS_CATEGORY";
+    enabled: boolean;
+    pageKey: string;
+    regionKey: string;
+    description: string;
+    defaultLayout: "SPOTLIGHT" | "BANNER" | "CARD" | "STRIP" | "PICKS_TILE";
+    maxPerRequest: number;
+    densityEveryN: number | null;
+    disclosure: "SPONSORED" | "SPONSORED_STORY" | "CUSTOM";
+    priceLkr: number;
+    interval: "DAY" | "WEEK" | "MONTH";
+    sortOrder: number;
+  }> = [
+    {
+      slot: "HOME_HERO",
+      enabled: true,
+      pageKey: "Homepage",
+      regionKey: "Hero",
+      description: "Full-width spotlight under the homepage hero",
+      defaultLayout: "SPOTLIGHT",
+      maxPerRequest: 1,
+      densityEveryN: null,
+      disclosure: "SPONSORED",
+      priceLkr: 45000,
+      interval: "WEEK",
+      sortOrder: 10,
+    },
+    {
+      slot: "HOME_PICKS",
+      enabled: true,
+      pageKey: "Homepage",
+      regionKey: "Picks",
+      description: "Tiles alongside Ceylon Picks",
+      defaultLayout: "PICKS_TILE",
+      maxPerRequest: 2,
+      densityEveryN: null,
+      disclosure: "SPONSORED",
+      priceLkr: 25000,
+      interval: "WEEK",
+      sortOrder: 20,
+    },
+    {
+      slot: "CATALOG_TOP",
+      enabled: false,
+      pageKey: "Vendor catalog",
+      regionKey: "Top strip",
+      description: "Legacy strip above results — prefer Catalog inline",
+      defaultLayout: "STRIP",
+      maxPerRequest: 1,
+      densityEveryN: null,
+      disclosure: "SPONSORED",
+      priceLkr: 20000,
+      interval: "WEEK",
+      sortOrder: 30,
+    },
+    {
+      slot: "CATALOG_INLINE",
+      enabled: true,
+      pageKey: "Vendor catalog",
+      regionKey: "Grid",
+      description: "Native sponsored cards at positions 1, 6, then every N",
+      defaultLayout: "CARD",
+      maxPerRequest: 4,
+      densityEveryN: 12,
+      disclosure: "SPONSORED",
+      priceLkr: 35000,
+      interval: "WEEK",
+      sortOrder: 40,
+    },
+    {
+      slot: "CATALOG_DATE_AVAILABLE",
+      enabled: false,
+      pageKey: "Vendor catalog",
+      regionKey: "Date available",
+      description: "Sponsored vendors available on the couple's wedding date",
+      defaultLayout: "CARD",
+      maxPerRequest: 4,
+      densityEveryN: null,
+      disclosure: "SPONSORED",
+      priceLkr: 30000,
+      interval: "WEEK",
+      sortOrder: 50,
+    },
+    {
+      slot: "CATALOG_MAP",
+      enabled: false,
+      pageKey: "Vendor catalog",
+      regionKey: "Map",
+      description: "Gold pins and first in map list",
+      defaultLayout: "CARD",
+      maxPerRequest: 6,
+      densityEveryN: null,
+      disclosure: "SPONSORED",
+      priceLkr: 28000,
+      interval: "WEEK",
+      sortOrder: 60,
+    },
+    {
+      slot: "IDEAS_RAIL",
+      enabled: false,
+      pageKey: "Ideas",
+      regionKey: "Rail",
+      description: "Legacy ideas rail — prefer article inline",
+      defaultLayout: "PICKS_TILE",
+      maxPerRequest: 2,
+      densityEveryN: null,
+      disclosure: "SPONSORED",
+      priceLkr: 18000,
+      interval: "WEEK",
+      sortOrder: 70,
+    },
+    {
+      slot: "IDEAS_INLINE",
+      enabled: false,
+      pageKey: "Ideas list",
+      regionKey: "Grid",
+      description: "Sponsored stories in the article grid",
+      defaultLayout: "CARD",
+      maxPerRequest: 2,
+      densityEveryN: 6,
+      disclosure: "SPONSORED_STORY",
+      priceLkr: 22000,
+      interval: "WEEK",
+      sortOrder: 80,
+    },
+    {
+      slot: "VENDOR_SIDEBAR",
+      enabled: false,
+      pageKey: "Vendor profile",
+      regionKey: "Sidebar (deprecated)",
+      description: "Deprecated — use Similar vendors",
+      defaultLayout: "CARD",
+      maxPerRequest: 2,
+      densityEveryN: null,
+      disclosure: "SPONSORED",
+      priceLkr: 15000,
+      interval: "WEEK",
+      sortOrder: 90,
+    },
+    {
+      slot: "VENDOR_COMPLEMENTARY",
+      enabled: true,
+      pageKey: "Vendor profile",
+      regionKey: "Complete your team",
+      description: "Complementary vendors below reviews",
+      defaultLayout: "CARD",
+      maxPerRequest: 3,
+      densityEveryN: null,
+      disclosure: "SPONSORED",
+      priceLkr: 28000,
+      interval: "WEEK",
+      sortOrder: 100,
+    },
+    {
+      slot: "VENDOR_SIMILAR",
+      enabled: false,
+      pageKey: "Vendor profile",
+      regionKey: "Similar vendors",
+      description: "Competitor strip at the bottom of the profile",
+      defaultLayout: "CARD",
+      maxPerRequest: 3,
+      densityEveryN: null,
+      disclosure: "SPONSORED",
+      priceLkr: 20000,
+      interval: "WEEK",
+      sortOrder: 110,
+    },
+    {
+      slot: "COMPARE_SUGGEST",
+      enabled: false,
+      pageKey: "Compare",
+      regionKey: "Add a third",
+      description: "Sponsored third option when comparing two vendors",
+      defaultLayout: "CARD",
+      maxPerRequest: 1,
+      densityEveryN: null,
+      disclosure: "SPONSORED",
+      priceLkr: 32000,
+      interval: "WEEK",
+      sortOrder: 120,
+    },
+    {
+      slot: "ARTICLE_INLINE",
+      enabled: false,
+      pageKey: "Idea article",
+      regionKey: "Mid-article",
+      description: "Contextual product card mid-article",
+      defaultLayout: "CARD",
+      maxPerRequest: 1,
+      densityEveryN: null,
+      disclosure: "SPONSORED",
+      priceLkr: 18000,
+      interval: "WEEK",
+      sortOrder: 130,
+    },
+    {
+      slot: "ARTICLE_NEXT_STEP",
+      enabled: false,
+      pageKey: "Idea article",
+      regionKey: "End CTA",
+      description: "End-of-article booking prompt",
+      defaultLayout: "BANNER",
+      maxPerRequest: 1,
+      densityEveryN: null,
+      disclosure: "SPONSORED",
+      priceLkr: 16000,
+      interval: "WEEK",
+      sortOrder: 140,
+    },
+    {
+      slot: "ARTICLE_STORY_CREDITS",
+      enabled: true,
+      pageKey: "Idea article",
+      regionKey: "Shop this wedding",
+      description: "Boost credited vendors with WhatsApp on real-wedding stories",
+      defaultLayout: "CARD",
+      maxPerRequest: 12,
+      densityEveryN: null,
+      disclosure: "SPONSORED",
+      priceLkr: 12000,
+      interval: "WEEK",
+      sortOrder: 150,
+    },
+    {
+      slot: "REELS",
+      enabled: false,
+      pageKey: "Home / Ideas",
+      regionKey: "Reels strip",
+      description: "Wedding Reels strip inventory",
+      defaultLayout: "STRIP",
+      maxPerRequest: 6,
+      densityEveryN: null,
+      disclosure: "SPONSORED",
+      priceLkr: 24000,
+      interval: "WEEK",
+      sortOrder: 160,
+    },
+    {
+      slot: "AWARDS_CATEGORY",
+      enabled: false,
+      pageKey: "Awards",
+      regionKey: "Category sponsor",
+      description: "Presented-by line on awards categories",
+      defaultLayout: "BANNER",
+      maxPerRequest: 1,
+      densityEveryN: null,
+      disclosure: "SPONSORED",
+      priceLkr: 50000,
+      interval: "MONTH",
+      sortOrder: 170,
+    },
+  ];
+
+  for (const slot of slotConfigs) {
+    await prisma.promotionSlotConfig.create({ data: slot });
+  }
+
+  await prisma.promotionPackage.createMany({
+    data: [
+      {
+        name: "Catalog spotlight",
+        slug: "catalog-spotlight",
+        description: "Native sponsored card in vendor search for one week",
+        slots: ["CATALOG_INLINE"],
+        priceLkr: 35000,
+        interval: "WEEK",
+        durationDays: 7,
+        active: true,
+        sortOrder: 10,
+      },
+      {
+        name: "Complete your team",
+        slug: "complete-your-team",
+        description: "Appear as a complementary suggestion on related vendor profiles",
+        slots: ["VENDOR_COMPLEMENTARY"],
+        priceLkr: 28000,
+        interval: "WEEK",
+        durationDays: 7,
+        active: true,
+        sortOrder: 20,
+      },
+      {
+        name: "Shop this wedding",
+        slug: "shop-this-wedding",
+        description: "Boost your credit on real-wedding stories with WhatsApp",
+        slots: ["ARTICLE_STORY_CREDITS"],
+        priceLkr: 12000,
+        interval: "WEEK",
+        durationDays: 14,
+        active: true,
+        sortOrder: 30,
+      },
+    ],
   });
 
   const flagCatalog = [

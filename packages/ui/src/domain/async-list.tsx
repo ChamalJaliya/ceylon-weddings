@@ -195,19 +195,11 @@ export function PaginationBar({
 
 export function VendorCardSkeleton() {
   return (
-    <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-card">
-      <div className="cw-shimmer m-2 mb-0 aspect-[4/3] rounded-2xl bg-muted" />
-      <div className="grid gap-3 px-5 pt-4 pb-5">
-        <div className="flex justify-between">
-          <div className="cw-shimmer h-3 w-24 rounded-full bg-muted" />
-          <div className="cw-shimmer h-4 w-12 rounded-full bg-muted" />
-        </div>
-        <div className="cw-shimmer h-5 w-3/4 rounded-full bg-muted" />
-        <div className="cw-shimmer h-3 w-32 rounded-full bg-muted" />
-        <div className="mt-1 flex items-center justify-between border-t border-border pt-3">
-          <div className="cw-shimmer h-4 w-28 rounded-full bg-muted" />
-          <div className="cw-shimmer size-8 rounded-full bg-muted" />
-        </div>
+    <div className="grid gap-3">
+      <div className="cw-shimmer aspect-[4/5] rounded-[1.75rem] bg-muted" />
+      <div className="flex items-center justify-between px-1.5">
+        <div className="cw-shimmer h-3.5 w-28 rounded-full bg-muted" />
+        <div className="cw-shimmer h-3.5 w-24 rounded-full bg-muted" />
       </div>
     </div>
   );
@@ -231,7 +223,7 @@ export function AsyncListGrid({
 
   if (loading) {
     return (
-      <div className="grid gap-4 sm:grid-cols-2 sm:gap-6 xl:grid-cols-3" aria-busy>
+      <div className="grid gap-x-5 gap-y-8 sm:grid-cols-2 lg:grid-cols-3" aria-busy>
         {Array.from({ length: skeletonCount }, (_, index) => (
           <VendorCardSkeleton key={index} />
         ))}
@@ -247,7 +239,7 @@ export function AsyncListGrid({
     <Stagger
       key={resetKey}
       trigger="immediate"
-      className="grid gap-4 sm:grid-cols-2 sm:gap-6 xl:grid-cols-3"
+      className="grid gap-x-5 gap-y-8 sm:grid-cols-2 lg:grid-cols-3"
       stagger={0.06}
     >
       {items.map((child, index) => (

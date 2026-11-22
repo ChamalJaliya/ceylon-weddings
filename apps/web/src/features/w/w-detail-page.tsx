@@ -16,6 +16,7 @@ import { Reveal, PageTransition, motion } from "@ceylonweddings/ui/domain/motion
 import { Link } from "@/i18n/navigation";
 import { CATEGORY_LABELS } from "@/lib/labels";
 import { CenteredLoader } from "@ceylonweddings/ui/components/spinner";
+import { CelebrationBackdrop, celebrationThemeFor } from "@/components/celebration-backdrop";
 
 export default function GuestWebsitePage() {
   const params = useParams<{ slug: string }>();
@@ -68,60 +69,68 @@ export default function GuestWebsitePage() {
     return new Date(iso).toLocaleString("en-LK", { dateStyle: "medium", timeStyle: "short" });
   }
 
+  const theme = celebrationThemeFor(site.events.map((event) => event.kind));
+
   return (
-    <PageTransition className="mx-auto cw-stack max-w-4xl px-4 py-10 sm:px-6">
-      <GuestSiteHero
-        imageSrc={resolveWeddingCoverUrl(site.coverImageUrl)}
-        names={names}
-        date={formatWeddingDateLabel(site.date)}
-        place={place}
-        actions={
-          <Button asChild size="lg">
-            <Link href={`/w/${site.slug}/rsvp`}>RSVP</Link>
-          </Button>
-        }
-      />
-
-      <section className="grid gap-4">
-        <Reveal direction="none" delay={0.05}>
-          <p className="text-label tracking-eyebrow text-muted-foreground uppercase">Ceremony</p>
-        </Reveal>
-        <CeremonySchedule events={site.events} formatWhen={formatWhen} />
-      </section>
-
-      <TravelGuideBlock notes={site.travelNotes} />
-
-      {site.websiteFaq ? (
-        <section className="grid gap-4">
-          <Reveal direction="none" delay={0.05}>
-            <p className="text-label tracking-eyebrow text-muted-foreground uppercase">FAQ</p>
-          </Reveal>
-          <FaqAccordion faq={site.websiteFaq} />
-        </section>
-      ) : null}
-
-      {(site.team ?? []).length ? (
-        <section className="grid gap-4">
-          <Reveal direction="none" delay={0.05}>
-            <p className="text-label tracking-eyebrow text-muted-foreground uppercase">Our team</p>
-          </Reveal>
-          <OurTeamStrip
-            items={(site.team ?? []).map((member) => ({
-              ...member,
-              category: CATEGORY_LABELS[member.category] ?? member.category,
-            }))}
-            catalogHref={(slug) => `/vendors/${slug}`}
+    <>
+      <PageTransition className="relative mx-auto cw-stack max-w-4xl px-4 py-10 sm:px-6">
+        <div className="relative isolate -mx-2 px-2 py-6 sm:-mx-16 sm:px-16 sm:py-10">
+          <CelebrationBackdrop theme={theme} seed={site.slug.length} />
+          <GuestSiteHero
+            imageSrc={resolveWeddingCoverUrl(site.coverImageUrl)}
+            names={names}
+            date={formatWeddingDateLabel(site.date)}
+            place={place}
+            actions={
+              <Button asChild size="lg">
+                <Link href={`/w/${site.slug}/rsvp`}>RSVP</Link>
+              </Button>
+            }
           />
-        </section>
-      ) : null}
-
-      <Reveal direction="up" y={20} delay={0.1}>
-        <div className="flex justify-center pb-10">
-          <Button asChild size="lg">
-            <Link href={`/w/${site.slug}/rsvp`}>Confirm your RSVP</Link>
-          </Button>
         </div>
-      </Reveal>
-    </PageTransition>
+
+        <section className="grid gap-4">
+          <Reveal direction="none" delay={0.05}>
+            <p className="text-label tracking-eyebrow text-muted-foreground uppercase">Ceremony</p>
+          </Reveal>
+          <CeremonySchedule events={site.events} formatWhen={formatWhen} />
+        </section>
+
+        <TravelGuideBlock notes={site.travelNotes} />
+
+        {site.websiteFaq ? (
+          <section className="grid gap-4">
+            <Reveal direction="none" delay={0.05}>
+              <p className="text-label tracking-eyebrow text-muted-foreground uppercase">FAQ</p>
+            </Reveal>
+            <FaqAccordion faq={site.websiteFaq} />
+          </section>
+        ) : null}
+
+        {(site.team ?? []).length ? (
+          <section className="grid gap-4">
+            <Reveal direction="none" delay={0.05}>
+              <p className="text-label tracking-eyebrow text-muted-foreground uppercase">Our team</p>
+            </Reveal>
+            <OurTeamStrip
+              items={(site.team ?? []).map((member) => ({
+                ...member,
+                category: CATEGORY_LABELS[member.category] ?? member.category,
+              }))}
+              catalogHref={(slug) => `/vendors/${slug}`}
+            />
+          </section>
+        ) : null}
+
+        <Reveal direction="up" y={20} delay={0.1}>
+          <div className="relative isolate mx-auto mb-10 flex w-full max-w-md justify-center py-12">
+            <CelebrationBackdrop theme={theme} seed={site.slug.length + 3} density="small" />
+            <Button asChild size="lg">
+              <Link href={`/w/${site.slug}/rsvp`}>Confirm your RSVP</Link>
+            </Button>
+          </div>
+        </Reveal>
+      </PageTransition>
+    </>
   );
 }

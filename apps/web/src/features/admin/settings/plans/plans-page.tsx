@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { CreditCard, Pencil, Plus } from "lucide-react";
+import { Check, CreditCard, GripVertical, Pencil, Plus, Sparkles, Star, X } from "lucide-react";
 import { api, formatMoney } from "@ceylonweddings/web";
 import type {
   BillingInterval,
@@ -13,7 +13,19 @@ import { Badge } from "@ceylonweddings/ui/components/badge";
 import { Button } from "@ceylonweddings/ui/components/button";
 import { FormStatus } from "@ceylonweddings/ui/components/form-status";
 import { Input } from "@ceylonweddings/ui/components/input";
-import { SimpleSelect } from "@ceylonweddings/ui/components/select";
+import { Combobox } from "@ceylonweddings/ui/components/combobox";
+import { Switch } from "@ceylonweddings/ui/components/switch";
+import { Label } from "@ceylonweddings/ui/components/label";
+import {
+  FloatingPanel,
+  FloatingPanelBody,
+  FloatingPanelContent,
+  FloatingPanelFooter,
+  FloatingPanelHeader,
+  FloatingPanelSection,
+} from "@ceylonweddings/ui/domain/floating-panel";
+import { AdminListToolbar } from "@ceylonweddings/ui/domain/admin-list-toolbar";
+import { cn } from "@ceylonweddings/ui/lib/utils";
 import { Textarea } from "@ceylonweddings/ui/components/textarea";
 import { DataTableCell, DataTableHead } from "@ceylonweddings/ui/domain/data-table";
 import { DataTableList } from "@ceylonweddings/ui/domain/data-table-list";
@@ -23,7 +35,7 @@ import { SettingsSwitchRow } from "@ceylonweddings/ui/domain/settings-switch-row
 import { useClientTablePagination } from "@ceylonweddings/ui/lib/use-client-table-pagination";
 import { Link } from "@/i18n/navigation";
 
-const PLAN_COLUMNS = ["slug", "name", "interval", "price", "billingMode", "recommended", "active", "actions"] as const;
+const PLAN_COLUMNS = ["plan", "billing", "price", "active", "actions"] as const;
 
 const INTERVAL_OPTIONS: { value: BillingInterval; label: string }[] = [
   { value: "MONTHLY", label: "Monthly" },
@@ -49,26 +61,34 @@ const EMPTY_FORM: UpsertSubscriptionPlanBody = {
   stripePriceId: null,
 };
 
-function featuresToText(features: string[]) {
-  return features.join("\n");
+function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
+  return (
+    <div className="grid min-w-0 gap-1.5">
+      <Label className="text-sm">{label}</Label>
+      {children}
+      {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
+    </div>
+  );
 }
 
-function textToFeatures(text: string) {
-  return text
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean);
+function priceLabel(plan: SubscriptionPlan) {
+  if (plan.billingMode === "contact") return "Contact us";
+  return formatMoney(plan.priceLkr, "LKR");
 }
 
 export default function AdminPlansPage() {
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [showForm, setShowForm] = useState(false);
-  const [featuresText, setFeaturesText] = useState("");
+  const [open, setOpen] = useState(false);
   const [form, setForm] = useState<UpsertSubscriptionPlanBody>(EMPTY_FORM);
   const [editingKey, setEditingKey] = useState<string | null>(null);
+  const [newFeature, setNewFeature] = useState("");
+  const [query, setQuery] = useState("");
+  const [intervalFilter, setIntervalFilter] = useState("all");
+  const [previewInterval, setPreviewInterval] = useState<BillingInterval>("MONTHLY");
 
   const load = useCallback(async () => {
     try {
@@ -86,19 +106,38 @@ export default function AdminPlansPage() {
     void load();
   }, [load]);
 
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return plans.filter((plan) => {
+      if (intervalFilter !== "all" && plan.interval !== intervalFilter) return false;
+      if (!q) return true;
+      return [plan.name, plan.slug, plan.description].filter(Boolean).some((t) => String(t).toLowerCase().includes(q));
+    });
+  }, [plans, query, intervalFilter]);
+
   const { page, setPage, setLimit, pageItems, total, totalPages, limit } = useClientTablePagination(
-    plans,
+    filtered,
     25,
-    plans.length,
+    `${query}|${intervalFilter}`,
   );
 
-  const formTitle = useMemo(() => {
-    if (!editingKey) return "Create plan";
-    const [slug, interval] = editingKey.split("::");
-    return `Edit ${slug} · ${interval}`;
-  }, [editingKey]);
+  // One card per tier (slug), using the chosen interval, falling back to any active row.
+  const tiers = useMemo(() => {
+    const bySlug = new Map<string, SubscriptionPlan[]>();
+    for (const plan of plans.filter((p) => p.active)) {
+      bySlug.set(plan.slug, [...(bySlug.get(plan.slug) ?? []), plan]);
+    }
+    return [...bySlug.values()]
+      .map((rows) => rows.find((row) => row.interval === previewInterval) ?? rows[0]!)
+      .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+  }, [plans, previewInterval]);
 
-  if (error) {
+  const monthlyBySlug = useMemo(
+    () => new Map(plans.filter((p) => p.interval === "MONTHLY").map((p) => [p.slug, p.priceLkr])),
+    [plans],
+  );
+
+  if (error && !plans.length) {
     return (
       <FormStatus tone="destructive">
         {error}. <Link href="/login">Sign in</Link>
@@ -109,8 +148,7 @@ export default function AdminPlansPage() {
   function openCreate() {
     setEditingKey(null);
     setForm({ ...EMPTY_FORM });
-    setFeaturesText("");
-    setShowForm(true);
+    setOpen(true);
   }
 
   function openEdit(plan: SubscriptionPlan) {
@@ -129,22 +167,52 @@ export default function AdminPlansPage() {
       active: plan.active,
       stripePriceId: plan.stripePriceId ?? null,
     });
-    setFeaturesText(featuresToText(plan.features));
-    setShowForm(true);
+    setOpen(true);
   }
 
-  function closeForm() {
-    setShowForm(false);
-    setEditingKey(null);
+  async function save() {
+    setSaving(true);
+    try {
+      await api.admin.upsertSubscriptionPlan(form);
+      setOpen(false);
+      setNotice(`${form.name} saved`);
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Save failed");
+    } finally {
+      setSaving(false);
+    }
   }
+
+  async function toggleActive(plan: SubscriptionPlan) {
+    setPlans((prev) => prev.map((p) => (p.id === plan.id ? { ...p, active: !p.active } : p)));
+    try {
+      await api.admin.setSubscriptionPlanActive(plan.id, !plan.active);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not update plan");
+      await load();
+    }
+  }
+
+  function addFeature() {
+    const value = newFeature.trim();
+    if (!value) return;
+    setForm((f) => ({ ...f, features: [...f.features, value] }));
+    setNewFeature("");
+  }
+
+  const annualSaving =
+    form.interval === "ANNUAL" && monthlyBySlug.get(form.slug)
+      ? Math.round((1 - form.priceLkr / (monthlyBySlug.get(form.slug)! * 12)) * 100)
+      : null;
 
   return (
-    <div className="grid gap-8">
+    <div className="grid min-w-0 gap-8">
       <PlanningHero
         icon={CreditCard}
         kicker="Settings"
         title="Plans & pricing"
-        description="Membership catalog for vendor Pro and Spotlight tiers — prices, features, and checkout mode."
+        description="What vendors pay for Pro and Spotlight — prices, features and how they check out."
         actions={
           <Button size="sm" onClick={openCreate}>
             <Plus className="size-4" />
@@ -153,240 +221,193 @@ export default function AdminPlansPage() {
         }
       />
 
-      {showForm ? (
-        <SectionCard title={formTitle} icon={CreditCard}>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className="grid gap-1 text-sm">
-              Slug
-              <Input
-                value={form.slug}
-                onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value }))}
-                placeholder="pro"
-                disabled={Boolean(editingKey)}
-              />
-            </label>
-            <label className="grid gap-1 text-sm">
-              Name
-              <Input
-                value={form.name}
-                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                placeholder="Ceylon Weddings Pro"
-              />
-            </label>
-            <label className="grid gap-1 text-sm">
-              Interval
-              <SimpleSelect
-                value={form.interval}
-                onValueChange={(v) => setForm((f) => ({ ...f, interval: v as BillingInterval }))}
-                aria-label="Billing interval"
-                options={INTERVAL_OPTIONS}
-                disabled={Boolean(editingKey)}
-              />
-            </label>
-            <label className="grid gap-1 text-sm">
-              Price (LKR)
-              <Input
-                type="number"
-                min={0}
-                value={form.priceLkr}
-                onChange={(e) => setForm((f) => ({ ...f, priceLkr: Number.parseInt(e.target.value, 10) || 0 }))}
-              />
-            </label>
-            <label className="grid gap-1 text-sm">
-              Billing mode
-              <SimpleSelect
-                value={form.billingMode}
-                onValueChange={(v) => setForm((f) => ({ ...f, billingMode: v as PlanBillingMode }))}
-                aria-label="Billing mode"
-                options={BILLING_MODE_OPTIONS}
-              />
-            </label>
-            <label className="grid gap-1 text-sm">
-              Sort order
-              <Input
-                type="number"
-                value={form.sortOrder ?? 0}
-                onChange={(e) => setForm((f) => ({ ...f, sortOrder: Number.parseInt(e.target.value, 10) || 0 }))}
-              />
-            </label>
-            <label className="grid gap-1 text-sm sm:col-span-2">
-              Description
-              <Textarea
-                value={form.description ?? ""}
-                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value || null }))}
-                rows={2}
-                placeholder="Short pitch for the pricing card"
-              />
-            </label>
-            <label className="grid gap-1 text-sm sm:col-span-2">
-              Stripe Price ID (optional)
-              <Input
-                value={form.stripePriceId ?? ""}
-                onChange={(e) => setForm((f) => ({ ...f, stripePriceId: e.target.value.trim() || null }))}
-                placeholder="price_… — leave empty to convert LKR → USD at checkout"
-              />
-            </label>
-            <label className="grid gap-1 text-sm sm:col-span-2">
-              Features (one per line)
-              <Textarea
-                value={featuresText}
-                onChange={(e) => setFeaturesText(e.target.value)}
-                rows={6}
-                placeholder={"Verified Pro badge\nWhatsApp lead alerts"}
-              />
-            </label>
-          </div>
-          <div className="mt-4 grid gap-2 sm:max-w-md">
-            <SettingsSwitchRow
-              label="Recommended"
-              description="Highlights this tier on the vendor billing page."
-              checked={form.recommended}
-              onCheckedChange={(recommended) => setForm((f) => ({ ...f, recommended }))}
-            />
-            <SettingsSwitchRow
-              label="Active"
-              description="Inactive plans are hidden from the public catalog."
-              checked={form.active}
-              onCheckedChange={(active) => setForm((f) => ({ ...f, active }))}
-            />
-          </div>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Button
-              size="sm"
-              disabled={saving || !form.slug.trim() || !form.name.trim()}
-              onClick={async () => {
-                setSaving(true);
-                try {
-                  const body: UpsertSubscriptionPlanBody = {
-                    ...form,
-                    features: textToFeatures(featuresText),
-                  };
-                  await api.admin.upsertSubscriptionPlan(body);
-                  closeForm();
-                  await load();
-                } catch (err) {
-                  setError(err instanceof Error ? err.message : "Save failed");
-                } finally {
-                  setSaving(false);
-                }
-              }}
-            >
-              {editingKey ? "Save changes" : "Create plan"}
-            </Button>
-            <Button size="sm" variant="outline" onClick={closeForm}>
-              Cancel
-            </Button>
-          </div>
-        </SectionCard>
-      ) : null}
+      {notice ? <FormStatus tone="success">{notice}</FormStatus> : null}
+      {error ? <FormStatus tone="destructive">{error}</FormStatus> : null}
 
-      <SectionCard title="Catalog" icon={CreditCard}>
+      <section className="grid gap-4">
+        <div className="flex flex-wrap items-end justify-between gap-3 px-1">
+          <div className="grid gap-0.5">
+            <h2 className="font-serif text-2xl">What vendors see</h2>
+            <p className="text-sm text-muted-foreground">Live preview of the billing page. Click a card to edit it.</p>
+          </div>
+          <div className="inline-flex rounded-full border border-border bg-muted/60 p-1">
+            {INTERVAL_OPTIONS.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => setPreviewInterval(option.value)}
+                className={cn(
+                  "rounded-full px-4 py-1.5 text-sm transition",
+                  previewInterval === option.value
+                    ? "bg-card font-medium text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {tiers.map((plan) => (
+            <button
+              key={plan.id}
+              type="button"
+              onClick={() => openEdit(plan)}
+              className={cn(
+                "group relative grid content-start gap-4 rounded-3xl border bg-card p-6 text-left shadow-card transition hover:-translate-y-0.5",
+                plan.recommended ? "border-primary/50 ring-2 ring-primary/20" : "border-border hover:border-primary/30",
+              )}
+            >
+              {plan.recommended ? (
+                <span className="absolute -top-3 left-6 inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground shadow">
+                  <Star className="size-3 fill-current" />
+                  Recommended
+                </span>
+              ) : null}
+              <div className="flex items-start justify-between gap-3">
+                <div className="grid gap-1">
+                  <p className="font-serif text-2xl">{plan.name}</p>
+                  {plan.description ? <p className="text-sm text-muted-foreground">{plan.description}</p> : null}
+                </div>
+                <Pencil className="size-4 shrink-0 text-muted-foreground opacity-0 transition group-hover:opacity-100" />
+              </div>
+              <p className="flex items-baseline gap-1.5">
+                <span className="font-serif text-4xl tabular-nums">{priceLabel(plan)}</span>
+                {plan.billingMode === "checkout" ? (
+                  <span className="text-sm text-muted-foreground">
+                    / {plan.interval === "ANNUAL" ? "year" : "month"}
+                  </span>
+                ) : null}
+              </p>
+              {plan.interval !== previewInterval && plan.billingMode === "checkout" ? (
+                <p className="-mt-2 text-xs text-warning">
+                  No {previewInterval.toLowerCase()} price — showing {plan.interval.toLowerCase()}
+                </p>
+              ) : null}
+              <ul className="grid gap-2 border-t border-border pt-4">
+                {plan.features.map((feature) => (
+                  <li key={feature} className="flex items-start gap-2 text-sm">
+                    <Check className="mt-0.5 size-4 shrink-0 text-success" />
+                    {feature}
+                  </li>
+                ))}
+                {plan.features.length === 0 ? (
+                  <li className="text-sm text-muted-foreground">No features listed yet.</li>
+                ) : null}
+              </ul>
+            </button>
+          ))}
+          {!loading && tiers.length === 0 ? (
+            <div className="grid min-h-48 place-items-center rounded-3xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground md:col-span-2 xl:col-span-3">
+              No active plans. Vendors can’t upgrade until one is live.
+            </div>
+          ) : null}
+        </div>
+      </section>
+
+      <SectionCard title="All plans" icon={CreditCard}>
+        <AdminListToolbar
+          searchValue={query}
+          onSearchChange={setQuery}
+          searchPlaceholder="Search plans…"
+          filters={
+            <Combobox
+              aria-label="Filter by interval"
+              className="w-full sm:w-40"
+              value={intervalFilter}
+              onValueChange={setIntervalFilter}
+              options={[{ value: "all", label: "Any interval" }, ...INTERVAL_OPTIONS]}
+            />
+          }
+          summary={loading ? "Loading…" : `${total} plan${total === 1 ? "" : "s"}`}
+        />
         <DataTableList
           framed={false}
           loading={loading}
           loadingColumns={PLAN_COLUMNS.length}
           sourceCount={plans.length}
-          filteredCount={plans.length}
+          filteredCount={filtered.length}
           empty={{
             icon: CreditCard,
             title: "No subscription plans",
-            description: "Create Pro monthly/annual rows to power vendor checkout.",
+            description: "Create Pro monthly and annual rows to power vendor checkout.",
+          }}
+          filteredEmpty={{
+            onClearFilters: () => {
+              setQuery("");
+              setIntervalFilter("all");
+            },
           }}
           pagination={
-            totalPages > 0
-              ? {
-                  page,
-                  totalPages,
-                  total,
-                  limit,
-                  onPageChange: setPage,
-                  onLimitChange: setLimit,
-                }
-              : null
+            totalPages > 0 ? { page, totalPages, total, limit, onPageChange: setPage, onLimitChange: setLimit } : null
           }
           items={pageItems}
           getRowId={(plan) => plan.id}
           orderedVisibleIds={PLAN_COLUMNS}
           renderHead={(id) => {
             const labels: Record<(typeof PLAN_COLUMNS)[number], string> = {
-              slug: "Slug",
-              name: "Name",
-              interval: "Interval",
+              plan: "Plan",
+              billing: "Billing",
               price: "Price",
-              billingMode: "Billing",
-              recommended: "Recommended",
-              active: "Active",
-              actions: "",
+              active: "Live",
+              actions: "Actions",
             };
             return <DataTableHead key={id}>{labels[id as (typeof PLAN_COLUMNS)[number]]}</DataTableHead>;
           }}
           renderCell={(id, plan) => {
             switch (id) {
-              case "slug":
-                return (
-                  <DataTableCell key={id} className="font-mono text-xs">
-                    {plan.slug}
-                  </DataTableCell>
-                );
-              case "name":
-                return (
-                  <DataTableCell key={id} className="text-sm font-medium">
-                    {plan.name}
-                  </DataTableCell>
-                );
-              case "interval":
+              case "plan":
                 return (
                   <DataTableCell key={id}>
-                    <Badge intent="outline">{plan.interval}</Badge>
+                    <div className="flex items-center gap-2">
+                      <div className="grid gap-0.5">
+                        <span className="font-medium">{plan.name}</span>
+                        <span className="font-mono text-xs text-muted-foreground">{plan.slug}</span>
+                      </div>
+                      {plan.recommended ? (
+                        <Badge intent="love">
+                          <Sparkles className="size-3" />
+                          Recommended
+                        </Badge>
+                      ) : null}
+                    </div>
+                  </DataTableCell>
+                );
+              case "billing":
+                return (
+                  <DataTableCell key={id}>
+                    <div className="grid gap-0.5 text-sm">
+                      <span>{plan.interval === "ANNUAL" ? "Annual" : "Monthly"}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {plan.billingMode === "contact" ? "Contact sales" : "Online checkout"}
+                      </span>
+                    </div>
                   </DataTableCell>
                 );
               case "price":
                 return (
-                  <DataTableCell key={id} className="text-xs tabular-nums">
-                    {formatMoney(plan.priceLkr, "LKR")}
-                  </DataTableCell>
-                );
-              case "billingMode":
-                return (
-                  <DataTableCell key={id} className="text-xs capitalize text-muted-foreground">
-                    {plan.billingMode}
-                  </DataTableCell>
-                );
-              case "recommended":
-                return (
-                  <DataTableCell key={id}>
-                    {plan.recommended ? (
-                      <Badge intent="success">Yes</Badge>
-                    ) : (
-                      <span className="text-muted-foreground">—</span>
-                    )}
+                  <DataTableCell key={id} className="whitespace-nowrap tabular-nums">
+                    {priceLabel(plan)}
                   </DataTableCell>
                 );
               case "active":
                 return (
                   <DataTableCell key={id}>
-                    <Badge intent={plan.active ? "success" : "outline"}>{plan.active ? "Active" : "Off"}</Badge>
+                    <Switch
+                      checked={plan.active}
+                      onCheckedChange={() => void toggleActive(plan)}
+                      aria-label={`${plan.name} ${plan.interval} live`}
+                    />
                   </DataTableCell>
                 );
               case "actions":
                 return (
-                  <DataTableCell key={id} className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button size="sm" variant="outline" onClick={() => openEdit(plan)}>
-                        <Pencil className="size-3.5" />
-                        Edit
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={async () => {
-                          await api.admin.setSubscriptionPlanActive(plan.id, !plan.active);
-                          await load();
-                        }}
-                      >
-                        {plan.active ? "Disable" : "Enable"}
-                      </Button>
-                    </div>
+                  <DataTableCell key={id}>
+                    <Button size="sm" variant="outline" className="h-8 gap-1 px-2.5" onClick={() => openEdit(plan)}>
+                      <Pencil className="size-3.5" />
+                      Edit
+                    </Button>
                   </DataTableCell>
                 );
               default:
@@ -395,6 +416,184 @@ export default function AdminPlansPage() {
           }}
         />
       </SectionCard>
+
+      <FloatingPanel open={open} onOpenChange={setOpen}>
+        <FloatingPanelContent side="right" width="32rem">
+          <FloatingPanelHeader
+            icon={CreditCard}
+            title={editingKey ? form.name || "Edit plan" : "New plan"}
+            description={
+              editingKey
+                ? `${form.slug} · ${form.interval === "ANNUAL" ? "Annual" : "Monthly"}`
+                : "Each tier has one row per billing interval."
+            }
+          />
+          <FloatingPanelBody className="gap-7">
+            <FloatingPanelSection title="Basics">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field label="Name">
+                  <Input
+                    value={form.name}
+                    onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                    placeholder="Pro"
+                  />
+                </Field>
+                <Field label="Slug" hint={editingKey ? "Fixed once created" : undefined}>
+                  <Input
+                    value={form.slug}
+                    className="font-mono"
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, slug: e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, "") }))
+                    }
+                    placeholder="pro"
+                    disabled={Boolean(editingKey)}
+                  />
+                </Field>
+              </div>
+              <Field label="Pitch">
+                <Textarea
+                  rows={2}
+                  value={form.description ?? ""}
+                  onChange={(e) => setForm((f) => ({ ...f, description: e.target.value || null }))}
+                  placeholder="One line under the plan name"
+                />
+              </Field>
+            </FloatingPanelSection>
+
+            <FloatingPanelSection title="Pricing">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field label="Interval" hint={editingKey ? "Fixed once created" : undefined}>
+                  <Combobox
+                    aria-label="Billing interval"
+                    value={form.interval}
+                    onValueChange={(v) => setForm((f) => ({ ...f, interval: v as BillingInterval }))}
+                    options={INTERVAL_OPTIONS}
+                    disabled={Boolean(editingKey)}
+                  />
+                </Field>
+                <Field label="How they pay">
+                  <Combobox
+                    aria-label="Billing mode"
+                    value={form.billingMode}
+                    onValueChange={(v) => setForm((f) => ({ ...f, billingMode: v as PlanBillingMode }))}
+                    options={BILLING_MODE_OPTIONS}
+                  />
+                </Field>
+              </div>
+              {form.billingMode === "checkout" ? (
+                <Field
+                  label="Price (LKR)"
+                  hint={
+                    annualSaving !== null && annualSaving > 0
+                      ? `${annualSaving}% less than paying monthly for a year`
+                      : undefined
+                  }
+                >
+                  <Input
+                    type="number"
+                    min={0}
+                    className="font-serif text-xl tabular-nums"
+                    value={form.priceLkr}
+                    onChange={(e) => setForm((f) => ({ ...f, priceLkr: Number.parseInt(e.target.value, 10) || 0 }))}
+                  />
+                </Field>
+              ) : null}
+              <details className="rounded-2xl border border-border px-3 py-2 text-sm">
+                <summary className="cursor-pointer text-muted-foreground">Advanced</summary>
+                <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                  <Field label="Stripe price ID" hint="Empty converts LKR → USD at checkout">
+                    <Input
+                      value={form.stripePriceId ?? ""}
+                      className="font-mono text-xs"
+                      onChange={(e) => setForm((f) => ({ ...f, stripePriceId: e.target.value.trim() || null }))}
+                      placeholder="price_…"
+                    />
+                  </Field>
+                  <Field label="Sort order">
+                    <Input
+                      type="number"
+                      value={form.sortOrder ?? 0}
+                      onChange={(e) => setForm((f) => ({ ...f, sortOrder: Number.parseInt(e.target.value, 10) || 0 }))}
+                    />
+                  </Field>
+                </div>
+              </details>
+            </FloatingPanelSection>
+
+            <FloatingPanelSection title={`Features · ${form.features.length}`}>
+              <ul className="grid gap-1.5">
+                {form.features.map((feature, index) => (
+                  <li
+                    key={`${feature}-${index}`}
+                    className="flex items-center gap-2 rounded-xl border border-border/70 bg-background/60 px-2.5 py-2 text-sm"
+                  >
+                    <GripVertical className="size-3.5 text-muted-foreground/50" />
+                    <Check className="size-4 shrink-0 text-success" />
+                    <Input
+                      value={feature}
+                      className="h-7 border-0 bg-transparent px-1 shadow-none"
+                      onChange={(e) =>
+                        setForm((f) => ({
+                          ...f,
+                          features: f.features.map((item, i) => (i === index ? e.target.value : item)),
+                        }))
+                      }
+                    />
+                    <button
+                      type="button"
+                      aria-label="Remove feature"
+                      className="grid size-6 place-items-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground"
+                      onClick={() => setForm((f) => ({ ...f, features: f.features.filter((_, i) => i !== index) }))}
+                    >
+                      <X className="size-3.5" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <div className="flex gap-2">
+                <Input
+                  value={newFeature}
+                  onChange={(e) => setNewFeature(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addFeature();
+                    }
+                  }}
+                  placeholder="Add a feature, press Enter"
+                />
+                <Button variant="outline" onClick={addFeature} disabled={!newFeature.trim()}>
+                  <Plus className="size-4" />
+                  Add
+                </Button>
+              </div>
+            </FloatingPanelSection>
+
+            <FloatingPanelSection title="Visibility">
+              <SettingsSwitchRow
+                label="Recommended"
+                description="Highlighted on the vendor billing page."
+                checked={form.recommended}
+                onCheckedChange={(recommended) => setForm((f) => ({ ...f, recommended }))}
+              />
+              <SettingsSwitchRow
+                label="Live"
+                description="Off hides it from vendors."
+                checked={form.active}
+                onCheckedChange={(active) => setForm((f) => ({ ...f, active }))}
+              />
+            </FloatingPanelSection>
+          </FloatingPanelBody>
+          <FloatingPanelFooter className="flex items-center justify-end gap-2 space-y-0">
+            <Button variant="outline" onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
+            <Button disabled={saving || !form.slug.trim() || !form.name.trim()} onClick={() => void save()}>
+              {saving ? "Saving…" : editingKey ? "Save" : "Create plan"}
+            </Button>
+          </FloatingPanelFooter>
+        </FloatingPanelContent>
+      </FloatingPanel>
     </div>
   );
 }

@@ -83,6 +83,12 @@ import {
   type UpsertPromotionBody,
   type PromotionListQuery,
   type PublicPromotionQuery,
+  type PromotionSlotConfig,
+  type UpsertPromotionSlotConfigBody,
+  type PublicPromotionSlotConfig,
+  type PromotionPackage,
+  type UpsertPromotionPackageBody,
+  type TrackPromotionBody,
   type CreateTaskBody,
   type UpdateTaskBody,
   type CreateBudgetLineBody,
@@ -754,6 +760,27 @@ export const api = {
     updatePromotion: (id: string, body: UpsertPromotionBody) =>
       request<Promotion>(`/admin/promotions/${id}`, { method: "PUT", body: JSON.stringify(body) }),
     deletePromotion: (id: string) => request<{ ok: true }>(`/admin/promotions/${id}`, { method: "DELETE" }),
+    promotionSlots: () => request<PromotionSlotConfig[]>("/admin/promotion-slots"),
+    upsertPromotionSlot: (body: UpsertPromotionSlotConfigBody) =>
+      request<PromotionSlotConfig>("/admin/promotion-slots", {
+        method: "PUT",
+        body: JSON.stringify(body),
+      }),
+    promotionPackages: () => request<PromotionPackage[]>("/admin/promotion-packages"),
+    createPromotionPackage: (body: UpsertPromotionPackageBody) =>
+      request<PromotionPackage>("/admin/promotion-packages", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    updatePromotionPackage: (id: string, body: UpsertPromotionPackageBody) =>
+      request<PromotionPackage>(`/admin/promotion-packages/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(body),
+      }),
+    deletePromotionPackage: (id: string) =>
+      request<{ ok: true }>(`/admin/promotion-packages/${id}`, { method: "DELETE" }),
+    promotionSlotAnalytics: () =>
+      request<Array<{ slot: string; impressions: number; clicks: number }>>("/admin/promotion-analytics/slots"),
     vendorSubscription: (vendorId: string) => request<VendorSubscription>(`/admin/vendors/${vendorId}/subscription`),
     overrideTrial: (vendorId: string, body: AdminOverrideTrialBody) =>
       request<VendorSubscription>(`/admin/vendors/${vendorId}/subscription/trial`, {
@@ -863,12 +890,24 @@ export const api = {
       request<Promotion>("/vendors/me/promotions", { method: "POST", body: JSON.stringify(body) }),
     updateMine: (id: string, body: UpsertPromotionBody) =>
       request<Promotion>(`/vendors/me/promotions/${id}`, { method: "PUT", body: JSON.stringify(body) }),
+    packages: () => request<PromotionPackage[]>("/vendors/me/promotion-packages"),
+    activatePackage: (packageId: string) =>
+      request<Promotion>(`/vendors/me/promotion-packages/${packageId}/activate`, { method: "POST" }),
     public: (query: PublicPromotionQuery) => {
       const params = toSearchParams(query as unknown as Record<string, unknown>);
       return request<Promotion[]>(`/public/promotions?${params.toString()}`);
     },
-    impression: (id: string) => request<{ ok: true }>(`/public/promotions/${id}/impression`, { method: "POST" }),
-    click: (id: string) => request<{ ok: true }>(`/public/promotions/${id}/click`, { method: "POST" }),
+    publicSlots: () => request<PublicPromotionSlotConfig[]>("/public/promotion-slots"),
+    impression: (id: string, body: TrackPromotionBody = {}) =>
+      request<{ ok: true }>(`/public/promotions/${id}/impression`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    click: (id: string, body: TrackPromotionBody = {}) =>
+      request<{ ok: true }>(`/public/promotions/${id}/click`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
   },
   site: {
     config: () => request<PublicSiteConfig>("/public/site-config"),

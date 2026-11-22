@@ -21,6 +21,7 @@ import { Link } from "@/i18n/navigation";
 import { PageHero } from "@/components/page-hero";
 import { SpotlightCard } from "@/components/spotlight-card";
 import { FinalCta, SectionHeading } from "@/features/home/home-sections";
+import { SponsoredPromoStrip } from "@/components/sponsored-promo-strip";
 
 const CRITERIA = [
   {
@@ -207,6 +208,7 @@ export default function AwardsPage() {
       </PageHero>
 
       <div className="mx-auto grid w-full max-w-6xl gap-24 px-6 py-20 sm:gap-28">
+        <SponsoredPromoStrip slot="AWARDS_CATEGORY" eyebrow="Presented by" title="Awards category sponsors" limit={2} />
         <section>
           <SectionHeading align="center" eyebrow="How we choose" title="What makes a winner" />
           <Stagger className="grid gap-5 md:grid-cols-3" stagger={0.08}>

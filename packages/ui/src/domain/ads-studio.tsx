@@ -20,6 +20,10 @@ import {
   Type,
   Upload,
   Users,
+  Eye as EyeIcon,
+  Monitor as MonitorIcon,
+  Smartphone as SmartphoneIcon,
+  ArrowUpRight as ArrowUpRightIcon,
 } from "lucide-react";
 import { Badge } from "../components/badge";
 import type { BadgeIntent } from "../contracts/badge";
@@ -48,7 +52,23 @@ const ACCENT_PRESETS: Array<{ value: string; label: string }> = [
 
 export type AdsPromotionLayout = "SPOTLIGHT" | "BANNER" | "CARD" | "STRIP" | "PICKS_TILE";
 export type AdsPromotionSlot =
-  "HOME_HERO" | "HOME_PICKS" | "CATALOG_TOP" | "CATALOG_INLINE" | "IDEAS_RAIL" | "VENDOR_SIDEBAR";
+  | "HOME_HERO"
+  | "HOME_PICKS"
+  | "CATALOG_TOP"
+  | "CATALOG_INLINE"
+  | "CATALOG_DATE_AVAILABLE"
+  | "CATALOG_MAP"
+  | "IDEAS_RAIL"
+  | "IDEAS_INLINE"
+  | "VENDOR_SIDEBAR"
+  | "VENDOR_COMPLEMENTARY"
+  | "VENDOR_SIMILAR"
+  | "COMPARE_SUGGEST"
+  | "ARTICLE_INLINE"
+  | "ARTICLE_NEXT_STEP"
+  | "ARTICLE_STORY_CREDITS"
+  | "REELS"
+  | "AWARDS_CATEGORY";
 export type AdsPromotionStatus = "DRAFT" | "SCHEDULED" | "ACTIVE" | "PAUSED" | "ARCHIVED";
 export type AdsPromotionSource = "EDITORIAL" | "COMPED" | "PAID_PENDING" | "PAID";
 
@@ -76,8 +96,16 @@ export type AdsPromotionDraft = {
   priority: number;
   vendorId: string | null;
   vendorName?: string | null;
+  packageId?: string | null;
   source: AdsPromotionSource;
   notes: string | null;
+};
+
+export type AdsSlotConfigHint = {
+  slot: AdsPromotionSlot;
+  enabled: boolean;
+  priceLkr?: number;
+  interval?: string;
 };
 
 /** Uploads one image and resolves to its public URL. */
@@ -89,8 +117,19 @@ export const PROMOTION_SLOTS: AdsPromotionSlot[] = [
   "HOME_PICKS",
   "CATALOG_TOP",
   "CATALOG_INLINE",
+  "CATALOG_DATE_AVAILABLE",
+  "CATALOG_MAP",
   "IDEAS_RAIL",
+  "IDEAS_INLINE",
   "VENDOR_SIDEBAR",
+  "VENDOR_COMPLEMENTARY",
+  "VENDOR_SIMILAR",
+  "COMPARE_SUGGEST",
+  "ARTICLE_INLINE",
+  "ARTICLE_NEXT_STEP",
+  "ARTICLE_STORY_CREDITS",
+  "REELS",
+  "AWARDS_CATEGORY",
 ];
 export const PROMOTION_STATUSES: AdsPromotionStatus[] = ["DRAFT", "SCHEDULED", "ACTIVE", "PAUSED", "ARCHIVED"];
 
@@ -127,30 +166,107 @@ export const SLOT_META: Record<
   CATALOG_TOP: {
     label: "Search top",
     page: "Vendor search",
-    where: "Above results — matches the category filter",
-    live: true,
+    where: "Above results — legacy strip",
+    live: false,
     suggested: "BANNER",
   },
   CATALOG_INLINE: {
     label: "Search inline",
     page: "Vendor search",
-    where: "Between search results",
-    live: false,
-    suggested: "STRIP",
+    where: "Native cards in the results grid",
+    live: true,
+    suggested: "CARD",
+  },
+  CATALOG_DATE_AVAILABLE: {
+    label: "Date available",
+    page: "Vendor search",
+    where: "Available on your date group",
+    live: true,
+    suggested: "CARD",
+  },
+  CATALOG_MAP: {
+    label: "Map pins",
+    page: "Vendor search",
+    where: "Gold pins and map list priority",
+    live: true,
+    suggested: "CARD",
   },
   IDEAS_RAIL: {
     label: "Ideas rail",
     page: "Ideas & inspiration",
-    where: "In the inspiration rail",
+    where: "Legacy inspiration rail",
     live: false,
     suggested: "PICKS_TILE",
+  },
+  IDEAS_INLINE: {
+    label: "Ideas inline",
+    page: "Ideas list",
+    where: "Sponsored stories in the grid",
+    live: true,
+    suggested: "CARD",
   },
   VENDOR_SIDEBAR: {
     label: "Vendor sidebar",
     page: "Vendor profiles",
-    where: "Beside a vendor's profile",
+    where: "Deprecated — use Similar vendors",
     live: false,
     suggested: "CARD",
+  },
+  VENDOR_COMPLEMENTARY: {
+    label: "Complete your team",
+    page: "Vendor profiles",
+    where: "Complementary vendors below reviews",
+    live: true,
+    suggested: "CARD",
+  },
+  VENDOR_SIMILAR: {
+    label: "Similar vendors",
+    page: "Vendor profiles",
+    where: "Competitors at the bottom of the profile",
+    live: true,
+    suggested: "CARD",
+  },
+  COMPARE_SUGGEST: {
+    label: "Compare suggest",
+    page: "Compare",
+    where: "Add a third option",
+    live: true,
+    suggested: "CARD",
+  },
+  ARTICLE_INLINE: {
+    label: "Article inline",
+    page: "Idea article",
+    where: "Mid-article product card",
+    live: true,
+    suggested: "CARD",
+  },
+  ARTICLE_NEXT_STEP: {
+    label: "Article next step",
+    page: "Idea article",
+    where: "End-of-article booking prompt",
+    live: true,
+    suggested: "BANNER",
+  },
+  ARTICLE_STORY_CREDITS: {
+    label: "Shop this wedding",
+    page: "Idea article",
+    where: "Boosted vendor credits with WhatsApp",
+    live: true,
+    suggested: "CARD",
+  },
+  REELS: {
+    label: "Reels strip",
+    page: "Home / Ideas",
+    where: "Wedding Reels inventory",
+    live: true,
+    suggested: "STRIP",
+  },
+  AWARDS_CATEGORY: {
+    label: "Awards category",
+    page: "Awards",
+    where: "Presented-by category sponsor",
+    live: true,
+    suggested: "BANNER",
   },
 };
 
@@ -187,7 +303,7 @@ const CHECK_META: Record<string, { label: string; section: PromotionSectionId }>
   schedule: { label: "Start & end dates", section: "schedule" },
 };
 
-export type PromotionSectionId = "creative" | "targeting" | "schedule" | "publish";
+export type PromotionSectionId = "creative" | "targeting" | "schedule" | "preview" | "publish";
 
 type Completeness = { score: number; total: number; missing: string[]; ready: boolean };
 
@@ -210,12 +326,19 @@ export function promotionSections(draft: AdsPromotionDraft, completeness: Comple
       icon: CalendarClock,
       done: Boolean(draft.startsAt && draft.endsAt),
     },
+    {
+      id: "preview",
+      label: "Preview",
+      hint: "See it in place",
+      icon: EyeIcon,
+      done: Boolean(draft.headline && draft.coverUrl),
+    },
     { id: "publish", label: "Review", hint: "Check & launch", icon: Send, done: completeness.ready },
   ];
 }
 
 export function nextPromotionSection(current: PromotionSectionId, step: 1 | -1): PromotionSectionId | null {
-  const order: PromotionSectionId[] = ["creative", "targeting", "schedule", "publish"];
+  const order: PromotionSectionId[] = ["creative", "targeting", "schedule", "preview", "publish"];
   return order[order.indexOf(current) + step] ?? null;
 }
 
@@ -383,12 +506,15 @@ function LayoutGlyph({ layout }: { layout: AdsPromotionLayout }) {
 export function LayoutPicker({
   value,
   onChange,
+  promo,
 }: {
   value: AdsPromotionLayout;
   onChange: (next: AdsPromotionLayout) => void;
+  /** When given, each option renders a live miniature of this creative. */
+  promo?: AdsPromotionDraft;
 }) {
   return (
-    <div role="radiogroup" aria-label="Layout" className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+    <div role="radiogroup" aria-label="Layout" className="grid grid-cols-2 gap-3 sm:grid-cols-3 2xl:grid-cols-5">
       {PROMOTION_LAYOUTS.map((layout) => {
         const active = layout === value;
         const meta = LAYOUT_META[layout];
@@ -398,19 +524,46 @@ export function LayoutPicker({
             type="button"
             role="radio"
             aria-checked={active}
-            title={meta.description}
             onClick={() => onChange(layout)}
             className={cn(
-              "group grid justify-items-center gap-2 rounded-xl border px-2 pt-3 pb-2.5 text-center transition",
+              "group grid content-start gap-2 rounded-2xl border p-2 text-left transition",
               active
-                ? "border-primary/50 bg-primary/5 text-primary shadow-sm ring-1 ring-primary/20"
-                : "border-border/60 text-muted-foreground hover:border-border hover:bg-secondary/40 hover:text-foreground",
+                ? "border-primary/60 bg-primary/5 shadow-sm ring-2 ring-primary/25"
+                : "border-border/60 hover:border-border hover:bg-secondary/40",
             )}
           >
-            <span className="grid h-14 place-items-center">
-              <LayoutGlyph layout={layout} />
+            <span className="relative grid h-28 place-items-center overflow-hidden rounded-xl bg-secondary/60">
+              {promo ? (
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute top-1/2 left-1/2"
+                  style={{
+                    width: THUMB_FRAME[layout].width,
+                    transform: `translate(-50%, -50%) scale(${THUMB_FRAME[layout].scale})`,
+                  }}
+                >
+                  <PromotionCreative
+                    promo={{ ...promo, layout, headline: promo.headline || "Your headline here" }}
+                    light={promo.overlayTone === "light"}
+                    className="rounded-2xl"
+                    style={accentStyle(promo.accentColor)}
+                  />
+                </span>
+              ) : (
+                <LayoutGlyph layout={layout} />
+              )}
+              {active ? (
+                <span className="absolute top-1.5 right-1.5 grid size-5 place-items-center rounded-full bg-primary text-paper shadow">
+                  <Check className="size-3" aria-hidden />
+                </span>
+              ) : null}
             </span>
-            <span className="text-xs font-medium">{meta.label}</span>
+            <span className="grid gap-0.5 px-1 pb-0.5">
+              <span className={cn("text-sm font-medium", active ? "text-primary" : "text-foreground")}>
+                {meta.label}
+              </span>
+              <span className="line-clamp-2 text-xs leading-snug text-muted-foreground">{meta.description}</span>
+            </span>
           </button>
         );
       })}
@@ -418,62 +571,235 @@ export function LayoutPicker({
   );
 }
 
+const THUMB_FRAME: Record<AdsPromotionLayout, { width: number; scale: number }> = {
+  SPOTLIGHT: { width: 220, scale: 0.32 },
+  BANNER: { width: 340, scale: 0.36 },
+  CARD: { width: 220, scale: 0.4 },
+  STRIP: { width: 340, scale: 0.36 },
+  PICKS_TILE: { width: 220, scale: 0.4 },
+};
+
+function accentStyle(color: string | null | undefined): CSSProperties {
+  return {
+    ["--promo-accent" as string]: HEX_RE.test(color ?? "") ? color! : "var(--color-primary)",
+  };
+}
+
+type SlotZone = { x: number; y: number; w: number; h: number; kind?: "map" | "sidebar" };
+
+/** Where the slot sits on a 100×64 page sketch. */
+const SLOT_ZONE: Record<AdsPromotionSlot, SlotZone> = {
+  HOME_HERO: { x: 6, y: 18, w: 88, h: 18 },
+  HOME_PICKS: { x: 6, y: 40, w: 28, h: 20 },
+  CATALOG_TOP: { x: 6, y: 16, w: 88, h: 8 },
+  CATALOG_INLINE: { x: 37, y: 28, w: 27, h: 18 },
+  CATALOG_DATE_AVAILABLE: { x: 6, y: 28, w: 88, h: 8 },
+  CATALOG_MAP: { x: 60, y: 16, w: 34, h: 44, kind: "map" },
+  IDEAS_RAIL: { x: 6, y: 42, w: 88, h: 14 },
+  IDEAS_INLINE: { x: 37, y: 28, w: 27, h: 18 },
+  VENDOR_SIDEBAR: { x: 68, y: 16, w: 26, h: 26, kind: "sidebar" },
+  VENDOR_COMPLEMENTARY: { x: 6, y: 46, w: 58, h: 12 },
+  VENDOR_SIMILAR: { x: 6, y: 50, w: 88, h: 10 },
+  COMPARE_SUGGEST: { x: 70, y: 16, w: 24, h: 44 },
+  ARTICLE_INLINE: { x: 22, y: 32, w: 56, h: 12 },
+  ARTICLE_NEXT_STEP: { x: 22, y: 50, w: 56, h: 10 },
+  ARTICLE_STORY_CREDITS: { x: 70, y: 16, w: 24, h: 30, kind: "sidebar" },
+  REELS: { x: 6, y: 34, w: 88, h: 14 },
+  AWARDS_CATEGORY: { x: 6, y: 16, w: 88, h: 12 },
+};
+
+function SlotSketch({ slot, active }: { slot: AdsPromotionSlot; active: boolean }) {
+  const zone = SLOT_ZONE[slot];
+  return (
+    <svg viewBox="0 0 100 64" aria-hidden className="h-12 w-[4.5rem] shrink-0 rounded-lg bg-background">
+      <rect x="0.5" y="0.5" width="99" height="63" rx="6" className="fill-background stroke-border" />
+      <rect x="6" y="6" width="24" height="4" rx="2" className="fill-muted-foreground/25" />
+      <rect x="74" y="6" width="20" height="4" rx="2" className="fill-muted-foreground/15" />
+      {[16, 26, 36, 46, 56].map((y) => (
+        <rect key={y} x="6" y={y} width="88" height="4" rx="2" className="fill-muted-foreground/10" />
+      ))}
+      <rect
+        x={zone.x}
+        y={zone.y}
+        width={zone.w}
+        height={zone.h}
+        rx="3"
+        className={cn(
+          "transition-colors",
+          active ? "fill-primary stroke-primary" : "fill-primary/25 stroke-primary/50",
+        )}
+        strokeWidth="1"
+      />
+    </svg>
+  );
+}
+
+function slotPrice(hint?: AdsSlotConfigHint) {
+  if (hint?.priceLkr == null || hint.priceLkr <= 0) return null;
+  return { amount: hint.priceLkr, interval: (hint.interval ?? "WEEK").toLowerCase() };
+}
+
 export function SlotPicker({
   values,
   onChange,
   layout,
+  slotHints,
+  enabledOnly = false,
+  onUseLayout,
 }: {
   values: AdsPromotionSlot[];
   onChange: (next: AdsPromotionSlot[]) => void;
   /** Current layout — slots that suggest a different one say so. */
   layout?: AdsPromotionLayout;
+  /** Live enabled/price from Placement Control Center when available. */
+  slotHints?: AdsSlotConfigHint[];
+  /** Hide slots that are not enabled on the site. */
+  enabledOnly?: boolean;
+  /** Lets a slot's tip switch the creative to its best layout. */
+  onUseLayout?: (layout: AdsPromotionLayout) => void;
 }) {
+  const hintBySlot = new Map((slotHints ?? []).map((hint) => [hint.slot, hint]));
+  const slots = PROMOTION_SLOTS.filter((slot) => {
+    if (!enabledOnly) return true;
+    const hint = hintBySlot.get(slot);
+    return hint ? hint.enabled : SLOT_META[slot].live;
+  });
+  const groups = new Map<string, AdsPromotionSlot[]>();
+  for (const slot of slots) {
+    const page = SLOT_META[slot].page;
+    groups.set(page, [...(groups.get(page) ?? []), slot]);
+  }
+  const [filter, setFilter] = useState<string>("all");
+  const visible = filter === "all" ? [...groups.entries()] : [...groups.entries()].filter(([page]) => page === filter);
+
+  const priced = values.map((slot) => slotPrice(hintBySlot.get(slot))).filter(Boolean) as Array<{
+    amount: number;
+    interval: string;
+  }>;
+  const weekly = priced.filter((p) => p.interval === "week").reduce((sum, p) => sum + p.amount, 0);
+
   return (
-    <div className="grid gap-2 sm:grid-cols-2">
-      {PROMOTION_SLOTS.map((slot) => {
-        const active = values.includes(slot);
-        const meta = SLOT_META[slot];
-        return (
-          <button
-            key={slot}
-            type="button"
-            aria-pressed={active}
-            onClick={() => onChange(active ? values.filter((item) => item !== slot) : [...values, slot])}
-            className={cn(
-              "flex items-start gap-3 rounded-xl border p-3 text-left transition",
-              active
-                ? "border-primary/50 bg-primary/5 ring-1 ring-primary/20"
-                : "border-border/60 hover:border-border hover:bg-secondary/30",
-            )}
-          >
-            <span
+    <div className="grid min-w-0 gap-4">
+      <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1 [scrollbar-width:none]">
+        {[
+          ["all", slots.length] as const,
+          ...[...groups.entries()].map(([page, list]) => [page, list.length] as const),
+        ].map(([page, count]) => {
+          const selected = page === "all" ? values.length : groups.get(page)!.filter((s) => values.includes(s)).length;
+          return (
+            <button
+              key={page}
+              type="button"
+              onClick={() => setFilter(page)}
               className={cn(
-                "mt-0.5 grid size-5 shrink-0 place-items-center rounded-md border transition",
-                active ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background",
+                "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition",
+                filter === page
+                  ? "border-foreground bg-foreground text-background"
+                  : "border-border/70 text-muted-foreground hover:border-border hover:text-foreground",
               )}
             >
-              {active ? <Check className="size-3" strokeWidth={3} aria-hidden /> : null}
-            </span>
-            <span className="grid min-w-0 flex-1 gap-0.5">
-              <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                <span className="text-sm font-medium text-foreground">{meta.label}</span>
-                <span className="text-xs text-muted-foreground">{meta.page}</span>
-                {!meta.live ? (
-                  <Badge intent="outline" className="ml-auto">
-                    Not on site yet
-                  </Badge>
-                ) : null}
+              {page === "all" ? "All pages" : page}
+              <span className={cn("tabular-nums", filter === page ? "opacity-70" : "opacity-60")}>
+                {selected ? `${selected}/${count}` : count}
               </span>
-              <span className="text-xs leading-relaxed text-muted-foreground">{meta.where}</span>
-              {active && layout && meta.suggested !== layout ? (
-                <span className="text-label text-muted-foreground/90">
-                  Tip: {LAYOUT_META[meta.suggested].label} fits best here
-                </span>
-              ) : null}
-            </span>
-          </button>
-        );
-      })}
+            </button>
+          );
+        })}
+      </div>
+
+      {visible.map(([page, list]) => (
+        <section key={page} className="grid gap-2">
+          <h4 className="text-label tracking-label text-muted-foreground uppercase">{page}</h4>
+          <div className="grid gap-2 sm:grid-cols-[repeat(auto-fill,minmax(17rem,1fr))]">
+            {list.map((slot) => {
+              const active = values.includes(slot);
+              const meta = SLOT_META[slot];
+              const hint = hintBySlot.get(slot);
+              const enabled = hint ? hint.enabled : meta.live;
+              const price = slotPrice(hint);
+              const mismatch = active && layout && meta.suggested !== layout;
+              return (
+                <div
+                  key={slot}
+                  className={cn(
+                    "group relative grid gap-2 rounded-2xl border p-3 transition",
+                    active
+                      ? "border-primary/50 bg-primary/5 ring-1 ring-primary/20"
+                      : "border-border/60 bg-background/40 hover:border-border hover:bg-secondary/30",
+                    !enabled && !active && "opacity-60",
+                  )}
+                >
+                  <button
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => onChange(active ? values.filter((item) => item !== slot) : [...values, slot])}
+                    className="flex min-w-0 items-center gap-3 text-left after:absolute after:inset-0 after:rounded-2xl"
+                  >
+                    <SlotSketch slot={slot} active={active} />
+                    <span className="grid min-w-0 flex-1 gap-0.5">
+                      <span className="flex min-w-0 items-center gap-2">
+                        <span className="truncate text-sm font-medium text-foreground">{meta.label}</span>
+                        {!enabled ? (
+                          <Badge intent="outline" className="shrink-0">
+                            Off
+                          </Badge>
+                        ) : null}
+                      </span>
+                      <span className="line-clamp-2 text-xs leading-snug text-muted-foreground">{meta.where}</span>
+                      <span className="text-xs tabular-nums">
+                        {price ? (
+                          <>
+                            <span className="font-medium text-foreground">
+                              LKR {price.amount.toLocaleString("en-LK")}
+                            </span>
+                            <span className="text-muted-foreground"> / {price.interval}</span>
+                          </>
+                        ) : (
+                          <span className="text-muted-foreground">Included</span>
+                        )}
+                      </span>
+                    </span>
+                    <span
+                      className={cn(
+                        "grid size-6 shrink-0 place-items-center self-start rounded-full border transition",
+                        active ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background",
+                      )}
+                    >
+                      {active ? <Check className="size-3.5" strokeWidth={3} aria-hidden /> : null}
+                    </span>
+                  </button>
+                  {mismatch ? (
+                    <div className="relative z-10 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-background/80 px-2.5 py-1.5 text-xs">
+                      <span className="text-muted-foreground">{LAYOUT_META[meta.suggested].label} fits best here</span>
+                      {onUseLayout ? (
+                        <button
+                          type="button"
+                          onClick={() => onUseLayout(meta.suggested)}
+                          className="font-medium text-primary underline-offset-4 hover:underline"
+                        >
+                          Use {LAYOUT_META[meta.suggested].label}
+                        </button>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      ))}
+
+      <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-secondary/50 px-4 py-3 text-sm">
+        <span className="text-muted-foreground">
+          {values.length ? `${values.length} placement${values.length === 1 ? "" : "s"} selected` : "No placements yet"}
+        </span>
+        {weekly > 0 ? (
+          <span className="tabular-nums">
+            <span className="font-medium">LKR {weekly.toLocaleString("en-LK")}</span>
+            <span className="text-muted-foreground"> / week list price</span>
+          </span>
+        ) : null}
+      </div>
     </div>
   );
 }
@@ -681,25 +1007,23 @@ export function PromotionCreativeFields({
   const overlayLayout = value.layout === "SPOTLIGHT" || value.layout === "BANNER" || value.layout === "PICKS_TILE";
   return (
     <Reveal className="grid gap-4" y={10}>
-      <FormGroup title="Campaign" description="Internal only — helps you find it later." icon={Megaphone}>
-        <Input
-          className={fieldClass}
-          value={value.name}
-          placeholder="e.g. Kandy venues — December push"
-          aria-label="Campaign name"
-          onChange={(e) => onChange({ name: e.target.value })}
-        />
-      </FormGroup>
-
-      <FormGroup title="Layout" description={LAYOUT_META[value.layout].description} icon={LayoutTemplate}>
-        <LayoutPicker value={value.layout} onChange={(layout) => onChange({ layout })} />
+      <FormGroup title="Format" description="Name it for your team, then pick how it looks." icon={LayoutTemplate}>
+        <FieldBlock label="Campaign name" hint="Internal only — couples never see this" compact>
+          <Input
+            className={fieldClass}
+            value={value.name}
+            placeholder="e.g. Kandy venues — December push"
+            onChange={(e) => onChange({ name: e.target.value })}
+          />
+        </FieldBlock>
+        <LayoutPicker value={value.layout} promo={value} onChange={(layout) => onChange({ layout })} />
       </FormGroup>
 
       <FormGroup title="Message" description="What couples read. Short and warm works best." icon={Type}>
         <div className="grid gap-4">
           <CountedField label="Headline" value={value.headline} max={60}>
             <Input
-              className={fieldClass}
+              className={cn(fieldClass, "font-serif text-lg")}
               value={value.headline}
               placeholder="Your dream Kandyan wedding, captured"
               onChange={(e) => onChange({ headline: e.target.value })}
@@ -715,18 +1039,24 @@ export function PromotionCreativeFields({
           </CountedField>
           <CountedField
             label="Body"
-            hint={value.layout === "STRIP" ? "Hidden in the Strip layout" : undefined}
+            hint={value.layout === "STRIP" || value.layout === "PICKS_TILE" ? "Hidden in this layout" : undefined}
             value={value.body}
             max={220}
           >
             <Textarea
-              className="min-h-24 rounded-xl border-border/80 bg-background/70"
+              rows={2}
+              className="min-h-16 rounded-xl border-border/80 bg-background/70"
               value={value.body ?? ""}
               placeholder="A sentence or two about the offer"
               onChange={(e) => onChange({ body: e.target.value || null })}
             />
           </CountedField>
-          <CountedField label="Badge" hint="Small tag above the headline" value={value.badgeLabel} max={20}>
+        </div>
+      </FormGroup>
+
+      <FormGroup title="Call to action" description="The tag and button couples tap." icon={MousePointerClick}>
+        <div className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.2fr)]">
+          <CountedField label="Badge" value={value.badgeLabel} max={20}>
             <Input
               className={fieldClass}
               value={value.badgeLabel ?? ""}
@@ -734,12 +1064,7 @@ export function PromotionCreativeFields({
               onChange={(e) => onChange({ badgeLabel: e.target.value || null })}
             />
           </CountedField>
-        </div>
-      </FormGroup>
-
-      <FormGroup title="Button" description="Where a tap takes them." icon={MousePointerClick}>
-        <FormGrid cols={2}>
-          <CountedField label="Label" value={value.ctaLabel} max={24}>
+          <CountedField label="Button" value={value.ctaLabel} max={24}>
             <Input
               className={fieldClass}
               value={value.ctaLabel ?? ""}
@@ -747,15 +1072,15 @@ export function PromotionCreativeFields({
               onChange={(e) => onChange({ ctaLabel: e.target.value || null })}
             />
           </CountedField>
-          <FieldBlock label="Link" hint="A site path like /vendors or a full URL" compact>
+          <FieldBlock label="Link" compact>
             <Input
               className={fieldClass}
               value={value.ctaHref ?? ""}
-              placeholder="/vendors"
+              placeholder="/vendors or https://…"
               onChange={(e) => onChange({ ctaHref: e.target.value || null })}
             />
           </FieldBlock>
-        </FormGrid>
+        </div>
       </FormGroup>
 
       <FormGroup title="Imagery" description="A bright, uncluttered photo reads best behind text." icon={ImageIcon}>
@@ -822,12 +1147,16 @@ export function PromotionTargetingFields({
   onChange,
   categoryOptions,
   children,
+  slotHints,
+  enabledSlotsOnly = false,
 }: {
   value: AdsPromotionDraft;
   onChange: (patch: Partial<AdsPromotionDraft>) => void;
   categoryOptions: Array<{ value: string; label: string }>;
   /** Extra groups (e.g. admin's linked vendor). */
   children?: ReactNode;
+  slotHints?: AdsSlotConfigHint[];
+  enabledSlotsOnly?: boolean;
 }) {
   const extraLocales = value.locales.filter((locale) => !LOCALE_OPTIONS.some((option) => option.value === locale));
   const toggle = (list: string[], item: string) =>
@@ -841,11 +1170,18 @@ export function PromotionTargetingFields({
         icon={LayoutTemplate}
         aside={value.slots.length ? `${value.slots.length} selected` : undefined}
       >
-        <SlotPicker values={value.slots} onChange={(slots) => onChange({ slots })} layout={value.layout} />
+        <SlotPicker
+          values={value.slots}
+          onChange={(slots) => onChange({ slots })}
+          layout={value.layout}
+          slotHints={slotHints}
+          enabledOnly={enabledSlotsOnly}
+          onUseLayout={(layout) => onChange({ layout })}
+        />
       </FormGroup>
 
       <FormGroup title="Audience" description="Narrow who sees it. Leave a group empty to reach everyone." icon={Users}>
-        <div className="grid gap-5">
+        <div className="grid min-w-0 gap-5">
           <FieldBlock label="Cities" hint={value.cities.length ? undefined : "All cities"} compact>
             <TagInput
               values={value.cities}
@@ -1246,8 +1582,8 @@ export function PromotionProgress({
 }) {
   const percent = Math.round((completeness.score / Math.max(completeness.total, 1)) * 100);
   return (
-    <div className="mr-auto flex min-w-0 items-center gap-3">
-      <PromotionStatusBadge status={status} />
+    <div className="mr-auto flex min-w-0 items-center gap-2 sm:gap-3">
+      <PromotionStatusBadge status={status} className="hidden sm:inline-flex" />
       <div className="hidden w-28 gap-1 sm:grid">
         <div className="h-1.5 overflow-hidden rounded-full bg-secondary">
           <div
@@ -1381,6 +1717,104 @@ export function PromotionPreview({
   );
 }
 
+/** Full-width preview for the studio Preview tab: placement + device switch. */
+export function PromotionPreviewStage({ promo }: { promo: AdsPromotionDraft }) {
+  const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
+  const toggle = (value: "desktop" | "mobile", icon: typeof MonitorIcon, label: string) => {
+    const DeviceIcon = icon;
+    return (
+      <button
+        type="button"
+        onClick={() => setDevice(value)}
+        aria-pressed={device === value}
+        className={cn(
+          "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition",
+          device === value ? "bg-foreground text-background" : "text-muted-foreground hover:bg-secondary",
+        )}
+      >
+        <DeviceIcon className="size-3.5" aria-hidden />
+        {label}
+      </button>
+    );
+  };
+  return (
+    <FormGroup
+      title="Preview"
+      description="How couples will see this ad in each placement. Switch device to check the mobile crop."
+      icon={EyeIcon}
+    >
+      <div className="flex justify-end">
+        <div className="inline-flex gap-1 rounded-full border border-border bg-background p-1">
+          {toggle("desktop", MonitorIcon, "Desktop")}
+          {toggle("mobile", SmartphoneIcon, "Mobile")}
+        </div>
+      </div>
+      <div className="grid place-items-center rounded-2xl bg-secondary/50 p-3 sm:p-6">
+        <div
+          className={cn(
+            "w-full overflow-hidden rounded-2xl border border-border bg-background shadow-card transition-[max-width] duration-300",
+            device === "mobile" ? "max-w-[390px]" : "max-w-3xl",
+          )}
+        >
+          <PromotionPreview promo={promo} />
+        </div>
+      </div>
+    </FormGroup>
+  );
+}
+
+/** Builder layout: form on the left, a sticky live preview on wide screens. */
+export function PromotionWorkspace({
+  promo,
+  showPreview = true,
+  onOpenPreview,
+  children,
+}: {
+  promo: AdsPromotionDraft;
+  showPreview?: boolean;
+  onOpenPreview?: () => void;
+  children: ReactNode;
+}) {
+  if (!showPreview) return <div className="grid min-w-0 gap-4">{children}</div>;
+  return (
+    <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_19rem] xl:grid-cols-[minmax(0,1fr)_22rem]">
+      <div className="grid min-w-0 gap-4">{children}</div>
+      <aside className="hidden lg:sticky lg:top-24 lg:grid">
+        <div className="grid gap-3 rounded-3xl border border-border bg-card p-4 shadow-card">
+          <div className="flex items-center justify-between gap-2">
+            <span className="inline-flex items-center gap-2 text-sm font-medium">
+              <span className="relative flex size-2">
+                <span className="absolute inline-flex size-full animate-ping rounded-full bg-success/60" />
+                <span className="relative inline-flex size-2 rounded-full bg-success" />
+              </span>
+              Live preview
+            </span>
+            {onOpenPreview ? (
+              <button
+                type="button"
+                onClick={onOpenPreview}
+                className="text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+              >
+                Full preview
+              </button>
+            ) : null}
+          </div>
+          <PromotionCreative
+            promo={{ ...promo, headline: promo.headline || "Your headline here" }}
+            light={promo.overlayTone === "light"}
+            className="rounded-2xl"
+            style={accentStyle(promo.accentColor)}
+          />
+          <p className="text-xs text-muted-foreground">
+            {LAYOUT_META[promo.layout].label} · {promo.slots.length || "No"} placement
+            {promo.slots.length === 1 ? "" : "s"}
+          </p>
+        </div>
+      </aside>
+    </div>
+  );
+}
+
 /** Thumbnail + name + headline, for campaign tables. */
 export function PromotionRowSummary({
   promo,
@@ -1436,20 +1870,24 @@ export function PromotionCreative({
   style,
   light,
   action,
+  badgeOverride,
 }: {
   promo: Pick<
     AdsPromotionDraft,
     "layout" | "headline" | "subheadline" | "body" | "ctaLabel" | "coverUrl" | "logoUrl" | "badgeLabel" | "vendorName"
-  >;
+  > & { effectiveBadge?: string | null; effectiveLayout?: AdsPromotionLayout };
   className?: string;
   style?: CSSProperties;
   light?: boolean;
   action?: ReactNode;
+  /** Forces disclosure label (e.g. Sponsored) over free-text badge. */
+  badgeOverride?: string | null;
 }) {
-  const { layout } = promo;
+  const layout = promo.effectiveLayout ?? promo.layout;
   const overlay = layout === "SPOTLIGHT" || layout === "BANNER" || layout === "PICKS_TILE";
   const isStrip = layout === "STRIP";
   const compact = layout === "PICKS_TILE";
+  const badge = badgeOverride ?? promo.effectiveBadge ?? promo.badgeLabel;
 
   const photo = promo.coverUrl ? (
     // eslint-disable-next-line @next/next/no-img-element
@@ -1466,13 +1904,14 @@ export function PromotionCreative({
       style={{ background: "var(--promo-accent, var(--color-primary))" }}
     >
       {promo.ctaLabel}
+      <ArrowUpRightIcon className="ml-1 size-3.5" aria-hidden />
     </span>
   ) : null;
 
   const meta =
-    promo.badgeLabel || promo.vendorName || promo.logoUrl ? (
+    badge || promo.vendorName || promo.logoUrl ? (
       <div className="flex flex-wrap items-center gap-2">
-        {promo.badgeLabel ? <Badge intent="love">{promo.badgeLabel}</Badge> : null}
+        {badge ? <Badge intent="love">{badge}</Badge> : null}
         {promo.vendorName ? <span className="text-xs opacity-80">{promo.vendorName}</span> : null}
         {promo.logoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -1518,7 +1957,12 @@ export function PromotionCreative({
         )}
         style={style}
       >
-        <div className="relative aspect-[16/10] overflow-hidden">{photo}</div>
+        <div className="relative aspect-[16/10] overflow-hidden">
+          {photo}
+          {promo.logoUrl ? null : (
+            <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-ink/20 to-transparent" />
+          )}
+        </div>
         <div className="grid gap-2 p-4">
           {meta}
           <h3 className="font-serif text-xl leading-snug tracking-tight">{promo.headline || "Headline"}</h3>
@@ -1542,8 +1986,8 @@ export function PromotionCreative({
       data-layout={layout}
       className={cn(
         "relative isolate flex overflow-hidden border border-border/60 bg-card shadow-sm",
-        layout === "SPOTLIGHT" && "min-h-80",
-        banner && "min-h-52",
+        layout === "SPOTLIGHT" && "min-h-80 sm:min-h-96",
+        banner && "min-h-52 sm:aspect-[21/8] sm:min-h-0",
         compact && "aspect-[4/5]",
         light ? "text-paper" : "text-ink",
         className,
@@ -1569,7 +2013,7 @@ export function PromotionCreative({
         <h3
           className={cn(
             "font-serif leading-tight tracking-tight",
-            layout === "SPOTLIGHT" ? "text-3xl" : compact ? "text-lg" : "text-2xl",
+            layout === "SPOTLIGHT" ? "text-3xl sm:text-4xl" : compact ? "text-lg" : "text-2xl",
           )}
         >
           {promo.headline || "Headline"}
@@ -1612,8 +2056,8 @@ export function emptyPromotionDraft(partial?: Partial<AdsPromotionDraft>): AdsPr
     accentColor: DEFAULT_PROMO_ACCENT,
     overlayTone: "light",
     layout: "CARD",
-    badgeLabel: "Featured",
-    slots: ["HOME_PICKS"],
+    badgeLabel: "Sponsored",
+    slots: ["CATALOG_INLINE"],
     cities: [],
     categories: [],
     locales: [],
@@ -1621,6 +2065,7 @@ export function emptyPromotionDraft(partial?: Partial<AdsPromotionDraft>): AdsPr
     endsAt: null,
     priority: 10,
     vendorId: null,
+    packageId: null,
     source: "EDITORIAL",
     notes: null,
     ...partial,

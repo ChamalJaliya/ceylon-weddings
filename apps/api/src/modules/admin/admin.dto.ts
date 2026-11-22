@@ -15,11 +15,14 @@ import {
   promotionListQuerySchema,
   publicPromotionQuerySchema,
   resolveReportBodySchema,
+  trackPromotionBodySchema,
   upsertAdminArticleBodySchema,
   upsertAwardNominationBodySchema,
   upsertFeatureFlagBodySchema,
   upsertFeaturedPlacementBodySchema,
   upsertPromotionBodySchema,
+  upsertPromotionPackageBodySchema,
+  upsertPromotionSlotConfigBodySchema,
   updateSiteConfigBodySchema,
   upsertCmsPageBodySchema,
   upsertSubscriptionPlanBodySchema,
@@ -45,6 +48,9 @@ export class PromotionListQueryDto extends createZodDto(promotionListQuerySchema
 export class UpdateSiteConfigDto extends createZodDto(updateSiteConfigBodySchema) {}
 export class UpsertCmsPageDto extends createZodDto(upsertCmsPageBodySchema) {}
 export class PublicPromotionQueryDto extends createZodDto(publicPromotionQuerySchema) {}
+export class UpsertPromotionSlotConfigDto extends createZodDto(upsertPromotionSlotConfigBodySchema) {}
+export class UpsertPromotionPackageDto extends createZodDto(upsertPromotionPackageBodySchema) {}
+export class TrackPromotionDto extends createZodDto(trackPromotionBodySchema) {}
 export class AdminOverrideTrialDto extends createZodDto(adminOverrideTrialBodySchema) {}
 export class AdminGrantCompedDto extends createZodDto(adminGrantCompedBodySchema) {}
 export class AdminActivatePaidDto extends createZodDto(adminActivatePaidBodySchema) {}

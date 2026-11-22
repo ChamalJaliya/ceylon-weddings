@@ -10,6 +10,7 @@ import { CATEGORY_LABELS } from "@/lib/labels";
 import { PageHero } from "@/components/page-hero";
 import { SafeImg } from "@/components/safe-img";
 import { FinalCta } from "@/features/home/home-sections";
+import { SponsoredPromoStrip } from "@/components/sponsored-promo-strip";
 import { CopyLinkButton, ReadingProgress } from "./article-extras";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -36,7 +37,7 @@ export default async function IdeaArticlePage({ params }: { params: Promise<{ sl
   }
 
   const vendorSlugs = article.vendorSlugs ?? [];
-  const [vendorResults, related] = await Promise.all([
+  const [vendorResults, related, storyPromos] = await Promise.all([
     Promise.all(
       vendorSlugs.map(async (vendorSlug) => {
         try {
@@ -55,8 +56,12 @@ export default async function IdeaArticlePage({ params }: { params: Promise<{ sl
           .slice(0, 3),
       )
       .catch(() => [] as Article[]),
+    api.promotions.public({ slot: "ARTICLE_STORY_CREDITS", limit: 24 }).catch(() => []),
   ]);
   const vendors = vendorResults.filter((vendor): vendor is NonNullable<typeof vendor> => Boolean(vendor));
+  const boostedBySlug = new Map(
+    storyPromos.filter((promo) => promo.vendorSlug).map((promo) => [promo.vendorSlug as string, promo]),
+  );
 
   const categoryLabel = t(`knotly.cat_${article.category.toLowerCase()}`);
   const paragraphs = article.body.split("\n").filter((para) => para.trim());
@@ -127,6 +132,11 @@ export default async function IdeaArticlePage({ params }: { params: Promise<{ sl
               </p>
             ))}
           </Reveal>
+          {paragraphs.length > 2 ? (
+            <div className="mt-10">
+              <SponsoredPromoStrip slot="ARTICLE_INLINE" eyebrow="Sponsored" title="Shop this look" limit={1} />
+            </div>
+          ) : null}
           <div className="mt-10 flex items-center gap-3 border-t border-border pt-6 lg:hidden">
             <CopyLinkButton />
           </div>
@@ -139,44 +149,58 @@ export default async function IdeaArticlePage({ params }: { params: Promise<{ sl
           <section>
             <Reveal className="mb-8">
               <p className="mb-2 inline-flex items-center gap-2 text-label font-medium tracking-eyebrow text-primary uppercase">
-                <span className="h-px w-8 bg-primary/50" /> {t("knotly.asSeenIn")}
+                <span className="h-px w-8 bg-primary/50" /> Shop this wedding
               </p>
               <h2 className="font-serif text-3xl font-medium tracking-tight sm:text-4xl">Vendors from this story</h2>
             </Reveal>
             <Stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" stagger={0.07}>
-              {vendors.map((vendor, index) => (
-                <StaggerItem key={vendor.id} className="h-full">
-                  <Link
-                    href={`/vendors/${vendor.slug}`}
-                    className="group flex h-full items-center gap-4 rounded-3xl border border-border bg-card p-3 shadow-card transition-all duration-300 motion-safe:hover:-translate-y-1 hover:border-primary/40 hover:shadow-raised"
-                  >
-                    <div className="relative size-20 shrink-0 overflow-hidden rounded-2xl">
-                      <SafeImg
-                        src={vendor.photoUrl ?? vendor.photos?.[0]}
-                        fallbackIndex={index}
-                        className="size-full object-cover transition-transform duration-500 group-hover:scale-110"
-                      />
+              {vendors.map((vendor, index) => {
+                const boost = boostedBySlug.get(vendor.slug);
+                const wa = vendor.whatsapp ? `https://wa.me/${vendor.whatsapp.replace(/\D/g, "")}` : null;
+                return (
+                  <StaggerItem key={vendor.id} className="h-full">
+                    <div className="group flex h-full flex-col gap-3 rounded-3xl border border-border bg-card p-3 shadow-card transition-all duration-300 motion-safe:hover:-translate-y-1 hover:border-primary/40 hover:shadow-raised">
+                      <Link href={`/vendors/${vendor.slug}`} className="flex flex-1 items-center gap-4">
+                        <div className="relative size-20 shrink-0 overflow-hidden rounded-2xl">
+                          <SafeImg
+                            src={vendor.photoUrl ?? vendor.photos?.[0]}
+                            fallbackIndex={index}
+                            className="size-full object-cover transition-transform duration-500 group-hover:scale-110"
+                          />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-label tracking-eyebrow text-primary uppercase">
+                            {CATEGORY_LABELS[vendor.category] ?? vendor.category}
+                            {boost ? " · Sponsored" : ""}
+                          </p>
+                          <p className="truncate font-serif text-xl group-hover:text-primary">{vendor.name}</p>
+                          <p className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
+                            <span className="inline-flex items-center gap-1">
+                              <MapPin className="size-3" /> {vendor.city}
+                            </span>
+                            {vendor.ratingAvg ? (
+                              <span className="inline-flex items-center gap-1">
+                                <Star className="size-3 fill-primary text-primary" /> {vendor.ratingAvg.toFixed(1)}
+                              </span>
+                            ) : null}
+                          </p>
+                        </div>
+                        <ArrowUpRight className="mr-2 size-5 shrink-0 text-muted-foreground transition-all group-hover:rotate-45 group-hover:text-primary" />
+                      </Link>
+                      {boost && wa ? (
+                        <a
+                          href={wa}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center justify-center rounded-full bg-primary px-3 py-2 text-xs font-medium text-primary-foreground"
+                        >
+                          WhatsApp {vendor.name.split(" ")[0]}
+                        </a>
+                      ) : null}
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-label tracking-eyebrow text-primary uppercase">
-                        {CATEGORY_LABELS[vendor.category] ?? vendor.category}
-                      </p>
-                      <p className="truncate font-serif text-xl group-hover:text-primary">{vendor.name}</p>
-                      <p className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
-                        <span className="inline-flex items-center gap-1">
-                          <MapPin className="size-3" /> {vendor.city}
-                        </span>
-                        {vendor.ratingAvg ? (
-                          <span className="inline-flex items-center gap-1">
-                            <Star className="size-3 fill-primary text-primary" /> {vendor.ratingAvg.toFixed(1)}
-                          </span>
-                        ) : null}
-                      </p>
-                    </div>
-                    <ArrowUpRight className="mr-2 size-5 shrink-0 text-muted-foreground transition-all group-hover:rotate-45 group-hover:text-primary" />
-                  </Link>
-                </StaggerItem>
-              ))}
+                  </StaggerItem>
+                );
+              })}
             </Stagger>
           </section>
         ) : null}
@@ -227,6 +251,13 @@ export default async function IdeaArticlePage({ params }: { params: Promise<{ sl
             </Stagger>
           </section>
         ) : null}
+
+        <SponsoredPromoStrip
+          slot="ARTICLE_NEXT_STEP"
+          eyebrow="Ready to book?"
+          title="Vendors available for your next step"
+          limit={3}
+        />
 
         <FinalCta
           title="Turn ideas into your plan"

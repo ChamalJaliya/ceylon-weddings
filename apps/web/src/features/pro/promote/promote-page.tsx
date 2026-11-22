@@ -7,6 +7,7 @@ import { api } from "@ceylonweddings/web";
 import {
   promotionCompleteness,
   type Promotion,
+  type PromotionPackage,
   type UpsertPromotionBody,
   type VendorCategory,
 } from "@ceylonweddings/contracts";
@@ -17,9 +18,10 @@ import { CreatorSectionNav, StickyActionBar, StudioShell } from "@ceylonweddings
 import {
   emptyPromotionDraft,
   nextPromotionSection,
+  PromotionPreviewStage,
+  PromotionWorkspace,
   PromotionCreativeFields,
   PromotionPerf,
-  PromotionPreview,
   PromotionProgress,
   PromotionReview,
   PromotionRowSummary,
@@ -29,6 +31,7 @@ import {
   PromotionTargetingFields,
   SLOT_META,
   type AdsPromotionDraft,
+  type AdsSlotConfigHint,
   type PromotionSectionId,
 } from "@ceylonweddings/ui/domain/ads-studio";
 import { DataTableCell, DataTableHead } from "@ceylonweddings/ui/domain/data-table";
@@ -49,11 +52,18 @@ export default function VendorPromotePage() {
   const [rows, setRows] = useState<Promotion[]>([]);
   const [section, setSection] = useState<PromotionSectionId>("creative");
   const [draft, setDraft] = useState<AdsPromotionDraft>(
-    emptyPromotionDraft({ source: "PAID_PENDING", status: "DRAFT", slots: ["CATALOG_TOP", "HOME_PICKS"] }),
+    emptyPromotionDraft({
+      source: "PAID_PENDING",
+      status: "DRAFT",
+      slots: ["CATALOG_INLINE"],
+      badgeLabel: "Sponsored",
+    }),
   );
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [listLoading, setListLoading] = useState(true);
+  const [packages, setPackages] = useState<PromotionPackage[]>([]);
+  const [slotHints, setSlotHints] = useState<AdsSlotConfigHint[]>([]);
   const [categoryOptions, setCategoryOptions] = useState(
     Object.entries(CATEGORY_LABELS).map(([value, label]) => ({ value, label })),
   );
@@ -87,6 +97,20 @@ export default function VendorPromotePage() {
       .catch(() => undefined);
   }, [locale]);
 
+  useEffect(() => {
+    void Promise.all([api.promotions.packages(), api.promotions.publicSlots()])
+      .then(([pkgs, slots]) => {
+        setPackages(pkgs);
+        setSlotHints(
+          slots.map((row) => ({
+            slot: row.slot,
+            enabled: row.enabled,
+          })),
+        );
+      })
+      .catch(() => undefined);
+  }, []);
+
   const completeness = useMemo(() => promotionCompleteness(draft), [draft]);
 
   function patch(next: Partial<AdsPromotionDraft>) {
@@ -117,14 +141,35 @@ export default function VendorPromotePage() {
       endsAt: draft.endsAt,
       priority: draft.priority,
       vendorId: draft.vendorId,
+      packageId: draft.packageId ?? null,
       source: "PAID_PENDING",
       notes: draft.notes,
     };
   }
 
+  function applyPackage(pkg: PromotionPackage) {
+    const starts = new Date();
+    const ends = new Date(starts.getTime() + pkg.durationDays * 86400000);
+    patch({
+      packageId: pkg.id,
+      slots: pkg.slots,
+      startsAt: starts.toISOString(),
+      endsAt: ends.toISOString(),
+      badgeLabel: "Sponsored",
+      name: draft.name || pkg.name,
+    });
+  }
+
   async function openNew() {
     setEditId(null);
-    setDraft(emptyPromotionDraft({ source: "PAID_PENDING", status: "DRAFT", slots: ["CATALOG_TOP", "HOME_PICKS"] }));
+    setDraft(
+      emptyPromotionDraft({
+        source: "PAID_PENDING",
+        status: "DRAFT",
+        slots: ["CATALOG_INLINE"],
+        badgeLabel: "Sponsored",
+      }),
+    );
     setSection("creative");
     setMode("edit");
   }
@@ -156,6 +201,7 @@ export default function VendorPromotePage() {
       priority: promo.priority,
       vendorId: promo.vendorId,
       vendorName: promo.vendorName,
+      packageId: promo.packageId ?? null,
       source: promo.source,
       notes: promo.notes,
     });
@@ -317,7 +363,6 @@ export default function VendorPromotePage() {
       />
       {error ? <FormStatus tone="destructive">{error}</FormStatus> : null}
       <StudioShell
-        defaultPreviewOpen
         nav={
           <CreatorSectionNav
             sections={sections}
@@ -325,43 +370,106 @@ export default function VendorPromotePage() {
             onSelect={(id) => setSection(id as PromotionSectionId)}
           />
         }
-        previewLabel="Live preview"
-        previewTitle={draft.name || "New promotion"}
-        previewHint={`${completeness.score}/${completeness.total}`}
-        previewThumb={draft.coverUrl}
-        preview={<PromotionPreview promo={draft} />}
       >
-        {section === "creative" ? (
-          <PromotionCreativeFields
-            value={draft}
-            onChange={patch}
-            onUpload={(file) => uploadImage(file, (body) => api.vendors.presignMedia({ ...body, kind: "image" }))}
-          />
-        ) : null}
-        {section === "targeting" ? (
-          <PromotionTargetingFields value={draft} onChange={patch} categoryOptions={categoryOptions} />
-        ) : null}
-        {section === "schedule" ? (
-          <PromotionScheduleFields value={draft} onChange={patch} showSource={false} showStatus={false} />
-        ) : null}
-        {section === "publish" ? (
-          <PromotionReview
-            promo={draft}
-            completeness={completeness}
-            onJump={setSection}
-            categoryLabel={categoryLabel}
-            readyNote="Looks good — submit it and our team will review it before it goes live."
-          />
-        ) : null}
-        <StickyActionBar>
+        <PromotionWorkspace
+          promo={draft}
+          showPreview={section !== "preview" && section !== "publish"}
+          onOpenPreview={() => setSection("preview")}
+        >
+          {section === "creative" ? (
+            <PromotionCreativeFields
+              value={draft}
+              onChange={patch}
+              onUpload={(file) => uploadImage(file, (body) => api.vendors.presignMedia({ ...body, kind: "image" }))}
+            />
+          ) : null}
+          {section === "targeting" ? (
+            <div className="grid gap-6">
+              {packages.length ? (
+                <SectionCard title="Packages" icon={Megaphone}>
+                  <div className="grid gap-2">
+                    {packages.map((pkg) => {
+                      const active = draft.packageId === pkg.id;
+                      return (
+                        <div
+                          key={pkg.id}
+                          className={`rounded-xl border p-3 text-left transition ${
+                            active ? "border-primary/50 bg-primary/5 ring-1 ring-primary/20" : "border-border/60"
+                          }`}
+                        >
+                          <button type="button" className="w-full text-left" onClick={() => applyPackage(pkg)}>
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <span className="font-medium">{pkg.name}</span>
+                              <span className="text-sm">
+                                LKR {pkg.priceLkr.toLocaleString("en-LK")} · {pkg.durationDays} days
+                              </span>
+                            </div>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              {pkg.description || pkg.slots.map((slot) => SLOT_META[slot]?.label ?? slot).join(", ")}
+                            </p>
+                          </button>
+                          <Button
+                            size="sm"
+                            className="mt-2"
+                            disabled={saving}
+                            onClick={() => {
+                              void (async () => {
+                                try {
+                                  setSaving(true);
+                                  await api.promotions.activatePackage(pkg.id);
+                                  toast.success("Package activated — your ad is live");
+                                  await load();
+                                  setMode("list");
+                                } catch (err) {
+                                  setError(err instanceof Error ? err.message : "Activate failed");
+                                } finally {
+                                  setSaving(false);
+                                }
+                              })();
+                            }}
+                          >
+                            Pay & go live (demo)
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </SectionCard>
+              ) : null}
+              <PromotionTargetingFields
+                value={draft}
+                onChange={patch}
+                categoryOptions={categoryOptions}
+                slotHints={slotHints}
+                enabledSlotsOnly
+              />
+            </div>
+          ) : null}
+          {section === "schedule" ? (
+            <PromotionScheduleFields value={draft} onChange={patch} showSource={false} showStatus={false} />
+          ) : null}
+          {section === "preview" ? <PromotionPreviewStage promo={draft} /> : null}
+          {section === "publish" ? (
+            <PromotionReview
+              promo={draft}
+              completeness={completeness}
+              onJump={setSection}
+              categoryLabel={categoryLabel}
+              readyNote="Looks good — submit it and our team will review it before it goes live."
+            />
+          ) : null}
+        </PromotionWorkspace>
+        <StickyActionBar className="flex-nowrap gap-2 px-3 sm:gap-3 sm:px-4">
           <PromotionProgress completeness={completeness} status={draft.status} />
           {prev ? (
             <Button variant="ghost" onClick={() => setSection(prev)}>
-              Back
+              <ArrowLeft className="size-4 sm:hidden" aria-hidden />
+              <span className="sr-only sm:not-sr-only">Back</span>
             </Button>
           ) : null}
           <Button variant="outline" disabled={saving} onClick={() => void save("DRAFT")}>
-            Save draft
+            <span className="sm:hidden">Save</span>
+            <span className="hidden sm:inline">Save draft</span>
           </Button>
           {next ? (
             <Button onClick={() => setSection(next)}>

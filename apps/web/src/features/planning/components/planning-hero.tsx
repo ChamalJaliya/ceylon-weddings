@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@ceylonweddings/ui/utils";
 
-/** Dark emerald → ink hero banner shared by the planning pages. */
+/** Soft theme-tinted hero banner (see .cw-hero-soft) shared across app pages. */
 export function PlanningHero({
   icon: Icon,
   kicker,
@@ -23,15 +23,9 @@ export function PlanningHero({
   return (
     <section
       className={cn(
-        "relative isolate overflow-hidden rounded-3xl p-6 text-paper shadow-raised sm:p-8 print:rounded-none print:bg-none print:p-0 print:text-foreground print:shadow-none",
+        "cw-hero-soft relative isolate overflow-hidden rounded-3xl p-6 sm:p-8 print:rounded-none print:bg-none print:p-0 print:text-foreground print:shadow-none",
         className,
       )}
-      style={{
-        background:
-          "radial-gradient(120% 90% at 0% 0%, color-mix(in srgb, var(--color-primary) 75%, transparent) 0%, transparent 60%)," +
-          "radial-gradient(60% 70% at 100% 120%, color-mix(in srgb, var(--cw-gold-300) 18%, transparent) 0%, transparent 60%)," +
-          "linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 35%, var(--color-ink)) 0%, var(--color-ink) 70%)",
-      }}
     >
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="grid max-w-2xl gap-3">

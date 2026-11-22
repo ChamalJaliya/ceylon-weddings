@@ -108,20 +108,22 @@ PaymentIntent
 
 ### Content, ads & admin
 
-| Enum                      | Values                                                                                                                 |
-| ------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `ArticleCategory`         | `FLOWERS`, `CEREMONY`, `CAKES`, `TRANSPORT`, `FASHION`, `BEAUTY`, `FAMILY`, `EVENTS`, `TRAVEL`, `FOOD`, `REAL_WEDDING` |
-| `ArticleStatus`           | `DRAFT`, `PUBLISHED`, `ARCHIVED`                                                                                       |
-| `SubscriptionStatus`      | `TRIAL`, `ACTIVE`, `GRACE`, `EXPIRED`, `CANCELLED`, `COMPED`                                                           |
-| `BillingInterval`         | `MONTHLY`, `ANNUAL`                                                                                                    |
-| `ReportEntityType`        | `VENDOR`, `INQUIRY`, `REVIEW`, `ARTICLE`, `USER`                                                                       |
-| `ReportStatus`            | `OPEN`, `RESOLVED`, `DISMISSED`                                                                                        |
-| `FeaturedPlacementSource` | `EDITORIAL`, `COMPED`, `PAID_PENDING`, `PAID`                                                                          |
-| `PromotionStatus`         | `DRAFT`, `SCHEDULED`, `ACTIVE`, `PAUSED`, `ARCHIVED`                                                                   |
-| `PromotionLayout`         | `SPOTLIGHT`, `BANNER`, `CARD`, `STRIP`, `PICKS_TILE`                                                                   |
-| `PromotionSlot`           | `HOME_HERO`, `HOME_PICKS`, `CATALOG_TOP`, `CATALOG_INLINE`, `IDEAS_RAIL`, `VENDOR_SIDEBAR`                             |
-| `AwardNominationStatus`   | `NOMINATED`, `SHORTLISTED`, `WINNER`, `REJECTED`                                                                       |
-| `AnalyticsEventKind`      | `VENDOR_PROFILE_VIEW`, `WHATSAPP_TAP`, `INQUIRY_CREATED`, `ARTICLE_VIEW`, `PROMO_IMPRESSION`, `PROMO_CLICK`            |
+| Enum                       | Values                                                                                                                                                                                                                                                                                                       |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `ArticleCategory`          | `FLOWERS`, `CEREMONY`, `CAKES`, `TRANSPORT`, `FASHION`, `BEAUTY`, `FAMILY`, `EVENTS`, `TRAVEL`, `FOOD`, `REAL_WEDDING`                                                                                                                                                                                       |
+| `ArticleStatus`            | `DRAFT`, `PUBLISHED`, `ARCHIVED`                                                                                                                                                                                                                                                                             |
+| `SubscriptionStatus`       | `TRIAL`, `ACTIVE`, `GRACE`, `EXPIRED`, `CANCELLED`, `COMPED`                                                                                                                                                                                                                                                 |
+| `BillingInterval`          | `MONTHLY`, `ANNUAL`                                                                                                                                                                                                                                                                                          |
+| `ReportEntityType`         | `VENDOR`, `INQUIRY`, `REVIEW`, `ARTICLE`, `USER`                                                                                                                                                                                                                                                             |
+| `ReportStatus`             | `OPEN`, `RESOLVED`, `DISMISSED`                                                                                                                                                                                                                                                                              |
+| `FeaturedPlacementSource`  | `EDITORIAL`, `COMPED`, `PAID_PENDING`, `PAID`                                                                                                                                                                                                                                                                |
+| `PromotionStatus`          | `DRAFT`, `SCHEDULED`, `ACTIVE`, `PAUSED`, `ARCHIVED`                                                                                                                                                                                                                                                         |
+| `PromotionLayout`          | `SPOTLIGHT`, `BANNER`, `CARD`, `STRIP`, `PICKS_TILE`                                                                                                                                                                                                                                                         |
+| `PromotionSlot`            | `HOME_HERO`, `HOME_PICKS`, `CATALOG_TOP`, `CATALOG_INLINE`, `CATALOG_DATE_AVAILABLE`, `CATALOG_MAP`, `IDEAS_RAIL`, `IDEAS_INLINE`, `VENDOR_SIDEBAR`, `VENDOR_COMPLEMENTARY`, `VENDOR_SIMILAR`, `COMPARE_SUGGEST`, `ARTICLE_INLINE`, `ARTICLE_NEXT_STEP`, `ARTICLE_STORY_CREDITS`, `REELS`, `AWARDS_CATEGORY` |
+| `PromotionDisclosure`      | `SPONSORED`, `SPONSORED_STORY`, `CUSTOM`                                                                                                                                                                                                                                                                     |
+| `PromotionBillingInterval` | `DAY`, `WEEK`, `MONTH`                                                                                                                                                                                                                                                                                       |
+| `AwardNominationStatus`    | `NOMINATED`, `SHORTLISTED`, `WINNER`, `REJECTED`                                                                                                                                                                                                                                                             |
+| `AnalyticsEventKind`       | `VENDOR_PROFILE_VIEW`, `WHATSAPP_TAP`, `INQUIRY_CREATED`, `ARTICLE_VIEW`, `PROMO_IMPRESSION`, `PROMO_CLICK`                                                                                                                                                                                                  |
 
 ---
 
@@ -440,9 +442,9 @@ Admin-controlled featured slot schedule for vendors. Source: `EDITORIAL` (free),
 
 ---
 
-### `Promotion` / `PromotionSlot`
+### `Promotion` / `PromotionSlot` / `PromotionSlotConfig` / `PromotionPackage`
 
-Paid ad campaigns. Placements: `HOME_HERO`, `HOME_PICKS`, `CATALOG_TOP`, `CATALOG_INLINE`, `IDEAS_RAIL`, `VENDOR_SIDEBAR`. Layouts: `SPOTLIGHT`, `BANNER`, `CARD`, `STRIP`, `PICKS_TILE`.
+Paid ad campaigns with admin Placement Control. Slot enablement, density, disclosure, and list price live on `PromotionSlotConfig`. Sellable bundles are `PromotionPackage` (optional `Promotion.packageId`). Public delivery forces Sponsored disclosure for paid sources; editorial `Vendor.featured` is not flipped by paid promos.
 
 ---
 

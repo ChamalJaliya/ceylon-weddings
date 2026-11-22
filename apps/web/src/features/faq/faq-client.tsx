@@ -16,19 +16,17 @@ function FAQItem({ question, answer }: FAQItemProps) {
   return (
     <div className="border-b border-border/50">
       <AnimateIcon animateOnHover animateOnTap asChild>
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex w-full items-center justify-between py-6 text-left focus:outline-none"
-      >
-        <span className="font-medium text-lg pr-8">{question}</span>
-        <Icon
-          icon={ChevronDown}
-          size="md"
-          className={`text-muted-foreground transition-transform duration-200 ${
-            isOpen ? "rotate-180" : ""
-          }`}
-        />
-      </button>
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="flex w-full items-center justify-between py-6 text-left focus:outline-none"
+        >
+          <span className="font-medium text-lg pr-8">{question}</span>
+          <Icon
+            icon={ChevronDown}
+            size="md"
+            className={`text-muted-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+          />
+        </button>
       </AnimateIcon>
       <div
         className={`overflow-hidden transition-all duration-300 ease-in-out ${

@@ -10,13 +10,13 @@ One public website. Role-based surfaces after login. Guest wedding pages have no
 
 ## Chrome summary
 
-| Surface | Chrome | Status |
-|---------|--------|--------|
+| Surface                                                     | Chrome                                                                            | Status         |
+| ----------------------------------------------------------- | --------------------------------------------------------------------------------- | -------------- |
 | Public (`/`, `/vendors`, `/vendors/[slug]`, login/register) | **TopNav** — marketing links when logged out; couple primary links when logged in | ✅ Implemented |
-| Couple / family (`/planning/*`) | **TopNav** as primary; optional left sidebar on hub + budget | ✅ Implemented |
-| Guest (`/w/[slug]`) | Chrome-light: language / currency / theme only | ✅ Implemented |
-| Vendor Pro (`/pro/*`) | Left-rail `AppShell` | ✅ Implemented |
-| Admin (`/admin/*`) | Left-rail `AppShell` + command palette (`⌘K`) | ✅ Implemented |
+| Couple / family (`/planning/*`)                             | **TopNav** as primary; optional left sidebar on hub + budget                      | ✅ Implemented |
+| Guest (`/w/[slug]`)                                         | Chrome-light: language / currency / theme only                                    | ✅ Implemented |
+| Vendor Pro (`/pro/*`)                                       | Left-rail `AppShell`                                                              | ✅ Implemented |
+| Admin (`/admin/*`)                                          | Left-rail `AppShell` + command palette (`⌘K`)                                     | ✅ Implemented |
 
 **TopNav primary slots (couple):** Planning · Calendar · Vendors · Budget · Ideas
 
@@ -109,6 +109,7 @@ All under `/[locale]/planning/`
 /[locale]/admin/reviews                 Review moderation (hide/unhide)
 /[locale]/admin/ads                     Ads + promotion campaigns
 /[locale]/admin/ads/[id]                Ads studio (creative · targeting · schedule · publish)
+/[locale]/admin/ads/placements          Placement control (slots, pricing, packages)
 /[locale]/admin/featured                Legacy featured placement inventory
 /[locale]/admin/audit                   Global searchable audit trail
 /[locale]/admin/settings                Platform settings overview
@@ -138,14 +139,14 @@ Public marketing copy for home, about, faq, terms, privacy, contact, and awards 
 
 ## Route auth guards
 
-| Route prefix | Guard |
-|-------------|-------|
-| `/planning/*` | `COUPLE` or `FAMILY` session |
-| `/pro/*` | `VENDOR` session |
-| `/admin/*` | `ADMIN` session |
-| `/w/[slug]` | None — public |
-| `/public/*` (API) | None — public |
-| All other routes | None — public |
+| Route prefix      | Guard                        |
+| ----------------- | ---------------------------- |
+| `/planning/*`     | `COUPLE` or `FAMILY` session |
+| `/pro/*`          | `VENDOR` session             |
+| `/admin/*`        | `ADMIN` session              |
+| `/w/[slug]`       | None — public                |
+| `/public/*` (API) | None — public                |
+| All other routes  | None — public                |
 
 Route auth is enforced at the Next.js middleware level (`src/middleware.ts`) and double-checked at the API layer (`JwtCookieGuard`).
 

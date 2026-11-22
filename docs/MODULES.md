@@ -49,14 +49,14 @@ These realities shape every module decision. A module that ignores them will fee
 
 ### 🔶 v1.5 (implemented in schema/API; UI in progress or partial)
 
-| Module                        | Notes                                                                                                                      |
-| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| **Seating chart**             | Full API: `SeatingPlan` → `SeatingTable` → `SeatAssignment`. UI at `/planning/seating`. Canvas drag-and-drop is future.    |
-| **Reviews**                   | `Review` model + API + admin moderation. Public display on storefront is v1.5.                                             |
-| **Paid featured listings**    | `FeaturedPlacement` + `Promotion` models. Admin UI for editorial/comped placements done. PayHere/Stripe checkout deferred. |
-| **Legal/registration helper** | Route `/planning/legal` exists. Full content + wizard is v1.5.                                                             |
-| **WhatsApp e-invites**        | `InviteTemplate` model + API implemented. WhatsApp-sending integration is v1.5.                                            |
-| **Tamil UI**                  | i18n catalog exists; copy lags — Tamil UI is v1.5.                                                                         |
+| Module                        | Notes                                                                                                                                                                                                                                              |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Seating chart**             | Full API: `SeatingPlan` → `SeatingTable` → `SeatAssignment`. UI at `/planning/seating`. Canvas drag-and-drop is future.                                                                                                                            |
+| **Reviews**                   | `Review` model + API + admin moderation. Public display on storefront is v1.5.                                                                                                                                                                     |
+| **Paid featured listings**    | `FeaturedPlacement` + `Promotion` + Placement Control (`PromotionSlotConfig`, packages). Admin `/admin/ads/placements`. Catalog inline / Complete your team / Shop this wedding live. Promo PayHere checkout deferred (PAID_PENDING → admin PAID). |
+| **Legal/registration helper** | Route `/planning/legal` exists. Full content + wizard is v1.5.                                                                                                                                                                                     |
+| **WhatsApp e-invites**        | `InviteTemplate` model + API implemented. WhatsApp-sending integration is v1.5.                                                                                                                                                                    |
+| **Tamil UI**                  | i18n catalog exists; copy lags — Tamil UI is v1.5.                                                                                                                                                                                                 |
 
 ---
 

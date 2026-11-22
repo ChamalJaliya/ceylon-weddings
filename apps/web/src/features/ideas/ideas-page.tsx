@@ -33,6 +33,7 @@ import {
 import { cn } from "@ceylonweddings/ui/utils";
 import { PageHero } from "@/components/page-hero";
 import { SafeImg } from "@/components/safe-img";
+import { SponsoredPromoStrip } from "@/components/sponsored-promo-strip";
 import { Link } from "@/i18n/navigation";
 
 const ICONS: Partial<Record<ArticleCategory, typeof Flower2>> = {
@@ -163,6 +164,13 @@ export default function IdeasPage() {
           })}
         </div>
       </LayoutGroup>
+
+      <SponsoredPromoStrip
+        slot="IDEAS_INLINE"
+        eyebrow="Sponsored story"
+        title="Ideas from vendors on the island"
+        category={category || undefined}
+      />
 
       <AnimatePresence mode="wait">
         <motion.div
@@ -305,6 +313,8 @@ export default function IdeasPage() {
                   </Stagger>
                 </section>
               ) : null}
+
+              <SponsoredPromoStrip slot="REELS" eyebrow="Wedding Reels" title="Short films from vendors" />
             </>
           )}
         </motion.div>

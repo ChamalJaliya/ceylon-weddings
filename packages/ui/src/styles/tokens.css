@@ -374,3 +374,18 @@
   --shadow-overlay: 0 16px 40px color-mix(in srgb, var(--cw-black) 50%, transparent);
   --shadow-floating: 0 24px 56px color-mix(in srgb, var(--cw-black) 60%, transparent);
 }
+
+/* Soft, theme-tinted hero surface. Works in light and dark: it re-points
+   `paper`/`ink` so content written for the old dark hero (text-paper,
+   bg-paper buttons) reads as foreground-on-card here. */
+.cw-hero-soft {
+  --color-paper: var(--color-foreground);
+  --color-ink: var(--color-card);
+  color: var(--color-foreground);
+  border: 1px solid color-mix(in oklab, var(--color-primary) 16%, var(--color-border));
+  background:
+    radial-gradient(90% 130% at 0% 0%, color-mix(in oklab, var(--color-primary) 20%, transparent) 0%, transparent 62%),
+    radial-gradient(55% 90% at 100% 110%, color-mix(in oklab, var(--cw-gold-300) 22%, transparent) 0%, transparent 65%),
+    linear-gradient(135deg, color-mix(in oklab, var(--color-primary) 9%, var(--color-card)) 0%, var(--color-card) 75%);
+  box-shadow: var(--shadow-card, 0 1px 2px rgb(0 0 0 / 0.04));
+}

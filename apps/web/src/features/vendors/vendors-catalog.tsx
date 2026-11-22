@@ -44,11 +44,14 @@ import {
 } from "@ceylonweddings/web";
 import {
   catalogFilterCount,
+  catalogInlineInsertIndices,
   toSearchParams,
   vendorCatalogQuerySchema,
   VENDOR_CATALOG_DEFAULTS,
   type CatalogAttrs,
   type CatalogAttrValue,
+  type Promotion,
+  type PublicPromotionSlotConfig,
   type PublicVendorTypeListItem,
   type Vendor,
   type VendorSort,
@@ -87,6 +90,7 @@ import {
 } from "@ceylonweddings/ui/domain/async-list";
 import { Link, useRouter } from "@/i18n/navigation";
 import { PromotionSlotRail } from "@/components/promotion-slot-rail";
+import { SponsoredPromoStrip } from "@/components/sponsored-promo-strip";
 import { CATEGORY_LABELS, localizedText, priceLabel } from "@/lib/labels";
 
 const SORT_KEYS: VendorSort[] = ["featured", "rating", "price_asc", "price_desc", "name"];
@@ -135,7 +139,7 @@ export function CatalogFallback() {
         </div>
         <div className="h-12 min-w-72 flex-1 animate-pulse rounded-full bg-secondary sm:max-w-xl" />
       </div>
-      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-x-5 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
         {Array.from({ length: 6 }, (_, index) => (
           <VendorCardSkeleton key={index} />
         ))}
@@ -180,6 +184,9 @@ export function VendorsCatalog() {
   const compareItems = useCompareStore((state) => state.items);
   const toggleCompare = useCompareStore((state) => state.toggle);
   const [quickId, setQuickId] = useState<string | null>(null);
+  const [inlinePromos, setInlinePromos] = useState<Promotion[]>([]);
+  const [inlineSlot, setInlineSlot] = useState<PublicPromotionSlotConfig | null>(null);
+  const [sponsoredVendors, setSponsoredVendors] = useState<Vendor[]>([]);
   const removeCompare = useCompareStore((state) => state.remove);
   const clearCompare = useCompareStore((state) => state.clear);
   const hasCompare = useCompareStore((state) => state.has);
@@ -223,6 +230,62 @@ export function VendorsCatalog() {
       .then(setTypes)
       .catch(() => setTypes([]));
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    void api.promotions
+      .publicSlots()
+      .then(async (slots) => {
+        if (cancelled) return;
+        const config = slots.find((row) => row.slot === "CATALOG_INLINE") ?? null;
+        setInlineSlot(config);
+        if (!config?.enabled) {
+          setInlinePromos([]);
+          setSponsoredVendors([]);
+          return;
+        }
+        const promos = await api.promotions.public({
+          slot: "CATALOG_INLINE",
+          city: query.city,
+          category: query.category as never,
+          limit: config.maxPerRequest,
+        });
+        if (cancelled) return;
+        setInlinePromos(promos);
+        promos.forEach((promo) => void api.promotions.impression(promo.id, { slot: "CATALOG_INLINE" }));
+        const vendors = await Promise.all(
+          promos.map(async (promo) => {
+            if (!promo.vendorSlug) return null;
+            try {
+              return await api.vendors.get(promo.vendorSlug);
+            } catch {
+              return null;
+            }
+          }),
+        );
+        if (!cancelled) {
+          setSponsoredVendors(
+            vendors.filter((row): row is Vendor => {
+              if (!row) return false;
+              if (query.minPrice != null && (row.startingPriceLkr ?? 0) < query.minPrice) return false;
+              if (query.maxPrice != null && (row.startingPriceLkr ?? Number.MAX_SAFE_INTEGER) > query.maxPrice)
+                return false;
+              return true;
+            }),
+          );
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setInlineSlot(null);
+          setInlinePromos([]);
+          setSponsoredVendors([]);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [query.city, query.category, query.minPrice, query.maxPrice]);
 
   useEffect(() => {
     if (restoredRef.current) return;
@@ -299,6 +362,33 @@ export function VendorsCatalog() {
   );
 
   const items = data?.items ?? [];
+  const gridEntries = useMemo(() => {
+    type Entry = { kind: "organic" | "sponsored"; vendor: Vendor; promo?: Promotion };
+    if (!inlineSlot?.enabled || !sponsoredVendors.length) {
+      return items.map((vendor) => ({ kind: "organic" as const, vendor }));
+    }
+    const sponsoredIds = new Set(sponsoredVendors.map((vendor) => vendor.id));
+    const organic = items.filter((vendor) => !sponsoredIds.has(vendor.id));
+    const inserts = catalogInlineInsertIndices(
+      organic.length,
+      inlineSlot.densityEveryN ?? 12,
+      inlineSlot.maxPerRequest,
+    );
+    const queue = sponsoredVendors
+      .map((vendor) => ({
+        vendor,
+        promo: inlinePromos.find((promo) => promo.vendorSlug === vendor.slug),
+      }))
+      .filter((row) => row.promo);
+    const result: Entry[] = organic.map((vendor) => ({ kind: "organic", vendor }));
+    for (const index of inserts) {
+      const next = queue.shift();
+      if (!next) break;
+      const at = Math.min(Math.max(index, 0), result.length);
+      result.splice(at, 0, { kind: "sponsored", vendor: next.vendor, promo: next.promo });
+    }
+    return result;
+  }, [items, inlineSlot, sponsoredVendors, inlinePromos]);
   const reduceMotion = useReducedMotion();
   const bannerPhoto =
     (query.category && CATEGORY_PHOTOS[query.category]?.replace(/w=\d+/, "w=1800")) ||
@@ -668,7 +758,18 @@ export function VendorsCatalog() {
         </div>
       </LayoutGroup>
 
-      <PromotionSlotRail slot="CATALOG_TOP" category={query.category} limit={1} layout="STRIP" />
+      {!inlineSlot?.enabled ? (
+        <PromotionSlotRail slot="CATALOG_TOP" category={query.category} city={query.city} limit={1} layout="STRIP" />
+      ) : null}
+
+      <SponsoredPromoStrip
+        slot="CATALOG_DATE_AVAILABLE"
+        eyebrow="Available on your date · Sponsored"
+        title="Vendors free around your wedding week"
+        category={query.category}
+        city={query.city}
+        limit={4}
+      />
 
       {query.category && highlightAttrs.length ? (
         <motion.div
@@ -1104,20 +1205,34 @@ export function VendorsCatalog() {
                     {inDistrict.length ? (
                       inDistrict.map((vendor) => {
                         const thumb = vendor.photoUrl ?? vendor.photos?.[0];
+                        const mapSponsored = sponsoredVendors.some((row) => row.id === vendor.id);
                         return (
                           <div
                             key={vendor.id}
-                            className="group flex items-center gap-3 rounded-2xl p-2 transition-colors hover:bg-secondary/60"
+                            className={cn(
+                              "group flex items-center gap-3 rounded-2xl p-2 transition-colors hover:bg-secondary/60",
+                              mapSponsored && "ring-1 ring-warning/60 bg-warning-subtle/40",
+                            )}
                           >
                             <Link
                               href={`/vendors/${vendor.slug}`}
-                              onClick={() => markLeavingCatalog()}
+                              onClick={() => {
+                                const promo = inlinePromos.find((row) => row.vendorSlug === vendor.slug);
+                                if (promo) void api.promotions.click(promo.id, { slot: "CATALOG_MAP" });
+                                markLeavingCatalog();
+                              }}
                               className="flex min-w-0 flex-1 items-center gap-3"
                             >
                               <VendorThumb src={thumb} name={vendor.name} />
                               <span className="min-w-0 flex-1">
                                 <span className="block truncate font-medium group-hover:text-primary">
+                                  {mapSponsored ? "★ " : ""}
                                   {vendor.name}
+                                  {mapSponsored ? (
+                                    <span className="ml-2 text-label font-medium uppercase tracking-wide text-warning-fg">
+                                      Sponsored
+                                    </span>
+                                  ) : null}
                                 </span>
                                 <span className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
                                   <span>{vendor.city}</span>
@@ -1188,38 +1303,44 @@ export function VendorsCatalog() {
             />
           }
         >
-          {items.map((vendor) => (
+          {gridEntries.map((entry) => (
             <VendorCard
-              key={vendor.id}
-              href={`/vendors/${vendor.slug}`}
+              key={`${entry.kind}-${entry.vendor.id}`}
+              href={`/vendors/${entry.vendor.slug}`}
               linkAs={Link}
-              onNavigate={markLeavingCatalog}
-              name={vendor.name}
+              onNavigate={() => {
+                if (entry.kind === "sponsored" && entry.promo) {
+                  void api.promotions.click(entry.promo.id, { slot: "CATALOG_INLINE" });
+                }
+                markLeavingCatalog();
+              }}
+              name={entry.vendor.name}
               category={typeLabel(
-                types.find((type) => type.slug === vendor.category),
-                vendor.category,
+                types.find((type) => type.slug === entry.vendor.category),
+                entry.vendor.category,
                 locale,
               )}
-              location={`${vendor.city}, ${vendor.district}`}
+              location={`${entry.vendor.city}, ${entry.vendor.district}`}
               priceBand={priceLabel(
-                vendor.startingPriceLkr,
+                entry.vendor.startingPriceLkr,
                 currency,
-                vendor.priceDisplayMode,
-                vendor.showPricing,
+                entry.vendor.priceDisplayMode,
+                entry.vendor.showPricing,
                 t("knotly.inquirePricing"),
               )}
-              rating={vendor.ratingAvg}
-              ratingCount={vendor.ratingCount}
-              imageSrc={vendor.photoUrl}
-              photos={vendor.photos}
-              verified={vendor.verified}
-              featured={vendor.featured}
-              matchChips={matchChipsForVendor(vendor, query.attrs, locale)}
-              shortlisted={savedIds.has(vendor.id)}
-              compared={hasCompare(vendor.slug)}
-              onQuickView={() => setQuickId(vendor.id)}
-              onCompare={() => compareVendor(vendor)}
-              onShortlist={canShortlist ? () => shortlistVendor(vendor) : undefined}
+              rating={entry.vendor.ratingAvg}
+              ratingCount={entry.vendor.ratingCount}
+              imageSrc={entry.vendor.photoUrl}
+              photos={entry.vendor.photos}
+              verified={entry.vendor.verified}
+              featured={entry.kind === "organic" ? entry.vendor.featured : false}
+              sponsored={entry.kind === "sponsored"}
+              matchChips={matchChipsForVendor(entry.vendor, query.attrs, locale)}
+              shortlisted={savedIds.has(entry.vendor.id)}
+              compared={hasCompare(entry.vendor.slug)}
+              onQuickView={() => setQuickId(entry.vendor.id)}
+              onCompare={() => compareVendor(entry.vendor)}
+              onShortlist={canShortlist ? () => shortlistVendor(entry.vendor) : undefined}
             />
           ))}
         </AsyncListGrid>

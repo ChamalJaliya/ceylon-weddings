@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
-import { fetchPublicCmsPage, renderCmsBody } from "@/lib/public-site";
+import { fetchPublicCmsPage, fetchPublicSiteConfig } from "@/lib/public-site";
+import { AboutContent } from "./about-content";
+import { parseAboutBody } from "./about-story";
 
 export async function generateMetadata(): Promise<Metadata> {
   const page = await fetchPublicCmsPage("about");
@@ -10,23 +12,17 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function AboutPage() {
-  const page = await fetchPublicCmsPage("about");
+  const [page, site] = await Promise.all([fetchPublicCmsPage("about"), fetchPublicSiteConfig()]);
   if (!page) {
     return (
-      <div className="mx-auto max-w-3xl py-16 text-center text-muted-foreground">
-        About page is not published yet.
-      </div>
+      <div className="mx-auto max-w-3xl py-16 text-center text-muted-foreground">About page is not published yet.</div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8 py-8">
-      <div className="space-y-3 text-center">
-        <p className="text-sm font-medium tracking-wide text-primary uppercase">Our story</p>
-        <h1 className="font-serif text-5xl tracking-tight lg:text-6xl">{page.title}</h1>
-        {page.excerpt ? <p className="text-lg text-muted-foreground">{page.excerpt}</p> : null}
-      </div>
-      <div className="space-y-5">{renderCmsBody(page.body)}</div>
-    </div>
+    <AboutContent
+      story={parseAboutBody(page.title, page.excerpt ?? null, page.body)}
+      stats={site.homepage.stats ?? []}
+    />
   );
 }

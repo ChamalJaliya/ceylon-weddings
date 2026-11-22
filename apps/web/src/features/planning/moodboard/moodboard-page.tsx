@@ -188,15 +188,7 @@ export default function MoodboardPage() {
 
   return (
     <div className="flex h-[calc(100vh-5.5rem)] min-h-[42rem] flex-col gap-3">
-      <section
-        className="relative isolate shrink-0 overflow-hidden rounded-3xl px-5 py-4 text-paper shadow-raised sm:px-6"
-        style={{
-          background:
-            "radial-gradient(120% 140% at 0% 0%, color-mix(in srgb, var(--color-primary) 75%, transparent) 0%, transparent 60%)," +
-            "radial-gradient(60% 120% at 100% 120%, color-mix(in srgb, var(--cw-gold-300) 18%, transparent) 0%, transparent 60%)," +
-            "linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 35%, var(--color-ink)) 0%, var(--color-ink) 70%)",
-        }}
-      >
+      <section className="cw-hero-soft relative isolate shrink-0 overflow-hidden rounded-3xl px-5 py-4 sm:px-6">
         <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
           <div className="flex items-center gap-3">
             <span className="grid size-10 place-items-center rounded-2xl bg-paper/10">

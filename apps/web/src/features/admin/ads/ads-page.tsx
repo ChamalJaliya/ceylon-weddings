@@ -67,14 +67,19 @@ export default function AdminAdsPage() {
         title="Ads studio"
         description="Campaigns across the homepage and vendor search — design, target, and schedule each one."
         actions={
-          chrome ? (
-            <Button asChild size="sm">
-              <Link href="/admin/ads/new">
-                <Plus className="size-4" aria-hidden />
-                New campaign
-              </Link>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild size="sm" variant="outline">
+              <Link href="/admin/ads/placements">Placements</Link>
             </Button>
-          ) : null
+            {chrome ? (
+              <Button asChild size="sm">
+                <Link href="/admin/ads/new">
+                  <Plus className="size-4" aria-hidden />
+                  New campaign
+                </Link>
+              </Button>
+            ) : null}
+          </div>
         }
       />
       <SectionCard title="Campaigns" icon={Megaphone}>
@@ -138,9 +143,10 @@ export default function AdminAdsPage() {
               case "slots":
                 return (
                   <DataTableCell key={id}>
-                    <span className="text-xs text-muted-foreground">
-                      {row.slots.map((slot) => SLOT_META[slot].label).join(", ") || "—"}
-                    </span>
+                    <div className="grid gap-0.5 text-xs text-muted-foreground">
+                      <span>{row.slots.map((slot) => SLOT_META[slot].label).join(", ") || "—"}</span>
+                      {row.packageName ? <span>{row.packageName}</span> : null}
+                    </div>
                   </DataTableCell>
                 );
               case "status":

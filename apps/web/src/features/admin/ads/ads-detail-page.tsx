@@ -20,8 +20,9 @@ import { CreatorSectionNav, FormGroup, StickyActionBar, StudioShell } from "@cey
 import {
   emptyPromotionDraft,
   nextPromotionSection,
+  PromotionPreviewStage,
+  PromotionWorkspace,
   PromotionCreativeFields,
-  PromotionPreview,
   PromotionProgress,
   PromotionReview,
   PromotionScheduleFields,
@@ -29,6 +30,7 @@ import {
   PromotionStatusBadge,
   PromotionTargetingFields,
   type AdsPromotionDraft,
+  type AdsSlotConfigHint,
   type PromotionSectionId,
 } from "@ceylonweddings/ui/domain/ads-studio";
 import { PlanningHero } from "@/features/planning/components/planning-hero";
@@ -50,11 +52,27 @@ export default function AdminAdsStudioPage() {
   const [categoryOptions, setCategoryOptions] = useState(
     Object.entries(CATEGORY_LABELS).map(([value, label]) => ({ value, label })),
   );
+  const [slotHints, setSlotHints] = useState<AdsSlotConfigHint[]>([]);
 
   useEffect(() => {
     api.admin.vendors().then((rows) => setVendors(rows.map((row) => ({ id: row.id, name: row.name }))));
   }, []);
 
+  useEffect(() => {
+    void api.admin
+      .promotionSlots()
+      .then((rows) =>
+        setSlotHints(
+          rows.map((row) => ({
+            slot: row.slot,
+            enabled: row.enabled,
+            priceLkr: row.priceLkr,
+            interval: row.interval,
+          })),
+        ),
+      )
+      .catch(() => undefined);
+  }, []);
   useEffect(() => {
     void api
       .vendorTypes()
@@ -98,6 +116,7 @@ export default function AdminAdsStudioPage() {
           priority: promo.priority,
           vendorId: promo.vendorId,
           vendorName: promo.vendorName,
+          packageId: promo.packageId ?? null,
           source: promo.source,
           notes: promo.notes,
         });
@@ -138,6 +157,7 @@ export default function AdminAdsStudioPage() {
       endsAt: draft.endsAt,
       priority: draft.priority,
       vendorId: draft.vendorId,
+      packageId: draft.packageId ?? null,
       source: draft.source,
       notes: draft.notes,
     };
@@ -211,7 +231,6 @@ export default function AdminAdsStudioPage() {
       />
       {error ? <FormStatus tone="destructive">{error}</FormStatus> : null}
       <StudioShell
-        defaultPreviewOpen
         nav={
           <CreatorSectionNav
             sections={sections}
@@ -219,62 +238,71 @@ export default function AdminAdsStudioPage() {
             onSelect={(id) => setSection(id as PromotionSectionId)}
           />
         }
-        previewLabel="Live preview"
-        previewTitle={draft.name || "Campaign preview"}
-        previewHint={`${completeness.score}/${completeness.total}`}
-        previewThumb={draft.coverUrl}
-        preview={<PromotionPreview promo={draft} />}
       >
-        {section === "creative" ? (
-          <PromotionCreativeFields
-            value={draft}
-            onChange={patch}
-            onUpload={(file) => uploadImage(file, (body) => api.admin.onboardingAssetPresign(body))}
-          />
-        ) : null}
-        {section === "targeting" ? (
-          <PromotionTargetingFields value={draft} onChange={patch} categoryOptions={categoryOptions}>
-            <FormGroup
-              title="Linked vendor"
-              description="Optional — credits the vendor and shows their name on the ad."
-              icon={Link2}
+        <PromotionWorkspace
+          promo={draft}
+          showPreview={section !== "preview" && section !== "publish"}
+          onOpenPreview={() => setSection("preview")}
+        >
+          {section === "creative" ? (
+            <PromotionCreativeFields
+              value={draft}
+              onChange={patch}
+              onUpload={(file) => uploadImage(file, (body) => api.admin.onboardingAssetPresign(body))}
+            />
+          ) : null}
+          {section === "targeting" ? (
+            <PromotionTargetingFields
+              value={draft}
+              onChange={patch}
+              categoryOptions={categoryOptions}
+              slotHints={slotHints}
             >
-              <SimpleSelect
-                value={draft.vendorId ?? "__none__"}
-                onValueChange={(vendorId) => {
-                  if (vendorId === "__none__") {
-                    patch({ vendorId: null, vendorName: null });
-                    return;
-                  }
-                  const vendor = vendors.find((item) => item.id === vendorId);
-                  patch({ vendorId, vendorName: vendor?.name ?? null });
-                }}
-                options={[
-                  { value: "__none__", label: "Platform / no vendor" },
-                  ...vendors.map((vendor) => ({ value: vendor.id, label: vendor.name })),
-                ]}
-              />
-            </FormGroup>
-          </PromotionTargetingFields>
-        ) : null}
-        {section === "schedule" ? <PromotionScheduleFields value={draft} onChange={patch} /> : null}
-        {section === "publish" ? (
-          <PromotionReview
-            promo={draft}
-            completeness={completeness}
-            onJump={setSection}
-            categoryLabel={categoryLabel}
-          />
-        ) : null}
-        <StickyActionBar>
+              <FormGroup
+                title="Linked vendor"
+                description="Optional — credits the vendor and shows their name on the ad."
+                icon={Link2}
+              >
+                <SimpleSelect
+                  value={draft.vendorId ?? "__none__"}
+                  onValueChange={(vendorId) => {
+                    if (vendorId === "__none__") {
+                      patch({ vendorId: null, vendorName: null });
+                      return;
+                    }
+                    const vendor = vendors.find((item) => item.id === vendorId);
+                    patch({ vendorId, vendorName: vendor?.name ?? null });
+                  }}
+                  options={[
+                    { value: "__none__", label: "Platform / no vendor" },
+                    ...vendors.map((vendor) => ({ value: vendor.id, label: vendor.name })),
+                  ]}
+                />
+              </FormGroup>
+            </PromotionTargetingFields>
+          ) : null}
+          {section === "schedule" ? <PromotionScheduleFields value={draft} onChange={patch} /> : null}
+          {section === "preview" ? <PromotionPreviewStage promo={draft} /> : null}
+          {section === "publish" ? (
+            <PromotionReview
+              promo={draft}
+              completeness={completeness}
+              onJump={setSection}
+              categoryLabel={categoryLabel}
+            />
+          ) : null}
+        </PromotionWorkspace>
+        <StickyActionBar className="flex-nowrap gap-2 px-3 sm:gap-3 sm:px-4">
           <PromotionProgress completeness={completeness} status={draft.status} />
           {prev ? (
             <Button variant="ghost" onClick={() => setSection(prev)}>
-              Back
+              <ArrowLeft className="size-4 sm:hidden" aria-hidden />
+              <span className="sr-only sm:not-sr-only">Back</span>
             </Button>
           ) : null}
           <Button variant="outline" disabled={saving} onClick={() => void save("DRAFT")}>
-            Save draft
+            <span className="sm:hidden">Save</span>
+            <span className="hidden sm:inline">Save draft</span>
           </Button>
           {next ? (
             <Button onClick={() => setSection(next)}>

@@ -6,14 +6,15 @@ import { useSearchParams } from "next/navigation";
 import { api, formatMoney, useCompareStore, usePreferenceStore } from "@ceylonweddings/web";
 import { formatVendorStartingPriceLabel, type Vendor } from "@ceylonweddings/contracts";
 import { Button } from "@ceylonweddings/ui/components/button";
-import { PageHeader } from "@ceylonweddings/ui/domain/page-header";
-import {
-  VendorCompareBoard,
-  type VendorCompareColumn,
-} from "@ceylonweddings/ui/domain/vendor-compare-board";
+import { ArrowLeft, Check, Plus, Scale } from "lucide-react";
+import { FormStatus } from "@ceylonweddings/ui/components/form-status";
+import { cn } from "@ceylonweddings/ui/utils";
+import { PlanningHero } from "@/features/planning/components/planning-hero";
+import { VendorCompareBoard, type VendorCompareColumn } from "@ceylonweddings/ui/domain/vendor-compare-board";
 import { Link, useRouter } from "@/i18n/navigation";
 import { CATEGORY_LABELS, formatAttributeDisplay, localizedText } from "@/lib/labels";
 import { CenteredLoader } from "@ceylonweddings/ui/components/spinner";
+import { SponsoredPromoStrip } from "@/components/sponsored-promo-strip";
 
 function toColumn(
   vendor: Vendor,
@@ -28,11 +29,8 @@ function toColumn(
     slug: vendor.slug,
     category: categoryLabel,
     location: `${vendor.city}, ${vendor.district}`,
-    priceLabel: formatVendorStartingPriceLabel(
-      vendor,
-      (value) => formatMoney(value, currency),
-      inquirePricing,
-    ),
+    priceLabel: formatVendorStartingPriceLabel(vendor, (value) => formatMoney(value, currency), inquirePricing),
+    priceValue: vendor.showPricing === false ? null : vendor.startingPriceLkr,
     typicalSpendLabel:
       vendor.showPricing === false
         ? inquirePricing
@@ -76,6 +74,7 @@ export default function VendorComparePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [typeLabels, setTypeLabels] = useState<Record<string, string>>({});
+  const [compareCategory, setCompareCategory] = useState<string | undefined>();
 
   const slugs = useMemo(() => {
     const fromQuery = searchParams.get("slugs");
@@ -120,6 +119,7 @@ export default function VendorComparePage() {
         if (categories.size > 1) {
           setError("Compare works best with the same category. Clear mixed picks and try again.");
         }
+        setCompareCategory(vendors[0]?.category);
         setColumns(
           vendors.map((vendor) =>
             toColumn(
@@ -155,16 +155,14 @@ export default function VendorComparePage() {
   }
 
   return (
-    <div className="grid gap-8 pb-16">
-      <PageHeader
+    <div className="grid min-w-0 gap-6 pb-16">
+      <PlanningHero
+        icon={Scale}
         kicker="Marketplace"
-        title="Vendor vs vendor"
-        description="Side-by-side pricing, packages, travel, and trust — pick the stronger fit before you WhatsApp."
+        title="Compare vendors"
+        description="Price, packages, logistics and reviews side by side — pick the stronger fit before you message."
         actions={
-          <div className="flex flex-wrap gap-2">
-            <Button asChild variant="outline" size="sm">
-              <Link href="/vendors">Back to catalog</Link>
-            </Button>
+          <>
             {columns.length ? (
               <Button
                 type="button"
@@ -179,47 +177,91 @@ export default function VendorComparePage() {
                 Clear all
               </Button>
             ) : null}
-          </div>
+            <Button asChild variant="outline" size="sm">
+              <Link href={compareCategory ? `/vendors?category=${compareCategory}` : "/vendors"}>
+                <ArrowLeft className="size-4" />
+                Back to catalog
+              </Link>
+            </Button>
+          </>
         }
       />
 
       {loading ? <CenteredLoader label="Loading comparison…" /> : null}
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      {error ? <FormStatus tone="destructive">{error}</FormStatus> : null}
 
       {!loading && columns.length < 2 ? (
-        <div className="grid gap-4 rounded-3xl border border-border/70 bg-card/30 p-8">
-          <p className="font-serif text-2xl tracking-tight">Add 2–3 vendors from the catalog</p>
-          <p className="max-w-xl text-sm leading-relaxed text-muted-foreground">
-            Tap the scale icon on catalog cards (same category), then open Compare. Or try a seeded venue pair:
-          </p>
-          <div className="flex flex-wrap gap-2">
-            <Button asChild size="sm">
-              <Link href="/vendors/compare?slugs=glen-receptions,kandy-hills-estate,fort-lawn-galle">
-                Compare 3 venues
-              </Link>
-            </Button>
-            <Button asChild variant="outline" size="sm">
-              <Link href="/vendors?category=VENUE">Browse venues</Link>
-            </Button>
-            <Button asChild variant="outline" size="sm">
-              <Link href="/vendors?category=PHOTO_VIDEO">Browse photo & video</Link>
-            </Button>
+        <section className="grid gap-8 rounded-3xl border border-border bg-card p-6 shadow-card sm:p-10">
+          <div className="grid gap-3 sm:grid-cols-3">
+            {[0, 1, 2].map((index) => (
+              <div
+                key={index}
+                className={cn(
+                  "grid aspect-[4/3] place-items-center rounded-2xl border-2 border-dashed",
+                  index < columns.length ? "border-primary/40 bg-primary/5" : "border-border",
+                )}
+              >
+                <span className="grid justify-items-center gap-2 text-sm text-muted-foreground">
+                  <span className="grid size-11 place-items-center rounded-full bg-secondary">
+                    {index < columns.length ? <Check className="size-5 text-primary" /> : <Plus className="size-5" />}
+                  </span>
+                  {index < columns.length
+                    ? columns[index]!.name
+                    : index === 2
+                      ? "Optional third"
+                      : `Vendor ${index + 1}`}
+                </span>
+              </div>
+            ))}
           </div>
-        </div>
+          <div className="grid max-w-xl gap-3">
+            <h2 className="font-serif text-3xl tracking-tight">Pick 2–3 vendors from the same category</h2>
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              Tap the <Scale className="inline size-3.5" /> scale on any vendor card in the catalog, then come back
+              here. Or start with an example:
+            </p>
+            <div className="flex flex-wrap gap-2 pt-1">
+              <Button asChild size="sm">
+                <Link href="/vendors/compare?slugs=glen-receptions,kandy-hills-estate,fort-lawn-galle">
+                  Try 3 venues
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="sm">
+                <Link href="/vendors?category=VENUE">Browse venues</Link>
+              </Button>
+              <Button asChild variant="outline" size="sm">
+                <Link href="/vendors?category=PHOTO_VIDEO">Browse photographers</Link>
+              </Button>
+            </div>
+          </div>
+        </section>
       ) : null}
 
       {columns.length >= 2 ? (
-        <VendorCompareBoard
-          title={`Compare ${columns[0]?.category ?? "vendors"}`}
-          columns={columns}
-          onView={(slug) => router.push(`/vendors/${slug}`)}
-          onRemove={(slug) => {
-            remove(slug);
-            const next = columns.filter((column) => column.slug !== slug).map((column) => column.slug);
-            setColumns(columns.filter((column) => column.slug !== slug));
-            syncQuery(next);
-          }}
-        />
+        <>
+          <VendorCompareBoard
+            title={`${columns.length} ${columns[0]?.category ?? "vendors"}`}
+            columns={columns}
+            addHref={`/${locale}/vendors${compareCategory ? `?category=${compareCategory}` : ""}`}
+            onView={(slug) => router.push(`/vendors/${slug}`)}
+            onRemove={(slug) => {
+              remove(slug);
+              const next = columns.filter((column) => column.slug !== slug).map((column) => column.slug);
+              setColumns(columns.filter((column) => column.slug !== slug));
+              syncQuery(next);
+            }}
+          />
+          {columns.length === 2 ? (
+            <SponsoredPromoStrip
+              slot="COMPARE_SUGGEST"
+              eyebrow="Sponsored"
+              title="Add a third option"
+              category={compareCategory}
+              excludeVendorSlugs={columns.map((column) => column.slug)}
+              limit={1}
+            />
+          ) : null}
+        </>
       ) : null}
     </div>
   );

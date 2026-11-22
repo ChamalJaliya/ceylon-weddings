@@ -47,6 +47,8 @@ import {
 } from "lucide-react";
 import { Reveal, Stagger, StaggerItem, motion, useReducedMotion } from "@ceylonweddings/ui/domain/motion";
 import { SafeImg } from "@/components/safe-img";
+import { CompleteYourTeam } from "@/features/vendors/complete-your-team";
+import { SponsoredPromoStrip } from "@/components/sponsored-promo-strip";
 import {
   FaqList,
   InquiryStepper,
@@ -765,6 +767,8 @@ export default function VendorStorefrontPage() {
             </StorySection>
           ) : null}
 
+          <CompleteYourTeam vendorName={vendor.name} city={vendor.city} category={vendor.category} />
+
           <StorySection id="info" eyebrow="Good to know" title="Details, FAQs & location">
             <InfoTabs
               tabs={[
@@ -819,6 +823,16 @@ export default function VendorStorefrontPage() {
               ]}
             />
           </StorySection>
+
+          <SponsoredPromoStrip
+            slot="VENDOR_SIMILAR"
+            eyebrow="Sponsored"
+            title="Similar vendors"
+            category={vendor.category}
+            city={vendor.city}
+            excludeVendorSlugs={[vendor.slug]}
+            limit={3}
+          />
         </div>
 
         {/* Booking card */}

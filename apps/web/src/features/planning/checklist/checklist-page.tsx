@@ -179,15 +179,7 @@ export default function ChecklistPage() {
   return (
     <div className="cw-stack">
       {/* Hero */}
-      <section
-        className="relative isolate overflow-hidden rounded-3xl p-6 text-paper shadow-raised sm:p-8"
-        style={{
-          background:
-            "radial-gradient(120% 90% at 0% 0%, color-mix(in srgb, var(--color-primary) 75%, transparent) 0%, transparent 60%)," +
-            "radial-gradient(60% 70% at 100% 120%, color-mix(in srgb, var(--cw-gold-300) 18%, transparent) 0%, transparent 60%)," +
-            "linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 35%, var(--color-ink)) 0%, var(--color-ink) 70%)",
-        }}
-      >
+      <section className="cw-hero-soft relative isolate overflow-hidden rounded-3xl p-6 sm:p-8">
         <div className="grid items-center gap-8 md:grid-cols-[1fr_auto]">
           <div className="grid gap-4">
             <p className="flex items-center gap-2 text-label tracking-eyebrow text-paper/60 uppercase">

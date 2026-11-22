@@ -335,8 +335,31 @@ enum PromotionSlot {
   HOME_PICKS
   CATALOG_TOP
   CATALOG_INLINE
+  CATALOG_DATE_AVAILABLE
+  CATALOG_MAP
   IDEAS_RAIL
+  IDEAS_INLINE
   VENDOR_SIDEBAR
+  VENDOR_COMPLEMENTARY
+  VENDOR_SIMILAR
+  COMPARE_SUGGEST
+  ARTICLE_INLINE
+  ARTICLE_NEXT_STEP
+  ARTICLE_STORY_CREDITS
+  REELS
+  AWARDS_CATEGORY
+}
+
+enum PromotionDisclosure {
+  SPONSORED
+  SPONSORED_STORY
+  CUSTOM
+}
+
+enum PromotionBillingInterval {
+  DAY
+  WEEK
+  MONTH
 }
 
 enum AdminCapability {
@@ -1168,6 +1191,8 @@ model Promotion {
   priority        Int                      @default(0)
   vendorId        String?
   vendor          Vendor?                  @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+  packageId       String?
+  package         PromotionPackage?        @relation(fields: [packageId], references: [id], onDelete: SetNull)
   createdById     String?
   source          FeaturedPlacementSource  @default(EDITORIAL)
   notes           String?
@@ -1179,6 +1204,48 @@ model Promotion {
   @@index([status, priority])
   @@index([startsAt, endsAt])
   @@index([vendorId])
+  @@index([packageId])
+}
+
+model PromotionSlotConfig {
+  id             String                    @id @default(cuid())
+  slot           PromotionSlot             @unique
+  enabled        Boolean                   @default(false)
+  pageKey        String
+  regionKey      String
+  description    String?
+  defaultLayout  PromotionLayout           @default(CARD)
+  maxPerRequest  Int                       @default(6)
+  densityEveryN  Int?
+  disclosure     PromotionDisclosure       @default(SPONSORED)
+  priceLkr       Int                       @default(0)
+  interval       PromotionBillingInterval  @default(WEEK)
+  currency       String                    @default("LKR")
+  sortOrder      Int                       @default(0)
+  notes          String?
+  createdAt      DateTime                  @default(now())
+  updatedAt      DateTime                  @updatedAt
+
+  @@index([enabled, sortOrder])
+}
+
+model PromotionPackage {
+  id            String                    @id @default(cuid())
+  name          String
+  slug          String                    @unique
+  description   String?
+  slots         PromotionSlot[]
+  priceLkr      Int
+  interval      PromotionBillingInterval  @default(WEEK)
+  durationDays  Int                       @default(7)
+  active        Boolean                   @default(true)
+  sortOrder     Int                       @default(0)
+  stripePriceId String?
+  createdAt     DateTime                  @default(now())
+  updatedAt     DateTime                  @updatedAt
+  promotions    Promotion[]
+
+  @@index([active, sortOrder])
 }
 
 model FeatureFlag {

@@ -13,6 +13,7 @@ import type { PublicSiteConfig, Vendor } from "@ceylonweddings/contracts";
 import { Link } from "@/i18n/navigation";
 import { CATEGORY_LABELS, priceLabel } from "@/lib/labels";
 import { PromotionSlotRail } from "@/components/promotion-slot-rail";
+import { SponsoredPromoStrip } from "@/components/sponsored-promo-strip";
 import { WEDDING_IMAGES } from "@/lib/wedding-images";
 import { CATEGORY_ICONS } from "@/lib/category-media";
 import {
@@ -135,8 +136,9 @@ export function HomeContent({
               }
             />
             {adsEnabled ? (
-              <div className="mb-6">
+              <div className="mb-6 grid gap-6">
                 <PromotionSlotRail slot="HOME_PICKS" limit={2} />
+                <SponsoredPromoStrip slot="REELS" eyebrow="Wedding Reels" title="Short films from the island" />
               </div>
             ) : null}
             <Stagger className="grid gap-4 sm:grid-cols-2 sm:gap-5 xl:grid-cols-3" stagger={0.06}>
