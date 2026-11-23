@@ -25,6 +25,8 @@ export function AttributeHelp({
             className,
           )}
           aria-label={label}
+          onClick={(event) => event.stopPropagation()}
+          onPointerDown={(event) => event.stopPropagation()}
         >
           <CircleHelp className="size-4" />
         </button>

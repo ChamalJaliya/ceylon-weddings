@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "Ceylon Weddings",
+    "slug": "ceylon-weddings",
+    "scheme": "ceylonweddings",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "bundleIdentifier": "com.ceylonweddings.app",
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.ceylonweddings.app"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#fdfaf4",
+          "dark": {
+            "backgroundColor": "#15100c"
+          }
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "backgroundColor": "#fdfaf4"
+  }
+}

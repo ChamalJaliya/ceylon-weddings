@@ -56,7 +56,7 @@
   "lint-staged": {
     "*.{ts,tsx}": [
       "prettier --write",
-      "eslint --fix --max-warnings=50",
+      "eslint --fix --max-warnings=50 --no-warn-ignored",
       "node scripts/check-design-system.mjs"
     ],
     "*.css": [

@@ -34,77 +34,82 @@ export function ChoiceCard({
   className?: string;
 }) {
   return (
-    <button
-      type="button"
-      disabled={disabled}
-      aria-pressed={selected}
-      onClick={onSelect}
+    <div
       className={cn(
         "group relative flex flex-col rounded-2xl border bg-card text-left transition",
         imageUrl ? "min-h-24 overflow-hidden" : "min-h-[4.5rem] overflow-visible",
-        "hover:border-primary/40 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        "hover:border-primary/40 hover:shadow-sm",
         selected ? "border-primary bg-primary/5 shadow-sm" : "border-border/80",
         disabled && "cursor-not-allowed opacity-45 hover:border-border/80 hover:shadow-none",
         className,
       )}
     >
-      {imageUrl ? (
-        <div className="aspect-[16/10] overflow-hidden bg-secondary">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={imageUrl}
-            alt=""
-            className="size-full object-cover transition duration-500 group-hover:scale-[1.03]"
-          />
-        </div>
-      ) : null}
-      <div className="flex flex-1 items-start gap-3 p-4">
-        {icon && !imageUrl ? (
-          <span className="grid size-11 shrink-0 place-items-center overflow-visible rounded-xl bg-primary/10 text-primary">
-            {icon}
-          </span>
-        ) : null}
-        <div className="grid min-w-0 flex-1 gap-1">
-          <div className="flex items-start justify-between gap-2">
-            <span className="font-serif text-lg font-medium leading-tight tracking-tight">
-              {title}
-            </span>
-            <div className="flex shrink-0 items-center gap-1">
-              <AttributeHelp text={helpText} />
-              {typeof count === "number" ? (
-                <span className="rounded-full bg-secondary px-2 py-0.5 text-label tabular-nums text-muted-foreground">
-                  {count}
-                </span>
-              ) : null}
-              {indicator !== "none" ? (
-                <span
-                  className={cn(
-                    "grid size-5 place-items-center border transition",
-                    multi && indicator === "check" ? "rounded-md" : "rounded-full",
-                    indicator === "edit"
-                      ? selected
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-border/70 text-muted-foreground opacity-0 group-hover:opacity-100"
-                      : selected
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-border/80 text-transparent",
-                  )}
-                  aria-hidden
-                >
-                  {indicator === "edit" ? (
-                    <Pencil className="size-3" />
-                  ) : selected ? (
-                    <Check className="size-3" />
-                  ) : null}
-                </span>
-              ) : null}
-            </div>
+      {/* Stretched select control — kept as a sibling of AttributeHelp so we never nest <button>s */}
+      <button
+        type="button"
+        disabled={disabled}
+        aria-pressed={selected}
+        aria-label={title}
+        onClick={onSelect}
+        className="absolute inset-0 z-0 rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      />
+      <div className="pointer-events-none relative z-[1] flex flex-1 flex-col">
+        {imageUrl ? (
+          <div className="aspect-[16/10] overflow-hidden bg-secondary">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={imageUrl}
+              alt=""
+              className="size-full object-cover transition duration-500 group-hover:scale-[1.03]"
+            />
           </div>
-          {description ? (
-            <p className="text-xs leading-relaxed text-muted-foreground">{description}</p>
+        ) : null}
+        <div className="flex flex-1 items-start gap-3 p-4">
+          {icon && !imageUrl ? (
+            <span className="grid size-11 shrink-0 place-items-center overflow-visible rounded-xl bg-primary/10 text-primary">
+              {icon}
+            </span>
           ) : null}
+          <div className="grid min-w-0 flex-1 gap-1">
+            <div className="flex items-start justify-between gap-2">
+              <span className="font-serif text-lg font-medium leading-tight tracking-tight">{title}</span>
+              <div className="flex shrink-0 items-center gap-1">
+                <span className="pointer-events-auto">
+                  <AttributeHelp text={helpText} />
+                </span>
+                {typeof count === "number" ? (
+                  <span className="rounded-full bg-secondary px-2 py-0.5 text-label tabular-nums text-muted-foreground">
+                    {count}
+                  </span>
+                ) : null}
+                {indicator !== "none" ? (
+                  <span
+                    className={cn(
+                      "grid size-5 place-items-center border transition",
+                      multi && indicator === "check" ? "rounded-md" : "rounded-full",
+                      indicator === "edit"
+                        ? selected
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border/70 text-muted-foreground opacity-0 group-hover:opacity-100"
+                        : selected
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border/80 text-transparent",
+                    )}
+                    aria-hidden
+                  >
+                    {indicator === "edit" ? (
+                      <Pencil className="size-3" />
+                    ) : selected ? (
+                      <Check className="size-3" />
+                    ) : null}
+                  </span>
+                ) : null}
+              </div>
+            </div>
+            {description ? <p className="text-xs leading-relaxed text-muted-foreground">{description}</p> : null}
+          </div>
         </div>
       </div>
-    </button>
+    </div>
   );
 }
