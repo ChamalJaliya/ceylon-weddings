@@ -30,6 +30,7 @@ import {
 import type { Appointment, BudgetLine, MineWedding } from "@ceylonweddings/contracts";
 import { BrandMark } from "./brand";
 import { CountUp, Ring } from "./motion";
+import { Carousel } from "./ui/carousel";
 import { tap } from "./ui/haptics";
 import { formatLkr, titleCase } from "@/lib/format";
 import { font, radius, shadow, useTheme } from "@/theme";
@@ -725,23 +726,35 @@ const TIPS = [
 
 export function TipWidget() {
   const t = useTheme();
-  const tip = TIPS[new Date().getDate() % TIPS.length];
+  const start = new Date().getDate() % TIPS.length;
+  const tips = [...TIPS.slice(start), ...TIPS.slice(0, start)];
   return (
-    <Widget delay={460} style={{ backgroundColor: t.accentBg, borderColor: t.accentBg }}>
-      <View style={{ flexDirection: "row", gap: 12 }}>
-        <Sparkles size={18} color={t.primaryText} style={{ marginTop: 2 }} />
-        <View style={{ flex: 1 }}>
-          <Text style={{ fontFamily: font.sansMedium, fontSize: 10, letterSpacing: 2.2, color: t.primaryText }}>
-            PLANNER'S TIP
-          </Text>
-          <Text
-            style={{ fontFamily: font.displayItalic, fontSize: 18, lineHeight: 24, color: t.heading, marginTop: 4 }}
-          >
-            {tip}
-          </Text>
-        </View>
-        <ChevronRight size={16} color={t.primaryText} style={{ alignSelf: "center", opacity: 0 }} />
-      </View>
-    </Widget>
+    <View style={{ marginHorizontal: -20 }}>
+      <Carousel peek={20} gap={12}>
+        {tips.map((tip, i) => (
+          <Widget key={i} delay={460} style={{ backgroundColor: t.accentBg, borderColor: t.accentBg }}>
+            <View style={{ flexDirection: "row", gap: 12 }}>
+              <Sparkles size={18} color={t.primaryText} style={{ marginTop: 2 }} />
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontFamily: font.sansMedium, fontSize: 10, letterSpacing: 2.2, color: t.primaryText }}>
+                  PLANNER'S TIP
+                </Text>
+                <Text
+                  style={{
+                    fontFamily: font.displayItalic,
+                    fontSize: 18,
+                    lineHeight: 24,
+                    color: t.heading,
+                    marginTop: 4,
+                  }}
+                >
+                  {tip}
+                </Text>
+              </View>
+            </View>
+          </Widget>
+        ))}
+      </Carousel>
+    </View>
   );
 }

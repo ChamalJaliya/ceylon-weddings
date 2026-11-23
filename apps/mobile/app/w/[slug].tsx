@@ -16,7 +16,7 @@ import Animated, {
   ZoomIn,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { CalendarHeart, Check, ChevronLeft, Clock, MapPin, Minus, Plus } from "lucide-react-native";
+import { CalendarHeart, Check, ChevronLeft, Clock, MapPin } from "lucide-react-native";
 import type { PublicWebsite } from "@ceylonweddings/contracts";
 import { BrandLockup, BrandMark } from "@/components/brand";
 import { Confetti, Rise } from "@/components/motion";
@@ -30,10 +30,12 @@ import {
   Eyebrow,
   GlassButton,
   impact,
+  MorphButton,
   Pill,
   ScreenSkeleton,
   Section,
   SheetField,
+  Stepper,
   success,
   tap,
 } from "@/components/ui";
@@ -63,14 +65,12 @@ function RsvpFlow({
   const [plus, setPlus] = useState(0);
   const [meal, setMeal] = useState<Meal | undefined>();
   const [replies, setReplies] = useState<Record<string, Reply>>({});
-  const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const attending = Object.values(replies).some((r) => r !== "DECLINED");
   const steps = attending ? 3 : 2;
   const canNext = step === 0 ? !!name.trim() : step === 1 ? events.every((e) => replies[e.id]) : true;
 
   async function submit() {
-    setBusy(true);
     setError(null);
     try {
       await api.rsvp(slug, {
@@ -79,18 +79,16 @@ function RsvpFlow({
         meal,
         events: events.map((e) => ({ eventId: e.id, status: replies[e.id]! })),
       });
-      success();
       onDone(attending, name.trim());
     } catch (e) {
       setError(e instanceof Error ? e.message : "Couldn't send your RSVP");
-    } finally {
-      setBusy(false);
+      throw e;
     }
   }
   const next = () => {
     tap();
-    if (step + 1 >= steps) submit();
-    else setStep(step + 1);
+    if (step + 1 >= steps) return;
+    setStep(step + 1);
   };
 
   return (
@@ -121,65 +119,13 @@ function RsvpFlow({
               autoFocus
               style={{ fontSize: 17 }}
             />
-            <Card style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-              <View>
-                <Body medium style={{ color: t.heading }}>
-                  Guests with you
-                </Body>
-                <Body muted size={13}>
-                  Partner, children, family
-                </Body>
-              </View>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
-                <Pressable
-                  onPress={() => {
-                    tap();
-                    setPlus(Math.max(0, plus - 1));
-                  }}
-                  style={{
-                    width: 38,
-                    height: 38,
-                    borderRadius: 19,
-                    borderWidth: 1,
-                    borderColor: t.border,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Minus size={16} color={t.heading} />
-                </Pressable>
-                <Animated.Text
-                  key={plus}
-                  entering={ZoomIn.duration(280)}
-                  style={{
-                    fontFamily: font.display,
-                    fontSize: 28,
-                    color: t.heading,
-                    minWidth: 22,
-                    textAlign: "center",
-                  }}
-                >
-                  {plus}
-                </Animated.Text>
-                <Pressable
-                  onPress={() => {
-                    tap();
-                    setPlus(Math.min(20, plus + 1));
-                  }}
-                  style={{
-                    width: 38,
-                    height: 38,
-                    borderRadius: 19,
-                    borderWidth: 1,
-                    borderColor: t.border,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Plus size={16} color={t.heading} />
-                </Pressable>
-              </View>
-            </Card>
+            <Stepper
+              value={plus}
+              onChange={setPlus}
+              min={0}
+              max={20}
+              hint="Guests with you — partner, children, family"
+            />
           </>
         ) : step === 1 ? (
           <>
@@ -260,12 +206,11 @@ function RsvpFlow({
           </View>
         ) : null}
         <View style={{ flex: 2 }}>
-          <Button
-            label={step + 1 >= steps ? "Send RSVP" : "Continue"}
-            onPress={next}
-            loading={busy}
-            disabled={!canNext}
-          />
+          {step + 1 >= steps ? (
+            <MorphButton label="Send RSVP" onPress={submit} disabled={!canNext} successLabel="Sent" />
+          ) : (
+            <Button label="Continue" onPress={next} disabled={!canNext} />
+          )}
         </View>
       </View>
     </View>

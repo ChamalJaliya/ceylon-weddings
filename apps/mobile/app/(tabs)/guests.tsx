@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Linking, Pressable, RefreshControl, Text, View } from "react-native";
 import Animated, { FadeIn, FadeOut, LinearTransition } from "react-native-reanimated";
-import { MessageCircle, Phone, Users } from "lucide-react-native";
+import { Check, HelpCircle, MessageCircle, Phone, Users, X } from "lucide-react-native";
 import type { GuestHousehold } from "@ceylonweddings/contracts";
 import { CountUp, Donut } from "@/components/motion";
 import { Sheet, type SheetRef } from "@/components/sheet";
@@ -14,6 +14,7 @@ import {
   Body,
   Button,
   Card,
+  ContextMenu,
   Display,
   EmptyState,
   ErrorNote,
@@ -168,37 +169,73 @@ export default function Guests() {
                     : undefined
                 }
               >
-                <Pressable
-                  onPress={() => {
-                    tap();
-                    setOpen(g);
-                    sheet.current?.present();
-                  }}
-                  style={({ pressed }) => ({
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 14,
-                    padding: 14,
-                    backgroundColor: pressed ? t.inset : t.card,
-                    borderTopWidth: i ? 1 : 0,
-                    borderTopColor: t.border,
-                  })}
+                <ContextMenu
+                  title={g.headName}
+                  eyebrow={g.label}
+                  items={[
+                    {
+                      id: "confirmed",
+                      label: "Mark confirmed",
+                      icon: Check,
+                      onPress: () => setStatus(g, "CONFIRMED"),
+                    },
+                    {
+                      id: "maybe",
+                      label: "Mark maybe",
+                      icon: HelpCircle,
+                      onPress: () => setStatus(g, "MAYBE"),
+                    },
+                    {
+                      id: "declined",
+                      label: "Mark declined",
+                      icon: X,
+                      destructive: true,
+                      onPress: () => setStatus(g, "DECLINED"),
+                    },
+                    ...(g.phone
+                      ? [
+                          {
+                            id: "wa",
+                            label: "WhatsApp",
+                            icon: MessageCircle,
+                            onPress: () => wa(g.phone!),
+                          },
+                        ]
+                      : []),
+                  ]}
                 >
-                  <Avatar
-                    name={g.headName}
-                    tone={g.side === "BRIDE" ? "bride" : g.side === "GROOM" ? "groom" : "both"}
-                  />
-                  <View style={{ flex: 1, gap: 2 }}>
-                    <Body medium style={{ color: t.heading }} numberOfLines={1}>
-                      {g.label}
-                    </Body>
-                    <Body muted size={13} numberOfLines={1}>
-                      {g.headName}
-                      {g.plusCount ? `  +${g.plusCount}` : ""}
-                    </Body>
-                  </View>
-                  <Badge label={titleCase(g.status)} tone={TONE[g.status]} />
-                </Pressable>
+                  <Pressable
+                    onPress={() => {
+                      tap();
+                      setOpen(g);
+                      sheet.current?.present();
+                    }}
+                    style={({ pressed }) => ({
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 14,
+                      padding: 14,
+                      backgroundColor: pressed ? t.inset : t.card,
+                      borderTopWidth: i ? 1 : 0,
+                      borderTopColor: t.border,
+                    })}
+                  >
+                    <Avatar
+                      name={g.headName}
+                      tone={g.side === "BRIDE" ? "bride" : g.side === "GROOM" ? "groom" : "both"}
+                    />
+                    <View style={{ flex: 1, gap: 2 }}>
+                      <Body medium style={{ color: t.heading }} numberOfLines={1}>
+                        {g.label}
+                      </Body>
+                      <Body muted size={13} numberOfLines={1}>
+                        {g.headName}
+                        {g.plusCount ? `  +${g.plusCount}` : ""}
+                      </Body>
+                    </View>
+                    <Badge label={titleCase(g.status)} tone={TONE[g.status]} />
+                  </Pressable>
+                </ContextMenu>
               </SwipeRow>
             </Animated.View>
           ))}
@@ -212,7 +249,7 @@ export default function Guests() {
         </Card>
         {shown.length ? (
           <Body muted size={12} style={{ textAlign: "center", marginTop: 10 }}>
-            Tap for details · swipe to message or call
+            Tap for details · long-press RSVP · swipe to message or call
           </Body>
         ) : null}
       </Screen>

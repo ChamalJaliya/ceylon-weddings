@@ -15,7 +15,7 @@ import {
 import { Geist_400Regular, Geist_500Medium } from "@expo-google-fonts/geist";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { api } from "@/lib/api";
-import { AppearanceProvider, font, useAppearance, useTheme } from "@/theme";
+import { AppearanceProvider, font, ReducedMotionProvider, useAppearance, useTheme } from "@/theme";
 import { DrawerProvider } from "@/components/drawer";
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -76,16 +76,18 @@ function AppChrome({ children }: { children: React.ReactNode }) {
   return (
     <AppearanceProvider updatePreferences={api.updatePreferences} onUserUpdated={setUser}>
       <AppearanceAccountSync />
-      <SafeAreaProvider>
-        <BottomSheetModalProvider>
-          <ToastProvider>
-            <DrawerProvider>
-              <ThemedStatusBar />
-              {children}
-            </DrawerProvider>
-          </ToastProvider>
-        </BottomSheetModalProvider>
-      </SafeAreaProvider>
+      <ReducedMotionProvider>
+        <SafeAreaProvider>
+          <BottomSheetModalProvider>
+            <ToastProvider>
+              <DrawerProvider>
+                <ThemedStatusBar />
+                {children}
+              </DrawerProvider>
+            </ToastProvider>
+          </BottomSheetModalProvider>
+        </SafeAreaProvider>
+      </ReducedMotionProvider>
     </AppearanceProvider>
   );
 }

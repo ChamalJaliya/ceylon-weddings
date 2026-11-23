@@ -8,13 +8,17 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "bundleIdentifier": "com.ceylonweddings.app",
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "Unlock Ceylon Weddings quickly with Face ID."
+      }
     },
     "android": {
       "package": "com.ceylonweddings.app"
     },
     "plugins": [
       "expo-router",
+      "expo-local-authentication",
       [
         "expo-splash-screen",
         {

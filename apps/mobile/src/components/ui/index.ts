@@ -20,6 +20,13 @@ export { Badge } from "./badge";
 export { Avatar } from "./avatar";
 export { ProgressLine } from "./progress";
 export { Skeleton, ScreenSkeleton, EmptyState, ErrorNote } from "./states";
+export { Stepper } from "./stepper";
+export { Slider } from "./slider";
+export { Carousel } from "./carousel";
+export { Fab } from "./fab";
+export { ContextMenu } from "./context-menu";
+export { MorphButton } from "./morph-button";
+export { Shake } from "./shake";
 
 import { eyebrow } from "@/theme";
 /** @deprecated Prefer `eyebrow` from `@/theme`. */

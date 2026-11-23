@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Dimensions, Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
+import { Dimensions, Pressable, RefreshControl, Text, View } from "react-native";
 import { router } from "expo-router";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
@@ -34,6 +34,7 @@ import {
 import {
   Body,
   Card,
+  Carousel,
   Display,
   ErrorNote,
   Eyebrow,
@@ -134,17 +135,31 @@ export default function Home() {
   const fg = cover ? t.heroFg : t.heading;
   const fgMuted = cover ? t.overlay.glassChipStrong : t.muted;
 
-  async function complete(id: string) {
+  function complete(id: string) {
     if (!w) return;
+    const prev = w;
     success();
     const next = tasks.map((x) => (x.id === id ? { ...x, status: "DONE" as const } : x));
     setData({ ...w, tasks: next });
-    toast("Nice — task complete");
     if (next.every((x) => x.status === "DONE")) setBurst(Date.now());
-    await api.setTaskStatus(id, "DONE").catch(() => {
-      toast("Couldn't save that", "error");
-      reload();
+    let committed = false;
+    const commit = () => {
+      if (committed) return;
+      committed = true;
+      void api.setTaskStatus(id, "DONE").catch(() => {
+        toast("Couldn't save that", "error");
+        reload();
+      });
+    };
+    toast("Nice — task complete", {
+      actionLabel: "Undo",
+      durationMs: 4200,
+      onAction: () => {
+        committed = true;
+        setData(prev);
+      },
     });
+    setTimeout(commit, 4200);
   }
 
   return (
@@ -371,56 +386,53 @@ export default function Home() {
           {events.length ? (
             <Rise index={3}>
               <Section title="Celebrations">
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  snapToInterval={W * 0.72 + 12}
-                  decelerationRate="fast"
-                  style={{ marginHorizontal: -20 }}
-                  contentContainerStyle={{ paddingHorizontal: 20, gap: 12 }}
-                >
-                  {events.map((e, i) => (
-                    <Touchable
-                      key={e.id}
-                      style={{ width: W * 0.72 }}
-                      onPress={() => router.push({ pathname: "/agenda", params: { event: e.id } })}
-                    >
-                      <Card
-                        style={{
-                          minHeight: 170,
-                          justifyContent: "space-between",
-                          backgroundColor: i === 0 ? t.heading : t.card,
-                          borderColor: i === 0 ? t.heading : t.border,
-                        }}
+                <View style={{ marginHorizontal: -20 }}>
+                  <Carousel peek={20} gap={12}>
+                    {events.map((e, i) => (
+                      <Touchable
+                        key={e.id}
+                        onPress={() => router.push({ pathname: "/agenda", params: { event: e.id } })}
                       >
-                        <View>
-                          <Eyebrow size={9} color={i === 0 ? t.primary : t.primaryText}>
-                            {i === 0 ? "Next · " : ""}
-                            {titleCase(e.kind)}
-                          </Eyebrow>
-                          <Display size={26} color={i === 0 ? t.page : t.heading} style={{ marginTop: 6 }}>
-                            {e.name}
-                          </Display>
-                        </View>
-                        <View style={{ gap: 6 }}>
-                          <Body size={13} style={{ color: i === 0 ? t.page : t.muted, opacity: i === 0 ? 0.75 : 1 }}>
-                            {formatDate(e.startsAt)}
-                            {e.venueName ? `  ·  ${e.venueName}` : ""}
-                          </Body>
-                          {e.nekathAt ? (
-                            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                              <CalendarHeart size={13} color={t.primary} />
-                              <Text style={{ fontFamily: font.sansMedium, fontSize: 12, color: t.primary }}>
-                                Nekath{" "}
-                                {new Date(e.nekathAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
-                              </Text>
-                            </View>
-                          ) : null}
-                        </View>
-                      </Card>
-                    </Touchable>
-                  ))}
-                </ScrollView>
+                        <Card
+                          style={{
+                            minHeight: 170,
+                            justifyContent: "space-between",
+                            backgroundColor: i === 0 ? t.heading : t.card,
+                            borderColor: i === 0 ? t.heading : t.border,
+                          }}
+                        >
+                          <View>
+                            <Eyebrow size={9} color={i === 0 ? t.primary : t.primaryText}>
+                              {i === 0 ? "Next · " : ""}
+                              {titleCase(e.kind)}
+                            </Eyebrow>
+                            <Display size={26} color={i === 0 ? t.page : t.heading} style={{ marginTop: 6 }}>
+                              {e.name}
+                            </Display>
+                          </View>
+                          <View style={{ gap: 6 }}>
+                            <Body size={13} style={{ color: i === 0 ? t.page : t.muted, opacity: i === 0 ? 0.75 : 1 }}>
+                              {formatDate(e.startsAt)}
+                              {e.venueName ? `  ·  ${e.venueName}` : ""}
+                            </Body>
+                            {e.nekathAt ? (
+                              <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                                <CalendarHeart size={13} color={t.primary} />
+                                <Text style={{ fontFamily: font.sansMedium, fontSize: 12, color: t.primary }}>
+                                  Nekath{" "}
+                                  {new Date(e.nekathAt).toLocaleTimeString([], {
+                                    hour: "numeric",
+                                    minute: "2-digit",
+                                  })}
+                                </Text>
+                              </View>
+                            ) : null}
+                          </View>
+                        </Card>
+                      </Touchable>
+                    ))}
+                  </Carousel>
+                </View>
               </Section>
             </Rise>
           ) : null}

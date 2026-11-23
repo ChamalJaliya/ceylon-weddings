@@ -25,3 +25,17 @@ export {
   type ThemeRail,
 } from "./tokens";
 export type { ThemeMode, Palette } from "@ceylonweddings/contracts";
+export {
+  ReducedMotionProvider,
+  useReducedMotion,
+  useEnter,
+  LAYOUT,
+  SMOOTH,
+  SMOOTH_FAST,
+  SMOOTH_SLOW,
+  SPRING_SNAPPY,
+  SPRING_SOFT,
+  MOTION_MS,
+  MOTION_FAST_MS,
+  MOTION_SLOW_MS,
+} from "./motion";

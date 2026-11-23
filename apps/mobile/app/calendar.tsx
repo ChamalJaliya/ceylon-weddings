@@ -178,13 +178,27 @@ export default function CalendarScreen() {
     }
   }
 
-  async function remove(a: Appointment) {
+  function remove(a: Appointment) {
     setData((d) => (d ? { ...d, appts: d.appts.filter((x) => x.id !== a.id) } : d));
-    toast("Removed", "info");
-    await api.deleteAppointment(a.id).catch(() => {
-      toast("Couldn't remove", "error");
-      reload();
+    let committed = false;
+    const commit = () => {
+      if (committed) return;
+      committed = true;
+      void api.deleteAppointment(a.id).catch(() => {
+        toast("Couldn't remove", "error");
+        reload();
+      });
+    };
+    toast("Removed", {
+      tone: "info",
+      actionLabel: "Undo",
+      durationMs: 4200,
+      onAction: () => {
+        committed = true;
+        reload();
+      },
     });
+    setTimeout(commit, 4200);
   }
 
   if (loading && !data) return <ScreenSkeleton />;

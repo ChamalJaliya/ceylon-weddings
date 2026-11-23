@@ -1,35 +1,64 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
 import { Redirect, router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, { FadeIn, FadeInDown, ZoomIn } from "react-native-reanimated";
-import { Mail } from "lucide-react-native";
+import { Fingerprint, Mail } from "lucide-react-native";
 import { BrandLockup } from "@/components/brand";
-import { Body, Button, Display, Eyebrow, Field, success } from "@/components/ui";
+import { Body, Button, Display, Eyebrow, Field, MorphButton, Shake } from "@/components/ui";
 import { useAuth } from "@/lib/auth";
+import { api } from "@/lib/api";
+import {
+  authenticateBiometric,
+  biometricsAvailable,
+  isBiometricsEnabled,
+  lastEmail,
+  rememberEmail,
+} from "@/lib/biometrics";
 import { font, useTheme } from "@/theme";
 
 export default function Login() {
   const t = useTheme();
-  const { user, signIn } = useAuth();
+  const { user, signIn, setUser } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [shake, setShake] = useState(0);
+  const [bio, setBio] = useState<{ ok: boolean; label: string; enabled: boolean } | null>(null);
+
+  useEffect(() => {
+    void (async () => {
+      const saved = await lastEmail();
+      if (saved) setEmail(saved);
+      const avail = await biometricsAvailable();
+      const enabled = await isBiometricsEnabled();
+      setBio({ ...avail, enabled: avail.ok && enabled });
+    })();
+  }, []);
 
   if (user) return <Redirect href="/" />;
 
   async function submit() {
-    setBusy(true);
     setError(null);
     try {
       await signIn(email.trim(), password);
-      success();
+      await rememberEmail(email.trim());
     } catch (e) {
+      setShake((n) => n + 1);
       setError(e instanceof Error && e.message !== "Unauthorized" ? e.message : "That email and password don't match.");
-    } finally {
-      setBusy(false);
+      throw e;
+    }
+  }
+
+  async function unlockWithBio() {
+    const ok = await authenticateBiometric(`Unlock with ${bio?.label ?? "biometrics"}`);
+    if (!ok) return;
+    try {
+      setUser(await api.me());
+    } catch {
+      setError(`Session expired — sign in with your password, then re-enable ${bio?.label ?? "biometrics"}.`);
+      setShake((n) => n + 1);
     }
   }
 
@@ -61,36 +90,49 @@ export default function Login() {
 
             <Animated.View entering={FadeInDown.delay(600).duration(280)} style={{ gap: 14, marginTop: 40 }}>
               <Eyebrow style={{ textAlign: "center", marginBottom: 2 }}>Couples & family</Eyebrow>
-              <Field
-                label="Email"
-                placeholder="you@example.com"
-                autoCapitalize="none"
-                keyboardType="email-address"
-                autoComplete="email"
-                textContentType="emailAddress"
-                value={email}
-                onChangeText={(v) => {
-                  setEmail(v);
-                  setError(null);
-                }}
-                returnKeyType="next"
-              />
-              <Field
-                label="Password"
-                placeholder="Your password"
-                secureTextEntry
-                autoComplete="password"
-                textContentType="password"
-                value={password}
-                onChangeText={(v) => {
-                  setPassword(v);
-                  setError(null);
-                }}
-                onSubmitEditing={submit}
-                returnKeyType="go"
-                error={error ?? undefined}
-              />
-              <Button label="Sign in" onPress={submit} loading={busy} disabled={!email || !password} />
+              <Shake trigger={shake}>
+                <View style={{ gap: 14 }}>
+                  <Field
+                    label="Email"
+                    placeholder="you@example.com"
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                    autoComplete="email"
+                    textContentType="emailAddress"
+                    value={email}
+                    onChangeText={(v) => {
+                      setEmail(v);
+                      setError(null);
+                    }}
+                    returnKeyType="next"
+                  />
+                  <Field
+                    label="Password"
+                    placeholder="Your password"
+                    secureTextEntry
+                    autoComplete="password"
+                    textContentType="password"
+                    value={password}
+                    onChangeText={(v) => {
+                      setPassword(v);
+                      setError(null);
+                    }}
+                    onSubmitEditing={() => void submit().catch(() => {})}
+                    returnKeyType="go"
+                    error={error ?? undefined}
+                  />
+                </View>
+              </Shake>
+              <MorphButton label="Sign in" onPress={submit} disabled={!email || !password} successLabel="Welcome" />
+
+              {bio?.enabled ? (
+                <Button
+                  label={`Unlock with ${bio.label}`}
+                  variant="outline"
+                  icon={<Fingerprint size={18} color={t.heading} />}
+                  onPress={unlockWithBio}
+                />
+              ) : null}
 
               <View style={{ flexDirection: "row", alignItems: "center", gap: 12, marginVertical: 10 }}>
                 <View style={{ flex: 1, height: 1, backgroundColor: t.border }} />

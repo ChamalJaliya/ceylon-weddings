@@ -1,4 +1,4 @@
-import { useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Alert, Linking, Pressable, Text, View } from "react-native";
 import Constants from "expo-constants";
 import {
@@ -8,6 +8,7 @@ import {
   Coins,
   ExternalLink,
   FileText,
+  Fingerprint,
   Globe,
   KeyRound,
   Languages,
@@ -29,6 +30,7 @@ import {
   Card,
   Display,
   Eyebrow,
+  MorphButton,
   Screen,
   Segmented,
   SheetField,
@@ -39,6 +41,12 @@ import {
 import { Rise } from "@/components/motion";
 import { api, WEB_URL } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import {
+  authenticateBiometric,
+  biometricsAvailable,
+  isBiometricsEnabled,
+  setBiometricsEnabled,
+} from "@/lib/biometrics";
 import { font, paletteSwatch, useAppearance, useTheme } from "@/theme";
 
 type Locale = "en" | "si" | "ta";
@@ -196,8 +204,35 @@ export default function Settings() {
   const [busy, setBusy] = useState(false);
   const [reminders, setReminders] = useState(true);
   const [rsvpAlerts, setRsvpAlerts] = useState(true);
+  const [bio, setBio] = useState<{ ok: boolean; label: string; on: boolean }>({
+    ok: false,
+    label: "Biometrics",
+    on: false,
+  });
+  useEffect(() => {
+    void (async () => {
+      const avail = await biometricsAvailable();
+      const on = avail.ok && (await isBiometricsEnabled());
+      setBio({ ok: avail.ok, label: avail.label, on });
+    })();
+  }, []);
   if (!user) return null;
   const ic = (I: typeof UserIcon, c = t.primaryText) => <I size={17} color={c} />;
+
+  async function toggleBio(next: boolean) {
+    if (next) {
+      const ok = await authenticateBiometric(`Enable ${bio.label}`);
+      if (!ok) return;
+      await setBiometricsEnabled(true);
+      setBio((b) => ({ ...b, on: true }));
+      success();
+      toast(`${bio.label} unlocked`);
+    } else {
+      await setBiometricsEnabled(false);
+      setBio((b) => ({ ...b, on: false }));
+      toast(`${bio.label} off`, "info");
+    }
+  }
 
   async function patch(body: Parameters<typeof api.updateMe>[0], msg = "Saved") {
     try {
@@ -229,18 +264,15 @@ export default function Settings() {
   }
 
   async function savePassword() {
-    setBusy(true);
     try {
       await api.changePassword(cur, next);
-      success();
       toast("Password changed · other devices signed out");
       setCur("");
       setNext("");
       password.current?.dismiss();
     } catch (e) {
       toast(e instanceof Error ? e.message : "Couldn't change password", "error");
-    } finally {
-      setBusy(false);
+      throw e;
     }
   }
 
@@ -364,6 +396,13 @@ export default function Settings() {
 
         <Group title="Security" index={3}>
           <Row first icon={ic(KeyRound)} label="Change password" onPress={() => password.current?.present()} />
+          {bio.ok ? (
+            <Row
+              icon={ic(Fingerprint)}
+              label={`Unlock with ${bio.label}`}
+              right={<ThemedSwitch value={bio.on} onValueChange={toggleBio} />}
+            />
+          ) : null}
           <Row icon={ic(MonitorSmartphone)} label="Sign out other devices" onPress={signOutOthers} />
           <Row
             icon={ic(Shield)}
@@ -453,7 +492,12 @@ export default function Settings() {
           <Body muted size={12}>
             Changing your password signs out every other device.
           </Body>
-          <Button label="Update password" onPress={savePassword} loading={busy} disabled={!cur || next.length < 8} />
+          <MorphButton
+            label="Update password"
+            onPress={savePassword}
+            disabled={!cur || next.length < 8}
+            successLabel="Updated"
+          />
         </View>
       </Sheet>
     </View>

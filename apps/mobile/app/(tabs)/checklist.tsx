@@ -11,7 +11,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { SMOOTH } from "@/theme/motion";
-import { Check, Plus, Sparkles, Trash2 } from "lucide-react-native";
+import { Check, Sparkles, Trash2 } from "lucide-react-native";
 import type { Task } from "@ceylonweddings/contracts";
 import { Confetti, Ring } from "@/components/motion";
 import { Sheet, type SheetRef } from "@/components/sheet";
@@ -20,24 +20,25 @@ import { TAB_BAR_SPACE } from "@/components/tabbar";
 import { useToast } from "@/components/toast";
 import {
   Body,
-  Button,
   Card,
   Display,
   EmptyState,
   ErrorNote,
   Eyebrow,
-  impact,
+  Fab,
+  MorphButton,
   Screen,
   ScreenSkeleton,
   Select,
   SheetField,
+  Slider,
   Tabs,
   success,
   tap,
 } from "@/components/ui";
 import { api } from "@/lib/api";
 import { formatDate, titleCase } from "@/lib/format";
-import { font, shadow, useTheme } from "@/theme";
+import { font, useTheme } from "@/theme";
 import { useQuery } from "@/lib/useQuery";
 
 type Filter = "open" | "done" | "all";
@@ -54,12 +55,6 @@ const CATS = [
   "travel",
 ];
 const addDays = (n: number) => new Date(Date.now() + n * 864e5).toISOString();
-const DUE = [
-  ["Today", 0],
-  ["This week", 7],
-  ["This month", 30],
-  ["No date", -1],
-] as const;
 
 function CheckCircle({ done }: { done: boolean }) {
   const t = useTheme();
@@ -109,7 +104,6 @@ export default function Checklist() {
   const [title, setTitle] = useState("");
   const [cat, setCat] = useState<string | undefined>();
   const [due, setDue] = useState<number>(-1);
-  const [saving, setSaving] = useState(false);
   const [burst, setBurst] = useState(0);
 
   const tasks = data ?? [];
@@ -141,26 +135,38 @@ export default function Checklist() {
     });
   }
 
-  async function remove(task: Task) {
+  function remove(task: Task) {
     const prev = tasks;
     setData(tasks.filter((x) => x.id !== task.id));
-    toast("Task deleted", "info");
-    await api.deleteTask(task.id).catch(() => {
-      setData(prev);
-      toast("Couldn't delete", "error");
+    let committed = false;
+    const commit = () => {
+      if (committed) return;
+      committed = true;
+      void api.deleteTask(task.id).catch(() => {
+        setData(prev);
+        toast("Couldn't delete", "error");
+      });
+    };
+    toast("Task deleted", {
+      tone: "info",
+      actionLabel: "Undo",
+      durationMs: 4200,
+      onAction: () => {
+        committed = true;
+        setData(prev);
+      },
     });
+    setTimeout(commit, 4200);
   }
 
   async function add() {
     if (!title.trim()) return;
-    setSaving(true);
     try {
       const created = await api.createTask({
         title: title.trim(),
         category: cat,
         dueAt: due >= 0 ? addDays(due) : null,
       });
-      success();
       setData([created, ...tasks]);
       setTitle("");
       setCat(undefined);
@@ -169,8 +175,7 @@ export default function Checklist() {
       toast("Task added");
     } catch {
       toast("Couldn't add task", "error");
-    } finally {
-      setSaving(false);
+      throw new Error("add failed");
     }
   }
 
@@ -328,30 +333,7 @@ export default function Checklist() {
         ) : null}
       </Screen>
 
-      {/* Floating add button */}
-      <Animated.View
-        entering={ZoomIn.delay(300).duration(280)}
-        style={[{ position: "absolute", right: 22, bottom: TAB_BAR_SPACE + 6 }, shadow.raised]}
-      >
-        <Pressable
-          onPress={() => {
-            impact();
-            sheet.current?.present();
-          }}
-          accessibilityLabel="Add task"
-          style={({ pressed }) => ({
-            width: 60,
-            height: 60,
-            borderRadius: 30,
-            backgroundColor: t.primary,
-            alignItems: "center",
-            justifyContent: "center",
-            transform: [{ scale: pressed ? 0.92 : 1 }],
-          })}
-        >
-          <Plus size={26} color={t.primaryFg} />
-        </Pressable>
-      </Animated.View>
+      <Fab label="Add task" bottom={TAB_BAR_SPACE + 6} onPress={() => sheet.current?.present()} />
 
       <Sheet ref={sheet} eyebrow="Checklist" title="New task">
         <SheetField
@@ -371,22 +353,24 @@ export default function Checklist() {
             options={[{ value: "", label: "Any category" }, ...CATS.map((c) => ({ value: c, label: titleCase(c) }))]}
           />
         </View>
-        <View style={{ marginTop: 16 }}>
-          <Select
-            label="Due"
-            value={String(due)}
-            onChange={(v) => setDue(Number(v))}
-            options={DUE.map(([label, n]) => ({ value: String(n), label }))}
+        <View style={{ marginTop: 20 }}>
+          <Slider
+            label="Due in"
+            value={due < 0 ? 0 : due}
+            min={0}
+            max={60}
+            step={1}
+            format={(n) => (n === 0 ? "Today" : n === 1 ? "Tomorrow" : `${n} days`)}
+            onChange={(n) => setDue(n)}
           />
+          <Pressable onPress={() => setDue(-1)} style={{ marginTop: 8 }}>
+            <Body muted size={13} style={{ color: due < 0 ? t.primaryText : t.muted }}>
+              {due < 0 ? "No due date" : "Clear due date"}
+            </Body>
+          </Pressable>
         </View>
         <View style={{ marginTop: 26 }}>
-          <Button
-            label="Add task"
-            onPress={add}
-            loading={saving}
-            disabled={!title.trim()}
-            icon={<Plus size={18} color={t.primaryFg} />}
-          />
+          <MorphButton label="Add task" onPress={add} disabled={!title.trim()} successLabel="Added" />
         </View>
       </Sheet>
     </View>

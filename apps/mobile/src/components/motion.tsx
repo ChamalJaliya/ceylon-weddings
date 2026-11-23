@@ -6,6 +6,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Dimensions, StyleSheet, Text, View, type StyleProp, type TextStyle, type ViewStyle } from "react-native";
 import Animated, {
   Easing,
+  FadeIn,
   FadeInDown,
   interpolate,
   useAnimatedProps,
@@ -16,14 +17,14 @@ import Animated, {
   withSequence,
   withTiming,
 } from "react-native-reanimated";
-import { SMOOTH } from "@/theme/motion";
+import { MOTION_FAST_MS, MOTION_MS, SMOOTH, useReducedMotion } from "@/theme/motion";
 import Svg, { Circle, G } from "react-native-svg";
 import { LinearGradient } from "expo-linear-gradient";
 import { useTheme } from "@/theme";
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
-/** Staggered entrance for list items / sections. */
+/** Staggered entrance for list items / sections. Honors Reduce Motion. */
 export function Rise({
   children,
   index = 0,
@@ -33,8 +34,13 @@ export function Rise({
   index?: number;
   style?: StyleProp<ViewStyle>;
 }) {
+  const reduced = useReducedMotion();
+  const delay = Math.min(index, 10) * (reduced ? 0 : 55);
   return (
-    <Animated.View entering={FadeInDown.delay(Math.min(index, 10) * 55).duration(280)} style={style}>
+    <Animated.View
+      entering={reduced ? FadeIn.duration(MOTION_FAST_MS) : FadeInDown.delay(delay).duration(MOTION_MS)}
+      style={style}
+    >
       {children}
     </Animated.View>
   );
@@ -246,21 +252,25 @@ export function Shimmer({
   style?: StyleProp<ViewStyle>;
 }) {
   const t = useTheme();
+  const reduced = useReducedMotion();
   const x = useSharedValue(0);
   useEffect(() => {
+    if (reduced) return;
     x.value = withRepeat(withTiming(1, { duration: 1300, easing: Easing.inOut(Easing.quad) }), -1, false);
-  }, [x]);
+  }, [x, reduced]);
   const sweep = useAnimatedStyle(() => ({ transform: [{ translateX: interpolate(x.value, [0, 1], [-300, 400]) }] }));
   return (
     <View style={[{ height, width, borderRadius: r, backgroundColor: t.inset, overflow: "hidden" }, style]}>
-      <Animated.View style={[StyleSheet.absoluteFill, { width: 220 }, sweep]}>
-        <LinearGradient
-          start={{ x: 0, y: 0.5 }}
-          end={{ x: 1, y: 0.5 }}
-          style={{ flex: 1 }}
-          colors={["transparent", t.dark ? "rgba(255,255,255,0.05)" : "rgba(255,254,251,0.75)", "transparent"]}
-        />
-      </Animated.View>
+      {reduced ? null : (
+        <Animated.View style={[StyleSheet.absoluteFill, { width: 220 }, sweep]}>
+          <LinearGradient
+            start={{ x: 0, y: 0.5 }}
+            end={{ x: 1, y: 0.5 }}
+            style={{ flex: 1 }}
+            colors={["transparent", t.dark ? "rgba(255,255,255,0.05)" : "rgba(255,254,251,0.75)", "transparent"]}
+          />
+        </Animated.View>
+      )}
     </View>
   );
 }
